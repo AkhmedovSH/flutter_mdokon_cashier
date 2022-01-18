@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kassa/globals.dart';
+import 'package:kassa/helpers/globals.dart';
 import '../components/drawer_app_bar.dart';
 
 class ClientDebt extends StatefulWidget {

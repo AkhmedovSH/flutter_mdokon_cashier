@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:kassa/globals.dart';
+import 'package:kassa/helpers/globals.dart';
 import '../components/drawer_app_bar.dart';
 
 class SalesOnCredit extends StatefulWidget {
@@ -44,7 +45,7 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
               children: [
                 Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  height: 50,
+                  height: 30,
                   child: TextField(
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.all(2),

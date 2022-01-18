@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kassa/globals.dart';
+import 'package:kassa/helpers/globals.dart';
 import '../components/drawer_app_bar.dart';
 
 class Index extends StatefulWidget {
@@ -64,8 +64,10 @@ class _IndexState extends State<Index> {
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: blue,
-          onPressed: () {},
-          child: Icon(
+          onPressed: () {
+            Get.toNamed('/search');
+          },
+          child: const Icon(
             Icons.add,
             size: 28,
           ),

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import './globals.dart';
+import 'helpers/globals.dart';
 
 import 'pages/splash.dart';
+
+// auth
+import 'pages/auth/login.dart';
+import 'pages/auth/cashboxes.dart';
+
 import 'pages/index.dart';
-import 'pages/login.dart';
+import 'pages/search.dart';
+
 import 'pages/client_debt.dart';
 import 'pages/sales_on_credit.dart';
 import 'pages/calculator.dart';
@@ -35,8 +41,14 @@ class MyApp extends StatelessWidget {
       initialRoute: '/splash',
       getPages: [
         GetPage(name: '/splash', page: () => const Splash()),
-        GetPage(name: '/', page: () => const Index()),
+        // Auth
         GetPage(name: '/login', page: () => const Login()),
+        GetPage(name: '/cashboxes', page: () => const CashBoxes ()),
+
+
+        GetPage(name: '/', page: () => const Index()),
+        GetPage(name: '/search', page: () => const Search()),
+        
         GetPage(name: '/client-debt', page: () => const ClientDebt()),
         GetPage(name: '/sales-on-credit', page: () => const SalesOnCredit()),
         GetPage(name: '/calculator', page: () => const Calculator()),

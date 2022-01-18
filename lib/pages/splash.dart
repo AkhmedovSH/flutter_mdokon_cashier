@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 
-import '../globals.dart' as globals;
+import '../helpers/globals.dart' as globals;
 
 class Splash extends StatefulWidget {
   const Splash({Key? key}) : super(key: key);

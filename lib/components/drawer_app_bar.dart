@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kassa/globals.dart';
+import 'package:kassa/helpers/globals.dart';
 
 class DrawerAppBar extends StatefulWidget {
   const DrawerAppBar({Key? key}) : super(key: key);
