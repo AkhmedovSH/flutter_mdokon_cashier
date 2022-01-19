@@ -34,11 +34,12 @@ class _SplashState extends State<Splash> {
     return Scaffold(
       backgroundColor: globals.white,
       body: Center(
-          child: Image.asset(
-        'images/splash_logo.png',
-        height: 200,
-        width: 200,
-      )),
+        child: Image.asset(
+          'images/splash_logo.png',
+          height: 200,
+          width: 200,
+        ),
+      ),
     );
   }
 }

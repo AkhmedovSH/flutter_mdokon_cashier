@@ -55,31 +55,40 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(0.0),
-          child: AppBar(
-            systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarIconBrightness: Brightness.dark,
-              statusBarColor: Colors.white, // Status bar
-            ),
-            elevation: 0.0,
-            bottomOpacity: 0.0,
-            backgroundColor: Colors.transparent,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(0.0),
+        child: AppBar(
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.dark,
+            statusBarColor: Colors.white, // Status bar
           ),
+          elevation: 0.0,
+          bottomOpacity: 0.0,
+          backgroundColor: Colors.transparent,
         ),
-        body: SafeArea(
-            child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      ),
+      body: SafeArea(
+        child: Container(
+          margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Авторизация',
-                  style: TextStyle(
-                    color: black,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.0,
-                  )),
+              Center(
+                child: Image.asset(
+                  'images/login_bg.jpg',
+                  height: 250,
+                  width: 250,
+                ),
+              ),
+              Text(
+                'Авторизация',
+                style: TextStyle(
+                  color: black,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2.0,
+                ),
+              ),
               Container(
                 height: 4,
                 width: 90,
@@ -87,130 +96,133 @@ class _LoginState extends State<Login> {
                 margin: const EdgeInsets.only(bottom: 15),
               ),
               Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Обязательное поле';
-                            }
-                          },
-                          initialValue: payload['username'],
-                          onChanged: (value) {
-                            setState(() {
-                              payload['username'] = value;
-                            });
-                          },
-                          decoration: InputDecoration(
-                              contentPadding:
-                                  const EdgeInsets.fromLTRB(10, 5, 10, 10),
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                size: 18,
-                                color: blue,
-                              ),
-                              border: UnderlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: lightGrey, width: 1)),
-                              focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: blue)),
-                              focusColor: blue,
-                              labelText: 'Логин',
-                              labelStyle: TextStyle(color: blue)),
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Обязательное поле';
+                          }
+                        },
+                        initialValue: payload['username'],
+                        onChanged: (value) {
+                          setState(() {
+                            payload['username'] = value;
+                          });
+                        },
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            size: 30,
+                            color: blue,
+                          ),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightGrey,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: blue),
+                          ),
+                          focusColor: blue,
+                          labelText: 'Логин',
+                          labelStyle: TextStyle(color: blue),
                         ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Обязательное поле';
-                            }
-                          },
-                          initialValue: payload['password'],
-                          onChanged: (value) {
-                            setState(() {
-                              payload['password'] = value;
-                            });
-                          },
-                          onFieldSubmitted: (val) {
-                            if (_formKey.currentState!.validate()) {
-                              login();
-                            }
-                          },
-                          obscureText: !showPassword,
-                          decoration: InputDecoration(
-                              contentPadding:
-                                  const EdgeInsets.fromLTRB(10, 5, 10, 10),
-                              prefixIcon: Icon(
-                                Icons.lock_outline,
-                                size: 18,
-                                color: blue,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    showPassword = !showPassword;
-                                  });
-                                },
-                                icon: showPassword
-                                    ? Icon(
-                                        Icons.visibility_outlined,
-                                        size: 20,
-                                        color: grey,
-                                      )
-                                    : Icon(
-                                        Icons.visibility_off_outlined,
-                                        size: 20,
-                                        color: grey,
-                                      ),
-                              ),
-                              border: UnderlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: lightGrey, width: 1)),
-                              focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: blue)),
-                              focusColor: blue,
-                              labelText: 'Пароль',
-                              labelStyle: TextStyle(color: blue)),
-                        ),
-                      ),
-                    ],
-                  )),
-            ],
-          ),
-        )),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-                width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.only(left: 48, right: 32, bottom: 25),
-                child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: blue,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        login();
-                      }
-                    },
-                    child: Text(
-                      'ВОЙТИ',
-                      style: TextStyle(
-                        color: white,
-                        fontSize: 18,
-                        letterSpacing: 2.0,
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Обязательное поле';
+                          }
+                        },
+                        initialValue: payload['password'],
+                        onChanged: (value) {
+                          setState(() {
+                            payload['password'] = value;
+                          });
+                        },
+                        onFieldSubmitted: (val) {
+                          if (_formKey.currentState!.validate()) {
+                            login();
+                          }
+                        },
+                        obscureText: !showPassword,
+                        decoration: InputDecoration(
+                            contentPadding:
+                                const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              size: 30,
+                              color: blue,
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  showPassword = !showPassword;
+                                });
+                              },
+                              icon: showPassword
+                                  ? Icon(
+                                      Icons.visibility_outlined,
+                                      size: 20,
+                                      color: grey,
+                                    )
+                                  : Icon(
+                                      Icons.visibility_off_outlined,
+                                      size: 20,
+                                      color: grey,
+                                    ),
+                            ),
+                            border: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                color: lightGrey,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: blue),
+                            ),
+                            focusColor: blue,
+                            labelText: 'Пароль',
+                            labelStyle: TextStyle(color: blue)),
                       ),
-                    ))),
-          ],
-        ));
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(150, 50),
+          primary: blue,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            login();
+          }
+        },
+        child: Text(
+          'ВОЙТИ',
+          style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
+        ),
+      ),
+    );
   }
 }
