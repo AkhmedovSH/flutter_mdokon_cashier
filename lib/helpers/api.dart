@@ -25,6 +25,7 @@ Future post(String url, dynamic payload) async {
         }));
     return response.data;
   } on DioError catch (e) {
+    print(e.response?.statusCode);
     if (e.response?.statusCode == 400) {
       return;
     }

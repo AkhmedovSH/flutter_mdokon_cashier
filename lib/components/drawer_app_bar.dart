@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/api.dart';
 
 class DrawerAppBar extends StatefulWidget {
   const DrawerAppBar({Key? key}) : super(key: key);
@@ -38,6 +43,31 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
         ),
       ),
     );
+  }
+
+  closeShift() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int id = 0;
+    dynamic shift = {'id': null};
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    if (prefs.getString('shift') != null) {
+      shift = jsonDecode(prefs.getString('shift')!);
+    }
+    if (shift['id'] != null) {
+      id = shift['id'];
+    } else {
+      id = cashbox['id'];
+    }
+    final response = await post('/services/desktop/api/close-shift', {
+      'cashboxId': cashbox['cashboxId'],
+      'posId': cashbox['posId'],
+      'offline': false,
+      'id': id
+    });
+    if (response['success']) {
+      Get.offAllNamed('/login');
+    }
+    print(response);
   }
 
   @override
@@ -78,12 +108,12 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(top: 15, left: 16),
+                margin: const EdgeInsets.only(top: 15, left: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      margin: EdgeInsets.only(bottom: 15),
+                      margin: const EdgeInsets.only(bottom: 15),
                       child: Text(
                         'Операции',
                         style: TextStyle(fontSize: 18, color: lightGrey),
@@ -95,6 +125,14 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                         Icons.shopping_cart_outlined, '/sales-on-credit'),
                     buildListTile(
                         'Калькулятор', Icons.calculate, '/calculator'),
+                    Container(
+                      child: ElevatedButton(
+                          onPressed: () {
+                            closeShift();
+                          },
+                          style: ElevatedButton.styleFrom(primary: red),
+                          child: Text('Закрыть смену')),
+                    )
                   ],
                 ),
               )

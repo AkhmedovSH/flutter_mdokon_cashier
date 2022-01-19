@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +25,7 @@ class _LoginState extends State<Login> {
     prefs.setString('access_token', data['access_token']);
     prefs.setString('username', payload['username'].toString().toLowerCase());
     prefs.setString('password', payload['password']);
+
     final account = await get('/services/uaa/api/account');
     var checker = false;
     for (var i = 0; i < account['authorities'].length; i++) {
@@ -37,13 +40,16 @@ class _LoginState extends State<Login> {
   }
 
   getAccessPos() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     final response = await get('/services/desktop/api/get-access-pos');
     if (response['openShift']) {
+      print(response);
+      prefs.remove('shift');
+      prefs.setString('cashbox', jsonEncode(response['shift']));
       Get.offAllNamed('/');
     } else {
       Get.offAllNamed('/cashboxes', arguments: response['posList']);
     }
-    print(response);
   }
 
   @override
@@ -51,7 +57,7 @@ class _LoginState extends State<Login> {
     return Scaffold(
         body: SafeArea(
             child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -168,7 +174,7 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       primary: blue,
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -184,11 +190,11 @@ class _LoginState extends State<Login> {
                     ))),
             Container(
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.only(left: 48, right: 32),
+                margin: const EdgeInsets.only(left: 48, right: 32),
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       primary: white,
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         side: BorderSide(
                           color: blue,
