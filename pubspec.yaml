@@ -37,6 +37,7 @@ dependencies:
   get: ^4.6.1
   dio: ^4.0.4
   shared_preferences: ^2.0.12
+  url_launcher: ^6.0.18
 
 
 flutter_icons:

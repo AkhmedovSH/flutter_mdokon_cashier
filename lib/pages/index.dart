@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
 import '../components/drawer_app_bar.dart';
+import 'package:flutter/services.dart';
 
 class Index extends StatefulWidget {
   const Index({Key? key}) : super(key: key);
@@ -18,6 +19,11 @@ class _IndexState extends State<Index> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.light,
+            statusBarColor: Color(0xFF5b73e8), // Status bar
+          ),
+          bottomOpacity: 0.0,
           title: Text(
             'Продажа',
             style: TextStyle(color: white),
@@ -26,13 +32,11 @@ class _IndexState extends State<Index> {
           elevation: 0,
           // centerTitle: true,
           leading: IconButton(
-              onPressed: () {
-                _scaffoldKey.currentState!.openDrawer();
-              },
-              icon: Icon(
-                Icons.menu,
-                color: white,
-              )),
+            onPressed: () {
+              _scaffoldKey.currentState!.openDrawer();
+            },
+            icon: Icon(Icons.menu, color: white),
+          ),
           actions: [
             Container(
               margin: const EdgeInsets.only(right: 15),
@@ -44,7 +48,7 @@ class _IndexState extends State<Index> {
             ),
             Container(
               margin: const EdgeInsets.only(right: 15),
-              child: const Icon(Icons.search),
+              child: const Icon(Icons.qr_code_2_outlined),
             ),
             Container(
               margin: const EdgeInsets.only(right: 15),
@@ -53,11 +57,11 @@ class _IndexState extends State<Index> {
           ],
         ),
         drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.85,
+          width: MediaQuery.of(context).size.width * 0.70,
           child: const DrawerAppBar(),
         ),
         body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 48),
+          margin: const EdgeInsets.symmetric(horizontal: 48),
           child: Column(
             children: [],
           ),

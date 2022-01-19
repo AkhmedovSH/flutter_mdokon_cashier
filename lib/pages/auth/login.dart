@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
@@ -16,7 +17,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
-  dynamic payload = {'username': '', 'password': ''};
+  dynamic payload = {'username': 'goblin', 'password': '123'};
   bool showPassword = false;
 
   login() async {
@@ -55,6 +56,18 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(0.0),
+          child: AppBar(
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarIconBrightness: Brightness.dark,
+              statusBarColor: Colors.white, // Status bar
+            ),
+            elevation: 0.0,
+            bottomOpacity: 0.0,
+            backgroundColor: Colors.transparent,
+          ),
+        ),
         body: SafeArea(
             child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
@@ -63,7 +76,11 @@ class _LoginState extends State<Login> {
             children: [
               Text('Авторизация',
                   style: TextStyle(
-                      color: black, fontSize: 32, fontWeight: FontWeight.bold)),
+                    color: black,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2.0,
+                  )),
               Container(
                 height: 4,
                 width: 90,
@@ -82,6 +99,7 @@ class _LoginState extends State<Login> {
                               return 'Обязательное поле';
                             }
                           },
+                          initialValue: payload['username'],
                           onChanged: (value) {
                             setState(() {
                               payload['username'] = value;
@@ -113,6 +131,7 @@ class _LoginState extends State<Login> {
                               return 'Обязательное поле';
                             }
                           },
+                          initialValue: payload['password'],
                           onChanged: (value) {
                             setState(() {
                               payload['password'] = value;
@@ -186,26 +205,11 @@ class _LoginState extends State<Login> {
                     },
                     child: Text(
                       'ВОЙТИ',
-                      style: TextStyle(color: white, fontSize: 18),
-                    ))),
-            Container(
-                width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.only(left: 48, right: 32),
-                child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: blue,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
+                      style: TextStyle(
+                        color: white,
+                        fontSize: 18,
+                        letterSpacing: 2.0,
                       ),
-                    ),
-                    onPressed: () {},
-                    child: Text(
-                      'ВОЙТИ АДМИНИСТРАТОРОМ',
-                      style: TextStyle(color: blue, fontSize: 16),
                     ))),
           ],
         ));

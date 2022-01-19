@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/api.dart';
@@ -15,36 +16,6 @@ class DrawerAppBar extends StatefulWidget {
 }
 
 class _DrawerAppBarState extends State<DrawerAppBar> {
-  Widget buildListTile(
-    String title,
-    IconData icon,
-    String routeName,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        Get.offAllNamed(routeName);
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 10),
-        child: Row(
-          children: [
-            Container(
-              margin: EdgeInsets.only(right: 15),
-              child: Icon(
-                icon,
-                color: grey,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   closeShift() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int id = 0;
@@ -70,74 +41,184 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
     print(response);
   }
 
+  void _launchURL() async {
+    if (!await launch("tel://+998994398808")) throw 'Could not launch';
+  }
+
+  Widget buildListTile(
+    String title,
+    IconData icon,
+    String routeName,
+  ) {
+    return InkWell(
+      onTap: () {
+        Get.offAllNamed(routeName);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        child: Row(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(right: 15),
+              child: Icon(
+                icon,
+                size: 26,
+                color: Colors.grey,
+              ),
+            ),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 18,
+                color: Color(0xFF525355),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: SafeArea(
-        child: Container(
-          color: Colors.white,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                color: blue,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(right: 10),
-                      height: 64,
-                      width: 64,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Тивал',
-                          style: TextStyle(fontSize: 16, color: white),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'Мобильна касса и склад',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: white),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 15, left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      child: Text(
-                        'Операции',
-                        style: TextStyle(fontSize: 18, color: lightGrey),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Container(
+              color: blue,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    child: CircleAvatar(
+                      radius: 30.0,
+                      backgroundColor: const Color(0xFFF8F8F8),
+                      child: Image.asset(
+                        'images/build-logo.png',
+                        width: 50,
                       ),
                     ),
-                    buildListTile('Долг клиента', Icons.shopping_cart_outlined,
-                        '/client-debt'),
-                    buildListTile('Продажи в долг',
-                        Icons.shopping_cart_outlined, '/sales-on-credit'),
-                    buildListTile(
-                        'Калькулятор', Icons.calculate, '/calculator'),
-                    Container(
-                      child: ElevatedButton(
-                          onPressed: () {
-                            closeShift();
-                          },
-                          style: ElevatedButton.styleFrom(primary: red),
-                          child: Text('Закрыть смену')),
+                    margin: const EdgeInsets.only(right: 10, left: 10),
+                    height: 64,
+                    width: 64,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Shokhrukh',
+                        style: TextStyle(fontSize: 16, color: white),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        'ID: 84 (M Dokon)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: white,
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 15, left: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 15),
+                    child: Text(
+                      'Меню',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  buildListTile(
+                    'Долг клиента',
+                    Icons.account_circle_outlined,
+                    '/client-debt',
+                  ),
+                  buildListTile(
+                    'Продажи в долг',
+                    Icons.sync_problem,
+                    '/sales-on-credit',
+                  ),
+                  buildListTile(
+                    'Калькулятор',
+                    Icons.calculate,
+                    '/calculator',
+                  ),
+                  buildListTile(
+                    'Чеки',
+                    Icons.list_alt,
+                    '/calculator',
+                  ),
+                  buildListTile(
+                    'Возврат товаров',
+                    Icons.reply_all_outlined,
+                    '/calculator',
+                  ),
+                  buildListTile(
+                    'X Отчет',
+                    Icons.bar_chart,
+                    '/calculator',
+                  ),
+                ],
+              ),
+            ),
+            const Expanded(child: SizedBox()),
+            SizedBox(
+              child: ElevatedButton(
+                onPressed: () {
+                  closeShift();
+                },
+                style: ElevatedButton.styleFrom(primary: red),
+                child: const Text('Закрыть смену'),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(color: Color(0xFF48A8FF)),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _launchURL();
+                      },
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.support_agent_outlined,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Служба поддержки',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     )
                   ],
                 ),
-              )
-            ],
-          ),
+              ),
+            )
+          ],
         ),
       ),
     );
