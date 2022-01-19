@@ -44,7 +44,6 @@ class _LoginState extends State<Login> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final response = await get('/services/desktop/api/get-access-pos');
     if (response['openShift']) {
-      print(response);
       prefs.remove('shift');
       prefs.setString('cashbox', jsonEncode(response['shift']));
       Get.offAllNamed('/');

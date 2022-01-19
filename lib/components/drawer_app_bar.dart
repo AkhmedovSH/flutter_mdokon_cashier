@@ -213,6 +213,18 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                           ),
                         ],
                       ),
+                    ),
+                    buildListTile('Долг клиента', Icons.shopping_cart_outlined,
+                        '/client-debt'),
+                    buildListTile('Продажи в долг',
+                        Icons.shopping_cart_outlined, '/sales-on-credit'),
+                    Container(
+                      child: ElevatedButton(
+                          onPressed: () {
+                            closeShift();
+                          },
+                          style: ElevatedButton.styleFrom(primary: red),
+                          child: Text('Закрыть смену')),
                     )
                   ],
                 ),
