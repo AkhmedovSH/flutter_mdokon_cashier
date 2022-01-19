@@ -12,3 +12,4 @@ Color white = const Color(0xFFFFFFFF);
 Color inputColor = const Color(0xFFF3F7FA);
 Color yellow = const Color(0xFFF3A919);
 Color borderColor = const Color(0xFFF8F8F8);
+

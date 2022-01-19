@@ -103,7 +103,7 @@ class _CalculatorState extends State<Calculator> {
             children: [
               Container(
                 margin: const EdgeInsets.only(bottom: 5),
-                child: const Text(  
+                child: const Text(
                   'Наименование товара',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
@@ -252,7 +252,9 @@ class _CalculatorState extends State<Calculator> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.back();
+                    },
                     style: ElevatedButton.styleFrom(
                       primary: white,
                       padding: const EdgeInsets.symmetric(vertical: 16),

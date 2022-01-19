@@ -7,12 +7,17 @@ var dio = Dio();
 
 Future get(String url) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  final response = await dio.get(host_url + url,
-      options: Options(headers: {
-        "authorization": "Bearer ${prefs.getString('access_token')}",
-      }));
-  print(response.data);
-  return response.data;
+  print(host_url + url);
+  try {
+    final response = await dio.get(host_url + url,
+        options: Options(headers: {
+          "authorization": "Bearer ${prefs.getString('access_token')}",
+        }));
+    print(response.data);
+    return response.data;
+  } on DioError catch (e) {
+    print(e.response?.statusCode);
+  }
 }
 
 Future post(String url, dynamic payload) async {

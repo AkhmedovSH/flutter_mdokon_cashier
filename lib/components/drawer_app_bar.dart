@@ -123,8 +123,6 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                         '/client-debt'),
                     buildListTile('Продажи в долг',
                         Icons.shopping_cart_outlined, '/sales-on-credit'),
-                    buildListTile(
-                        'Калькулятор', Icons.calculate, '/calculator'),
                     Container(
                       child: ElevatedButton(
                           onPressed: () {
