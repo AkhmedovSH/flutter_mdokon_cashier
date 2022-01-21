@@ -62,102 +62,114 @@ class _IndexState extends State<Index> {
             ),
           ],
         ),
-        drawerEnableOpenDragGesture: false,
         drawer: SizedBox(
           width: MediaQuery.of(context).size.width * 0.70,
           child: const DrawerAppBar(),
         ),
-        body: Container(
-          child: Column(
-            children: [
-              for (var i = 0; i < products.length; i++)
-                Dismissible(
-                    key: ValueKey(products[i]['productName']),
-                    onDismissed: (DismissDirection direction) {
-                      setState(() {
-                        products.removeAt(i);
-                      });
-                    },
-                    background: Container(
-                      color: white,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 10),
-                      child: Icon(
-                        Icons.delete,
-                        color: red,
-                      ),
-                    ),
-                    direction: DismissDirection.endToStart,
-                    child: GestureDetector(
-                      onTap: () async {
-                        final result = await Get.toNamed('/calculator',
-                            arguments: products[i]);
-                        print(result);
-                        var arr = products;
-                        for (var i = 0; i < arr.length; i++) {
-                          if (arr[i]['productId'] == result['productId']) {
-                            arr[i] = result;
-                          }
-                        }
-                        setState(() {
-                          products = arr;
-                        });
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 8),
-                        margin: const EdgeInsets.only(bottom: 5),
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(
-                                    color: Color(0xFFF5F3F5), width: 1))),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${products[i]['productName']}',
-                              style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              softWrap: false,
+        body: SingleChildScrollView(
+          child: Container(
+              width: MediaQuery.of(context).size.width,
+              child: GestureDetector(
+                onPanUpdate: (details) {
+                  if (details.delta.dx > 0) {
+                    _scaffoldKey.currentState!.openDrawer();
+                  }
+                },
+                child: Column(
+                  children: [
+                    for (var i = 0; i < products.length; i++)
+                      Dismissible(
+                          key: ValueKey(products[i]['productName']),
+                          onDismissed: (DismissDirection direction) {
+                            setState(() {
+                              products.removeAt(i);
+                            });
+                          },
+                          background: Container(
+                            color: white,
+                            alignment: Alignment.centerRight,
+                            padding: EdgeInsets.only(right: 10),
+                            child: Icon(
+                              Icons.delete,
+                              color: red,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Text(
-                                      '${products[i]['price']} x ${products[i]['quantity']}',
-                                      style: TextStyle(color: lightGrey),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  child: Text(
-                                    '${products[i]['total_amount']} So\'m',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: blue,
-                                        fontSize: 16),
+                          ),
+                          direction: DismissDirection.endToStart,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final result = await Get.toNamed('/calculator',
+                                  arguments: products[i]);
+                              print(result);
+                              var arr = products;
+                              for (var i = 0; i < arr.length; i++) {
+                                if (arr[i]['productId'] ==
+                                    result['productId']) {
+                                  arr[i] = result;
+                                }
+                              }
+                              setState(() {
+                                products = arr;
+                              });
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 8),
+                              margin: const EdgeInsets.only(bottom: 5),
+                              decoration: const BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: Color(0xFFF5F3F5), width: 1))),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${products[i]['productName']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: false,
                                   ),
-                                )
-                              ],
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(
+                                            height: 5,
+                                          ),
+                                          Text(
+                                            '${products[i]['price']} x ${products[i]['quantity']}',
+                                            style: TextStyle(color: lightGrey),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        child: Text(
+                                          '${products[i]['total_amount']} So\'m',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: blue,
+                                              fontSize: 16),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ))
-            ],
-          ),
+                          ))
+                  ],
+                ),
+              )),
         ),
         floatingActionButton: Container(
           child: Row(
@@ -165,6 +177,8 @@ class _IndexState extends State<Index> {
             children: [
               Container(
                 margin: EdgeInsets.only(left: 32),
+                width: MediaQuery.of(context).size.width * 0.6,
+                color: Colors.transparent,
                 child: ElevatedButton(
                   onPressed: () {
                     if (products.length > 0) {
