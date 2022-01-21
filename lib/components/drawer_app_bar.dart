@@ -16,6 +16,24 @@ class DrawerAppBar extends StatefulWidget {
 }
 
 class _DrawerAppBarState extends State<DrawerAppBar> {
+  dynamic cashbox = {};
+  dynamic account = {'firstName': "", 'lastName': ""};
+
+  @override
+  void initState() {
+    super.initState();
+    getCashboxInfo();
+  }
+
+  void getCashboxInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      account = jsonDecode(prefs.getString('account')!);
+    });
+  }
+
   closeShift() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int id = 0;
@@ -38,7 +56,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
     if (response['success']) {
       Get.offAllNamed('/login');
     }
-    print(response);
+    //print(response);
   }
 
   void _launchURL() async {
@@ -109,12 +127,12 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Shokhrukh',
+                        account['firstName'] + ' ' + account['lastName'],
                         style: TextStyle(fontSize: 16, color: white),
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        'ID: 84 (M Dokon)',
+                        'ID: ${cashbox['posId']} (${cashbox['posName']})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: white,
@@ -150,11 +168,6 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     'Продажи в долг',
                     Icons.sync_problem,
                     '/sales-on-credit',
-                  ),
-                  buildListTile(
-                    'Калькулятор',
-                    Icons.calculate,
-                    '/calculator',
                   ),
                   buildListTile(
                     'Чеки',

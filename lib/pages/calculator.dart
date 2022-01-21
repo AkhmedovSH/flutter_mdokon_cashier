@@ -23,11 +23,11 @@ class _CalculatorState extends State<Calculator> {
   @override
   void initState() {
     super.initState();
-    print(Get.arguments);
+    //print(Get.arguments);
     setState(() {
       prevProduct = product;
     });
-    print(prevProduct);
+    //print(prevProduct);
   }
 
   dynamic items = [
@@ -139,7 +139,7 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${product['price']} сум x ${product['quantity']} кг',
+                    '${product['price']} So\'m x ${product['quantity']} кг',
                     style: TextStyle(color: lightGrey),
                   ),
                   Row(
@@ -154,7 +154,7 @@ class _CalculatorState extends State<Calculator> {
                         ),
                       ),
                       const Text(
-                        'сум',
+                        'So\'m',
                         style: TextStyle(
                             fontWeight: FontWeight.w500, fontSize: 12),
                       )
@@ -254,7 +254,7 @@ class _CalculatorState extends State<Calculator> {
                                       product['quantity'].toString();
                                   string =
                                       string.substring(0, string.length - 1);
-                                  print(string);
+                                  //print(string);
                                   setState(() {
                                     product['quantity'] = int.parse(string);
                                   });
@@ -292,42 +292,50 @@ class _CalculatorState extends State<Calculator> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
-                    onPressed: () {
-                      print(prevProduct);
-                      Get.back(result: prevProduct);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      primary: white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(color: blue, width: 1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  onPressed: () {
+                    //print(prevProduct);
+                    Get.back(result: prevProduct);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: blue, width: 1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      'ОТМЕНА',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: blue,
-                          fontWeight: FontWeight.bold),
-                    )),
+                  ),
+                  child: Text(
+                    'ОТМЕНА',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      primary: blue,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  onPressed: () {
+                    //print(prevProduct);
+                    Get.back(result: prevProduct);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      'В ЧЕК',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    )),
+                  ),
+                  child: const Text(
+                    'В ЧЕК',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

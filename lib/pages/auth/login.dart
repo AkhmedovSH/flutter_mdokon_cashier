@@ -22,12 +22,15 @@ class _LoginState extends State<Login> {
 
   login() async {
     final data = await guestPost('/auth/login', payload);
+    
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('access_token', data['access_token']);
     prefs.setString('username', payload['username'].toString().toLowerCase());
     prefs.setString('password', payload['password']);
 
     final account = await get('/services/uaa/api/account');
+    prefs.setString('account', jsonEncode(account));
+
     var checker = false;
     for (var i = 0; i < account['authorities'].length; i++) {
       if (account['authorities'][i] == "ROLE_CASHIER") {

@@ -38,25 +38,23 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarIconBrightness: Brightness.dark,
-            statusBarColor: white,
-          ),
-          title: Text(
-            'Каталог товаров',
-            style: TextStyle(color: black),
-          ),
-          backgroundColor: white,
-          elevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-              onPressed: () {
-                Get.back();
-              },
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: black,
-              ))),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.dark,
+          statusBarColor: white,
+        ),
+        title: Text(
+          'Каталог товаров',
+          style: TextStyle(color: black),
+        ),
+        backgroundColor: white,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+            onPressed: () {
+              Get.back();
+            },
+            icon: Icon(Icons.arrow_back_ios, color: black)),
+      ),
       body: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
@@ -73,22 +71,25 @@ class _SearchState extends State<Search> {
                           height: 35,
                           child: TextField(
                             decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.all(2),
-                                isDense: true,
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: grey,
-                                  size: 18,
+                              contentPadding: const EdgeInsets.all(2),
+                              isDense: true,
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: grey,
+                                size: 18,
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: borderColor),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(24),
                                 ),
-                                border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: borderColor,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(24))),
-                                hintText: 'Поиск по названию, QR code ...',
-                                hintStyle:
-                                    TextStyle(color: lightGrey, fontSize: 14)),
+                              ),
+                              hintText: 'Поиск по названию, QR code ...',
+                              hintStyle: TextStyle(
+                                color: lightGrey,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -157,7 +158,7 @@ class _SearchState extends State<Search> {
                                     height: 5,
                                   ),
                                   Text(
-                                    'Ostatok: 81',
+                                    'Ostatok: ${products[i]['balance'] != null ? products[i]['balance'] : 0}',
                                     style: TextStyle(color: lightGrey),
                                   ),
                                 ],

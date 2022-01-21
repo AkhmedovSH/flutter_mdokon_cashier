@@ -62,7 +62,8 @@ class _PaymentState extends State<Payment> {
         'paymentTypeId': 1,
       });
     }
-    print(textController2.text.length > 0);
+
+    //print(textController2.text.length > 0);
     if (textController2.text.length > 0) {
       transactionsList.add({
         'amountIn': textController2.text,
@@ -71,7 +72,8 @@ class _PaymentState extends State<Payment> {
         'paymentTypeId': 2,
       });
     }
-    if (data['change'] != 0 || data['change'] != '0' || data['change'] != '') {
+
+    if (data['change'] > 0) {
       transactionsList.add({
         'amountIn': 0,
         'amountOut': data['change'],
@@ -87,7 +89,9 @@ class _PaymentState extends State<Payment> {
         data['paid'] = int.parse(textController.text);
       }
       data['transactionsList'] = transactionsList;
+      data['itemsList'] = products;
     });
+    //print('${data}');
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
       Get.offAllNamed('/');

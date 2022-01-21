@@ -15,7 +15,7 @@ class _OnCreditState extends State<OnCredit> {
 
   getClients() async {
     final response = await get('/services/desktop/api/clients-helper');
-    print(response);
+    //print(response);
     setState(() {
       clients = response;
     });
