@@ -114,10 +114,8 @@ class _CashBoxesState extends State<CashBoxes> {
                             ),
                           ),
                         ),
-                      Expanded(child: Container()),
                       Container(
-                          alignment: Alignment.bottomCenter,
-                          width: MediaQuery.of(context).size.width,
+                          width: MediaQuery.of(context).size.width * 0.6,
                           child: ElevatedButton(
                             onPressed: () {
                               Get.offAllNamed('/login');

@@ -171,34 +171,6 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     Icons.bar_chart,
                     '/calculator',
                   ),
-                  InkWell(
-                    onTap: () {
-                      Get.toNamed('/payment');
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: Row(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(right: 15),
-                            child: Icon(
-                              Icons.bar_chart,
-                              size: 26,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            'Оплата',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 18,
-                              color: Color(0xFF525355),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  )
                 ],
               ),
             ),

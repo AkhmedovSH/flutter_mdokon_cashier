@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,8 @@ class _PaymentState extends State<Payment> {
   int currentIndex = 0;
 
   final _formKey = GlobalKey<FormState>();
+  final textController = TextEditingController();
+  final textController2 = TextEditingController();
   dynamic products = Get.arguments;
   dynamic data = {
     "cashboxVersion": '',
@@ -49,10 +52,46 @@ class _PaymentState extends State<Payment> {
     "transactionsList": []
   };
 
-  @override
-  void initState() {
-    super.initState();
-    getData();
+  createCheque() async {
+    var transactionsList = data['transactionsList'];
+    if (textController.text.length > 0) {
+      transactionsList.add({
+        'amountIn': textController.text,
+        'amountOut': 0,
+        'paymentPurposeId': 1,
+        'paymentTypeId': 1,
+      });
+    }
+    print(textController2.text.length > 0);
+    if (textController2.text.length > 0) {
+      transactionsList.add({
+        'amountIn': textController2.text,
+        'amountOut': 0,
+        'paymentPurposeId': 1,
+        'paymentTypeId': 2,
+      });
+    }
+    if (data['change'] != 0 || data['change'] != '0' || data['change'] != '') {
+      transactionsList.add({
+        'amountIn': 0,
+        'amountOut': data['change'],
+        'paymentPurposeId': 2,
+        'paymentTypeId': 1,
+      });
+    }
+    setState(() {
+      if (textController2.text.length > 0) {
+        data['paid'] =
+            int.parse(textController.text) + int.parse(textController2.text);
+      } else {
+        data['paid'] = int.parse(textController.text);
+      }
+      data['transactionsList'] = transactionsList;
+    });
+    final response = await post('/services/desktop/api/cheque', data);
+    if (response['success']) {
+      Get.offAllNamed('/');
+    }
   }
 
   getData() async {
@@ -64,26 +103,47 @@ class _PaymentState extends State<Payment> {
     if (prefs.getString('shift') != null) {
       final shift = jsonDecode(prefs.getString('shift')!);
       setState(() {
-        data['shiftId'] = shift;
+        data['shiftId'] = shift['id'];
       });
     } else {
       setState(() {
         data['shiftId'] = cashbox['id'];
       });
     }
-    print(cashbox);
+    final transactionId = generateTransactionId(
+        cashbox['posId'].toString(),
+        cashbox['cashboxId'].toString(),
+        prefs.getString('shift') != null
+            ? jsonDecode(prefs.getString('shift')!)['id']
+            : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
-      data['cashboxId'] = cashbox['id'];
-
+      data['cashboxId'] = cashbox['cashboxId'];
       data['cashboxVersion'] = version;
       data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
       data['currencyId'] = cashbox['defaultCurrency'];
+      data['saleCurrencyId'] = cashbox['defaultCurrency'];
       data['posId'] = cashbox['posId'];
-      data['itemsList'] = products;
+      data['chequeNumber'] = generateChequeNumber();
+      data['transactionId'] = transactionId;
     });
-    
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    dynamic totalAmount = 0;
+    for (var i = 0; i < products.length; i++) {
+      totalAmount += products[i]['total_amount'];
+    }
+    setState(() {
+      data['totalPrice'] = totalAmount.round();
+      data['change'] = 0;
+      data['paid'] = totalAmount.round();
+    });
+    textController.text = data['totalPrice'].toString();
+    getData();
   }
 
   @override
@@ -159,7 +219,7 @@ class _PaymentState extends State<Payment> {
                       ),
                       Container(
                           margin: EdgeInsets.only(bottom: 10),
-                          child: Text('270 000.00 сум',
+                          child: Text('${data['totalPrice']} сум',
                               style: TextStyle(
                                   color: darkGrey,
                                   fontSize: 16,
@@ -178,12 +238,33 @@ class _PaymentState extends State<Payment> {
                               Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 child: TextFormField(
+                                  controller: textController,
+                                  keyboardType: TextInputType.number,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Обязательное поле';
                                     }
                                   },
-                                  onChanged: (value) {},
+                                  onChanged: (value) {
+                                    // textController.text = value;
+                                    if (value.length > 0) {
+                                      if (textController2.text.length > 0) {
+                                        setState(() {
+                                          data['change'] = (int.parse(
+                                                      textController.text) +
+                                                  int.parse(
+                                                      textController2.text)) -
+                                              (data['totalPrice']);
+                                        });
+                                      } else {
+                                        setState(() {
+                                          data['change'] =
+                                              (int.parse(textController.text)) -
+                                                  (data['totalPrice']);
+                                        });
+                                      }
+                                    }
+                                  },
                                   decoration: InputDecoration(
                                     contentPadding: const EdgeInsets.fromLTRB(
                                         10, 15, 10, 10),
@@ -221,12 +302,32 @@ class _PaymentState extends State<Payment> {
                               Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 child: TextFormField(
+                                  controller: textController2,
+                                  keyboardType: TextInputType.number,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Обязательное поле';
                                     }
                                   },
-                                  onChanged: (value) {},
+                                  onChanged: (value) {
+                                    if (value.length > 0) {
+                                      if (textController.text.length > 0) {
+                                        setState(() {
+                                          data['change'] = (int.parse(
+                                                      textController.text) +
+                                                  int.parse(
+                                                      textController2.text)) -
+                                              (data['totalPrice']);
+                                        });
+                                      } else {
+                                        setState(() {
+                                          data['change'] = (int.parse(
+                                                  textController2.text)) -
+                                              (data['totalPrice']);
+                                        });
+                                      }
+                                    }
+                                  },
                                   decoration: InputDecoration(
                                     contentPadding: const EdgeInsets.fromLTRB(
                                         10, 15, 10, 10),
@@ -263,7 +364,7 @@ class _PaymentState extends State<Payment> {
                               fontWeight: FontWeight.bold)),
                       Container(
                           margin: EdgeInsets.only(bottom: 10, top: 5),
-                          child: Text('-10 800 000.00 сум',
+                          child: Text('${data['change']} сум',
                               style: TextStyle(
                                   color: darkGrey,
                                   fontSize: 16,
@@ -280,14 +381,17 @@ class _PaymentState extends State<Payment> {
         ],
       )),
       floatingActionButton: Container(
-        color: red,
         margin: EdgeInsets.only(left: 32),
         width: MediaQuery.of(context).size.width,
         child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              if (data['change'] >= 0) {
+                createCheque();
+              }
+            },
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-            ),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                primary: data['change'] < 0 ? blue.withOpacity(0.65) : blue),
             child: Text('ПРИНЯТЬ')),
       ),
     );

@@ -25,9 +25,9 @@ class _IndexState extends State<Index> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          systemOverlayStyle: const SystemUiOverlayStyle(
+          systemOverlayStyle: SystemUiOverlayStyle(
             statusBarIconBrightness: Brightness.light,
-            statusBarColor: Color(0xFF5b73e8), // Status bar
+            statusBarColor: blue, // Status bar
           ),
           bottomOpacity: 0.0,
           title: Text(
@@ -62,6 +62,7 @@ class _IndexState extends State<Index> {
             ),
           ],
         ),
+        drawerEnableOpenDragGesture: false,
         drawer: SizedBox(
           width: MediaQuery.of(context).size.width * 0.70,
           child: const DrawerAppBar(),
@@ -88,8 +89,19 @@ class _IndexState extends State<Index> {
                     ),
                     direction: DismissDirection.endToStart,
                     child: GestureDetector(
-                      onTap: () {
-                        Get.toNamed('/calculator');
+                      onTap: () async {
+                        final result = await Get.toNamed('/calculator',
+                            arguments: products[i]);
+                        print(result);
+                        var arr = products;
+                        for (var i = 0; i < arr.length; i++) {
+                          if (arr[i]['productId'] == result['productId']) {
+                            arr[i] = result;
+                          }
+                        }
+                        setState(() {
+                          products = arr;
+                        });
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
@@ -124,14 +136,14 @@ class _IndexState extends State<Index> {
                                       height: 5,
                                     ),
                                     Text(
-                                      'Ostatok: 81',
+                                      '${products[i]['price']} x ${products[i]['quantity']}',
                                       style: TextStyle(color: lightGrey),
                                     ),
                                   ],
                                 ),
                                 Container(
                                   child: Text(
-                                    '${products[i]['price']} So\'m',
+                                    '${products[i]['total_amount']} So\'m',
                                     style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: blue,
@@ -147,18 +159,60 @@ class _IndexState extends State<Index> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: blue,
-          onPressed: () async {
-            final result = await Get.toNamed('/search');
-            setState(() {
-              products.add(result);
-            });
-            print(products);
-          },
-          child: const Icon(
-            Icons.add,
-            size: 28,
+        floatingActionButton: Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                margin: EdgeInsets.only(left: 32),
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (products.length > 0) {
+                      Get.toNamed('/payment', arguments: products);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                      primary:
+                          products.length > 0 ? blue : blue.withOpacity(0.7)),
+                  child: Text('Продать'),
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: blue,
+                onPressed: () async {
+                  final result = await Get.toNamed('/search');
+                  if (result != null) {
+                    var found = false;
+                    for (var i = 0; i < products.length; i++) {
+                      if (products[i]['productId'] == result['productId']) {
+                        found = true;
+                        dynamic arr = products;
+                        arr[i]['quantity'] += 1;
+                        arr[i]['total_amount'] =
+                            (arr[i]['quantity']) * (arr[i]['price']);
+                        setState(() {
+                          products = arr;
+                        });
+                      }
+                    }
+                    if (!found) {
+                      result['quantity'] = 1;
+                      result['total_amount'] =
+                          result['quantity'] * result['price'];
+                      setState(() {
+                        products.add(result);
+                      });
+                    }
+                  }
+                },
+                child: const Icon(
+                  Icons.add,
+                  size: 28,
+                ),
+              )
+            ],
           ),
         ));
   }

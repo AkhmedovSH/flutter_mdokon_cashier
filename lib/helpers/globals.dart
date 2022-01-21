@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Color blue = const Color(0xFF5b73e8);
 Color grey = const Color(0xFF838488);
@@ -15,7 +19,21 @@ Color borderColor = const Color(0xFFF8F8F8);
 
 Color a2 = Color(0xFFA2A2A2);
 
-
 getUnixTime() {
   return DateTime.now().toUtc().millisecondsSinceEpoch;
+}
+
+generateChequeNumber() {
+  return getUnixTime()
+      .toString()
+      .substring(getUnixTime().toString().length - 8);
+}
+
+generateTransactionId(posId, cashboxId, shiftId) {
+  var rng = Random();
+  return posId.toString() +
+      cashboxId.toString() +
+      shiftId.toString() +
+      getUnixTime().toString() +
+      (rng.nextInt(999999).floor().toString());
 }

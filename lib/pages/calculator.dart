@@ -11,8 +11,30 @@ class Calculator extends StatefulWidget {
 }
 
 class _CalculatorState extends State<Calculator> {
+  dynamic product = Get.arguments;
+  dynamic prevProduct = {};
+
+  increment(number) {
+    setState(() {
+      product['quantity'] = product['quantity'].toString() + number;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print(Get.arguments);
+    setState(() {
+      prevProduct = product;
+    });
+    print(prevProduct);
+  }
+
   dynamic items = [
-    {'id': 1, 'title': '7'},
+    {
+      'id': 1,
+      'title': '7',
+    },
     {'id': 1, 'title': '8'},
     {'id': 1, 'title': '9'},
     {'id': 2, 'title': 'кол-во', 'active': true},
@@ -40,27 +62,32 @@ class _CalculatorState extends State<Calculator> {
   ];
 
   buildNumber(item) {
-    return Container(
-        margin: const EdgeInsets.symmetric(vertical: 1),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: const BoxDecoration(
-            border: Border(
-                top: BorderSide(color: Color(0xFFDADADA)),
-                bottom: BorderSide(color: Color(0xFFDADADA)))),
-        child: Container(
+    return GestureDetector(
+      onTap: () {
+        increment(item['title']);
+      },
+      child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 1),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-              border: item['title'] == '.' ||
-                      item['title'] == '0' ||
-                      int.parse(item['title']) % 3 != 0
-                  ? const Border(right: BorderSide(color: Color(0xFFDADADA)))
-                  : const Border()),
-          child: Text(
-            item['title'],
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            textAlign: TextAlign.center,
-          ),
-        ));
+          decoration: const BoxDecoration(
+              border: Border(
+                  top: BorderSide(color: Color(0xFFDADADA)),
+                  bottom: BorderSide(color: Color(0xFFDADADA)))),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+                border: item['title'] == '.' ||
+                        item['title'] == '0' ||
+                        int.parse(item['title']) % 3 != 0
+                    ? const Border(right: BorderSide(color: Color(0xFFDADADA)))
+                    : const Border()),
+            child: Text(
+              item['title'],
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          )),
+    );
   }
 
   buildButton(item) {
@@ -103,8 +130,8 @@ class _CalculatorState extends State<Calculator> {
             children: [
               Container(
                 margin: const EdgeInsets.only(bottom: 5),
-                child: const Text(
-                  'Наименование товара',
+                child: Text(
+                  product['productName'],
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
               ),
@@ -112,7 +139,7 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '00\'000,00 сум x 000,00 кг',
+                    '${product['price']} сум x ${product['quantity']} кг',
                     style: TextStyle(color: lightGrey),
                   ),
                   Row(
@@ -120,8 +147,8 @@ class _CalculatorState extends State<Calculator> {
                     children: [
                       Container(
                         margin: const EdgeInsets.only(right: 5),
-                        child: const Text(
-                          '0\'000\'000.00',
+                        child: Text(
+                          '${product['total_amount']}',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16),
                         ),
@@ -161,8 +188,8 @@ class _CalculatorState extends State<Calculator> {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             alignment: Alignment.centerRight,
-            child: const Text(
-              '1.50',
+            child: Text(
+              '${product['quantity']}',
               style: TextStyle(fontSize: 36, fontWeight: FontWeight.w300),
             ),
           ),
@@ -221,24 +248,37 @@ class _CalculatorState extends State<Calculator> {
                     flex: 2,
                     child: items4[i]['id'] == 1
                         ? i == 2
-                            ? Container(
-                                margin: const EdgeInsets.symmetric(vertical: 1),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                decoration: const BoxDecoration(
-                                    border: Border(
-                                        top: BorderSide(
-                                            color: Color(0xFFDADADA)),
-                                        bottom: BorderSide(
-                                            color: Color(0xFFDADADA)))),
+                            ? GestureDetector(
+                                onTap: () {
+                                  String string =
+                                      product['quantity'].toString();
+                                  string =
+                                      string.substring(0, string.length - 1);
+                                  print(string);
+                                  setState(() {
+                                    product['quantity'] = int.parse(string);
+                                  });
+                                },
                                 child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: const Icon(
-                                    Icons.backspace_outlined,
-                                    size: 18,
-                                  ),
-                                ))
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    decoration: const BoxDecoration(
+                                        border: Border(
+                                            top: BorderSide(
+                                                color: Color(0xFFDADADA)),
+                                            bottom: BorderSide(
+                                                color: Color(0xFFDADADA)))),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                      child: const Icon(
+                                        Icons.backspace_outlined,
+                                        size: 18,
+                                      ),
+                                    )),
+                              )
                             : buildNumber(items4[i])
                         : buildButton(items4[i]))
             ],
@@ -253,7 +293,8 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                     onPressed: () {
-                      Get.back();
+                      print(prevProduct);
+                      Get.back(result: prevProduct);
                     },
                     style: ElevatedButton.styleFrom(
                       primary: white,

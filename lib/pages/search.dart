@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -37,6 +38,10 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.dark,
+            statusBarColor: white,
+          ),
           title: Text(
             'Каталог товаров',
             style: TextStyle(color: black),
@@ -96,7 +101,7 @@ class _SearchState extends State<Search> {
                             borderRadius:
                                 BorderRadius.all(Radius.circular(50))),
                         child: Icon(
-                          Icons.photo,
+                          Icons.qr_code_2_outlined,
                           color: blue,
                           size: 18,
                         ),
@@ -159,7 +164,7 @@ class _SearchState extends State<Search> {
                               ),
                               Container(
                                 child: Text(
-                                  '${products[i]['price']} So\'m',
+                                  '${products[i]['price'] != null ? products[i]['price'] : 0} So\'m',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       color: blue,
