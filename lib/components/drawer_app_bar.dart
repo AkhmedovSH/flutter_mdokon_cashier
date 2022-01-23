@@ -160,6 +160,11 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     ),
                   ),
                   buildListTile(
+                    'Продажа',
+                    Icons.home,
+                    '/',
+                  ),
+                  buildListTile(
                     'Долг клиента',
                     Icons.account_circle_outlined,
                     '/client-debt',
@@ -172,7 +177,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                   buildListTile(
                     'Чеки',
                     Icons.list_alt,
-                    '/calculator',
+                    '/cheques',
                   ),
                   buildListTile(
                     'Возврат товаров',

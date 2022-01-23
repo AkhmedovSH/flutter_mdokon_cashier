@@ -101,7 +101,7 @@ class _OnCreditState extends State<OnCredit> {
                                     }
                                   },
                                   onChanged: (value) {},
-                                  enableInteractiveSelection: false,
+                                  
                                   decoration: InputDecoration(
                                     contentPadding: const EdgeInsets.fromLTRB(
                                         10, 15, 10, 10),
@@ -126,14 +126,45 @@ class _OnCreditState extends State<OnCredit> {
                                 ),
                               ),
                               Table(
-                                  border: TableBorder(bottom: BorderSide(color: Color(0xFFDADADA),width: 1)), // Allows to add a border decoration around your table
-                                  children: const [
-                                    TableRow(children: [
+                                  border: TableBorder(
+                                      horizontalInside: BorderSide(
+                                          width: 1,
+                                          color: Color(0xFFDADADa),
+                                          style: BorderStyle
+                                              .solid)), // Allows to add a border decoration around your table
+                                  children: [
+                                    TableRow(children: const [
                                       Text('Контакт'),
                                       Text('Номер телефона'),
                                       Text('Номер телефона'),
                                       Text('Комментарий'),
                                     ]),
+                                    for (var i = 0; i < clients.length; i++)
+                                      TableRow(children: [
+                                        Container(
+                                          padding:
+                                              EdgeInsets.symmetric(vertical: 8),
+                                          child: Text('${clients[i]['name']}'),
+                                        ),
+                                        Container(
+                                          padding:
+                                              EdgeInsets.symmetric(vertical: 8),
+                                          child:
+                                              Text('${clients[i]['phone1']}'),
+                                        ),
+                                        Container(
+                                          padding:
+                                              EdgeInsets.symmetric(vertical: 8),
+                                          child:
+                                              Text('${clients[i]['phone2']}'),
+                                        ),
+                                        Container(
+                                          padding:
+                                              EdgeInsets.symmetric(vertical: 8),
+                                          child:
+                                              Text('${clients[i]['comment']}'),
+                                        ),
+                                      ]),
                                   ])
                             ],
                           ),

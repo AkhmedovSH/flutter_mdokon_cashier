@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
-import '../components/drawer_app_bar.dart';
 import 'package:flutter/services.dart';
+
+import '../components/drawer_app_bar.dart';
 
 class Index extends StatefulWidget {
   const Index({Key? key}) : super(key: key);
@@ -88,10 +89,12 @@ class _IndexState extends State<Index> {
                 onTap: () async {
                   final result =
                       await Get.toNamed('/calculator', arguments: products[i]);
-                  //print(result);
+                  print(result);
                   var arr = products;
                   for (var i = 0; i < arr.length; i++) {
                     if (arr[i]['productId'] == result['productId']) {
+                      arr[i]['total_amount'] =
+                          (arr[i]['quantity']) * (arr[i]['price'].round());
                       arr[i] = result;
                     }
                   }

@@ -15,26 +15,28 @@ class _CalculatorState extends State<Calculator> {
   dynamic prevProduct = {};
 
   increment(number) {
-    setState(() {
-      product['quantity'] = product['quantity'].toString() + number;
-    });
+    print(product['quantity'] == 0);
+    if (product['quantity'] != 0) {
+      setState(() {
+        product['quantity'] = product['quantity'].toString() + number;
+      });
+    } else {
+      setState(() {
+        product['quantity'] = number;
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    //print(Get.arguments);
     setState(() {
       prevProduct = product;
     });
-    //print(prevProduct);
   }
 
   dynamic items = [
-    {
-      'id': 1,
-      'title': '7',
-    },
+    {'id': 1, 'title': '7'},
     {'id': 1, 'title': '8'},
     {'id': 1, 'title': '9'},
     {'id': 2, 'title': 'кол-во', 'active': true},
@@ -250,14 +252,21 @@ class _CalculatorState extends State<Calculator> {
                         ? i == 2
                             ? GestureDetector(
                                 onTap: () {
-                                  String string =
-                                      product['quantity'].toString();
-                                  string =
-                                      string.substring(0, string.length - 1);
-                                  //print(string);
-                                  setState(() {
-                                    product['quantity'] = int.parse(string);
-                                  });
+                                  print(product['quantity'] > 1);
+                                  if ((product['quantity']) > 1) {
+                                    String string =
+                                        product['quantity'].toString();
+                                    string =
+                                        string.substring(0, string.length - 1);
+                                    //print(string);
+                                    setState(() {
+                                      product['quantity'] = int.parse(string);
+                                    });
+                                  } else {
+                                    setState(() {
+                                      product['quantity'] = 0;
+                                    });
+                                  }
                                 },
                                 child: Container(
                                     margin:

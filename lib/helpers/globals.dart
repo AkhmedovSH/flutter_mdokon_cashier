@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,7 @@ Color yellow = const Color(0xFFF3A919);
 Color borderColor = const Color(0xFFF8F8F8);
 
 Color a2 = Color(0xFFA2A2A2);
+Color b8 = Color(0xFF7b8190);
 
 getUnixTime() {
   return DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -36,4 +38,9 @@ generateTransactionId(posId, cashboxId, shiftId) {
       shiftId.toString() +
       getUnixTime().toString() +
       (rng.nextInt(999999).floor().toString());
+}
+
+formatUnixTime(unixTime) {
+  var dt = DateTime.fromMillisecondsSinceEpoch(unixTime);
+  return DateFormat('dd.MM.yyyy HH:mm').format(dt);
 }

@@ -7,11 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 const host_url = "https://cabinet.mdokon.uz";
 var dio = Dio();
 
-Future get(String url) async {
+Future get(String url, {payload}) async {
+  print(payload);
   SharedPreferences prefs = await SharedPreferences.getInstance();
   print(host_url + url);
   try {
     final response = await dio.get(host_url + url,
+        queryParameters: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
         }));
