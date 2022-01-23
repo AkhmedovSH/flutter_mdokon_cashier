@@ -12,9 +12,6 @@ import 'pages/index.dart';
 import 'pages/search.dart';
 import 'pages/payment/payment.dart';
 
-import 'pages/cheques/cheques.dart';
-import 'pages/cheques/cheq_detail.dart';
-
 import 'pages/client_debt.dart';
 import 'pages/sales_on_credit.dart';
 import 'pages/calculator.dart';
@@ -48,9 +45,7 @@ class MyApp extends StatelessWidget {
         // Auth
         GetPage(name: '/login', page: () => const Login()),
         GetPage(name: '/cashboxes', page: () => const CashBoxes ()),
-        // Cheques
-        GetPage(name: '/cheques', page: () => const Cheques()),
-        GetPage(name: '/cheq-detail', page: () => const CheqDetail()),
+
 
         GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/search', page: () => const Search()),

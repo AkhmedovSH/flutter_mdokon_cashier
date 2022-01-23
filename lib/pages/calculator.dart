@@ -27,6 +27,21 @@ class _CalculatorState extends State<Calculator> {
     }
   }
 
+  _delete() {
+    if (int.parse(product['quantity']) > 1) {
+      String string = product['quantity'].toString();
+      string = string.substring(0, string.length - 1);
+      //print(string);
+      setState(() {
+        product['quantity'] = string;
+      });
+    } else {
+      setState(() {
+        product['quantity'] = 0;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -252,21 +267,7 @@ class _CalculatorState extends State<Calculator> {
                         ? i == 2
                             ? GestureDetector(
                                 onTap: () {
-                                  print(product['quantity'] > 1);
-                                  if ((product['quantity']) > 1) {
-                                    String string =
-                                        product['quantity'].toString();
-                                    string =
-                                        string.substring(0, string.length - 1);
-                                    //print(string);
-                                    setState(() {
-                                      product['quantity'] = int.parse(string);
-                                    });
-                                  } else {
-                                    setState(() {
-                                      product['quantity'] = 0;
-                                    });
-                                  }
+                                  _delete();
                                 },
                                 child: Container(
                                     margin:
