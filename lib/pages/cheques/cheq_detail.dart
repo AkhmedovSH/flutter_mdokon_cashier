@@ -68,28 +68,12 @@ class _CheqDetailState extends State<CheqDetail> {
           padding: EdgeInsets.symmetric(horizontal: 12),
           child: Column(
             children: [
-              Stack(
-                children: [
-                  Center(
-                      child: Image.asset(
-                    'images/logo.jpg',
-                    height: 64,
-                    width: 200,
-                  )),
-                  Positioned(
-                      left: 0,
-                      top: 10,
-                      child: IconButton(
-                        onPressed: () {
-                          Get.back();
-                        },
-                        icon: Icon(
-                          Icons.arrow_back,
-                          size: 28,
-                        ),
-                      ))
-                ],
-              ),
+              Center(
+                  child: Image.asset(
+                'images/logo.jpg',
+                height: 64,
+                width: 200,
+              )),
               Container(
                 alignment: Alignment.center,
                 margin: EdgeInsets.only(bottom: 10),

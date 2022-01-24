@@ -28,7 +28,24 @@ class _CalculatorState extends State<Calculator> {
   }
 
   _delete() {
-    if (int.parse(product['quantity']) > 1) {
+    print(product['quantity'].runtimeType == String);
+    if (product['quantity'].runtimeType == String) {
+      print(int.parse(product['quantity']) > 1);
+      if ((product['quantity']).length > 1) {
+        String string = product['quantity'].toString();
+        string = string.substring(0, string.length - 1);
+        //print(string);
+        setState(() {
+          product['quantity'] = string;
+        });
+      } else {
+        setState(() {
+          product['quantity'] = 0;
+        });
+      }
+      return;
+    }
+    if ((product['quantity']) > 1) {
       String string = product['quantity'].toString();
       string = string.substring(0, string.length - 1);
       //print(string);
@@ -303,8 +320,9 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                   onPressed: () {
-                    //print(prevProduct);
-                    Get.back(result: prevProduct);
+                    if (product['quantity'].toString() != '0') {
+                      Get.back(result: prevProduct);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     primary: white,
