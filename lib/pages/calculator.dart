@@ -62,6 +62,7 @@ class _CalculatorState extends State<Calculator> {
   @override
   void initState() {
     super.initState();
+    final product = Get.arguments;
     setState(() {
       prevProduct = product;
     });
@@ -101,7 +102,7 @@ class _CalculatorState extends State<Calculator> {
         increment(item['title']);
       },
       child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 1),
+          // margin: const EdgeInsets.symmetric(vertical: 1),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: const BoxDecoration(
               border: Border(
@@ -346,8 +347,9 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                   onPressed: () {
-                    //print(prevProduct);
-                    Get.back(result: prevProduct);
+                    if (product['quantity'].toString() != '0') {
+                      Get.back(result: prevProduct);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     primary: blue,

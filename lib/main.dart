@@ -10,7 +10,8 @@ import 'pages/auth/cashboxes.dart';
 
 import 'pages/index.dart';
 import 'pages/search.dart';
-import 'pages/payment/payment.dart';
+import 'pages/payment/payment_sample.dart';
+import 'package:kassa/pages/x_report.dart';
 
 import 'pages/client_debt.dart';
 import 'pages/sales_on_credit.dart';
@@ -49,7 +50,8 @@ class MyApp extends StatelessWidget {
 
         GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/search', page: () => const Search()),
-        GetPage(name: '/payment', page: () => const Payment()),
+        GetPage(name: '/payment', page: () => const PaymentSample()),
+        GetPage(name: '/x-report', page: () => const XReport ()),
         
         GetPage(name: '/client-debt', page: () => const ClientDebt()),
         GetPage(name: '/sales-on-credit', page: () => const SalesOnCredit()),

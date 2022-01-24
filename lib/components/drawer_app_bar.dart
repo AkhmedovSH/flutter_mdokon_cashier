@@ -187,7 +187,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                   buildListTile(
                     'X Отчет',
                     Icons.bar_chart,
-                    '/calculator',
+                    '/x-report',
                   ),
                 ],
               ),

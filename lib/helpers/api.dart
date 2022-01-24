@@ -29,12 +29,13 @@ Future post(String url, dynamic payload) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   print(payload);
   try {
-    print(200);
+    
     final response = await dio.post(host_url + url,
         data: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
         }));
+      print(200);
     return response.data;
   } on DioError catch (e) {
     print(e.response?.statusCode);

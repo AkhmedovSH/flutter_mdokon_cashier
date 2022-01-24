@@ -46,20 +46,66 @@ class _IndexState extends State<Index> {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 15),
-            child: const Icon(Icons.person),
+            child: IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.person),
+            ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 15),
-            child: const Icon(Icons.search),
+            child: IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.search),
+            ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 15),
-            child: const Icon(Icons.qr_code_2_outlined),
+            child: IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.qr_code_2_outlined),
+            ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 15),
-            child: const Icon(Icons.delete),
+            child: IconButton(
+              onPressed: () {
+                if (products.length > 0) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: const Text('Вы уверены?'),
+                      // content: const Text('AlertDialog description'),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.33,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: ElevatedButton.styleFrom(primary: red, padding: EdgeInsets.symmetric(vertical: 10)),
+                                child: const Text('Отмена'),
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.33,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    products = [];
+                                  });
+                                  Get.back();
+                                },
+                                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
+                                child: const Text('Продолжить'),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                }
+              },
+              icon: Icon(Icons.delete),
+            ),
           ),
         ],
       ),
@@ -93,8 +139,8 @@ class _IndexState extends State<Index> {
                   var arr = products;
                   for (var i = 0; i < arr.length; i++) {
                     if (arr[i]['productId'] == result['productId']) {
-                      arr[i]['total_amount'] =
-                          (arr[i]['quantity']) * (arr[i]['price'].round());
+                      arr[i]['total_amount'] = int.parse(arr[i]['quantity']) *
+                          (arr[i]['price'].round());
                       arr[i] = result;
                     }
                   }
@@ -186,17 +232,27 @@ class _IndexState extends State<Index> {
                   if (products[i]['productId'] == result['productId']) {
                     found = true;
                     dynamic arr = products;
-                    arr[i]['quantity'] += 1;
+                    if (arr[i]['quantity'].runtimeType == String) {
+                      arr[i]['quantity'] = int.parse(arr[i]['quantity']) + 1;
+                    } else {
+                      arr[i]['quantity'] = (arr[i]['quantity']) + 1;
+                    }
+                    
+                    arr[i]['discount'] = 0;
                     arr[i]['total_amount'] =
                         (arr[i]['quantity']) * (arr[i]['price']);
                     setState(() {
                       products = arr;
                     });
+                    print(products[i]['discount']);
                   }
                 }
                 if (!found) {
                   result['quantity'] = 1;
+                  result['discount'] = 0;
+                  result['discount'] = 0;
                   result['total_amount'] = result['quantity'] * result['price'];
+                  result['totalPrice'] = result['total_amount'];
                   setState(() {
                     products.add(result);
                   });
