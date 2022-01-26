@@ -80,7 +80,10 @@ class _IndexState extends State<Index> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(primary: red, padding: EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(
+                                    primary: red,
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Отмена'),
                               ),
                             ),
@@ -93,7 +96,9 @@ class _IndexState extends State<Index> {
                                   });
                                   Get.back();
                                 },
-                                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Продолжить'),
                               ),
                             )
@@ -139,8 +144,9 @@ class _IndexState extends State<Index> {
                   var arr = products;
                   for (var i = 0; i < arr.length; i++) {
                     if (arr[i]['productId'] == result['productId']) {
-                      arr[i]['total_amount'] = int.parse(arr[i]['quantity']) *
-                          (arr[i]['price'].round());
+                      arr[i]['total_amount'] =
+                          double.parse(arr[i]['quantity']) *
+                              (arr[i]['price'].round());
                       arr[i] = result;
                     }
                   }
@@ -237,7 +243,7 @@ class _IndexState extends State<Index> {
                     } else {
                       arr[i]['quantity'] = (arr[i]['quantity']) + 1;
                     }
-                    
+
                     arr[i]['discount'] = 0;
                     arr[i]['total_amount'] =
                         (arr[i]['quantity']) * (arr[i]['price']);

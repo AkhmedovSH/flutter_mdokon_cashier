@@ -15,19 +15,26 @@ class _CalculatorState extends State<Calculator> {
   dynamic prevProduct = {};
 
   increment(number) {
-    final validCharacters = RegExp(r'^[\d.]');
-    final regEx = RegExp(r"\d+([\.]\d+)?");
-    print(regEx.hasMatch(product['quantity']));
-    if (number == '.' && validCharacters.hasMatch(product['quantity'])) {
+    var parsed = "";
+    if (product['quantity'].toString()[0] == "0") {
+      parsed = number;
+    } else {
+      parsed = product['quantity'].toString() + number;
+    }
+    var moreThanOneDots = '.'.allMatches(parsed).length <= 1 ? false : true;
+    if (moreThanOneDots) {
       return;
     }
-    if (product['quantity'] != 0) {
+
+    if (double.parse(parsed) > 0 && !moreThanOneDots) {
+      print('BLOCK-1');
       setState(() {
-        product['quantity'] = product['quantity'].toString() + number;
+        product['quantity'] = parsed;
       });
     } else {
+      print('BLOCK-3');
       setState(() {
-        product['quantity'] = number;
+        product['quantity'] = 0;
       });
     }
   }
@@ -57,6 +64,20 @@ class _CalculatorState extends State<Calculator> {
       setState(() {
         product['quantity'] = 0;
       });
+    }
+  }
+
+  void _toCheque() {
+    if (product['quantity'].toString() != '0') {
+      var str = product['quantity']
+          .toString()
+          .substring(product['quantity'].toString().length - 1);
+      if (str == ".") {
+        setState(() {
+          product['quantity'] = double.parse(str);
+        });
+      }
+      Get.back(result: product);
     }
   }
 
@@ -349,9 +370,7 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (product['quantity'].toString() != '0') {
-                      Get.back(result: prevProduct);
-                    }
+                    _toCheque();
                   },
                   style: ElevatedButton.styleFrom(
                     primary: blue,
