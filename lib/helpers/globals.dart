@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 Color blue = const Color(0xFF5b73e8);
 Color grey = const Color(0xFF838488);

@@ -182,7 +182,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                   buildListTile(
                     'Возврат товаров',
                     Icons.reply_all_outlined,
-                    '/calculator',
+                    '/return',
                   ),
                   buildListTile(
                     'X Отчет',

@@ -76,67 +76,69 @@ class _CashBoxesState extends State<CashBoxes> {
                     color: white, fontSize: 18, fontWeight: FontWeight.w500),
               ),
             ),
-            Column(
-              children: [
-                for (var i = 0; i < poses.length; i++)
-                  Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          poses[i]['posName'],
-                          style: TextStyle(
-                              color: white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                      for (var j = 0; j < poses[i]['cashboxList'].length; j++)
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (var i = 0; i < poses.length; i++)
+                    Column(
+                      children: [
                         Container(
                           margin: const EdgeInsets.only(bottom: 10),
-                          width: MediaQuery.of(context).size.width * 0.6,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              primary: blue,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 14, horizontal: 20),
-                              side: const BorderSide(
-                                color: Color.fromARGB(0, 0, 100, 1),
-                              ),
-                            ),
-                            onPressed: () {
-                              selectCashbox(
-                                  poses[i], poses[i]['cashboxList'][j]);
-                            },
-                            child: Text(
-                              poses[i]['cashboxList'][j]['name'],
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                          child: Text(
+                            poses[i]['posName'],
+                            style: TextStyle(
+                                color: white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500),
                           ),
                         ),
-                      Container(
-                          width: MediaQuery.of(context).size.width * 0.6,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Get.offAllNamed('/login');
-                            },
-                            style: ElevatedButton.styleFrom(
-                                primary: white,
+                        for (var j = 0; j < poses[i]['cashboxList'].length; j++)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            width: MediaQuery.of(context).size.width * 0.6,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                primary: blue,
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 12, horizontal: 30)),
-                            child: Text(
-                              'Выйти',
-                              style: TextStyle(
-                                  color: blue,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 18),
+                                    vertical: 14, horizontal: 20),
+                                side: const BorderSide(
+                                  color: Color.fromARGB(0, 0, 100, 1),
+                                ),
+                              ),
+                              onPressed: () {
+                                selectCashbox(
+                                    poses[i], poses[i]['cashboxList'][j]);
+                              },
+                              child: Text(
+                                poses[i]['cashboxList'][j]['name'],
+                                style: const TextStyle(fontSize: 16),
+                              ),
                             ),
-                          ))
-                    ],
-                  )
-              ],
+                          ),
+                      ],
+                    ),
+                ],
+              ),
             )
           ],
+        ),
+      ),
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(left: 32),
+        width: MediaQuery.of(context).size.width,
+        child: ElevatedButton(
+          onPressed: () {
+            Get.offAllNamed('/login');
+          },
+          style: ElevatedButton.styleFrom(
+              primary: white,
+              padding:
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 30)),
+          child: Text(
+            'Выйти',
+            style: TextStyle(
+                color: blue, fontWeight: FontWeight.w500, fontSize: 18),
+          ),
         ),
       ),
     );

@@ -4,15 +4,15 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const host_url = "https://cabinet.mdokon.uz";
+const hostUrl = "https://cabinet.mdokon.uz";
 var dio = Dio();
 
 Future get(String url, {payload}) async {
   print(payload);
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  print(host_url + url);
+  print(hostUrl + url);
   try {
-    final response = await dio.get(host_url + url,
+    final response = await dio.get(hostUrl + url,
         queryParameters: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
@@ -30,7 +30,7 @@ Future post(String url, dynamic payload) async {
   print(payload);
   try {
     
-    final response = await dio.post(host_url + url,
+    final response = await dio.post(hostUrl + url,
         data: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
@@ -48,7 +48,7 @@ Future post(String url, dynamic payload) async {
 
 Future guestPost(String url, dynamic payload) async {
   try {
-    final response = await dio.post(host_url + url, data: payload);
+    final response = await dio.post(hostUrl + url, data: payload);
     return response.data;
   } on DioError catch (e) {
     if (e.response?.statusCode == 400) {

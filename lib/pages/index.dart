@@ -45,25 +45,25 @@ class _IndexState extends State<Index> {
           icon: Icon(Icons.menu, color: white),
         ),
         actions: [
-          Container(
+          SizedBox(
             child: IconButton(
               onPressed: () {},
               icon: Icon(Icons.person),
             ),
           ),
-          Container(
+          SizedBox(
             child: IconButton(
               onPressed: () {},
               icon: Icon(Icons.search),
             ),
           ),
-          Container(
+          SizedBox(
             child: IconButton(
               onPressed: () {},
               icon: Icon(Icons.qr_code_2_outlined),
             ),
           ),
-          Container(
+          SizedBox(
             child: IconButton(
               onPressed: () {
                 if (products.length > 0) {
