@@ -25,7 +25,6 @@ class _CalculatorState extends State<Calculator> {
     if (moreThanOneDots) {
       return;
     }
-
     if (double.parse(parsed) > 0 && !moreThanOneDots) {
       print('BLOCK-1');
       setState(() {

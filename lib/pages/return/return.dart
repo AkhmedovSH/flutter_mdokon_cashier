@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kassa/helpers/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
@@ -18,7 +19,77 @@ class Return extends StatefulWidget {
 
 class _ReturnState extends State<Return> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  dynamic products = [];
+  dynamic itemsList = [];
+  dynamic id = 0;
+  dynamic data = {'cashierName': 'Фамилия И.О.', 'chequeNumber': '000000'};
+  dynamic sendData = {
+    'actionDate': 0,
+    'cashboxId': 'cashbox.cashboxId',
+    'chequeId': 0,
+    'clientAmount': 0,
+    'clientId': 0,
+    'currencyId': "",
+    'saleCurrencyId': "",
+    'itemsList': [],
+    'note': "",
+    'offline': false,
+    'posId': 'cashbox.posId',
+    'shiftId': 'cashbox.id ? cashbox.id : shift.id',
+    'totalAmount': 0,
+    'transactionId': "",
+    'transactionsList': [
+      {"amountIn": 0, "amountOut": 0, "paymentTypeId": 1, "paymentPurposeId": 3}
+    ]
+  };
+
+  searchCheq() async {
+    dynamic response;
+    if (id != null) {
+      response = await get(
+          '/services/desktop/api/cheque-byNumber/$id/${sendData['posId']}');
+    } else {
+      response = await get(
+          '/services/desktop/api/cheque-byNumber/$id/${sendData['posId']}');
+    }
+    if (response['id'] != null) {
+      setState(() {
+        data = response;
+        itemsList = data['itemsList'];
+      });
+      for (var i = 0; i < itemsList.length; i++) {
+        print(itemsList[i]['discount'].runtimeType);
+        itemsList[i]['discount'] = itemsList[i]['discount'].round();
+      }
+    }
+  }
+
+  getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    dynamic shift = {};
+    if (prefs.getString('shift') != null) {
+      shift = jsonDecode(prefs.getString('shift')!);
+    }
+    final shiftId = cashbox['id'] != null ? cashbox['id'] : shift['id'];
+    setState(() {
+      sendData['cashboxId'] = cashbox['cashboxId'];
+      sendData['posId'] = cashbox['posId'];
+      sendData['shiftId'] = shiftId;
+    });
+    print(Get.arguments);
+    if (Get.arguments != null) {
+      setState(() {
+        id = Get.arguments;
+      });
+      searchCheq();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +133,15 @@ class _ReturnState extends State<Return> {
                   margin: EdgeInsets.only(bottom: 10),
                   height: 40,
                   child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        id = value;
+                      });
+                    },
+                    onSubmitted: (value) {
+                      searchCheq();
+                    },
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.only(top: 5, left: 10),
                       enabledBorder: OutlineInputBorder(
@@ -85,11 +165,12 @@ class _ReturnState extends State<Return> {
                 ),
                 Container(
                   margin: EdgeInsets.only(bottom: 10),
+                  width: MediaQuery.of(context).size.width * 0.23,
                   height: 40,
                   child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 20)),
+                    onPressed: () {
+                      searchCheq();
+                    },
                     child: Text('Поиск'),
                   ),
                 )
@@ -98,7 +179,6 @@ class _ReturnState extends State<Return> {
             Container(
                 height: MediaQuery.of(context).size.height * 0.3,
                 width: MediaQuery.of(context).size.width,
-                
                 decoration: BoxDecoration(
                     border: Border(
                   bottom: BorderSide(color: Color(0xFFced4da), width: 1),
@@ -110,7 +190,7 @@ class _ReturnState extends State<Return> {
                       Container(
                         margin: EdgeInsets.only(bottom: 5),
                         child: Text(
-                          'Кассовый чек №: 90223387',
+                          'Кассовый чек №: ${data['chequeNumber']}',
                           style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 16,
@@ -129,7 +209,7 @@ class _ReturnState extends State<Return> {
                             Container(
                               margin: EdgeInsets.only(right: 20),
                               child: Text(
-                                '25.01.2022 10:57:03',
+                                '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
                                 style: TextStyle(color: b8),
                               ),
                             ),
@@ -139,7 +219,7 @@ class _ReturnState extends State<Return> {
                                   fontWeight: FontWeight.bold, color: b8),
                             ),
                             Text(
-                              'Ibrohim Rasulov',
+                              '${data['cashierName']}',
                               style: TextStyle(color: b8),
                             )
                           ],
@@ -200,61 +280,64 @@ class _ReturnState extends State<Return> {
                               ),
                             ),
                           ]),
-                          // for (var i = 0; i < products.length; i++)
-                          TableRow(children: [
-                            // HERE IT IS...
-                            TableRowInkWell(
-                              onTap: () {
-                                print('tab');
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'data',
-                                  style: TextStyle(color: Color(0xFF495057)),
+                          for (var i = 0; i < itemsList.length; i++)
+                            TableRow(children: [
+                              // HERE IT IS...
+                              TableRowInkWell(
+                                onTap: () {
+                                  print('tab');
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    '${itemsList[i]['productName']} ',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                  ),
                                 ),
                               ),
-                            ),
-                            TableRowInkWell(
-                              onTap: () {
-                                print('tab');
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'data',
-                                  style: TextStyle(color: Color(0xFF495057)),
-                                  textAlign: TextAlign.center,
+                              TableRowInkWell(
+                                onTap: () {
+                                  print('tab');
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: int.parse(itemsList[i]['discount']) > 0
+                                      ? Text(
+                                          '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                          style: TextStyle(
+                                              color: Color(0xFF495057)),
+                                          textAlign: TextAlign.center,
+                                        )
+                                      : Text('data'),
                                 ),
                               ),
-                            ),
-                            TableRowInkWell(
-                              onDoubleTap: () {
-                                print('tab');
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'data',
-                                  style: TextStyle(color: Color(0xFF495057)),
-                                  textAlign: TextAlign.center,
+                              TableRowInkWell(
+                                onDoubleTap: () {
+                                  print('tab');
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    '${itemsList[i]['quantity']}',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
-                            ),
-                            TableRowInkWell(
-                              onDoubleTap: () {
-                                print('tab');
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'data',
-                                  style: TextStyle(color: Color(0xFF495057)),
-                                  textAlign: TextAlign.end,
+                              TableRowInkWell(
+                                onDoubleTap: () {
+                                  print('tab');
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'data',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                    textAlign: TextAlign.end,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ]),
+                            ]),
                         ],
                       )
                     ],

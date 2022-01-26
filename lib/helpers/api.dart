@@ -7,8 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 const hostUrl = "https://cabinet.mdokon.uz";
 var dio = Dio();
 
+checkToken() async {
+
+}
+
 Future get(String url, {payload}) async {
-  print(payload);
   SharedPreferences prefs = await SharedPreferences.getInstance();
   print(hostUrl + url);
   try {

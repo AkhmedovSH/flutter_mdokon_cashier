@@ -5,11 +5,11 @@ import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:kassa/pages/payment/payment.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
-
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:kassa/components/loading_layout.dart';
 
 import './on_credit.dart';
 import './loyalty.dart';
@@ -23,6 +23,7 @@ class PaymentSample extends StatefulWidget {
 
 class _PaymentSampleState extends State<PaymentSample> {
   int currentIndex = 0;
+  bool loading = false;
   dynamic data = {
     "cashboxVersion": '',
     "login": '',
@@ -104,6 +105,9 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
+    setState(() {
+      loading = true;
+    });
     var transactionsList = data['transactionsList'];
     if (textController.text.length > 0) {
       transactionsList.add({
@@ -171,84 +175,87 @@ class _PaymentSampleState extends State<PaymentSample> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.dark,
-          statusBarColor: white,
-        ),
-        title: Text(
-          'Продажа',
-          style: TextStyle(color: black),
-        ),
-        leading: IconButton(
-            onPressed: () {
-              Get.back();
-            },
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: black,
-            )),
-        centerTitle: true,
-        backgroundColor: white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DefaultTabController(
-            length: 3,
-            child: TabBar(
-              onTap: (index) {
-                setState(() {
-                  currentIndex = index;
-                });
-              },
-              labelColor: black,
-              indicatorColor: blue,
-              indicatorWeight: 3,
-              labelStyle: TextStyle(
-                  fontSize: 14.0, color: black, fontWeight: FontWeight.w500),
-              unselectedLabelStyle:
-                  TextStyle(fontSize: 14.0, color: Color(0xFF9B9B9B)),
-              // controller: ,
-              tabs: const [
-                Tab(
-                  text: 'Оплата',
-                ),
-                Tab(
-                  text: 'В долг',
-                ),
-                Tab(
-                  text: 'Лояльность',
-                ),
-              ],
-            ),
+    return LoadingLayout(
+      isLoading: loading,
+      body: Scaffold(
+        appBar: AppBar(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.dark,
+            statusBarColor: white,
           ),
-          currentIndex == 0
-              ? Payment(getPayload: setPayload, data: data, setData: setData)
-              : currentIndex == 1
-                  ? OnCredit(getPayload: setPayload, data: data)
-                  : Loyalty(getPayload: setPayload, data: data),
-          Container(
-            margin: EdgeInsets.only(bottom: 70),
-          )
-        ],
-      )),
-      floatingActionButton: Container(
-        margin: EdgeInsets.only(left: 32),
-        width: MediaQuery.of(context).size.width,
-        child: ElevatedButton(
-            onPressed: () {
-              if (currentIndex == 0 && data['change'] > 0) {
-                createCheque();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                primary: data['change'] < 0 ? blue.withOpacity(0.8) : blue),
-            child: Text('ПРИНЯТЬ')),
+          title: Text(
+            'Продажа',
+            style: TextStyle(color: black),
+          ),
+          leading: IconButton(
+              onPressed: () {
+                Get.back();
+              },
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: black,
+              )),
+          centerTitle: true,
+          backgroundColor: white,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DefaultTabController(
+              length: 3,
+              child: TabBar(
+                onTap: (index) {
+                  setState(() {
+                    currentIndex = index;
+                  });
+                },
+                labelColor: black,
+                indicatorColor: blue,
+                indicatorWeight: 3,
+                labelStyle: TextStyle(
+                    fontSize: 14.0, color: black, fontWeight: FontWeight.w500),
+                unselectedLabelStyle:
+                    TextStyle(fontSize: 14.0, color: Color(0xFF9B9B9B)),
+                // controller: ,
+                tabs: const [
+                  Tab(
+                    text: 'Оплата',
+                  ),
+                  Tab(
+                    text: 'В долг',
+                  ),
+                  Tab(
+                    text: 'Лояльность',
+                  ),
+                ],
+              ),
+            ),
+            currentIndex == 0
+                ? Payment(getPayload: setPayload, data: data, setData: setData)
+                : currentIndex == 1
+                    ? OnCredit(getPayload: setPayload, data: data)
+                    : Loyalty(getPayload: setPayload, data: data),
+            Container(
+              margin: EdgeInsets.only(bottom: 70),
+            )
+          ],
+        )),
+        floatingActionButton: Container(
+          margin: EdgeInsets.only(left: 32),
+          width: MediaQuery.of(context).size.width,
+          child: ElevatedButton(
+              onPressed: () {
+                if (currentIndex == 0 && data['change'] >= 0) {
+                  createCheque();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  primary: data['change'] < 0 ? blue.withOpacity(0.8) : blue),
+              child: Text('ПРИНЯТЬ')),
+        ),
       ),
     );
   }
