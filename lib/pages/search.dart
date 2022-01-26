@@ -165,7 +165,7 @@ class _SearchState extends State<Search> {
                               ),
                               Container(
                                 child: Text(
-                                  '${products[i]['price'] != null ? products[i]['price'] : 0} So\'m',
+                                  '${products[i]['salePrice'] != null ? products[i]['salePrice'] : 0} So\'m',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       color: blue,

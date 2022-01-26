@@ -46,6 +46,7 @@ class _OnCreditState extends State<OnCredit> {
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
   final textController2 = TextEditingController();
+  dynamic sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
   dynamic addList = [
     {
       'name': 'Наименование контакта',
@@ -68,6 +69,11 @@ class _OnCreditState extends State<OnCredit> {
       'icon': Icons.comment_outlined,
     },
   ];
+
+  createClient() {
+    print(sendData);
+    // final response = post('/services/desktop/api/clients', sendData);
+  }
 
   getClients() async {
     final response = await get('/services/desktop/api/clients-helper');
@@ -383,55 +389,80 @@ class _OnCreditState extends State<OnCredit> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     for (var i = 0; i < addList.length; i++)
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${addList[i]['name']}',
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: b8),
-                                        ),
-                                        Container(
-                                          margin:
-                                              const EdgeInsets.only(bottom: 10),
-                                          width:
-                                              MediaQuery.of(context).size.width,
-                                          child: TextFormField(
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.isEmpty) {
-                                                return 'Обязательное поле';
-                                              }
-                                            },
-                                            decoration: InputDecoration(
-                                              contentPadding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      10, 15, 10, 10),
-                                              enabledBorder:
-                                                  UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: blue,
-                                                  width: 2,
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${addList[i]['name']}',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: b8),
+                                          ),
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                                bottom: 10),
+                                            width: MediaQuery.of(context)
+                                                .size
+                                                .width,
+                                            child: TextFormField(
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return 'Обязательное поле';
+                                                }
+                                              },
+                                              onChanged: (value) {
+                                                if (i == 0) {
+                                                  setState(() {
+                                                    sendData['name'] = value;
+                                                  });
+                                                }
+                                                if (i == 1) {
+                                                  setState(() {
+                                                    sendData['phone1'] = value;
+                                                  });
+                                                }
+                                                if (i == 2) {
+                                                  setState(() {
+                                                    sendData['phone2'] = value;
+                                                  });
+                                                }
+                                                if (i == 3) {
+                                                  setState(() {
+                                                    sendData['comment'] = value;
+                                                  });
+                                                }
+                                              },
+                                              decoration: InputDecoration(
+                                                contentPadding:
+                                                    const EdgeInsets.fromLTRB(
+                                                        10, 15, 10, 10),
+                                                enabledBorder:
+                                                    UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: blue,
+                                                    width: 2,
+                                                  ),
                                                 ),
-                                              ),
-                                              focusedBorder:
-                                                  UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: blue,
-                                                  width: 2,
+                                                focusedBorder:
+                                                    UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: blue,
+                                                    width: 2,
+                                                  ),
                                                 ),
+                                                suffixIcon:
+                                                    Icon(addList[i]['icon']),
+                                                filled: true,
+                                                fillColor: borderColor,
+                                                focusColor: blue,
                                               ),
-                                              suffixIcon: Icon(addList[i]['icon']),
-                                              filled: true,
-                                              fillColor: borderColor,
-                                              focusColor: blue,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
                                     SizedBox(
                                       height: 5,
                                     ),
@@ -444,11 +475,7 @@ class _OnCreditState extends State<OnCredit> {
                                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      // for (var i = 0; i < content.length; i++) {
-                                      //   if (content[i]['selected']) {
-                                      //     Navigator.pop(context, content[i]);
-                                      //   }
-                                      // }
+                                      createClient();
                                     },
                                     child: Text('Сохранить'),
                                   ),

@@ -142,14 +142,9 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
-    print('${data['transactionsList']}');
-    for (String key in data.keys) {
-      print('$key : ${data[key]}');
-    }
-    var itemList = data['itemsList'][0];
-    for (String key in itemList.keys) {
-      print('$key : ${itemList[key]}');
-    }
+    // for (String key in data.keys) {
+    //   print('$key : ${data[key]}');
+    // }
 
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
@@ -246,14 +241,13 @@ class _PaymentSampleState extends State<PaymentSample> {
         width: MediaQuery.of(context).size.width,
         child: ElevatedButton(
             onPressed: () {
-              if (currentIndex == 0) {
+              if (currentIndex == 0 && data['change'] > 0) {
                 createCheque();
               }
             },
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              // primary: data['change'] < 0 ? blue.withOpacity(0.65) : blue
-            ),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                primary: data['change'] < 0 ? blue.withOpacity(0.8) : blue),
             child: Text('ПРИНЯТЬ')),
       ),
     );

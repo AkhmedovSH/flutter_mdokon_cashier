@@ -8,6 +8,10 @@ import 'pages/splash.dart';
 import 'pages/auth/login.dart';
 import 'pages/auth/cashboxes.dart';
 
+// cheques
+import 'pages/cheques/cheques.dart';
+import 'pages/cheques/cheq_detail.dart';
+
 import 'pages/index.dart';
 import 'pages/search.dart';
 import 'pages/payment/payment_sample.dart';
@@ -45,14 +49,16 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/splash', page: () => const Splash()),
         // Auth
         GetPage(name: '/login', page: () => const Login()),
-        GetPage(name: '/cashboxes', page: () => const CashBoxes ()),
-
+        GetPage(name: '/cashboxes', page: () => const CashBoxes()),
+        // Cheques
+        GetPage(name: '/cheques', page: () => const Cheques()),
+        GetPage(name: '/cheq-detail', page: () => const CheqDetail()),
 
         GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/search', page: () => const Search()),
         GetPage(name: '/payment', page: () => const PaymentSample()),
-        GetPage(name: '/x-report', page: () => const XReport ()),
-        
+        GetPage(name: '/x-report', page: () => const XReport()),
+
         GetPage(name: '/client-debt', page: () => const ClientDebt()),
         GetPage(name: '/sales-on-credit', page: () => const SalesOnCredit()),
         GetPage(name: '/calculator', page: () => const Calculator()),

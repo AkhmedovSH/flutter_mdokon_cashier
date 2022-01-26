@@ -10,7 +10,8 @@ import 'package:kassa/helpers/globals.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.getPayload, this.data, this.setData}) : super(key: key);
+  const Payment({Key? key, this.getPayload, this.data, this.setData})
+      : super(key: key);
   final Function? getPayload;
   final Function? setData;
   final dynamic data;
@@ -36,7 +37,6 @@ class _PaymentState extends State<Payment> {
       textController.text = data['text'];
     });
   }
- 
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +98,11 @@ class _PaymentState extends State<Payment> {
                               widget.setData!(textController, textController2);
                             });
                           }
+                        } else {
+                          setState(() {
+                            data['change'] = 0 - (data['totalPrice']);
+                            widget.setData!(textController, textController2);
+                          });
                         }
                       },
                       decoration: InputDecoration(
@@ -160,6 +165,11 @@ class _PaymentState extends State<Payment> {
                               widget.setData!(textController, textController2);
                             });
                           }
+                        } else {
+                          setState(() {
+                            data['change'] = 0 - (data['totalPrice']);
+                            widget.setData!(textController, textController2);
+                          });
                         }
                       },
                       decoration: InputDecoration(
