@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
@@ -19,7 +18,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  dynamic payload = {'username': 'goblin', 'password': '123'};
+  dynamic payload = {'username': 'united', 'password': '0777'};
   bool showPassword = false;
   bool loading = false;
 

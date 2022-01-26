@@ -12,6 +12,8 @@ import 'pages/auth/cashboxes.dart';
 import 'pages/cheques/cheques.dart';
 import 'pages/cheques/cheq_detail.dart';
 
+import 'pages/return/return.dart';
+
 import 'pages/index.dart';
 import 'pages/search.dart';
 import 'pages/payment/payment_sample.dart';
@@ -53,6 +55,8 @@ class MyApp extends StatelessWidget {
         // Cheques
         GetPage(name: '/cheques', page: () => const Cheques()),
         GetPage(name: '/cheq-detail', page: () => const CheqDetail()),
+
+        GetPage(name: '/return', page: () => const Return()),
 
         GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/search', page: () => const Search()),

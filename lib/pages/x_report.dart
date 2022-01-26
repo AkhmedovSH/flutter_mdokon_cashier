@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -152,58 +151,11 @@ class _XReportState extends State<XReport> {
                   softWrap: false,
                 ),
               ),
-              Table(columnWidths: const {
-                0: FlexColumnWidth(5),
-                1: FlexColumnWidth(3),
-                2: FlexColumnWidth(3),
-              }, children: [
-                TableRow(children: [
-                  Container(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text('№ Товар',
-                        style:
-                            TextStyle(fontWeight: FontWeight.bold, color: b8)),
-                  ),
-                  Container(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text('Кол-во',
-                        style:
-                            TextStyle(fontWeight: FontWeight.bold, color: b8)),
-                  ),
-                  Container(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text('Цена',
-                        textAlign: TextAlign.end,
-                        style:
-                            TextStyle(fontWeight: FontWeight.bold, color: b8)),
-                  ),
-                ]),
-                for (var i = 0; i < reportList.length; i++)
-                  TableRow(children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        '${i + 1} ${reportList[i]['productName']}',
-                        style: TextStyle(color: b8),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        '${reportList[i]['quantity']} * ${reportList[i]['salePrice']}',
-                        style: TextStyle(color: b8),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        '${reportList[i]['totalPrice']}',
-                        textAlign: TextAlign.end,
-                        style: TextStyle(color: b8),
-                      ),
-                    ),
-                  ])
-              ]),
+              for (var i = 0; i < reportList.length; i++)
+              reportList[i]['amountIn'] != 0 ? 
+              buildRow('${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Приход (${reportList[i]['currencyName']}) ', reportList[i]['amountIn'])
+              :
+              buildRow('${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Расход (${reportList[i]['currencyName']}) ', reportList[i]['amountOut']),
               Container(
                 margin: EdgeInsets.symmetric(vertical: 5),
                 child: Text(

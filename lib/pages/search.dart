@@ -67,7 +67,7 @@ class _SearchState extends State<Search> {
                     children: [
                       Expanded(
                         flex: 6,
-                        child: Container(
+                        child: SizedBox(
                           height: 35,
                           child: TextField(
                             decoration: InputDecoration(
@@ -163,7 +163,7 @@ class _SearchState extends State<Search> {
                                   ),
                                 ],
                               ),
-                              Container(
+                              SizedBox(
                                 child: Text(
                                   '${products[i]['salePrice'] != null ? products[i]['salePrice'] : 0} So\'m',
                                   style: TextStyle(

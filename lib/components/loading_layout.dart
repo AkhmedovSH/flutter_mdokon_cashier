@@ -1,13 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../helpers/globals.dart';
-import '../../helpers/api.dart';
 
 class LoadingLayout extends StatefulWidget {
   const LoadingLayout({Key? key, this.isLoading, this.body}) : super(key: key);

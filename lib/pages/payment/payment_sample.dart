@@ -229,8 +229,8 @@ class _PaymentSampleState extends State<PaymentSample> {
           currentIndex == 0
               ? Payment(getPayload: setPayload, data: data, setData: setData)
               : currentIndex == 1
-                  ? OnCredit(getPayload: setPayload)
-                  : Loyalty(getPayload: setPayload),
+                  ? OnCredit(getPayload: setPayload, data: data)
+                  : Loyalty(getPayload: setPayload, data: data),
           Container(
             margin: EdgeInsets.only(bottom: 70),
           )

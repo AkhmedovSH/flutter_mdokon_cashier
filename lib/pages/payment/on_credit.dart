@@ -1,11 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key, this.getPayload}) : super(key: key);
+  const OnCredit({Key? key, this.getPayload, this.data}) : super(key: key);
+  final dynamic data;
   final Function? getPayload;
 
   @override
@@ -15,34 +15,8 @@ class OnCredit extends StatefulWidget {
 class _OnCreditState extends State<OnCredit> {
   dynamic clients = [];
   dynamic products = Get.arguments;
-  dynamic data = {
-    "cashboxVersion": '',
-    "login": '',
-    "cashboxId": '',
-    "change": 0,
-    "chequeDate": 0,
-    "chequeNumber": "",
-    "clientAmount": 0,
-    "clientComment": "",
-    "clientId": 0,
-    "currencyId": '',
-    "currencyRate": 0,
-    "discount": 0,
-    "note": "",
-    "offline": false,
-    "outType": false,
-    "paid": 0,
-    "posId": '',
-    "saleCurrencyId": '',
-    "shiftId": '',
-    "totalPriceBeforeDiscount": 0,
-    "totalPrice": 0,
-    "transactionId": "",
-    "itemsList": [],
-    "transactionsList": []
-  };
+  dynamic data = {};
   dynamic client = {'name': 'КЛИЕНТ'};
-  Timer? _debounce;
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
   final textController2 = TextEditingController();
@@ -52,21 +26,25 @@ class _OnCreditState extends State<OnCredit> {
       'name': 'Наименование контакта',
       'value': '',
       'icon': Icons.person,
+      'keyboardType': TextInputType.text
     },
     {
       'name': 'Телефон',
       'value': '',
       'icon': Icons.phone,
+      'keyboardType': TextInputType.number
     },
     {
       'name': 'Телефон',
       'value': '',
       'icon': Icons.phone,
+      'keyboardType': TextInputType.number
     },
     {
       'name': 'Комментарий',
       'value': '',
       'icon': Icons.comment_outlined,
+      'keyboardType': TextInputType.text
     },
   ];
 
@@ -99,11 +77,6 @@ class _OnCreditState extends State<OnCredit> {
       }
     });
 
-    // if (_debounce?.isActive ?? false) _debounce!.cancel();
-    // _debounce = Timer(const Duration(milliseconds: 500), () {
-    // });
-
-    print(_searchList);
     setState(() {
       clients = _searchList;
     });
@@ -113,12 +86,12 @@ class _OnCreditState extends State<OnCredit> {
   @override
   void initState() {
     super.initState();
-    print(Get.arguments);
     dynamic totalAmount = 0;
     for (var i = 0; i < products.length; i++) {
       totalAmount += products[i]['total_amount'];
     }
     setState(() {
+      data = widget.data!;
       data['totalPrice'] = totalAmount.round();
       data['change'] = 0;
       data['paid'] = totalAmount.round();
@@ -242,14 +215,10 @@ class _OnCreditState extends State<OnCredit> {
                                     ),
                                     Table(
                                         border: TableBorder(
-                                            verticalInside: BorderSide(
-                                                width: 0,
-                                                color: Colors.transparent),
                                             horizontalInside: BorderSide(
                                                 width: 1,
                                                 color: Color(0xFFDADADa),
-                                                style: BorderStyle
-                                                    .solid)), // Allows to add a border decoration around your table
+                                                style: BorderStyle.solid)),
                                         children: [
                                           TableRow(children: const [
                                             Text(
@@ -435,6 +404,7 @@ class _OnCreditState extends State<OnCredit> {
                                                   });
                                                 }
                                               },
+                                              keyboardType: addList[i]['keyboardType'],
                                               decoration: InputDecoration(
                                                 contentPadding:
                                                     const EdgeInsets.fromLTRB(

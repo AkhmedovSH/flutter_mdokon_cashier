@@ -15,10 +15,9 @@ class _CalculatorState extends State<Calculator> {
   dynamic prevProduct = {};
 
   increment(number) {
-    final validCharacters = RegExp(r'^[\d.]');
-    final regEx = RegExp(r"\d+([\.]\d+)?");
-    print(regEx.hasMatch(product['quantity']));
-    if (number == '.' && validCharacters.hasMatch(product['quantity'])) {
+    final validCharacters2 = RegExp(r'^\d+(\.\d+)*$');
+    print(validCharacters2.hasMatch(product['quantity']));
+    if (number == '.' && !validCharacters2.hasMatch(product['quantity'])) {
       return;
     }
     if (product['quantity'] != 0) {
