@@ -15,7 +15,12 @@ class _CalculatorState extends State<Calculator> {
   dynamic prevProduct = {};
 
   increment(number) {
-    print(product['quantity'] == 0);
+    final validCharacters = RegExp(r'^[\d.]');
+    final regEx = RegExp(r"\d+([\.]\d+)?");
+    print(regEx.hasMatch(product['quantity']));
+    if (number == '.' && validCharacters.hasMatch(product['quantity'])) {
+      return;
+    }
     if (product['quantity'] != 0) {
       setState(() {
         product['quantity'] = product['quantity'].toString() + number;
@@ -28,13 +33,10 @@ class _CalculatorState extends State<Calculator> {
   }
 
   _delete() {
-    print(product['quantity'].runtimeType == String);
     if (product['quantity'].runtimeType == String) {
-      print(int.parse(product['quantity']) > 1);
       if ((product['quantity']).length > 1) {
         String string = product['quantity'].toString();
         string = string.substring(0, string.length - 1);
-        //print(string);
         setState(() {
           product['quantity'] = string;
         });
@@ -48,7 +50,6 @@ class _CalculatorState extends State<Calculator> {
     if ((product['quantity']) > 1) {
       String string = product['quantity'].toString();
       string = string.substring(0, string.length - 1);
-      //print(string);
       setState(() {
         product['quantity'] = string;
       });
@@ -64,6 +65,7 @@ class _CalculatorState extends State<Calculator> {
     super.initState();
     final product = Get.arguments;
     setState(() {
+      product['quantity'] = product['quantity'].toString();
       prevProduct = product;
     });
   }

@@ -52,10 +52,11 @@ Future guestPost(String url, dynamic payload) async {
     return response.data;
   } on DioError catch (e) {
     if (e.response?.statusCode == 400) {
+      print(e.response?.statusCode);
       return;
     }
     if (e.response?.statusCode == 401) {
-      print(111);
+      print(e.response?.statusCode);
     }
   }
 }
