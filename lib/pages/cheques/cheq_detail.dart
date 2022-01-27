@@ -246,7 +246,9 @@ class _CheqDetailState extends State<CheqDetail> {
                     style: TextStyle(color: b8, fontSize: 16),
                   ),
                 ),
-                SizedBox(height: 70,)
+                SizedBox(
+                  height: 70,
+                )
               ],
             ),
           ),
@@ -261,8 +263,7 @@ class _CheqDetailState extends State<CheqDetail> {
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14)
-              ),
+                  padding: EdgeInsets.symmetric(vertical: 14)),
               child: Text('ПЕЧАТЬ'),
             ),
           ),
@@ -270,12 +271,11 @@ class _CheqDetailState extends State<CheqDetail> {
             width: MediaQuery.of(context).size.width * 0.43,
             child: ElevatedButton(
               onPressed: () {
-                Get.offAllNamed('/return', arguments: cheq['id']);
+                Get.offAllNamed('/return', arguments: cheq['chequeNumber']);
               },
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                primary: Color(0xFFf46a6a)
-              ),
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  primary: Color(0xFFf46a6a)),
               child: Text('ВОЗВРАТ'),
             ),
           ),

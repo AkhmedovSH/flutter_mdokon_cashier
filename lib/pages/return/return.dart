@@ -20,11 +20,12 @@ class Return extends StatefulWidget {
 class _ReturnState extends State<Return> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic itemsList = [];
+  dynamic returnedList = [];
   dynamic id = 0;
   dynamic data = {'cashierName': 'Фамилия И.О.', 'chequeNumber': '000000'};
   dynamic sendData = {
     'actionDate': 0,
-    'cashboxId': 'cashbox.cashboxId',
+    'cashboxId': '',
     'chequeId': 0,
     'clientAmount': 0,
     'clientId': 0,
@@ -33,8 +34,8 @@ class _ReturnState extends State<Return> {
     'itemsList': [],
     'note': "",
     'offline': false,
-    'posId': 'cashbox.posId',
-    'shiftId': 'cashbox.id ? cashbox.id : shift.id',
+    'posId': '',
+    'shiftId': '',
     'totalAmount': 0,
     'transactionId': "",
     'transactionsList': [
@@ -61,6 +62,12 @@ class _ReturnState extends State<Return> {
         itemsList[i]['discount'] = itemsList[i]['discount'].round();
       }
     }
+  }
+
+  addToReturnList(item) {
+    setState(() {
+      sendData['itemsList'].add(item);
+    });
   }
 
   getData() async {
@@ -284,8 +291,8 @@ class _ReturnState extends State<Return> {
                             TableRow(children: [
                               // HERE IT IS...
                               TableRowInkWell(
-                                onTap: () {
-                                  print('tab');
+                                onDoubleTap: () {
+                                  addToReturnList(itemsList[i]);
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -296,24 +303,29 @@ class _ReturnState extends State<Return> {
                                 ),
                               ),
                               TableRowInkWell(
-                                onTap: () {
-                                  print('tab');
+                                onDoubleTap: () {
+                                  addToReturnList(itemsList[i]);
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: int.parse(itemsList[i]['discount']) > 0
+                                  child: (itemsList[i]['discount']) > 0 
                                       ? Text(
                                           '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
                                           style: TextStyle(
                                               color: Color(0xFF495057)),
                                           textAlign: TextAlign.center,
                                         )
-                                      : Text('data'),
+                                      : Text(
+                                          '${itemsList[i]['salePrice']}',
+                                          style: TextStyle(
+                                              color: Color(0xFF495057)),
+                                          textAlign: TextAlign.center,
+                                        ),
                                 ),
                               ),
                               TableRowInkWell(
                                 onDoubleTap: () {
-                                  print('tab');
+                                  addToReturnList(itemsList[i]);
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -326,12 +338,12 @@ class _ReturnState extends State<Return> {
                               ),
                               TableRowInkWell(
                                 onDoubleTap: () {
-                                  print('tab');
+                                  addToReturnList(itemsList[i]);
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    'data',
+                                    '${itemsList[i]['totalPrice']}',
                                     style: TextStyle(color: Color(0xFF495057)),
                                     textAlign: TextAlign.end,
                                   ),
@@ -342,7 +354,142 @@ class _ReturnState extends State<Return> {
                       )
                     ],
                   ),
-                ))
+                )),
+            Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                    border: Border(
+                  bottom: BorderSide(color: Color(0xFFced4da), width: 1),
+                )),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(4),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(3),
+                        },
+                        border: TableBorder(
+                          horizontalInside: BorderSide(
+                              width: 1,
+                              color: Color(0xFFDADADa),
+                              style: BorderStyle.solid),
+                        ),
+                        children: [
+                          TableRow(children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Наименование товара',
+                                style: TextStyle(
+                                    color: Color(0xFF495057),
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Цена со скидкой',
+                                style: TextStyle(
+                                    color: Color(0xFF495057),
+                                    fontWeight: FontWeight.w500),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Кол-во возврата',
+                                style: TextStyle(
+                                    color: Color(0xFF495057),
+                                    fontWeight: FontWeight.w500),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'Сумма оплаты',
+                                style: TextStyle(
+                                    color: Color(0xFF495057),
+                                    fontWeight: FontWeight.w500),
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
+                          ]),
+                          for (var i = 0; i < sendData['itemsList'].length; i++)
+                            TableRow(children: [
+                              // HERE IT IS...
+                              TableRowInkWell(
+                                onTap: () {
+                                  addToReturnList(itemsList[i]);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    '${sendData['itemsList'][i]['productName']} ',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                  ),
+                                ),
+                              ),
+                              TableRowInkWell(
+                                onTap: () {
+                                  addToReturnList(itemsList[i]);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child:
+                                      (sendData['itemsList'][i]['discount']) > 0
+                                          ? Text(
+                                              '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                              style: TextStyle(
+                                                  color: Color(0xFF495057)),
+                                              textAlign: TextAlign.center,
+                                            )
+                                          : Text(
+                                              '${sendData['itemsList'][i]['salePrice']}',
+                                              style: TextStyle(
+                                                  color: Color(0xFF495057)),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                ),
+                              ),
+                              TableRowInkWell(
+                                onDoubleTap: () {
+                                  addToReturnList(sendData['itemsList'][i]);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    '${sendData['itemsList'][i]['quantity']}',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              TableRowInkWell(
+                                onDoubleTap: () {
+                                  addToReturnList(sendData['itemsList'][i]);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    '${sendData['itemsList'][i]['totalPrice']}',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ),
+                            ]),
+                        ],
+                      )
+                    ],
+                  ),
+                )),
           ],
         ),
       ),
