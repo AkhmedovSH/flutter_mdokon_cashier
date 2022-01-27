@@ -61,9 +61,11 @@ class _ChequesState extends State<Cheques> {
         cheques = response;
       });
     } else {
-      setState(() {
-        cheques = [];
-      });
+      if (mounted) {
+        setState(() {
+          cheques = [];
+        });
+      }
     }
   }
 
@@ -435,7 +437,8 @@ class _ChequesState extends State<Cheques> {
                         TableRow(children: [
                           GestureDetector(
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.toNamed('/cheq-detail',
+                                  arguments: cheques[i]['id']);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 12),
@@ -445,7 +448,8 @@ class _ChequesState extends State<Cheques> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.toNamed('/cheq-detail',
+                                  arguments: cheques[i]['id']);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 12),
@@ -457,7 +461,8 @@ class _ChequesState extends State<Cheques> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.toNamed('/cheq-detail',
+                                  arguments: cheques[i]['id']);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 12),

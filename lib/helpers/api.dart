@@ -24,7 +24,7 @@ Future get(String url, {payload}) async {
     return response.data;
   } on DioError catch (e) {
     print(e.response?.statusCode);
-    return statuscheker(e, url);
+    return statuscheker(e, url, payload: payload);
   }
 }
 
@@ -64,11 +64,9 @@ Future guestPost(String url, dynamic payload) async {
   }
 }
 
-statuscheker(e, url) async {
+statuscheker(e, url, {payload}) async {
   if (e.response?.statusCode == 401) {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('username'));
-    print(prefs.getString('password'));
     final data = await guestPost('/auth/login', {
       'username': prefs.getString('username'),
       'password': prefs.getString('password'),
@@ -84,18 +82,18 @@ statuscheker(e, url) async {
     }
     if (checker == true) {
       prefs.setString('user_roles', account['authorities'].toString());
-      getAccessPos(url);
+      await getAccessPos(url, payload);
     }
   }
 }
 
-getAccessPos(url) async {
+getAccessPos(url, payload) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final response = await get('/services/desktop/api/get-access-pos');
   if (response['openShift']) {
     prefs.remove('shift');
     prefs.setString('cashbox', jsonEncode(response['shift']));
-    get(url);
+    get(url, payload: payload);
   } else {
     Get.offAllNamed('/cashboxes', arguments: response['posList']);
   }

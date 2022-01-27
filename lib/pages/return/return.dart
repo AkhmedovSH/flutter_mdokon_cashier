@@ -19,9 +19,10 @@ class Return extends StatefulWidget {
 
 class _ReturnState extends State<Return> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _validate = false;
   dynamic itemsList = [];
   dynamic returnedList = [];
-  dynamic id = 0;
+  dynamic search = 0;
   dynamic data = {'cashierName': 'Фамилия И.О.', 'chequeNumber': '000000'};
   dynamic sendData = {
     'actionDate': 0,
@@ -43,14 +44,14 @@ class _ReturnState extends State<Return> {
     ]
   };
 
-  searchCheq() async {
+  searchCheq(id) async {
     dynamic response;
     if (id != null) {
       response = await get(
           '/services/desktop/api/cheque-byNumber/$id/${sendData['posId']}');
     } else {
       response = await get(
-          '/services/desktop/api/cheque-byNumber/$id/${sendData['posId']}');
+          '/services/desktop/api/cheque-byNumber/$search/${sendData['posId']}');
     }
     if (response['id'] != null) {
       setState(() {
@@ -64,10 +65,41 @@ class _ReturnState extends State<Return> {
     }
   }
 
-  addToReturnList(item) {
+  addToReturnList(item, index) {
+    item['controller'] = TextEditingController();
+    item['controller'].text = item['quantity'].toString();
+    item['errorText'] = '';
     setState(() {
+      itemsList.removeAt(index);
       sendData['itemsList'].add(item);
     });
+  }
+
+  addToItemsList(item, index) {
+    setState(() {
+      sendData['itemsList'].removeAt(index);
+      itemsList.add(item);
+    });
+    dynamic totalAmount = 0;
+    for (var i = 0; i < sendData['itemsList']; i++) {
+      totalAmount += sendData['itemsList'][i]['salePrice'];
+    }
+    setState(() {
+      sendData['totalAmount'] = totalAmount;
+    });
+  }
+
+  validate(payload, i) {
+    if (payload['errorText'] == '') {
+      setState(() {
+        sendData['itemsList'][i]['validate'] = 'Неверное количество '; 
+      });
+      return 'Неверное количество';
+    }
+    if (payload['errorText'] > payload['quantity']) {
+      return 'Не больше ${payload['quantity']} ';
+    }
+    return null;
   }
 
   getData() async {
@@ -83,12 +115,9 @@ class _ReturnState extends State<Return> {
       sendData['posId'] = cashbox['posId'];
       sendData['shiftId'] = shiftId;
     });
-    print(Get.arguments);
     if (Get.arguments != null) {
-      setState(() {
-        id = Get.arguments;
-      });
-      searchCheq();
+      final id = Get.arguments;
+      searchCheq(id);
     }
   }
 
@@ -101,398 +130,528 @@ class _ReturnState extends State<Return> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.light,
-          statusBarColor: blue, // Status bar
+        key: _scaffoldKey,
+        appBar: AppBar(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.light,
+            statusBarColor: blue, // Status bar
+          ),
+          bottomOpacity: 0.0,
+          title: Text(
+            'Возврат',
+            style: TextStyle(color: white),
+          ),
+          centerTitle: true,
+          backgroundColor: blue,
+          elevation: 0,
+          // centerTitle: true,
+          leading: IconButton(
+            onPressed: () {
+              _scaffoldKey.currentState!.openDrawer();
+            },
+            icon: Icon(Icons.menu, color: white),
+          ),
         ),
-        bottomOpacity: 0.0,
-        title: Text(
-          'Возврат',
-          style: TextStyle(color: white),
+        drawer: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.70,
+          child: const DrawerAppBar(),
         ),
-        centerTitle: true,
-        backgroundColor: blue,
-        elevation: 0,
-        // centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
-          icon: Icon(Icons.menu, color: white),
-        ),
-      ),
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.70,
-        child: const DrawerAppBar(),
-      ),
-      body: Container(
-        margin: EdgeInsets.only(top: 10, left: 8, right: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        body: SingleChildScrollView(
+          child: Container(
+            margin: EdgeInsets.only(top: 10, left: 8, right: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.7,
-                  margin: EdgeInsets.only(bottom: 10),
-                  height: 40,
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        id = value;
-                      });
-                    },
-                    onSubmitted: (value) {
-                      searchCheq();
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.only(top: 5, left: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFFced4da),
-                          width: 2,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      margin: EdgeInsets.only(bottom: 10),
+                      height: 40,
+                      child: TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            search = value;
+                          });
+                        },
+                        onSubmitted: (value) {
+                          searchCheq(null);
+                        },
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.only(top: 5, left: 10),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0xFFced4da),
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0xFFced4da),
+                              width: 2,
+                            ),
+                          ),
+                          hintText: 'Поиск',
+                          filled: true,
+                          fillColor: white,
+                          focusColor: blue,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFFced4da),
-                          width: 2,
-                        ),
-                      ),
-                      hintText: 'Поиск',
-                      filled: true,
-                      fillColor: white,
-                      focusColor: blue,
                     ),
-                  ),
+                    Container(
+                      margin: EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width * 0.23,
+                      height: 40,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          searchCheq(null);
+                        },
+                        child: Text('Поиск'),
+                      ),
+                    )
+                  ],
                 ),
                 Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  width: MediaQuery.of(context).size.width * 0.23,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      searchCheq();
-                    },
-                    child: Text('Поиск'),
-                  ),
-                )
-              ],
-            ),
-            Container(
-                height: MediaQuery.of(context).size.height * 0.3,
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                    border: Border(
-                  bottom: BorderSide(color: Color(0xFFced4da), width: 1),
-                )),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(bottom: 5),
-                        child: Text(
-                          'Кассовый чек №: ${data['chequeNumber']}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                              color: b8),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Дата: ',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: b8),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(right: 20),
-                              child: Text(
-                                '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
-                                style: TextStyle(color: b8),
-                              ),
-                            ),
-                            Text(
-                              'Кассир: ',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: b8),
-                            ),
-                            Text(
-                              '${data['cashierName']}',
-                              style: TextStyle(color: b8),
-                            )
-                          ],
-                        ),
-                      ),
-                      Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(4),
-                          1: FlexColumnWidth(3),
-                          2: FlexColumnWidth(2),
-                          3: FlexColumnWidth(3),
-                        },
-                        border: TableBorder(
-                          horizontalInside: BorderSide(
-                              width: 1,
-                              color: Color(0xFFDADADa),
-                              style: BorderStyle.solid),
-                        ),
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                        border: Border(
+                      bottom: BorderSide(color: Color(0xFFced4da), width: 1),
+                    )),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TableRow(children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Наименование товара',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                              ),
+                          Container(
+                            margin: EdgeInsets.only(bottom: 5),
+                            child: Text(
+                              'Кассовый чек №: ${data['chequeNumber']}',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: b8),
                             ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Цена со скидкой',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Кол-во',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Сумма оплаты',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.end,
-                              ),
-                            ),
-                          ]),
-                          for (var i = 0; i < itemsList.length; i++)
-                            TableRow(children: [
-                              // HERE IT IS...
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Дата: ',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, color: b8),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.only(right: 20),
                                   child: Text(
-                                    '${itemsList[i]['productName']} ',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                                    '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
+                                    style: TextStyle(color: b8),
                                   ),
                                 ),
-                              ),
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: (itemsList[i]['discount']) > 0 
-                                      ? Text(
-                                          '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                          style: TextStyle(
-                                              color: Color(0xFF495057)),
-                                          textAlign: TextAlign.center,
-                                        )
-                                      : Text(
-                                          '${itemsList[i]['salePrice']}',
-                                          style: TextStyle(
-                                              color: Color(0xFF495057)),
-                                          textAlign: TextAlign.center,
-                                        ),
+                                Text(
+                                  'Кассир: ',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, color: b8),
                                 ),
-                              ),
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
+                                Text(
+                                  '${data['cashierName']}',
+                                  style: TextStyle(color: b8),
+                                )
+                              ],
+                            ),
+                          ),
+                          Table(
+                            columnWidths: const {
+                              0: FlexColumnWidth(4),
+                              1: FlexColumnWidth(3),
+                              2: FlexColumnWidth(2),
+                              3: FlexColumnWidth(3),
+                            },
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                  width: 1,
+                                  color: Color(0xFFDADADa),
+                                  style: BorderStyle.solid),
+                            ),
+                            children: [
+                              TableRow(children: [
+                                Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    '${itemsList[i]['quantity']}',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                                    'Наименование товара',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Цена со скидкой',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ),
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
+                                Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    '${itemsList[i]['totalPrice']}',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                                    'Кол-во',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Сумма оплаты',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.end,
                                   ),
                                 ),
-                              ),
-                            ]),
-                        ],
-                      )
-                    ],
-                  ),
-                )),
-            Container(
-                height: MediaQuery.of(context).size.height * 0.3,
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                    border: Border(
-                  bottom: BorderSide(color: Color(0xFFced4da), width: 1),
-                )),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(4),
-                          1: FlexColumnWidth(3),
-                          2: FlexColumnWidth(2),
-                          3: FlexColumnWidth(3),
-                        },
-                        border: TableBorder(
-                          horizontalInside: BorderSide(
-                              width: 1,
-                              color: Color(0xFFDADADa),
-                              style: BorderStyle.solid),
-                        ),
-                        children: [
-                          TableRow(children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Наименование товара',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Цена со скидкой',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Кол-во возврата',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Сумма оплаты',
-                                style: TextStyle(
-                                    color: Color(0xFF495057),
-                                    fontWeight: FontWeight.w500),
-                                textAlign: TextAlign.end,
-                              ),
-                            ),
-                          ]),
-                          for (var i = 0; i < sendData['itemsList'].length; i++)
-                            TableRow(children: [
-                              // HERE IT IS...
-                              TableRowInkWell(
-                                onTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    '${sendData['itemsList'][i]['productName']} ',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                              ]),
+                              for (var i = 0; i < itemsList.length; i++)
+                                TableRow(children: [
+                                  // HERE IT IS...
+                                  TableRowInkWell(
+                                    onDoubleTap: () {
+                                      addToReturnList(itemsList[i], i);
+                                    },
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Text(
+                                        '${itemsList[i]['productName']} ',
+                                        style:
+                                            TextStyle(color: Color(0xFF495057)),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              TableRowInkWell(
-                                onTap: () {
-                                  addToReturnList(itemsList[i]);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child:
-                                      (sendData['itemsList'][i]['discount']) > 0
+                                  TableRowInkWell(
+                                    onDoubleTap: () {
+                                      addToReturnList(itemsList[i], i);
+                                    },
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: (itemsList[i]['discount']) > 0
                                           ? Text(
-                                              '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                              '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
                                               style: TextStyle(
                                                   color: Color(0xFF495057)),
                                               textAlign: TextAlign.center,
                                             )
                                           : Text(
-                                              '${sendData['itemsList'][i]['salePrice']}',
+                                              '${itemsList[i]['salePrice']}',
                                               style: TextStyle(
                                                   color: Color(0xFF495057)),
                                               textAlign: TextAlign.center,
                                             ),
-                                ),
-                              ),
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(sendData['itemsList'][i]);
-                                },
-                                child: Container(
+                                    ),
+                                  ),
+                                  TableRowInkWell(
+                                    onDoubleTap: () {
+                                      addToReturnList(itemsList[i], i);
+                                    },
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Text(
+                                        '${itemsList[i]['quantity']}',
+                                        style:
+                                            TextStyle(color: Color(0xFF495057)),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  TableRowInkWell(
+                                    onDoubleTap: () {
+                                      addToReturnList(itemsList[i], i);
+                                    },
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Text(
+                                        '${itemsList[i]['totalPrice']}',
+                                        style:
+                                            TextStyle(color: Color(0xFF495057)),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                            ],
+                          )
+                        ],
+                      ),
+                    )),
+                Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                        border: Border(
+                      bottom: BorderSide(color: Color(0xFFced4da), width: 1),
+                    )),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Table(
+                            defaultVerticalAlignment:
+                                TableCellVerticalAlignment.middle,
+                            columnWidths: const {
+                              0: FixedColumnWidth(130.0),
+                              1: FlexColumnWidth(3),
+                              2: FlexColumnWidth(2),
+                              3: FlexColumnWidth(3),
+                            },
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                  width: 1,
+                                  color: Color(0xFFDADADa),
+                                  style: BorderStyle.solid),
+                            ),
+                            children: [
+                              TableRow(children: [
+                                Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    '${sendData['itemsList'][i]['quantity']}',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                                    'Наименование товара',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Цена со скидкой',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ),
-                              TableRowInkWell(
-                                onDoubleTap: () {
-                                  addToReturnList(sendData['itemsList'][i]);
-                                },
-                                child: Container(
+                                Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    '${sendData['itemsList'][i]['totalPrice']}',
-                                    style: TextStyle(color: Color(0xFF495057)),
+                                    'Кол-во возврата',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Сумма оплаты',
+                                    style: TextStyle(
+                                        color: Color(0xFF495057),
+                                        fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.end,
                                   ),
                                 ),
-                              ),
-                            ]),
+                              ]),
+                              for (var i = 0;
+                                  i < sendData['itemsList'].length;
+                                  i++)
+                                TableRow(children: [
+                                  // HERE IT IS...
+                                  Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Container(
+                                        height: 25,
+                                        width: 50,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              margin: EdgeInsets.only(left: 5),
+                                              child: IconButton(
+                                                  onPressed: () {
+                                                    addToItemsList(
+                                                        sendData['itemsList']
+                                                            [i],
+                                                        i);
+                                                  },
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: BoxConstraints(),
+                                                  icon: Icon(
+                                                    Icons.arrow_back_ios,
+                                                    size: 16,
+                                                  )),
+                                            ),
+                                            SizedBox(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.25,
+                                              child: Text(
+                                                '${sendData['itemsList'][i]['productName']} ',
+                                                style: TextStyle(
+                                                    color: Color(0xFF495057)),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      )),
+
+                                  Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: (sendData['itemsList'][i]
+                                                  ['discount']) >
+                                              0
+                                          ? Container(
+                                              height: 25,
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                                style: TextStyle(
+                                                    color: Color(0xFF495057)),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            )
+                                          : Container(
+                                              height: 25,
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                '${sendData['itemsList'][i]['salePrice']}',
+                                                style: TextStyle(
+                                                    color: Color(0xFF495057)),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            )),
+                                  Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Container(
+                                        height: 25,
+                                        child: TextFormField(
+                                          textAlign: TextAlign.center,
+                                          controller: sendData['itemsList'][i]
+                                              ['controller'],
+                                          onChanged: (value) {
+                                            setState(() {
+                                              sendData['itemsList'][i]
+                                                  ['errorText'] = value;
+                                            });
+                                            validate(
+                                                sendData['itemsList'][i], i);
+                                          },
+                                          decoration: InputDecoration(
+                                            enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Color.fromRGBO(
+                                                        0, 0, 0, 0.2))),
+                                            focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Color.fromRGBO(
+                                                        0, 0, 0, 0.2))),
+                                            errorBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Color.fromRGBO(
+                                                        0, 0, 0, 0.2))),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 0,
+                                                    horizontal: 12),
+                                            errorText: sendData['itemsList'][i]['validate'] == 0
+                                                ? 'Username Can\'t Be Empty'
+                                                : null,
+                                          ),
+                                        ),
+                                      )),
+                                  Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
+                                      child: Container(
+                                        height: 25,
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          '${sendData['itemsList'][i]['totalPrice']}',
+                                          style: TextStyle(
+                                              color: Color(0xFF495057)),
+                                          textAlign: TextAlign.end,
+                                        ),
+                                      )),
+                                ]),
+                            ],
+                          )
                         ],
-                      )
-                    ],
-                  ),
-                )),
-          ],
+                      ),
+                    )),
+              ],
+            ),
+          ),
         ),
-      ),
-    );
+        // resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
+        floatingActionButton: Container(
+          margin: EdgeInsets.only(left: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'К ВЫПЛАТЕ:',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '0',
+                          style: TextStyle(
+                              color: blue,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'сум',
+                          style: TextStyle(
+                              color: blue,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 18),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                        primary: red,
+                        padding: EdgeInsets.symmetric(vertical: 12)),
+                    child: Text(
+                      'Осуществить возврат',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    )),
+              )
+            ],
+          ),
+        ));
   }
 }
