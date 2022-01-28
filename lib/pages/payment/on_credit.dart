@@ -4,9 +4,10 @@ import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key, this.getPayload, this.data}) : super(key: key);
+  const OnCredit({Key? key, this.getPayload, this.data, this.setData}) : super(key: key);
   final dynamic data;
   final Function? getPayload;
+  final Function? setData;
 
   @override
   _OnCreditState createState() => _OnCreditState();
@@ -96,7 +97,7 @@ class _OnCreditState extends State<OnCredit> {
       data['change'] = 0;
       data['paid'] = totalAmount.round();
     });
-    textController.text = data['totalPrice'].toString();
+    // textController.text = data['totalPrice'].toString();
   }
 
   @override
@@ -326,9 +327,15 @@ class _OnCreditState extends State<OnCredit> {
                           });
                         });
                     print(result);
-                    setState(() {
-                      client = result;
-                    });
+                    if (result != null) {
+                      setState(() {
+                        client = result;
+                      });
+                      print(client);
+                      widget.getPayload!('clientName', client['name']);
+                      widget.getPayload!('clientId', client['id']);
+                      widget.getPayload!('clientComment', client['comment']);
+                    }
                   },
                   style: ElevatedButton.styleFrom(primary: Color(0xFFf1b44c)),
                   child: Text('Выбрать'),
@@ -539,7 +546,6 @@ class _OnCreditState extends State<OnCredit> {
                             }
                           },
                           onChanged: (value) {
-                            // textController.text = value;
                             if (value.length > 0) {
                               if (textController2.text.length > 0) {
                                 setState(() {
@@ -555,6 +561,7 @@ class _OnCreditState extends State<OnCredit> {
                                           (data['totalPrice']);
                                 });
                               }
+                              widget.setData!(textController.text, textController2.text);
                             }
                           },
                           decoration: InputDecoration(
@@ -616,6 +623,7 @@ class _OnCreditState extends State<OnCredit> {
                                           (data['totalPrice']);
                                 });
                               }
+                              widget.setData!(textController.text, textController2.text);
                             }
                           },
                           decoration: InputDecoration(

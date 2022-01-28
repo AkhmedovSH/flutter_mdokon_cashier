@@ -83,20 +83,20 @@ class _PaymentState extends State<Payment> {
                               data['change'] = (int.parse(textController.text) +
                                       int.parse(textController2.text)) -
                                   (data['totalPrice']);
-                              widget.setData!(textController, textController2);
+                              widget.setData!(textController.text, textController2.text);
                             });
                           } else {
                             setState(() {
                               data['change'] =
                                   (int.parse(textController.text)) -
                                       (data['totalPrice']);
-                              widget.setData!(textController, textController2);
+                              widget.setData!(textController.text, textController2.text);
                             });
                           }
                         } else {
                           setState(() {
                             data['change'] = 0 - (data['totalPrice']);
-                            widget.setData!(textController, textController2);
+                            widget.setData!(textController.text, textController2.text);
                           });
                         }
                       },
@@ -150,20 +150,20 @@ class _PaymentState extends State<Payment> {
                               data['change'] = (int.parse(textController.text) +
                                       int.parse(textController2.text)) -
                                   (data['totalPrice']);
-                              widget.setData!(textController, textController2);
+                              widget.setData!(textController.text, textController2.text);
                             });
                           } else {
                             setState(() {
                               data['change'] =
                                   (int.parse(textController2.text)) -
                                       (data['totalPrice']);
-                              widget.setData!(textController, textController2);
+                              widget.setData!(textController.text, textController2.text);
                             });
                           }
                         } else {
                           setState(() {
                             data['change'] = 0 - (data['totalPrice']);
-                            widget.setData!(textController, textController2);
+                            widget.setData!(textController.text, textController2.text);
                           });
                         }
                       },

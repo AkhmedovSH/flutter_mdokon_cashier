@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kassa/helpers/globals.dart';
 import 'package:flutter/services.dart';
+
+import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/controller.dart';
 
 import '../components/drawer_app_bar.dart';
 
@@ -15,6 +17,7 @@ class Index extends StatefulWidget {
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic products = [];
+  
 
   @override
   void initState() {
@@ -146,7 +149,7 @@ class _IndexState extends State<Index> {
                     if (arr[i]['productId'] == result['productId']) {
                       arr[i]['total_amount'] =
                           double.parse(arr[i]['quantity']) *
-                              (arr[i]['price'].round());
+                              (arr[i]['salePrice'].round());
                       arr[i] = result;
                     }
                   }
@@ -189,7 +192,7 @@ class _IndexState extends State<Index> {
                             children: [
                               const SizedBox(height: 5),
                               Text(
-                                '${products[i]['price']} x ${products[i]['quantity']}',
+                                '${products[i]['salePrice']} x ${products[i]['quantity']}',
                                 style: TextStyle(color: lightGrey),
                               ),
                             ],
@@ -246,7 +249,7 @@ class _IndexState extends State<Index> {
 
                     arr[i]['discount'] = 0;
                     arr[i]['total_amount'] =
-                        (arr[i]['quantity']) * (arr[i]['price']);
+                        (arr[i]['quantity']) * (arr[i]['salePrice']);
                     setState(() {
                       products = arr;
                     });
@@ -257,7 +260,7 @@ class _IndexState extends State<Index> {
                   result['quantity'] = 1;
                   result['discount'] = 0;
                   result['discount'] = 0;
-                  result['total_amount'] = result['quantity'] * result['price'];
+                  result['total_amount'] = result['quantity'] * result['salePrice'];
                   result['totalPrice'] = result['total_amount'];
                   setState(() {
                     products.add(result);

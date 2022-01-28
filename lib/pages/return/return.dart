@@ -19,7 +19,7 @@ class Return extends StatefulWidget {
 
 class _ReturnState extends State<Return> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _validate = false;
+  double height = 30;
   dynamic itemsList = [];
   dynamic returnedList = [];
   dynamic search = 0;
@@ -106,23 +106,30 @@ class _ReturnState extends State<Return> {
   }
 
   validate(payload, i, value) {
-    final string = value.substring(0, value.length);
-    var moreThanOneDots = '.'.allMatches(value).length <= 1 ? false : true;
+    var copy = Map.from(payload);
+    final string = value[value.length - 1];
     if (value == '') {
       setState(() {
         sendData['itemsList'][i]['validate'] = true;
-        sendData['itemsList'][i]['validateText'] = 'Неверное количество';
+        sendData['itemsList'][i]['validateText'] = 'Неверное кол.';
+        height = 20;
       });
       return;
     }
-    if (int.parse(value) > payload['quantity']) {
-      setState(() {
-        sendData['itemsList'][i]['validate'] = true;
-        sendData['itemsList'][i]['validateText'] =
-            'Не больше ${payload['quantity']}';
-      });
-      return;
+    if (value[value.length - 1] != '.') {
+      print(double.parse(value).round().runtimeType);
+      print(copy['quantity'].runtimeType);
+      if (double.parse(value) > double.parse(copy['quantity'])) {
+        setState(() {
+          sendData['itemsList'][i]['validate'] = true;
+          sendData['itemsList'][i]['validateText'] =
+              'Не больше ${copy['quantity'].round()}';
+          height = 20;
+        });
+        return;
+      }
     }
+    
     setState(() {
       sendData['itemsList'][i]['validate'] = false;
       sendData['itemsList'][i]['validateText'] = '';
@@ -502,7 +509,7 @@ class _ReturnState extends State<Return> {
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
                                       child: Container(
-                                        height: 25,
+                                        height: 30,
                                         width: 50,
                                         child: Row(
                                           crossAxisAlignment:
@@ -548,7 +555,7 @@ class _ReturnState extends State<Return> {
                                                   ['discount']) >
                                               0
                                           ? Container(
-                                              height: 25,
+                                              height: 30,
                                               alignment: Alignment.center,
                                               child: Text(
                                                 '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
@@ -558,7 +565,7 @@ class _ReturnState extends State<Return> {
                                               ),
                                             )
                                           : Container(
-                                              height: 25,
+                                              height: 30,
                                               alignment: Alignment.center,
                                               child: Text(
                                                 '${sendData['itemsList'][i]['salePrice']}',
@@ -571,52 +578,73 @@ class _ReturnState extends State<Return> {
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
                                       child: SizedBox(
-                                          height: 25,
                                           child: Column(
-                                            children: [
-                                              SizedBox(
-                                                height: 20,
-                                                child: TextFormField(
-                                                  textAlign: TextAlign.center,
-                                                  controller:
-                                                      sendData['itemsList'][i]
-                                                          ['controller'],
-                                                  onChanged: (value) {
-                                                    validate(
-                                                        sendData['itemsList']
-                                                            [i],
-                                                        i,
-                                                        value);
-                                                  },
-                                                  decoration: InputDecoration(
-                                                      enabledBorder: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color.fromRGBO(
-                                                                  0, 0, 0, 0.2))),
-                                                      focusedBorder: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color.fromRGBO(
-                                                                  0, 0, 0, 0.2))),
-                                                      errorBorder: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color.fromRGBO(
-                                                                  0, 0, 0, 0.2))),
-                                                      contentPadding: EdgeInsets.symmetric(
-                                                          vertical: 0,
-                                                          horizontal: 12),
-                                                      // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
-                                                      // errorStyle: TextStyle(fontSize: 10)
-                                                      ),
+                                        children: [
+                                          SizedBox(
+                                            height: 30,
+                                            child: TextFormField(
+                                              textAlign: TextAlign.center,
+                                              controller: sendData['itemsList']
+                                                  [i]['controller'],
+                                              onChanged: (value) {
+                                                if (value.length > 0) {
+                                                  validate(
+                                                    sendData['itemsList'][i],
+                                                    i,
+                                                    value);
+                                                }
+                                                
+                                              },
+                                              keyboardType: TextInputType.number,
+                                              decoration: InputDecoration(
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0.2))),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0.2))),
+                                                errorBorder: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                        color: Color.fromRGBO(
+                                                            0, 0, 0, 0.2))),
+                                                contentPadding: EdgeInsets.only(
+                                                  top: 5,
                                                 ),
+                                                // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
+                                                // errorStyle: TextStyle(fontSize: 10)
                                               ),
-                                              Text('${sendData['itemsList'][i]['validateText']}')
-                                            ],
-                                          ))),
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          sendData['itemsList'][i]
+                                                      ['validateText'] !=
+                                                  null
+                                              ? Text(
+                                                  '${sendData['itemsList'][i]['validateText'] ?? ''}', 
+                                                  overflow: TextOverflow.fade,
+                                                  maxLines: 1,
+                                                  style: TextStyle(fontSize: 8, color: Color(0xFFf46a6a)),
+                                                )
+                                              : Container()
+                                        ],
+                                      ))),
                                   Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
                                       child: Container(
-                                        height: 25,
+                                        height: 30,
                                         alignment: Alignment.centerRight,
                                         child: Text(
                                           '${sendData['itemsList'][i]['totalPrice']}',

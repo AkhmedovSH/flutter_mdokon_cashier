@@ -51,15 +51,14 @@ class _PaymentSampleState extends State<PaymentSample> {
     "transactionsList": []
   };
   dynamic products = Get.arguments;
-  dynamic textController = {};
-  dynamic textController2 = {};
+  dynamic textController = TextEditingController();
+  dynamic textController2 = TextEditingController();
 
   setData(payload, payload2) {
     setState(() {
-      textController = payload;
-      textController2 = payload2;
+      textController.text = payload;
+      textController2.text = payload2;
     });
-    print(textController);
   }
 
   setPayload(key, payload) {
@@ -117,9 +116,6 @@ class _PaymentSampleState extends State<PaymentSample> {
         'paymentTypeId': 1,
       });
     }
-    
-
-    //print(textController2.text.length > 0);
     if (textController2.text.length > 0) {
       transactionsList.add({
         'amountIn': textController2.text,
@@ -137,22 +133,63 @@ class _PaymentSampleState extends State<PaymentSample> {
         'paymentTypeId': 1,
       });
     }
-    setState(() {
+    if (currentIndex == 0) {
       if (textController2.text.length > 0) {
-        data['paid'] =
-            int.parse(textController.text) + int.parse(textController2.text);
+        setState(() {
+          data['paid'] =
+              int.parse(textController.text) + int.parse(textController2.text);
+          data['change'] = (int.parse(textController.text) +
+                  int.parse(textController2.text)) -
+              (data['totalPrice']);
+        });
       } else {
-        data['paid'] = int.parse(textController.text);
+        setState(() {
+          data['paid'] = int.parse(textController.text);
+        });
       }
+    }
+    if (currentIndex == 1) {
+      if (textController.text.length > 0) {
+        print(111);
+        if (textController2.text.length > 0) {
+          setState(() {
+            data['change'] = (int.parse(textController.text) +
+                    int.parse(textController2.text)) -
+                (data['totalPrice']);
+            data['paid'] = int.parse(textController.text) +
+                int.parse(textController2.text);
+            data['clientAmount'] = data['totalPrice'] -
+                (int.parse(textController.text) +
+                    int.parse(textController2.text));
+          });
+        } else {
+          setState(() {
+              (data['totalPrice']);
+            data['clientAmount'] =
+                data['totalPrice'] - int.parse(textController.text);
+            data['paid'] = int.parse(textController.text);
+          });
+        }
+      } else {
+        setPayload('clientAmount', data['totalPrice']);
+        setPayload('paid', textController.text);
+      }
+    }
+    print(data['paid']);
+    setState(() {
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
+    print(data['change']);
     // for (String key in data.keys) {
     //   print('$key : ${data[key]}');
     // }
 
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
+      setState(() {
+        loading = false;
+      });
       Get.offAllNamed('/');
     }
   }
@@ -162,7 +199,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     super.initState();
     dynamic totalAmount = 0;
     for (var i = 0; i < products.length; i++) {
-      totalAmount += products[i]['total_amount'];
+      totalAmount += products[i]['salePrice'];
     }
     setState(() {
       data['totalPrice'] = totalAmount.round();
@@ -170,14 +207,13 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['paid'] = totalAmount.round();
       data['text'] = data['totalPrice'].toString();
     });
-    // textController.text = data['totalPrice'].toString();
+    textController.text = data['totalPrice'].toString();
     getData();
   }
 
   @override
   Widget build(BuildContext context) {
     return LoadingLayout(
-      isLoading: loading,
       body: Scaffold(
         appBar: AppBar(
           systemOverlayStyle: SystemUiOverlayStyle(
@@ -236,7 +272,8 @@ class _PaymentSampleState extends State<PaymentSample> {
             currentIndex == 0
                 ? Payment(getPayload: setPayload, data: data, setData: setData)
                 : currentIndex == 1
-                    ? OnCredit(getPayload: setPayload, data: data)
+                    ? OnCredit(
+                        getPayload: setPayload, data: data, setData: setData)
                     : Loyalty(getPayload: setPayload, data: data),
             Container(
               margin: EdgeInsets.only(bottom: 70),
@@ -251,10 +288,20 @@ class _PaymentSampleState extends State<PaymentSample> {
                 if (currentIndex == 0 && data['change'] >= 0) {
                   createCheque();
                 }
+                if (currentIndex == 1 && data['clientId'] != 0) {
+                  createCheque();
+                }
               },
               style: ElevatedButton.styleFrom(
+                  elevation: 0,
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  primary: data['change'] < 0 ? blue.withOpacity(0.8) : blue),
+                  primary: currentIndex == 0
+                      ? data['change'] < 0
+                          ? blue.withOpacity(0.8)
+                          : blue
+                      : data['clientId'] == 0
+                          ? blue.withOpacity(0.8)
+                          : blue),
               child: Text('ПРИНЯТЬ')),
         ),
       ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:get/get.dart';
 
-import '../../helpers/globals.dart';
+import '../helpers/globals.dart';
+import '../helpers/controller.dart';
 
 class LoadingLayout extends StatefulWidget {
-  const LoadingLayout({Key? key, this.isLoading, this.body}) : super(key: key);
-  final bool? isLoading;
+  const LoadingLayout({Key? key, this.body}) : super(key: key);
   final Widget? body;
 
   @override
@@ -15,6 +16,7 @@ class LoadingLayout extends StatefulWidget {
 class _LoadingLayoutState extends State<LoadingLayout>
     with TickerProviderStateMixin {
   AnimationController? animationController;
+  final Controller controller = Get.put(Controller());
 
   @override
   void initState() {
@@ -27,7 +29,7 @@ class _LoadingLayoutState extends State<LoadingLayout>
 
   @override
   dispose() {
-    animationController!.dispose(); // you need this
+    animationController!.dispose();
     super.dispose();
   }
 
@@ -36,7 +38,7 @@ class _LoadingLayoutState extends State<LoadingLayout>
     return Stack(
       children: [
         widget.body!,
-        widget.isLoading!
+        controller.loading.value
             ? Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,

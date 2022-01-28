@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
+import '../../helpers/controller.dart';
 import '../../components/loading_layout.dart';
 
 class Login extends StatefulWidget {
@@ -21,12 +22,13 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   dynamic payload = {'username': 'united', 'password': '0777'};
   bool showPassword = false;
   bool loading = false;
+  final Controller controller = Get.put(Controller());
 
   login() async {
-    setState(() {
-      loading = true;
-    });
-    final data = await guestPost('/auth/login', payload);
+    controller.showLoading();
+    print(controller.loading);
+    setState(() {});
+    final data = await guestPost('/auth/login', payload, loading: false);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('access_token', data['access_token']);
     prefs.setString('username', payload['username'].toString().toLowerCase());
@@ -49,7 +51,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   getAccessPos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final response = await get('/services/desktop/api/get-access-pos');
+    final response =
+        await get('/services/desktop/api/get-access-pos', loading: false);
     if (response['openShift']) {
       prefs.remove('shift');
       prefs.setString('cashbox', jsonEncode(response['shift']));
@@ -57,15 +60,13 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     } else {
       Get.offAllNamed('/cashboxes', arguments: response['posList']);
     }
-    setState(() {
-      loading = false;
-    });
+    controller.hideLoading();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return LoadingLayout(
-      isLoading: loading,
       body: Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(0.0),
