@@ -38,7 +38,7 @@ class _XReportState extends State<XReport> {
     setState(() {
       report = response;
       reportList = report['xReportList'];
-      report['shiftNumber'] = formatUnixTime(report['shiftNumber']);
+      report['shiftNumber'] = report['shiftNumber'];
     });
   }
 
@@ -139,7 +139,7 @@ class _XReportState extends State<XReport> {
               ),
               buildRow('Кассир', report['cashierName']),
               buildRow('Касса №', report['shiftNumber']),
-              buildRow('ИНН', report['tin']),
+              buildRow('ИНН', report['tin'] ?? ''),
               buildRow('Дата', report['shiftOpenDate']),
               Container(
                 margin: EdgeInsets.symmetric(vertical: 5),

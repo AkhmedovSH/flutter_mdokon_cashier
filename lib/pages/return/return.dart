@@ -58,10 +58,19 @@ class _ReturnState extends State<Return> {
         data = response;
         itemsList = data['itemsList'];
       });
-      for (var i = 0; i < itemsList.length; i++) {
-        print(itemsList[i]['discount'].runtimeType);
-        itemsList[i]['discount'] = itemsList[i]['discount'].round();
+      final list = itemsList;
+      for (var i = 0; i < list.length; i++) {
+        list[i]['validate'] = false;
+        print(list[i]['discount'].runtimeType);
+        list[i]['discount'] = list[i]['discount'].round();
+        print(list[i]['uomId']);
+        if (list[i]['uomId'] == 1) {
+          list[i]['uomId'].round();
+        }
       }
+      setState(() {
+        itemsList = list;
+      });
     }
   }
 
@@ -73,6 +82,13 @@ class _ReturnState extends State<Return> {
       itemsList.removeAt(index);
       sendData['itemsList'].add(item);
     });
+    dynamic totalAmount = 0;
+    for (var i = 0; i < sendData['itemsList'].length; i++) {
+      totalAmount += sendData['itemsList'][i]['salePrice'];
+    }
+    setState(() {
+      sendData['totalAmount'] = totalAmount;
+    });
   }
 
   addToItemsList(item, index) {
@@ -81,7 +97,7 @@ class _ReturnState extends State<Return> {
       itemsList.add(item);
     });
     dynamic totalAmount = 0;
-    for (var i = 0; i < sendData['itemsList']; i++) {
+    for (var i = 0; i < sendData['itemsList'].length; i++) {
       totalAmount += sendData['itemsList'][i]['salePrice'];
     }
     setState(() {
@@ -89,17 +105,29 @@ class _ReturnState extends State<Return> {
     });
   }
 
-  validate(payload, i) {
-    if (payload['errorText'] == '') {
+  validate(payload, i, value) {
+    final string = value.substring(0, value.length);
+    var moreThanOneDots = '.'.allMatches(value).length <= 1 ? false : true;
+    if (value == '') {
       setState(() {
-        sendData['itemsList'][i]['validate'] = 'Неверное количество '; 
+        sendData['itemsList'][i]['validate'] = true;
+        sendData['itemsList'][i]['validateText'] = 'Неверное количество';
       });
-      return 'Неверное количество';
+      return;
     }
-    if (payload['errorText'] > payload['quantity']) {
-      return 'Не больше ${payload['quantity']} ';
+    if (int.parse(value) > payload['quantity']) {
+      setState(() {
+        sendData['itemsList'][i]['validate'] = true;
+        sendData['itemsList'][i]['validateText'] =
+            'Не больше ${payload['quantity']}';
+      });
+      return;
     }
-    return null;
+    setState(() {
+      sendData['itemsList'][i]['validate'] = false;
+      sendData['itemsList'][i]['validateText'] = '';
+    });
+    return;
   }
 
   getData() async {
@@ -109,7 +137,7 @@ class _ReturnState extends State<Return> {
     if (prefs.getString('shift') != null) {
       shift = jsonDecode(prefs.getString('shift')!);
     }
-    final shiftId = cashbox['id'] != null ? cashbox['id'] : shift['id'];
+    final shiftId = cashbox['id'] ?? shift['id'];
     setState(() {
       sendData['cashboxId'] = cashbox['cashboxId'];
       sendData['posId'] = cashbox['posId'];
@@ -176,7 +204,9 @@ class _ReturnState extends State<Return> {
                           });
                         },
                         onSubmitted: (value) {
-                          searchCheq(null);
+                          if (search.length > 0) {
+                            searchCheq(null);
+                          }
                         },
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
@@ -207,7 +237,9 @@ class _ReturnState extends State<Return> {
                       height: 40,
                       child: ElevatedButton(
                         onPressed: () {
-                          searchCheq(null);
+                          if (search.length > 0) {
+                            searchCheq(null);
+                          }
                         },
                         child: Text('Поиск'),
                       ),
@@ -538,43 +570,48 @@ class _ReturnState extends State<Return> {
                                   Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
-                                      child: Container(
-                                        height: 25,
-                                        child: TextFormField(
-                                          textAlign: TextAlign.center,
-                                          controller: sendData['itemsList'][i]
-                                              ['controller'],
-                                          onChanged: (value) {
-                                            setState(() {
-                                              sendData['itemsList'][i]
-                                                  ['errorText'] = value;
-                                            });
-                                            validate(
-                                                sendData['itemsList'][i], i);
-                                          },
-                                          decoration: InputDecoration(
-                                            enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Color.fromRGBO(
-                                                        0, 0, 0, 0.2))),
-                                            focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Color.fromRGBO(
-                                                        0, 0, 0, 0.2))),
-                                            errorBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Color.fromRGBO(
-                                                        0, 0, 0, 0.2))),
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    vertical: 0,
-                                                    horizontal: 12),
-                                            errorText: sendData['itemsList'][i]['validate'] == 0
-                                                ? 'Username Can\'t Be Empty'
-                                                : null,
-                                          ),
-                                        ),
-                                      )),
+                                      child: SizedBox(
+                                          height: 25,
+                                          child: Column(
+                                            children: [
+                                              SizedBox(
+                                                height: 20,
+                                                child: TextFormField(
+                                                  textAlign: TextAlign.center,
+                                                  controller:
+                                                      sendData['itemsList'][i]
+                                                          ['controller'],
+                                                  onChanged: (value) {
+                                                    validate(
+                                                        sendData['itemsList']
+                                                            [i],
+                                                        i,
+                                                        value);
+                                                  },
+                                                  decoration: InputDecoration(
+                                                      enabledBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              color: Color.fromRGBO(
+                                                                  0, 0, 0, 0.2))),
+                                                      focusedBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              color: Color.fromRGBO(
+                                                                  0, 0, 0, 0.2))),
+                                                      errorBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              color: Color.fromRGBO(
+                                                                  0, 0, 0, 0.2))),
+                                                      contentPadding: EdgeInsets.symmetric(
+                                                          vertical: 0,
+                                                          horizontal: 12),
+                                                      // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
+                                                      // errorStyle: TextStyle(fontSize: 10)
+                                                      ),
+                                                ),
+                                              ),
+                                              Text('${sendData['itemsList'][i]['validateText']}')
+                                            ],
+                                          ))),
                                   Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
@@ -619,7 +656,7 @@ class _ReturnState extends State<Return> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '0',
+                          '${sendData['totalAmount'].round()}',
                           style: TextStyle(
                               color: blue,
                               fontSize: 32,
@@ -642,7 +679,10 @@ class _ReturnState extends State<Return> {
                 child: ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                        primary: red,
+                        primary: sendData['itemsList'].length > 0
+                            ? Color(0xFFf46a6a)
+                            : Color(0xFFf46a6a).withOpacity(0.65),
+                        elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 12)),
                     child: Text(
                       'Осуществить возврат',

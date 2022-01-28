@@ -84,9 +84,10 @@ class _CalculatorState extends State<Calculator> {
   void initState() {
     super.initState();
     final product = Get.arguments;
+    Map copyObject = Map.from(product);
     setState(() {
       product['quantity'] = product['quantity'].toString();
-      prevProduct = product;
+      prevProduct = copyObject;
     });
   }
 
