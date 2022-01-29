@@ -4,7 +4,8 @@ import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key, this.getPayload, this.data, this.setData}) : super(key: key);
+  const OnCredit({Key? key, this.getPayload, this.data, this.setData})
+      : super(key: key);
   final dynamic data;
   final Function? getPayload;
   final Function? setData;
@@ -94,10 +95,9 @@ class _OnCreditState extends State<OnCredit> {
     setState(() {
       data = widget.data!;
       data['totalPrice'] = totalAmount.round();
-      data['change'] = 0;
+      data['change'] = -totalAmount.round();
       data['paid'] = totalAmount.round();
     });
-    // textController.text = data['totalPrice'].toString();
   }
 
   @override
@@ -411,7 +411,8 @@ class _OnCreditState extends State<OnCredit> {
                                                   });
                                                 }
                                               },
-                                              keyboardType: addList[i]['keyboardType'],
+                                              keyboardType: addList[i]
+                                                  ['keyboardType'],
                                               decoration: InputDecoration(
                                                 contentPadding:
                                                     const EdgeInsets.fromLTRB(
@@ -561,7 +562,14 @@ class _OnCreditState extends State<OnCredit> {
                                           (data['totalPrice']);
                                 });
                               }
-                              widget.setData!(textController.text, textController2.text);
+                              widget.setData!(
+                                  textController.text, textController2.text);
+                            } else {
+                              setState(() {
+                                data['change'] = 0 - (data['totalPrice']);
+                                widget.setData!(
+                                    textController.text, textController2.text);
+                              });
                             }
                           },
                           decoration: InputDecoration(
@@ -623,7 +631,14 @@ class _OnCreditState extends State<OnCredit> {
                                           (data['totalPrice']);
                                 });
                               }
-                              widget.setData!(textController.text, textController2.text);
+                              widget.setData!(
+                                  textController.text, textController2.text);
+                            } else {
+                              setState(() {
+                                data['change'] = 0 - (data['totalPrice']);
+                                widget.setData!(
+                                    textController.text, textController2.text);
+                              });
                             }
                           },
                           decoration: InputDecoration(
@@ -655,7 +670,7 @@ class _OnCreditState extends State<OnCredit> {
                       ),
                     ],
                   )),
-              Text('СДАЧА:',
+              Text('СУММА ДОЛГА:',
                   style: TextStyle(
                       color: darkGrey,
                       fontSize: 16,

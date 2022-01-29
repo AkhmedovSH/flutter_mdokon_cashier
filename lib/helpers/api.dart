@@ -10,8 +10,7 @@ const hostUrl = "https://cabinet.mdokon.uz";
 var dio = Dio();
 final Controller controller = Get.put(Controller());
 
-
-Future get(String url, {payload, loading=true }) async {
+Future get(String url, {payload, loading = true}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   if (loading) {
     controller.showLoading;
@@ -30,7 +29,7 @@ Future get(String url, {payload, loading=true }) async {
     return response.data;
   } on DioError catch (e) {
     print(e.response?.statusCode);
-    return statuscheker(e, url, payload: payload);
+    return await statuscheker(e, url, payload: payload);
   }
 }
 
@@ -39,14 +38,13 @@ Future post(String url, dynamic payload) async {
   print(payload);
   controller.showLoading;
   try {
-    
     final response = await dio.post(hostUrl + url,
         data: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
         }));
-      print(200);
-      controller.hideLoading;
+    print(200);
+    controller.hideLoading;
     return response.data;
   } on DioError catch (e) {
     print(e.response?.statusCode);
@@ -57,12 +55,12 @@ Future post(String url, dynamic payload) async {
   }
 }
 
-Future guestPost(String url, dynamic payload, { loading=true }) async {
+Future guestPost(String url, dynamic payload, {loading = true}) async {
   try {
     if (loading) {
       controller.showLoading;
     }
-    
+
     final response = await dio.post(hostUrl + url, data: payload);
     if (loading) {
       controller.hideLoading;
@@ -80,7 +78,7 @@ Future guestPost(String url, dynamic payload, { loading=true }) async {
   }
 }
 
-statuscheker(e, url, {payload, method='get'}) async {
+statuscheker(e, url, {payload, method = 'get'}) async {
   if (e.response?.statusCode == 401) {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final data = await guestPost('/auth/login', {
@@ -98,23 +96,23 @@ statuscheker(e, url, {payload, method='get'}) async {
     }
     if (checker == true) {
       prefs.setString('user_roles', account['authorities'].toString());
-      await getAccessPos(url, payload, method: method);
+      return await getAccessPos(url, payload, method: method);
     }
   }
 }
 
-getAccessPos(url, payload, { method }) async {
+getAccessPos(url, payload, {method}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final response = await get('/services/desktop/api/get-access-pos');
   if (response['openShift']) {
     prefs.remove('shift');
     prefs.setString('cashbox', jsonEncode(response['shift']));
     if (method == 'get') {
-      get(url, payload: payload);
-    } if (method == 'post') {
-      post(url, payload);
+      return await get(url, payload: payload);
     }
-    
+    if (method == 'post') {
+      return await post(url, payload);
+    }
   } else {
     Get.offAllNamed('/cashboxes', arguments: response['posList']);
   }

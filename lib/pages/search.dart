@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/controller.dart';
 import 'package:kassa/components/loading_layout.dart';
 
 class Search extends StatefulWidget {
@@ -17,6 +18,7 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
+  final Controller controller = Get.put(Controller());
   dynamic products = [];
 
   @override
@@ -26,10 +28,13 @@ class _SearchState extends State<Search> {
   }
 
   getProducts() async {
+    // controller.showLoading();
+    setState(() {});
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
     final response = await get(
         '/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
+    // controller.hideLoading();
     setState(() {
       products = response;
     });

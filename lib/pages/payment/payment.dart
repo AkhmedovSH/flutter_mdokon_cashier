@@ -23,6 +23,7 @@ class _PaymentState extends State<Payment> {
   dynamic products = Get.arguments;
   dynamic sendData = {};
   dynamic data = {};
+  
 
   @override
   void initState() {

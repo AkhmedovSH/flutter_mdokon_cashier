@@ -9,8 +9,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
-import 'package:kassa/components/loading_layout.dart';
+import 'package:kassa/helpers/controller.dart';
 
+import 'package:kassa/components/loading_layout.dart';
 import './on_credit.dart';
 import './loyalty.dart';
 
@@ -22,6 +23,7 @@ class PaymentSample extends StatefulWidget {
 }
 
 class _PaymentSampleState extends State<PaymentSample> {
+  final Controller controller = Get.put(Controller());
   int currentIndex = 0;
   bool loading = false;
   dynamic data = {
@@ -104,9 +106,8 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
-    setState(() {
-      loading = true;
-    });
+    controller.showLoading();
+    setState(() {});
     var transactionsList = data['transactionsList'];
     if (textController.text.length > 0) {
       transactionsList.add({
@@ -164,7 +165,6 @@ class _PaymentSampleState extends State<PaymentSample> {
           });
         } else {
           setState(() {
-              (data['totalPrice']);
             data['clientAmount'] =
                 data['totalPrice'] - int.parse(textController.text);
             data['paid'] = int.parse(textController.text);
@@ -177,6 +177,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     }
     print(data['paid']);
     setState(() {
+      data['change'] = 0;
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
@@ -184,19 +185,15 @@ class _PaymentSampleState extends State<PaymentSample> {
     // for (String key in data.keys) {
     //   print('$key : ${data[key]}');
     // }
-
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
-      setState(() {
-        loading = false;
-      });
+      controller.hideLoading();
+      setState(() {});
       Get.offAllNamed('/');
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
+  setInitState() {
     dynamic totalAmount = 0;
     for (var i = 0; i < products.length; i++) {
       totalAmount += products[i]['salePrice'];
@@ -208,6 +205,12 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['text'] = data['totalPrice'].toString();
     });
     textController.text = data['totalPrice'].toString();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setInitState();
     getData();
   }
 
@@ -247,6 +250,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                   setState(() {
                     currentIndex = index;
                   });
+                  setInitState();
                 },
                 labelColor: black,
                 indicatorColor: blue,
@@ -288,7 +292,9 @@ class _PaymentSampleState extends State<PaymentSample> {
                 if (currentIndex == 0 && data['change'] >= 0) {
                   createCheque();
                 }
-                if (currentIndex == 1 && data['clientId'] != 0) {
+                if (currentIndex == 1 &&
+                    data['change'] < 0 &&
+                    data['clientId'] != 0) {
                   createCheque();
                 }
               },
