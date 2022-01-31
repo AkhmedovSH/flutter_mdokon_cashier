@@ -1,5 +1,11 @@
+import 'dart:convert';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kassa/helpers/api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:kassa/helpers/globals.dart';
 
 class Loyalty extends StatefulWidget {
@@ -12,44 +18,97 @@ class Loyalty extends StatefulWidget {
 }
 
 class _LoyaltyState extends State<Loyalty> {
-  dynamic data = {};
+  Timer? _debounce;
+  dynamic data = {
+    'firstName': TextEditingController(),
+    'balance': TextEditingController(),
+  };
+  dynamic textController = TextEditingController();
+  dynamic textController2 = TextEditingController();
+  dynamic textController3 = TextEditingController();
+  dynamic cashbox = {};
   dynamic list = [
     {
       'label': 'Введите QR код или Номер телефона',
       'icon': Icons.person_pin_rounded,
-      'fieldName': ''
+      'fieldName': 'search',
+      'enabled': true
     },
     {
       'label': 'Клиент',
       'icon': Icons.person,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': false
     },
     {
       'label': 'Накопленные баллы',
       'icon': Icons.add,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': false
     },
     {
       'label': 'Баллы к списанию',
       'icon': Icons.remove,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': true
     },
     {
       'label': 'Сумма наличные',
       'icon': Icons.payments,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': true
     },
     {
       'label': 'Сумма терминал',
       'icon': Icons.payment,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': true
     },
     {
       'label': 'Баллы к начислению',
       'icon': Icons.payments,
-      'fieldName': ''
+      'fieldName': '',
+      'enabled': false
     },
   ];
+  dynamic search = '';
+
+  searchUserBalance() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      if (data['search'].length == 6 || data['search'].length == 12) {
+        var sendData = {
+          'clientCode': data['search'],
+          'key': cashbox['loyaltyApi']
+        };
+        final response =
+            await l_post('/services/gocashapi/api/get-user-balance', sendData);
+        if (response['reason'] == "SUCCESS") {
+          setState(() {
+            textController2.text = response['balance'].round().toString();
+            textController.text =
+                '${response['firstName'] + response['lastName'] + '[' + response['status'] + ' ' + response['award'].round().toString() + '%]'}';
+            data = response;
+          });
+        } else {
+          Get.snackbar('Ошибка', 'Не найден пользователь',
+              colorText: white,
+              onTap: (_) => Get.back(),
+              duration: Duration(milliseconds: 1500),
+              animationDuration: Duration(milliseconds: 300),
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: red);
+        }
+
+        print(response);
+      }
+    });
+  }
+
+  getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    cashbox = jsonDecode(prefs.getString('cashbox')!);
+  }
 
   @override
   void initState() {
@@ -57,9 +116,10 @@ class _LoyaltyState extends State<Loyalty> {
     setState(() {
       data = widget.data!;
     });
+    getData();
   }
 
-  buildTextField(label, icon, fieldName, {scrollPadding}) {
+  buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,13 +132,39 @@ class _LoyaltyState extends State<Loyalty> {
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
           child: TextFormField(
+            controller: index == 1
+                ? textController
+                : index == 2
+                    ? textController2
+                    : index == 6
+                        ? textController3
+                        : null,
+            keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Обязательное поле';
               }
             },
             onChanged: (value) {
+              setState(() {
+                data[item['fieldName']] = value;
+              });
+              if (index == 0) {
+                searchUserBalance();
+              }
+              if (index == 3) {
+                setState(() {
+                  data['amount'] = value;
+                });
+              }
+              if (index == 4 || index == 4) {
+                setState(() {
+                  data['amountIn'] = value;
+                });
+              }
             },
+            enabled: item['enabled'],
+            enableInteractiveSelection: item['enabled'],
             scrollPadding: EdgeInsets.only(bottom: 100),
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
@@ -127,8 +213,8 @@ class _LoyaltyState extends State<Loyalty> {
                       color: darkGrey,
                       fontSize: 16,
                       fontWeight: FontWeight.bold))),
-                      for (var i = 0; i < list.length; i++)
-                      buildTextField(list[i]['label'], list[i]['icon'], list[i]['fieldName'])
+          for (var i = 0; i < list.length; i++)
+            buildTextField(list[i]['label'], list[i]['icon'], list[i], i)
         ],
       ),
     );

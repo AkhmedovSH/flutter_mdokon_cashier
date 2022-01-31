@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:kassa/helpers/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import './controller.dart';
@@ -10,7 +11,7 @@ const hostUrl = "https://cabinet.mdokon.uz";
 var dio = Dio();
 final Controller controller = Get.put(Controller());
 
-Future get(String url, {payload, loading = true}) async {
+Future get(String url, {payload, loading = true, setState}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   if (loading) {
     controller.showLoading;
@@ -60,7 +61,6 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
     if (loading) {
       controller.showLoading;
     }
-
     final response = await dio.post(hostUrl + url, data: payload);
     if (loading) {
       controller.hideLoading;
@@ -115,5 +115,26 @@ getAccessPos(url, payload, {method}) async {
     }
   } else {
     Get.offAllNamed('/cashboxes', arguments: response['posList']);
+  }
+}
+
+Future l_post(String url, dynamic payload) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  print(payload);
+  controller.showLoading;
+  try {
+    final response = await dio.post(
+      'https://cabinet.cashbek.uz' + url,
+      data: payload,
+    );
+    print(200);
+    controller.hideLoading;
+    return response.data;
+  } on DioError catch (e) {
+    print(e.response?.statusCode);
+    print(e.response?.data);
+    if (e.response?.statusCode == 401) {
+      return;
+    }
   }
 }

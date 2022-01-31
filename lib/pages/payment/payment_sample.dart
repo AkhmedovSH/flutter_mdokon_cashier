@@ -196,7 +196,12 @@ class _PaymentSampleState extends State<PaymentSample> {
   setInitState() {
     dynamic totalAmount = 0;
     for (var i = 0; i < products.length; i++) {
-      totalAmount += products[i]['salePrice'];
+      if (products[i]['quantity'].runtimeType == int) {
+        totalAmount += products[i]['salePrice'] * (products[i]['quantity']);
+      } else {
+        totalAmount +=
+            products[i]['salePrice'] * int.parse(products[i]['quantity']);
+      }
     }
     setState(() {
       data['totalPrice'] = totalAmount.round();
@@ -305,9 +310,13 @@ class _PaymentSampleState extends State<PaymentSample> {
                       ? data['change'] < 0
                           ? blue.withOpacity(0.8)
                           : blue
-                      : data['clientId'] == 0
-                          ? blue.withOpacity(0.8)
-                          : blue),
+                      : currentIndex == 1
+                          ? data['clientId'] == 0
+                              ? blue.withOpacity(0.8)
+                              : blue
+                          : data['clientId'] == 0
+                              ? lightGrey
+                              : blue),
               child: Text('ПРИНЯТЬ')),
         ),
       ),

@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/controller.dart';
 
@@ -17,11 +21,162 @@ class Index extends StatefulWidget {
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic products = [];
-  
+  dynamic clients = [];
+  dynamic textController = TextEditingController();
+  dynamic textController2 = TextEditingController();
+  dynamic expenseOut = {
+    "cashboxId": '',
+    "posId": '',
+    "shiftId": '',
+    'note': '',
+    'amountOut': '',
+    'paymentPurposeId': 1,
+  };
+  dynamic debtIn = {
+    "amountIn": 0,
+    "cash": 0,
+    "terminal": 0,
+    "amountOut": 0,
+    "cashboxId": '',
+    "clientId": 0,
+    "currencyId": 0,
+    "posId": '',
+    "shiftId": '',
+    "transactionsList": []
+  };
+  dynamic itemList = [
+    {
+      'label': 'Наличные',
+      'icon': Icons.payments,
+      'fieldName': 'cash',
+    },
+    {
+      'label': 'Банковская карточка',
+      'icon': Icons.payment,
+      'fieldName': 'terminal',
+    },
+    {
+      'label': 'Примечание',
+      'fieldName': 'note',
+    },
+  ];
+
+  getClients() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    final response =
+        await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
+    //print(response);
+    for (var i = 0; i < response.length; i++) {
+      response[i]['selected'] = false;
+    }
+    setState(() {
+      clients = response;
+      debtIn['cashboxId'] = cashbox['cashboxId'];
+      debtIn['posId'] = cashbox['posId'];
+      if (prefs.getString('shift') != null) {
+        debtIn['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
+      } else {
+        debtIn['shiftId'] = cashbox['id'];
+      }
+    });
+  }
+
+  createDebtorOut() async {
+    final response =
+        await post('/services/desktop/api/expense-out', expenseOut);
+  }
+
+  createClientDebt() async {
+    final list = [];
+    print(debtIn['amountIn'].runtimeType);
+    if (textController.text.length > 0) {
+      list.add({
+        "amountIn": textController.text,
+        "amountOut": "",
+        "paymentTypeId": 1,
+        "paymentPurposeId": 1
+      });
+    }
+    if (textController2.text.length > 0) {
+      list.add({
+        "amountIn": textController2.text,
+        "amountOut": "",
+        "paymentTypeId": 1,
+        "paymentPurposeId": 2
+      });
+    }
+    setState(() {
+      debtIn['transactionsList'] = list;
+    });
+    setState(() {});
+    final response = await post('/services/desktop/api/client-debt-in', debtIn);
+  }
+
+  getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    setState(() {
+      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
+      expenseOut['posId'] = cashbox['posId'];
+      if (prefs.getString('shift') != null) {
+        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
+      } else {
+        expenseOut['shiftId'] = cashbox['id'];
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    getData();
+  }
+
+  buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label',
+          style:
+              TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+        ),
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          width: MediaQuery.of(context).size.width,
+          child: TextFormField(
+            keyboardType:
+                index != 2 ? TextInputType.number : TextInputType.text,
+            onChanged: (value) {
+              setState(() {
+                debtIn[item['fieldName']] = value;
+              });
+            },
+            scrollPadding: EdgeInsets.only(bottom: 100),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                  color: blue,
+                  width: 2,
+                ),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                  color: blue,
+                  width: 2,
+                ),
+              ),
+              suffixIcon: Icon(icon),
+              filled: true,
+              fillColor: borderColor,
+              focusColor: blue,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -50,14 +205,18 @@ class _IndexState extends State<Index> {
         actions: [
           SizedBox(
             child: IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.person),
+              onPressed: () {
+                showModal();
+              },
+              icon: Icon(Icons.payment),
             ),
           ),
           SizedBox(
             child: IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.search),
+              onPressed: () {
+                showModal2();
+              },
+              icon: Icon(Icons.paid_outlined),
             ),
           ),
           SizedBox(
@@ -260,7 +419,8 @@ class _IndexState extends State<Index> {
                   result['quantity'] = 1;
                   result['discount'] = 0;
                   result['discount'] = 0;
-                  result['total_amount'] = result['quantity'] * result['salePrice'];
+                  result['total_amount'] =
+                      result['quantity'] * result['salePrice'];
                   result['totalPrice'] = result['total_amount'];
                   setState(() {
                     products.add(result);
@@ -273,5 +433,379 @@ class _IndexState extends State<Index> {
         ],
       ),
     );
+  }
+
+  showModal2() async {
+    final result = await showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          List filter = [
+            {"id": 1, "name": "Продажа"},
+            {"id": 2, "name": "Сдача"},
+            {"id": 3, "name": "Возврат товаров"},
+            {"id": 4, "name": "Долг"},
+            {"id": 5, "name": "Погашение задолженности "},
+            {"id": 6, "name": "Для собственных нужд"},
+            {"id": 7, "name": "Для нужд торговой точки"},
+            {"id": 8, "name": "Прочие"},
+          ];
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(bottom: 15),
+                      width: double.infinity,
+                      decoration: ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                              width: 1.0,
+                              style: BorderStyle.solid,
+                              color: Color(0xFFECECEC)),
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: ButtonTheme(
+                          alignedDropdown: true,
+                          child: DropdownButton(
+                            isExpanded: true,
+                            hint: Text('${filter[0]['name']}'),
+                            icon: const Icon(Icons.chevron_right),
+                            iconSize: 24,
+                            iconEnabledColor: blue,
+                            elevation: 16,
+                            style: const TextStyle(color: Color(0xFF313131)),
+                            underline: Container(
+                              height: 2,
+                              color: blue,
+                            ),
+                            onChanged: (newValue) {
+                              setState(() {
+                                expenseOut['paymentPurposeId'] = newValue;
+                              });
+                            },
+                            items: filter.map((item) {
+                              return DropdownMenuItem<String>(
+                                value: '${item['id']}',
+                                child: Text(item['name']),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Наличные (Сум)',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: TextFormField(
+                        onChanged: (value) {
+                          expenseOut['amountOut'] = value;
+                        },
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          suffixIcon: Icon(Icons.payment),
+                          filled: true,
+                          fillColor: borderColor,
+                          focusColor: blue,
+                          hintText: '0 сум',
+                          hintStyle: TextStyle(color: a2),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'ПРИМЕЧАНИЕ',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: TextFormField(
+                        onChanged: (value) {
+                          expenseOut['note'] = value;
+                        },
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: borderColor,
+                          focusColor: blue,
+                          hintText: 'Примечание',
+                          hintStyle: TextStyle(color: a2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (expenseOut['amountOut'].length != 0) {
+                        createDebtorOut();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        primary: expenseOut['amountOut'].length == 0
+                            ? lightGrey
+                            : blue),
+                    child: Text('Принять'),
+                  ),
+                )
+              ],
+            );
+          });
+        });
+  }
+
+  showModal() async {
+    await getClients();
+    final result = await showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          dynamic content = clients;
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: TextFormField(
+                        onChanged: (value) {},
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: blue,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: borderColor,
+                          focusColor: blue,
+                          hintText: 'Поиск по контактам',
+                          hintStyle: TextStyle(color: a2),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.35,
+                        child: SingleChildScrollView(
+                          child: Table(
+                              border: TableBorder(
+                                  horizontalInside: BorderSide(
+                                      width: 1,
+                                      color: Color(0xFFDADADa),
+                                      style: BorderStyle.solid)),
+                              children: [
+                                TableRow(children: const [
+                                  Text(
+                                    'Контакт',
+                                  ),
+                                  Text(
+                                    'Валюта',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    'Сумма долга',
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ]),
+                                for (var i = 0; i < content.length; i++)
+                                  TableRow(children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        dynamic arr = content;
+                                        if (arr[i]['selected']) {
+                                          arr[i]['selected'] = false;
+                                        } else {
+                                          for (var j = 0;
+                                              j < content.length;
+                                              j++) {
+                                            arr[j]['selected'] = false;
+                                          }
+                                          arr[i]['selected'] = true;
+                                        }
+                                        setState(() {
+                                          content = arr;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.fromLTRB(5, 8, 0, 8),
+                                        color: content[i]['selected']
+                                            ? Color(0xFF91a0e7)
+                                            : Colors.transparent,
+                                        child:
+                                            Text('${content[i]['clientName']}'),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        dynamic arr = content;
+                                        arr[i]['selected'] =
+                                            !arr[i]['selected'];
+                                        setState(() {
+                                          content = arr;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 8),
+                                        color: content[i]['selected']
+                                            ? Color(0xFF91a0e7)
+                                            : Colors.transparent,
+                                        child: Text(
+                                            '${content[i]['currencyName']}'),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        dynamic arr = content;
+                                        arr[i]['selected'] =
+                                            !arr[i]['selected'];
+                                        setState(() {
+                                          content = arr;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.fromLTRB(0, 8, 5, 8),
+                                        color: content[i]['selected']
+                                            ? Color(0xFF91a0e7)
+                                            : Colors.transparent,
+                                        child: Text(
+                                          '${content[i]['balance']}',
+                                          textAlign: TextAlign.end,
+                                        ),
+                                      ),
+                                    ),
+                                  ]),
+                              ]),
+                        )),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(color: blue, width: 4))),
+                      child: Text(
+                        'Приход',
+                        style: TextStyle(fontSize: 20, color: blue),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    for (var i = 0; i < itemList.length; i++)
+                      buildTextField(itemList[i]['label'], itemList[i]['icon'],
+                          itemList[i], i)
+                  ],
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (debtIn['cash'].toString().length > 0 ||
+                          debtIn['terminal'].toString().length > 0) {
+                        for (var i = 0; i < content.length; i++) {
+                          if (content[i]['selected']) {
+                            Navigator.pop(context, content[i]);
+                          }
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text('Принять'),
+                  ),
+                )
+              ],
+            );
+          });
+        });
+    if (result != null) {
+      setState(() {
+        debtIn['clientId'] = result['clientId'];
+        debtIn['balance'] = result['balance'];
+        debtIn['clientName'] = result['clientName'];
+        debtIn['currencyName'] = result['currencyName'];
+        debtIn['currencyId'] = result['currencyId'];
+      });
+      createClientDebt();
+    }
   }
 }

@@ -164,16 +164,16 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     Icons.home,
                     '/',
                   ),
-                  buildListTile(
-                    'Долг клиента',
-                    Icons.account_circle_outlined,
-                    '/client-debt',
-                  ),
-                  buildListTile(
-                    'Продажи в долг',
-                    Icons.sync_problem,
-                    '/sales-on-credit',
-                  ),
+                  // buildListTile(
+                  //   'Долг клиента',
+                  //   Icons.account_circle_outlined,
+                  //   '/client-debt',
+                  // ),
+                  // buildListTile(
+                  //   'Продажи в долг',
+                  //   Icons.sync_problem,
+                  //   '/sales-on-credit',
+                  // ),
                   buildListTile(
                     'Чеки',
                     Icons.list_alt,
@@ -196,7 +196,44 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
             SizedBox(
               child: ElevatedButton(
                 onPressed: () {
-                  closeShift();
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: const Text('Вы уверены?'),
+                      // content: const Text('AlertDialog description'),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.33,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: ElevatedButton.styleFrom(
+                                    primary: red,
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 10)),
+                                child: const Text('Отмена'),
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.33,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  closeShift();
+                                  Get.back();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 10)),
+                                child: const Text('Продолжить'),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(primary: red),
                 child: const Text('Закрыть смену'),
