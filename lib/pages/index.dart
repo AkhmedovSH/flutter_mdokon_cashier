@@ -30,7 +30,7 @@ class _IndexState extends State<Index> {
     "shiftId": '',
     'note': '',
     'amountOut': '',
-    'paymentPurposeId': 1,
+    'paymentPurposeId': '1',
   };
   dynamic debtIn = {
     "amountIn": 0,
@@ -83,8 +83,26 @@ class _IndexState extends State<Index> {
   }
 
   createDebtorOut() async {
+    print(111);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    print(cashbox);
+    setState(() {
+      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
+      expenseOut['posId'] = cashbox['posId'];
+      expenseOut['currencyId'] = cashbox['defaultCurrency'];
+      if (prefs.getString('shift') != null) {
+        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
+      } else {
+        expenseOut['shiftId'] = cashbox['id'];
+      }
+    });
     final response =
         await post('/services/desktop/api/expense-out', expenseOut);
+    print(response);
+    if (response['success']) {
+      Navigator.pop(context);
+    }
   }
 
   createClientDebt() async {
@@ -113,24 +131,9 @@ class _IndexState extends State<Index> {
     final response = await post('/services/desktop/api/client-debt-in', debtIn);
   }
 
-  getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    setState(() {
-      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
-      expenseOut['posId'] = cashbox['posId'];
-      if (prefs.getString('shift') != null) {
-        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
-      } else {
-        expenseOut['shiftId'] = cashbox['id'];
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
   }
 
   buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
@@ -480,6 +483,7 @@ class _IndexState extends State<Index> {
                         child: ButtonTheme(
                           alignedDropdown: true,
                           child: DropdownButton(
+                            value: expenseOut['paymentPurposeId'],
                             isExpanded: true,
                             hint: Text('${filter[0]['name']}'),
                             icon: const Icon(Icons.chevron_right),

@@ -55,11 +55,19 @@ class _PaymentSampleState extends State<PaymentSample> {
   dynamic products = Get.arguments;
   dynamic textController = TextEditingController();
   dynamic textController2 = TextEditingController();
+  dynamic textController3 = TextEditingController();
+  dynamic cashbox = {};
 
-  setData(payload, payload2) {
+  setData(payload, payload2, {dynamic payload3}) {
+    print(payload);
+    print(payload2);
+    print(payload3);
     setState(() {
       textController.text = payload;
       textController2.text = payload2;
+      if (payload3 != null && payload3.length > 0) {
+        textController3.text = payload3;
+      }
     });
   }
 
@@ -73,7 +81,9 @@ class _PaymentSampleState extends State<PaymentSample> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+    });
     final username = prefs.getString('username');
     if (prefs.getString('shift') != null) {
       final shift = jsonDecode(prefs.getString('shift')!);
@@ -106,7 +116,6 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
-    controller.showLoading();
     setState(() {});
     var transactionsList = data['transactionsList'];
     if (textController.text.length > 0) {
@@ -125,7 +134,6 @@ class _PaymentSampleState extends State<PaymentSample> {
         'paymentTypeId': 2,
       });
     }
-
     if (data['change'] > 0) {
       transactionsList.add({
         'amountIn': 0,
@@ -174,6 +182,52 @@ class _PaymentSampleState extends State<PaymentSample> {
         setPayload('clientAmount', data['totalPrice']);
         setPayload('paid', textController.text);
       }
+    }
+    if (currentIndex == 2) {
+      var list = [];
+      list.add({
+        'amountIn': textController.text,
+        'amountOut': 0,
+        'paymentPurposeId': 1,
+        'paymentTypeId': 1,
+      });
+      // print(textController3);
+      if (textController3.text.length > 0) {
+        list.add({
+          'amountIn': textController3.text,
+          'amountOut': 0,
+          'paymentPurposeId': 1,
+          'paymentTypeId': 1,
+        });
+      }
+      list.add({
+        'amountIn': textController2.text,
+        'amountOut': 0,
+        'paymentPurposeId': 9,
+        'paymentTypeId': 4,
+      });
+      setState(() {
+        data['transactionsList'] = list;
+      });
+      print(data);
+      final response = await post('/services/desktop/api/cheque', data);
+      print(response);
+      var sendData = {
+        'cashierName': data['loyaltyClientName'],
+        'chequeDate': getUnixTime().toString().substring(0, 10),
+        'chequeId': response['id'],
+        'clientCode': data['clientCode'],
+        'key': cashbox['loyaltyApi'],
+        'products': [],
+        'totalAmount': data['totalPrice'],
+        'writeOff': data['loyaltyBonus'] ?? 0
+      };
+      final responseLoyalty =
+          await l_post('/services/gocashapi/api/create-cheque', sendData);
+      if (responseLoyalty['success']) {
+        Get.offAllNamed('/');
+      }
+      return;
     }
     print(data['paid']);
     setState(() {
@@ -283,7 +337,8 @@ class _PaymentSampleState extends State<PaymentSample> {
                 : currentIndex == 1
                     ? OnCredit(
                         getPayload: setPayload, data: data, setData: setData)
-                    : Loyalty(getPayload: setPayload, data: data),
+                    : Loyalty(
+                        setPayload: setPayload, data: data, setData: setData),
             Container(
               margin: EdgeInsets.only(bottom: 70),
             )
@@ -302,19 +357,24 @@ class _PaymentSampleState extends State<PaymentSample> {
                     data['clientId'] != 0) {
                   createCheque();
                 }
+                if (currentIndex == 2) {
+                  createCheque();
+                }
               },
               style: ElevatedButton.styleFrom(
                   elevation: 0,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   primary: currentIndex == 0
                       ? data['change'] < 0
-                          ? blue.withOpacity(0.8)
+                          ? lightGrey
                           : blue
                       : currentIndex == 1
                           ? data['clientId'] == 0
-                              ? blue.withOpacity(0.8)
+                              ? lightGrey
                               : blue
-                          : data['clientId'] == 0
+                          : data['loyaltyClientName'] == null &&
+                                  data['loyaltyClientAmount'] == null &&
+                                  data['loyaltyClientAmount'] != null
                               ? lightGrey
                               : blue),
               child: Text('ПРИНЯТЬ')),
