@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:intl/intl.dart';
-
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 Color blue = const Color(0xFF5b73e8);
@@ -41,4 +41,24 @@ generateTransactionId(posId, cashboxId, shiftId) {
 formatUnixTime(unixTime) {
   var dt = DateTime.fromMillisecondsSinceEpoch(unixTime);
   return DateFormat('dd.MM.yyyy HH:mm').format(dt);
+}
+
+showSuccessToast(message) {
+  return Get.snackbar('Успешно', message,
+      colorText: white,
+      onTap: (_) => Get.back(),
+      duration: Duration(milliseconds: 1500),
+      animationDuration: Duration(milliseconds: 300),
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: green);
+}
+
+showDangerToast() {
+  return Get.snackbar('Ошибка', 'Не найден пользователь',
+      colorText: white,
+      onTap: (_) => Get.back(),
+      duration: Duration(milliseconds: 1500),
+      animationDuration: Duration(milliseconds: 300),
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: red);
 }
