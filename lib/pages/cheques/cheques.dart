@@ -108,6 +108,16 @@ class _ChequesState extends State<Cheques> {
     }
   }
 
+  getColor(status) {
+    if (status == 0) {
+      return null;
+    } else if (status == 1) {
+      return yellow;
+    } else if (status == 2) {
+      return red;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -457,7 +467,11 @@ class _ChequesState extends State<Cheques> {
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
-                                    '${i + 1}. ${getStatus(cheques[i]['returned'])}'),
+                                  '${i + 1}. ${getStatus(cheques[i]['returned'])}',
+                                  style: TextStyle(
+                                    color: getColor(cheques[i]['returned']),
+                                  ),
+                                ),
                               ),
                             ),
                             GestureDetector(

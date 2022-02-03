@@ -100,7 +100,11 @@ class _ReturnState extends State<Return> {
     });
     dynamic totalAmount = 0;
     for (var i = 0; i < sendData['itemsList'].length; i++) {
-      totalAmount += sendData['itemsList'][i]['salePrice'];
+      totalAmount += (sendData['itemsList'][i]['salePrice'] -
+              (sendData['itemsList'][i]['salePrice'] *
+                  sendData['itemsList'][i]['salePrice'] /
+                  100)) *
+          sendData['itemsList'][i]['quantity'];
     }
     setState(() {
       sendData['totalAmount'] = totalAmount;
@@ -109,8 +113,18 @@ class _ReturnState extends State<Return> {
 
   setQuantity(item, i, value) {
     var itemCopy = Map.from(item);
-    print(itemCopy);
+    //print(itemCopy);
     if (value == '') {
+      setState(() {
+        sendData['itemsList'][i]['validate'] = true;
+        sendData['itemsList'][i]['validateText'] = 'Введите кол.';
+        height = 20;
+      });
+      return;
+    }
+
+    var dotExist = '.'.allMatches(value).length == 1 ? true : false;
+    if (itemCopy['uomId'] == 1 && dotExist) {
       setState(() {
         sendData['itemsList'][i]['validate'] = true;
         sendData['itemsList'][i]['validateText'] = 'Неверное кол.';
@@ -118,6 +132,7 @@ class _ReturnState extends State<Return> {
       });
       return;
     }
+
     if (value[value.length - 1] != '.') {
       if (double.parse(value).round() > (itemCopy['quantity'].round())) {
         setState(() {
@@ -130,11 +145,30 @@ class _ReturnState extends State<Return> {
       }
     }
 
-    if (itemCopy['uomId'] == 1)
-      setState(() {
-        sendData['itemsList'][i]['validate'] = false;
-        sendData['itemsList'][i]['validateText'] = '';
-      });
+    setState(() {
+      sendData['itemsList'][i]['quantity'] = int.parse(value);
+      sendData['itemsList'][i]['totalPrice'] = (sendData['itemsList'][i]
+                  ['salePrice'] -
+              (sendData['itemsList'][i]['salePrice'] *
+                  sendData['itemsList'][i]['discount'] /
+                  100)) *
+          int.parse(value);
+    });
+
+    dynamic totalAmount = 0;
+    for (var i = 0; i < sendData['itemsList'].length; i++) {
+      totalAmount += (sendData['itemsList'][i]['salePrice'] -
+              (sendData['itemsList'][i]['salePrice'] *
+                  sendData['itemsList'][i]['discount'] /
+                  100)) *
+          sendData['itemsList'][i]['quantity'];
+    }
+
+    setState(() {
+      sendData['totalAmount'] = totalAmount;
+      sendData['itemsList'][i]['validate'] = false;
+      sendData['itemsList'][i]['validateText'] = '';
+    });
     return;
   }
 
