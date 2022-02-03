@@ -36,7 +36,7 @@ Future get(String url, {payload, loading = true, setState}) async {
 
 Future post(String url, dynamic payload) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  print(payload);
+  // print(payload);
   controller.showLoading;
   try {
     print(hostUrl + url);

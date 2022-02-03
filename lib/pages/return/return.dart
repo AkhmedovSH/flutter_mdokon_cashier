@@ -138,7 +138,6 @@ class _ReturnState extends State<Return> {
   }
 
   createReturn() async {
-    print(data);
     setState(() {
       sendData['actionDate'] = getUnixTime();
       sendData['chequeId'] = data['id'];
@@ -155,8 +154,55 @@ class _ReturnState extends State<Return> {
           'paymentPurposeId': 3
         }
       ];
+      for (var i = 0; i < sendData['itemsList'].length; i++) {
+        setState(() {
+          sendData['itemsList'][i]['controller'] = null;
+          sendData['itemsList'][i]['validate'] = null;
+        });
+      }
     });
-    final response = post('/services/desktop/api/cheque-returned', sendData);
+    final response =
+        await post('/services/desktop/api/cheque-returned', sendData);
+    if (response['success']) {
+      showSuccessToast('Возврат выполнен');
+      setInitState();
+    }
+  }
+
+  setInitState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      if (prefs.getString('shift') != null) {
+        shift = jsonDecode(prefs.getString('shift')!);
+      }
+    });
+    // dynamic shift = {};
+    if (prefs.getString('shift') != null) {
+      shift = jsonDecode(prefs.getString('shift')!);
+    }
+    final shiftId = cashbox['id'] ?? shift['id'];
+    setState(() {
+      sendData = {
+        'actionDate': 0,
+        'cashboxId': '',
+        'chequeId': 0,
+        'clientAmount': 0,
+        'clientId': 0,
+        'currencyId': "",
+        'saleCurrencyId': "",
+        'itemsList': [],
+        'note': "",
+        'offline': false,
+        'posId': '',
+        'shiftId': '',
+        'totalAmount': 0,
+        'transactionId': "",
+      };
+      sendData['cashboxId'] = cashbox['cashboxId'];
+      sendData['posId'] = cashbox['posId'];
+      sendData['shiftId'] = shiftId;
+    });
   }
 
   getData() async {
