@@ -32,7 +32,6 @@ class _ReturnState extends State<Return> {
     'chequeId': 0,
     'clientAmount': 0,
     'clientId': 0,
-    'currencyId': "",
     'saleCurrencyId': "",
     'itemsList': [],
     'note': "",
@@ -43,7 +42,7 @@ class _ReturnState extends State<Return> {
     'transactionId': "",
   };
 
-  searchCheq(id) async {
+  searchCheque(id) async {
     dynamic response;
     if (id != null) {
       response = await get(
@@ -55,7 +54,6 @@ class _ReturnState extends State<Return> {
     if (response['id'] != null) {
       setState(() {
         data = response;
-        print(data);
         itemsList = data['itemsList'];
       });
       final list = itemsList;
@@ -84,7 +82,11 @@ class _ReturnState extends State<Return> {
     });
     dynamic totalAmount = 0;
     for (var i = 0; i < sendData['itemsList'].length; i++) {
-      totalAmount += sendData['itemsList'][i]['salePrice'];
+      totalAmount += (sendData['itemsList'][i]['salePrice'] -
+              (sendData['itemsList'][i]['salePrice'] *
+                  sendData['itemsList'][i]['discount'] /
+                  100)) *
+          sendData['itemsList'][i]['quantity'];
     }
     setState(() {
       sendData['totalAmount'] = totalAmount;
@@ -105,9 +107,9 @@ class _ReturnState extends State<Return> {
     });
   }
 
-  validate(payload, i, value) {
-    var copy = Map.from(payload);
-    final string = value[value.length - 1];
+  setQuantity(item, i, value) {
+    var itemCopy = Map.from(item);
+    print(itemCopy);
     if (value == '') {
       setState(() {
         sendData['itemsList'][i]['validate'] = true;
@@ -117,46 +119,56 @@ class _ReturnState extends State<Return> {
       return;
     }
     if (value[value.length - 1] != '.') {
-      print(double.parse(value).round().runtimeType);
-      print(copy['quantity'].runtimeType);
-      if (double.parse(value).round() > (copy['quantity'].round())) {
+      if (double.parse(value).round() > (itemCopy['quantity'].round())) {
         setState(() {
           sendData['itemsList'][i]['validate'] = true;
           sendData['itemsList'][i]['validateText'] =
-              'Не больше ${copy['quantity'].round()}';
+              'Не больше ${itemCopy['quantity'].round()}';
           height = 20;
         });
         return;
       }
     }
 
-    setState(() {
-      sendData['itemsList'][i]['validate'] = false;
-      sendData['itemsList'][i]['validateText'] = '';
-    });
+    if (itemCopy['uomId'] == 1)
+      setState(() {
+        sendData['itemsList'][i]['validate'] = false;
+        sendData['itemsList'][i]['validateText'] = '';
+      });
     return;
   }
 
-  createReturn() async {
-    print(data);
+  returnCheque() async {
     setState(() {
       sendData['actionDate'] = getUnixTime();
       sendData['chequeId'] = data['id'];
       sendData['clientAmount'] = data['clientAmount'];
+      if (data['clientAmount'] > 0) {
+        if (sendData['totalAmount'] <= data['clientAmount']) {
+          sendData['totalAmount'] = sendData['totalAmount'];
+        }
+      }
       sendData['clientId'] = data['clientId'];
       sendData['saleCurrencyId'] = data['saleCurrencyId'];
       sendData['transactionId'] = generateTransactionId(
-          cashbox['posId'], cashbox['cashboxId'], shift['id'] ?? cashbox['id']);
+        cashbox['posId'],
+        cashbox['cashboxId'],
+        shift['id'] ?? cashbox['id'],
+      );
       sendData['transactionsList'] = [
         {
-          'amountIn': sendData['totalAmount'],
-          'amountOut': 0,
+          'amountIn': 0,
+          'amountOut': sendData['totalAmount'],
           'paymentTypeId': 1,
           'paymentPurposeId': 3
         }
       ];
     });
-    final response = post('/services/desktop/api/cheque-returned', sendData);
+    for (var i = 0; i < sendData['itemsList'].length; i++) {
+      sendData['itemsList'][i].remove('controller');
+    }
+    print('sendDATA${sendData}');
+    //final response = post('/services/desktop/api/cheque-returned', sendData);
   }
 
   getData() async {
@@ -180,7 +192,7 @@ class _ReturnState extends State<Return> {
     if (Get.arguments != null) {
       final id = Get.arguments;
       data['id'] = id.toString();
-      searchCheq(id);
+      searchCheque(id);
     }
   }
 
@@ -240,7 +252,7 @@ class _ReturnState extends State<Return> {
                         },
                         onSubmitted: (value) {
                           if (search.length > 0) {
-                            searchCheq(null);
+                            searchCheque(null);
                           }
                         },
                         keyboardType: TextInputType.number,
@@ -273,7 +285,7 @@ class _ReturnState extends State<Return> {
                       child: ElevatedButton(
                         onPressed: () {
                           if (search.length > 0) {
-                            searchCheq(null);
+                            searchCheque(null);
                           }
                         },
                         child: Text('Поиск'),
@@ -577,31 +589,31 @@ class _ReturnState extends State<Return> {
                                       )),
 
                                   Container(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 8),
-                                      child: (sendData['itemsList'][i]
-                                                  ['discount']) >
-                                              0
-                                          ? Container(
-                                              height: 30,
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                                style: TextStyle(
-                                                    color: Color(0xFF495057)),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            )
-                                          : Container(
-                                              height: 30,
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                '${sendData['itemsList'][i]['salePrice']}',
-                                                style: TextStyle(
-                                                    color: Color(0xFF495057)),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            )),
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: (sendData['itemsList'][i]
+                                                ['discount']) >
+                                            0
+                                        ? Container(
+                                            height: 30,
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                              style: TextStyle(
+                                                  color: Color(0xFF495057)),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          )
+                                        : Container(
+                                            height: 30,
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '${sendData['itemsList'][i]['salePrice']}',
+                                              style: TextStyle(
+                                                  color: Color(0xFF495057)),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                  ),
                                   Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
@@ -615,12 +627,10 @@ class _ReturnState extends State<Return> {
                                               controller: sendData['itemsList']
                                                   [i]['controller'],
                                               onChanged: (value) {
-                                                if (value.length > 0) {
-                                                  validate(
-                                                      sendData['itemsList'][i],
-                                                      i,
-                                                      value);
-                                                }
+                                                setQuantity(
+                                                    sendData['itemsList'][i],
+                                                    i,
+                                                    value);
                                               },
                                               keyboardType:
                                                   TextInputType.number,
@@ -736,7 +746,7 @@ class _ReturnState extends State<Return> {
                 width: MediaQuery.of(context).size.width,
                 child: ElevatedButton(
                     onPressed: () {
-                      createReturn();
+                      returnCheque();
                     },
                     style: ElevatedButton.styleFrom(
                         primary: sendData['itemsList'].length > 0
@@ -779,7 +789,7 @@ class _ReturnState extends State<Return> {
   //               width: MediaQuery.of(context).size.width * 0.33,
   //               child: ElevatedButton(
   //                 onPressed: () {
-  //                   createReturn();
+  //                   returnCheque();
   //                   Navigator.pop(context);
   //                 },
   //                 style: ElevatedButton.styleFrom(
