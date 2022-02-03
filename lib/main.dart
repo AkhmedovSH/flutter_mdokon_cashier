@@ -23,7 +23,7 @@ import 'pages/client_debt.dart';
 import 'pages/sales_on_credit.dart';
 import 'pages/calculator.dart';
 
-void main() {
+void main() { 
   runApp(const MyApp());
 }
 

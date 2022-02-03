@@ -184,7 +184,7 @@ class _CheqDetailState extends State<CheqDetail> {
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          '${itemsList[i]['totalPrice']}',
+                          '${cheq['totalPrice']}',
                           textAlign: TextAlign.end,
                           style: TextStyle(color: b8),
                         ),

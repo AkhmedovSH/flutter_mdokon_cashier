@@ -34,8 +34,8 @@ class _IndexState extends State<Index> {
   };
   dynamic debtIn = {
     "amountIn": 0,
-    "cash": 0,
-    "terminal": 0,
+    "cash": '',
+    "terminal": '',
     "amountOut": 0,
     "cashboxId": '',
     "clientId": 0,
@@ -83,7 +83,6 @@ class _IndexState extends State<Index> {
   }
 
   createDebtorOut() async {
-    print(111);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
     print(cashbox);
@@ -611,11 +610,15 @@ class _IndexState extends State<Index> {
 
   showModal() async {
     await getClients();
+    setState(() {
+      debtIn['cash'] = '0';
+    });
     final result = await showDialog(
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
           dynamic content = clients;
+          dynamic client = null;
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
@@ -661,7 +664,7 @@ class _IndexState extends State<Index> {
                       height: 5,
                     ),
                     SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.35,
+                        height: MediaQuery.of(context).size.height * 0.2,
                         child: SingleChildScrollView(
                           child: Table(
                               border: TableBorder(
@@ -700,6 +703,7 @@ class _IndexState extends State<Index> {
                                         }
                                         setState(() {
                                           content = arr;
+                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
@@ -719,6 +723,7 @@ class _IndexState extends State<Index> {
                                             !arr[i]['selected'];
                                         setState(() {
                                           content = arr;
+                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
@@ -738,6 +743,7 @@ class _IndexState extends State<Index> {
                                             !arr[i]['selected'];
                                         setState(() {
                                           content = arr;
+                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
@@ -782,18 +788,20 @@ class _IndexState extends State<Index> {
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
                     onPressed: () {
-                      if (debtIn['cash'].toString().length > 0 ||
-                          debtIn['terminal'].toString().length > 0) {
-                        for (var i = 0; i < content.length; i++) {
-                          if (content[i]['selected']) {
-                            Navigator.pop(context, content[i]);
-                          }
-                        }
+                      print(client);
+                      print(client != null);
+                      if (int.parse(debtIn['cash']) > 0 ||
+                          debtIn['terminal'].toString().length > 0 ||
+                          client != null) {
+                        Navigator.pop(context, client);
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        primary: int.parse(debtIn['cash']) > 0 ||
+                                int.parse(debtIn['cash']) > 0 && client != null
+                            ? blue
+                            : lightGrey),
                     child: Text('Принять'),
                   ),
                 )

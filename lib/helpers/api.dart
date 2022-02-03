@@ -39,6 +39,7 @@ Future post(String url, dynamic payload) async {
   print(payload);
   controller.showLoading;
   try {
+    print(hostUrl + url);
     final response = await dio.post(hostUrl + url,
         data: payload,
         options: Options(headers: {

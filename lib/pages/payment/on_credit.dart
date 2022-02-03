@@ -52,7 +52,6 @@ class _OnCreditState extends State<OnCredit> {
 
   createClient() {
     print(sendData);
-    // final response = post('/services/desktop/api/clients', sendData);
   }
 
   getClients() async {
@@ -96,8 +95,9 @@ class _OnCreditState extends State<OnCredit> {
       data = widget.data!;
       data['totalPrice'] = totalAmount.round();
       data['change'] = -totalAmount.round();
-      data['paid'] = totalAmount.round();
+      data['paid'] = 0;
     });
+    print(textController.text);
   }
 
   @override
@@ -689,53 +689,3 @@ class _OnCreditState extends State<OnCredit> {
     );
   }
 }
-
-// DataTable(
-//                                       showCheckboxColumn: true,
-//                                       border: TableBorder(
-//                                           horizontalInside: BorderSide(
-//                                               width: 1,
-//                                               color: Color(0xFFDADADa),
-//                                               style: BorderStyle
-//                                                   .solid)), // Allows to add a border decoration around your table
-
-//                                       columns: [
-//                                         DataColumn(label: Text(
-//                                               'Контакт',
-//                                               textAlign: TextAlign.center,
-//                                             ),),
-//                                         DataColumn(label: Text(
-//                                               'Номер телефона',
-//                                               textAlign: TextAlign.center,
-//                                             ),),
-//                                         DataColumn(label: Text('Комментарий')),
-//                                       ],
-//                                       rows: [
-//                                         for (var i = 0; i < clients.length; i++)
-//                                           DataRow(cells: [
-//                                             DataCell(
-//                                               Container(
-//                                                 padding: EdgeInsets.symmetric(
-//                                                     vertical: 8),
-//                                                 child: Text(
-//                                                     '${clients[i]['name']}'),
-//                                               ),
-//                                             ),
-//                                             DataCell(
-//                                               Container(
-//                                                 padding: EdgeInsets.symmetric(
-//                                                     vertical: 8),
-//                                                 child: Text(
-//                                                     '${clients[i]['phone1']}'),
-//                                               ),
-//                                             ),
-//                                             DataCell(
-//                                               Container(
-//                                                 padding: EdgeInsets.symmetric(
-//                                                     vertical: 8),
-//                                                 child: Text(
-//                                                     '${clients[i]['comment']}'),
-//                                               ),
-//                                             )
-//                                           ]),
-//                                       ])

@@ -59,9 +59,6 @@ class _PaymentSampleState extends State<PaymentSample> {
   dynamic cashbox = {};
 
   setData(payload, payload2, {dynamic payload3}) {
-    print(payload);
-    print(payload2);
-    print(payload3);
     setState(() {
       textController.text = payload;
       textController2.text = payload2;
@@ -116,33 +113,34 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
-    setState(() {});
     var transactionsList = data['transactionsList'];
-    if (textController.text.length > 0) {
-      transactionsList.add({
-        'amountIn': textController.text,
-        'amountOut': 0,
-        'paymentPurposeId': 1,
-        'paymentTypeId': 1,
-      });
-    }
-    if (textController2.text.length > 0) {
-      transactionsList.add({
-        'amountIn': textController2.text,
-        'amountOut': 0,
-        'paymentPurposeId': 1,
-        'paymentTypeId': 2,
-      });
-    }
-    if (data['change'] > 0) {
-      transactionsList.add({
-        'amountIn': 0,
-        'amountOut': data['change'],
-        'paymentPurposeId': 2,
-        'paymentTypeId': 1,
-      });
-    }
-    if (currentIndex == 0) {
+    if (currentIndex == 0 || currentIndex == 1) {
+      setState(() {});
+      if (textController.text.length > 0) {
+        transactionsList.add({
+          'amountIn': textController.text,
+          'amountOut': 0,
+          'paymentPurposeId': 1,
+          'paymentTypeId': 1,
+        });
+      }
+      if (textController2.text.length > 0) {
+        transactionsList.add({
+          'amountIn': textController2.text,
+          'amountOut': 0,
+          'paymentPurposeId': 1,
+          'paymentTypeId': 2,
+        });
+      }
+      if (data['change'] > 0) {
+        transactionsList.add({
+          'amountIn': 0,
+          'amountOut': data['change'],
+          'paymentPurposeId': 2,
+          'paymentTypeId': 1,
+        });
+      }
+
       if (textController2.text.length > 0) {
         setState(() {
           data['paid'] =
@@ -153,13 +151,16 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       } else {
         setState(() {
-          data['paid'] = int.parse(textController.text);
+          if (currentIndex == 0) {
+            data['paid'] = (textController.text);
+          }
         });
       }
     }
     if (currentIndex == 1) {
+      print(textController.text);
+      print(textController2.text);
       if (textController.text.length > 0) {
-        print(111);
         if (textController2.text.length > 0) {
           setState(() {
             data['change'] = (int.parse(textController.text) +
@@ -180,7 +181,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         }
       } else {
         setPayload('clientAmount', data['totalPrice']);
-        setPayload('paid', textController.text);
+        setPayload('paid', 0);
       }
     }
     if (currentIndex == 2) {
@@ -208,6 +209,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       });
       setState(() {
         data['transactionsList'] = list;
+        data['itemsList'] = products;
       });
       print(data);
       final response = await post('/services/desktop/api/cheque', data);
@@ -229,16 +231,17 @@ class _PaymentSampleState extends State<PaymentSample> {
       }
       return;
     }
-    print(data['paid']);
     setState(() {
-      data['change'] = 0;
+      if (currentIndex == 1) {
+        data['change'] = 0;
+      }
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
-    print(data['change']);
-    // for (String key in data.keys) {
-    //   print('$key : ${data[key]}');
-    // }
+    print(data);
+    // // for (String key in data.keys) {
+    // //   print('$key : ${data[key]}');
+    // // }
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
       controller.hideLoading();
@@ -263,7 +266,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['paid'] = totalAmount.round();
       data['text'] = data['totalPrice'].toString();
     });
-    textController.text = data['totalPrice'].toString();
+    textController.text = '';
   }
 
   @override
@@ -374,7 +377,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                               : blue
                           : data['loyaltyClientName'] == null &&
                                   data['loyaltyClientAmount'] == null &&
-                                  data['loyaltyClientAmount'] != null
+                                  data['loyaltyBonus'] == null
                               ? lightGrey
                               : blue),
               child: Text('ПРИНЯТЬ')),

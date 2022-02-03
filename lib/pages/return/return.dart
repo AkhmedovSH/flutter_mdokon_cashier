@@ -23,6 +23,8 @@ class _ReturnState extends State<Return> {
   dynamic itemsList = [];
   dynamic returnedList = [];
   dynamic search = 0;
+  dynamic cashbox = {};
+  dynamic shift = {};
   dynamic data = {'cashierName': 'Фамилия И.О.', 'chequeNumber': '000000'};
   dynamic sendData = {
     'actionDate': 0,
@@ -39,9 +41,6 @@ class _ReturnState extends State<Return> {
     'shiftId': '',
     'totalAmount': 0,
     'transactionId': "",
-    'transactionsList': [
-      {"amountIn": 0, "amountOut": 0, "paymentTypeId": 1, "paymentPurposeId": 3}
-    ]
   };
 
   searchCheq(id) async {
@@ -56,6 +55,7 @@ class _ReturnState extends State<Return> {
     if (response['id'] != null) {
       setState(() {
         data = response;
+        print(data);
         itemsList = data['itemsList'];
       });
       final list = itemsList;
@@ -76,7 +76,7 @@ class _ReturnState extends State<Return> {
 
   addToReturnList(item, index) {
     item['controller'] = TextEditingController();
-    item['controller'].text = item['quantity'].toString();
+    item['controller'].text = item['quantity'].round().toString();
     item['errorText'] = '';
     setState(() {
       itemsList.removeAt(index);
@@ -119,7 +119,7 @@ class _ReturnState extends State<Return> {
     if (value[value.length - 1] != '.') {
       print(double.parse(value).round().runtimeType);
       print(copy['quantity'].runtimeType);
-      if (double.parse(value) > double.parse(copy['quantity'])) {
+      if (double.parse(value).round() > (copy['quantity'].round())) {
         setState(() {
           sendData['itemsList'][i]['validate'] = true;
           sendData['itemsList'][i]['validateText'] =
@@ -129,7 +129,7 @@ class _ReturnState extends State<Return> {
         return;
       }
     }
-    
+
     setState(() {
       sendData['itemsList'][i]['validate'] = false;
       sendData['itemsList'][i]['validateText'] = '';
@@ -137,10 +137,37 @@ class _ReturnState extends State<Return> {
     return;
   }
 
+  createReturn() async {
+    print(data);
+    setState(() {
+      sendData['actionDate'] = getUnixTime();
+      sendData['chequeId'] = data['id'];
+      sendData['clientAmount'] = data['clientAmount'];
+      sendData['clientId'] = data['clientId'];
+      sendData['saleCurrencyId'] = data['saleCurrencyId'];
+      sendData['transactionId'] = generateTransactionId(
+          cashbox['posId'], cashbox['cashboxId'], shift['id'] ?? cashbox['id']);
+      sendData['transactionsList'] = [
+        {
+          'amountIn': sendData['totalAmount'],
+          'amountOut': 0,
+          'paymentTypeId': 1,
+          'paymentPurposeId': 3
+        }
+      ];
+    });
+    final response = post('/services/desktop/api/cheque-returned', sendData);
+  }
+
   getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    dynamic shift = {};
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      if (prefs.getString('shift') != null) {
+        shift = jsonDecode(prefs.getString('shift')!);
+      }
+    });
+    // dynamic shift = {};
     if (prefs.getString('shift') != null) {
       shift = jsonDecode(prefs.getString('shift')!);
     }
@@ -152,6 +179,7 @@ class _ReturnState extends State<Return> {
     });
     if (Get.arguments != null) {
       final id = Get.arguments;
+      data['id'] = id.toString();
       searchCheq(id);
     }
   }
@@ -589,13 +617,13 @@ class _ReturnState extends State<Return> {
                                               onChanged: (value) {
                                                 if (value.length > 0) {
                                                   validate(
-                                                    sendData['itemsList'][i],
-                                                    i,
-                                                    value);
+                                                      sendData['itemsList'][i],
+                                                      i,
+                                                      value);
                                                 }
-                                                
                                               },
-                                              keyboardType: TextInputType.number,
+                                              keyboardType:
+                                                  TextInputType.number,
                                               decoration: InputDecoration(
                                                 enabledBorder:
                                                     OutlineInputBorder(
@@ -632,10 +660,12 @@ class _ReturnState extends State<Return> {
                                                       ['validateText'] !=
                                                   null
                                               ? Text(
-                                                  '${sendData['itemsList'][i]['validateText'] ?? ''}', 
+                                                  '${sendData['itemsList'][i]['validateText'] ?? ''}',
                                                   overflow: TextOverflow.fade,
                                                   maxLines: 1,
-                                                  style: TextStyle(fontSize: 8, color: Color(0xFFf46a6a)),
+                                                  style: TextStyle(
+                                                      fontSize: 8,
+                                                      color: Color(0xFFf46a6a)),
                                                 )
                                               : Container()
                                         ],
@@ -705,7 +735,9 @@ class _ReturnState extends State<Return> {
               SizedBox(
                 width: MediaQuery.of(context).size.width,
                 child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      createReturn();
+                    },
                     style: ElevatedButton.styleFrom(
                         primary: sendData['itemsList'].length > 0
                             ? Color(0xFFf46a6a)
@@ -722,4 +754,43 @@ class _ReturnState extends State<Return> {
           ),
         ));
   }
+
+  // showConfirmModal() {
+  //   return showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) => AlertDialog(
+  //       title: const Text('Вы уверены?'),
+  //       // content: const Text('AlertDialog description'),
+  //       actions: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             SizedBox(
+  //               width: MediaQuery.of(context).size.width * 0.33,
+  //               child: ElevatedButton(
+  //                 onPressed: () => Navigator.pop(context),
+  //                 style: ElevatedButton.styleFrom(
+  //                     primary: red,
+  //                     padding: EdgeInsets.symmetric(vertical: 10)),
+  //                 child: const Text('Отмена'),
+  //               ),
+  //             ),
+  //             SizedBox(
+  //               width: MediaQuery.of(context).size.width * 0.33,
+  //               child: ElevatedButton(
+  //                 onPressed: () {
+  //                   createReturn();
+  //                   Navigator.pop(context);
+  //                 },
+  //                 style: ElevatedButton.styleFrom(
+  //                     padding: EdgeInsets.symmetric(vertical: 10)),
+  //                 child: const Text('Продолжить'),
+  //               ),
+  //             )
+  //           ],
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 }

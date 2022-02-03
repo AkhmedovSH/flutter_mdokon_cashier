@@ -165,17 +165,29 @@ class _LoyaltyState extends State<Loyalty> {
                     textController3.text =
                         (data['totalPrice'] - int.parse(value)).toString();
                     widget.setPayload!('loyaltyClientAmount', value);
-                    textController5.text =
-                        ((data['totalPrice'] - int.parse(value)) *
-                                (data['award'] / 100))
-                            .round()
-                            .toString();
+                    if (data['award'] != null) {
+                      textController5.text =
+                          ((data['totalPrice'] - int.parse(value)) *
+                                  (data['award'] / 100))
+                              .round()
+                              .toString();
+                    }
                     widget.setPayload!('loyaltyBonus', textController5.text);
                   });
                   widget.setData!(
                     textController3.text,
                     value,
                   );
+                } else {
+                  textController3.text = (data['totalPrice']).toString();
+                  widget.setPayload!('loyaltyClientAmount', 0);
+                  if (data['award'] != null) {
+                    textController5.text =
+                        ((data['totalPrice']) * (data['award'] / 100))
+                            .round()
+                            .toString();
+                  }
+                  widget.setPayload!('loyaltyBonus', textController5.text);
                 }
               }
               if (index == 4) {
