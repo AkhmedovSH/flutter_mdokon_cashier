@@ -13,13 +13,15 @@ class Calculator extends StatefulWidget {
 class _CalculatorState extends State<Calculator> {
   dynamic product = Get.arguments;
   dynamic prevProduct = {};
+  dynamic fieldName = 'quantity';
 
   increment(number) {
     var parsed = "";
-    if (product['quantity'].toString()[0] == "0") {
+    print(fieldName);
+    if (product[fieldName].toString()[0] == "0") {
       parsed = number;
     } else {
-      parsed = product['quantity'].toString() + number;
+      parsed = product[fieldName].toString() + number;
     }
     var moreThanOneDots = '.'.allMatches(parsed).length <= 1 ? false : true;
     if (moreThanOneDots) {
@@ -28,40 +30,42 @@ class _CalculatorState extends State<Calculator> {
     if (double.parse(parsed) > 0 && !moreThanOneDots) {
       print('BLOCK-1');
       setState(() {
-        product['quantity'] = parsed;
+        print(parsed.runtimeType);
+        product[fieldName] = parsed;
+        product['totalAmount'];
       });
     } else {
       print('BLOCK-3');
       setState(() {
-        product['quantity'] = 0;
+        product[fieldName] = 0;
       });
     }
   }
 
   _delete() {
-    if (product['quantity'].runtimeType == String) {
-      if ((product['quantity']).length > 1) {
+    if (product[fieldName].runtimeType == String) {
+      if ((product[fieldName]).length > 1) {
         String string = product['quantity'].toString();
         string = string.substring(0, string.length - 1);
         setState(() {
-          product['quantity'] = string;
+          product[fieldName] = string;
         });
       } else {
         setState(() {
-          product['quantity'] = 0;
+          product[fieldName] = 0;
         });
       }
       return;
     }
-    if ((product['quantity']) > 1) {
-      String string = product['quantity'].toString();
+    if ((product[fieldName]) > 1) {
+      String string = product[fieldName].toString();
       string = string.substring(0, string.length - 1);
       setState(() {
-        product['quantity'] = string;
+        product[fieldName] = string;
       });
     } else {
       setState(() {
-        product['quantity'] = 0;
+        product[fieldName] = 0;
       });
     }
   }
@@ -85,8 +89,11 @@ class _CalculatorState extends State<Calculator> {
     super.initState();
     final product = Get.arguments;
     Map copyObject = Map.from(product);
+    print(product);
     setState(() {
       product['quantity'] = product['quantity'].toString();
+      product['discount'] = product['discount'].toString();
+      product['totalPrice'] = product['totalPrice'].round().toString();
       prevProduct = copyObject;
     });
   }
@@ -148,15 +155,43 @@ class _CalculatorState extends State<Calculator> {
     );
   }
 
-  buildButton(item) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 22),
-      color: item['active'] ? blue : const Color(0xFFDADADA),
-      child: Text(
-        item['title'],
-        style:
-            TextStyle(color: white, fontWeight: FontWeight.bold, fontSize: 16),
-        textAlign: TextAlign.center,
+  buildButton(item, number) {
+    return GestureDetector(
+      onTap: () {
+        if (!item['active']) {
+          setState(() {
+            items[3]['active'] = false;
+            items2[3]['active'] = false;
+            items3[3]['active'] = false;
+            items4[3]['active'] = false;
+            if (number == 1) {
+              items[3]['active'] = true;
+              fieldName = 'quantity';
+            }
+            if (number == 2) {
+              items2[3]['active'] = true;
+              fieldName = 'salePrice';
+            }
+            if (number == 3) {
+              items3[3]['active'] = true;
+              fieldName = 'quantity';
+            }
+            if (number == 4) {
+              items4[3]['active'] = true;
+              fieldName = 'discount';
+            }
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 22),
+        color: item['active'] ? blue : const Color(0xFFDADADA),
+        child: Text(
+          item['title'],
+          style: TextStyle(
+              color: white, fontWeight: FontWeight.bold, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -197,7 +232,7 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${product['price']} So\'m x ${product['quantity']} кг',
+                    '${product['price']} So\'m x ${product['quantity']} ${product['uomId'] == 1 ? 'шт' : 'кг'}',
                     style: TextStyle(color: lightGrey),
                   ),
                   Row(
@@ -206,7 +241,7 @@ class _CalculatorState extends State<Calculator> {
                       Container(
                         margin: const EdgeInsets.only(right: 5),
                         child: Text(
-                          '${product['total_amount']}',
+                          '${product['totalPrice']}',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16),
                         ),
@@ -247,7 +282,7 @@ class _CalculatorState extends State<Calculator> {
             margin: const EdgeInsets.symmetric(horizontal: 20),
             alignment: Alignment.centerRight,
             child: Text(
-              '${product['quantity']}',
+              '${product[fieldName]}',
               style: TextStyle(fontSize: 36, fontWeight: FontWeight.w300),
             ),
           ),
@@ -273,7 +308,7 @@ class _CalculatorState extends State<Calculator> {
                     flex: 2,
                     child: items[i]['id'] == 1
                         ? buildNumber(items[i])
-                        : buildButton(items[i]))
+                        : buildButton(items[i], 1))
             ],
           ),
           Row(
@@ -284,7 +319,7 @@ class _CalculatorState extends State<Calculator> {
                     flex: 2,
                     child: items2[i]['id'] == 1
                         ? buildNumber(items2[i])
-                        : buildButton(items2[i]))
+                        : buildButton(items2[i], 2))
             ],
           ),
           Row(
@@ -295,7 +330,7 @@ class _CalculatorState extends State<Calculator> {
                     flex: 2,
                     child: items3[i]['id'] == 1
                         ? buildNumber(items3[i])
-                        : buildButton(items3[i]))
+                        : buildButton(items3[i], 3))
             ],
           ),
           Row(
@@ -331,7 +366,7 @@ class _CalculatorState extends State<Calculator> {
                                     )),
                               )
                             : buildNumber(items4[i])
-                        : buildButton(items4[i]))
+                        : buildButton(items4[i], 4))
             ],
           ),
         ]),

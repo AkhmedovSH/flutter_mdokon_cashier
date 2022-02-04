@@ -88,12 +88,12 @@ class _IndexState extends State<Index> {
     print(cashbox);
     setState(() {
       expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
-      expenseOut['posId'] = cashbox['posId'];
-      expenseOut['currencyId'] = cashbox['defaultCurrency'];
+      expenseOut['posId'] = cashbox['posId'].toString();
+      expenseOut['currencyId'] = cashbox['defaultCurrency'].toString();
       if (prefs.getString('shift') != null) {
         expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
       } else {
-        expenseOut['shiftId'] = cashbox['id'];
+        expenseOut['shiftId'] = cashbox['id'].toString();
       }
     });
     final response =
@@ -304,19 +304,21 @@ class _IndexState extends State<Index> {
                 onTap: () async {
                   final result =
                       await Get.toNamed('/calculator', arguments: products[i]);
-                  print(result);
-                  var arr = products;
-                  for (var i = 0; i < arr.length; i++) {
-                    if (arr[i]['productId'] == result['productId']) {
-                      arr[i]['total_amount'] =
-                          double.parse(arr[i]['quantity']) *
-                              (arr[i]['salePrice'].round());
-                      arr[i] = result;
+                  if (result != null) {
+                    print(result);
+                    var arr = products;
+                    for (var i = 0; i < arr.length; i++) {
+                      if (arr[i]['productId'] == result['productId']) {
+                        arr[i]['total_amount'] =
+                            double.parse(arr[i]['quantity']) *
+                                (arr[i]['salePrice'].round());
+                        arr[i] = result;
+                      }
                     }
+                    setState(() {
+                      products = arr;
+                    });
                   }
-                  setState(() {
-                    products = arr;
-                  });
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width,
