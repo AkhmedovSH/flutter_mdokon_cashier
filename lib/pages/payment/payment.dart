@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import 'package:kassa/helpers/globals.dart';
 
-
 class Payment extends StatefulWidget {
   const Payment({Key? key, this.getPayload, this.data, this.setData})
       : super(key: key);
@@ -23,7 +22,24 @@ class _PaymentState extends State<Payment> {
   dynamic products = Get.arguments;
   dynamic sendData = {};
   dynamic data = {};
-  
+
+  calculateChange() {
+    widget.setData!(textController.text, textController2.text);
+    var change = 0;
+    var paid = 0;
+    if (textController.text.isNotEmpty) {
+      paid += int.parse(textController.text);
+    }
+    if (textController2.text.isNotEmpty) {
+      paid += int.parse(textController2.text);
+    }
+    change = (paid - data['totalPrice']) as int;
+
+    setState(() {
+      data['change'] = change;
+      data['paid'] = paid;
+    });
+  }
 
   @override
   void initState() {
@@ -77,29 +93,7 @@ class _PaymentState extends State<Payment> {
                         }
                       },
                       onChanged: (value) {
-                        // textController.text = value;
-                        if (value.length > 0) {
-                          if (textController2.text.length > 0) {
-                            setState(() {
-                              data['change'] = (int.parse(textController.text) +
-                                      int.parse(textController2.text)) -
-                                  (data['totalPrice']);
-                              widget.setData!(textController.text, textController2.text);
-                            });
-                          } else {
-                            setState(() {
-                              data['change'] =
-                                  (int.parse(textController.text)) -
-                                      (data['totalPrice']);
-                              widget.setData!(textController.text, textController2.text);
-                            });
-                          }
-                        } else {
-                          setState(() {
-                            data['change'] = 0 - (data['totalPrice']);
-                            widget.setData!(textController.text, textController2.text);
-                          });
-                        }
+                        calculateChange();
                       },
                       decoration: InputDecoration(
                         contentPadding:
@@ -145,28 +139,7 @@ class _PaymentState extends State<Payment> {
                         }
                       },
                       onChanged: (value) {
-                        if (value.length > 0) {
-                          if (textController.text.length > 0) {
-                            setState(() {
-                              data['change'] = (int.parse(textController.text) +
-                                      int.parse(textController2.text)) -
-                                  (data['totalPrice']);
-                              widget.setData!(textController.text, textController2.text);
-                            });
-                          } else {
-                            setState(() {
-                              data['change'] =
-                                  (int.parse(textController2.text)) -
-                                      (data['totalPrice']);
-                              widget.setData!(textController.text, textController2.text);
-                            });
-                          }
-                        } else {
-                          setState(() {
-                            data['change'] = 0 - (data['totalPrice']);
-                            widget.setData!(textController.text, textController2.text);
-                          });
-                        }
+                        calculateChange();
                       },
                       decoration: InputDecoration(
                         contentPadding:

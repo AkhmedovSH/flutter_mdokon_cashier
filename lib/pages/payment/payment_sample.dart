@@ -74,46 +74,8 @@ class _PaymentSampleState extends State<PaymentSample> {
     });
   }
 
-  getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String version = packageInfo.version;
-    setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
-    });
-    final username = prefs.getString('username');
-    if (prefs.getString('shift') != null) {
-      final shift = jsonDecode(prefs.getString('shift')!);
-      setState(() {
-        data['shiftId'] = shift['id'];
-      });
-    } else {
-      setState(() {
-        data['shiftId'] = cashbox['id'];
-      });
-    }
-    final transactionId = generateTransactionId(
-        cashbox['posId'].toString(),
-        cashbox['cashboxId'].toString(),
-        prefs.getString('shift') != null
-            ? jsonDecode(prefs.getString('shift')!)['id']
-            : cashbox['cashboxId'].toString());
-    setState(() {
-      data['login'] = username;
-      data['cashierLogin'] = username;
-      data['cashboxId'] = cashbox['cashboxId'];
-      data['cashboxVersion'] = version;
-      data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      data['currencyId'] = cashbox['defaultCurrency'];
-      data['saleCurrencyId'] = cashbox['defaultCurrency'];
-      data['posId'] = cashbox['posId'];
-      data['chequeNumber'] = generateChequeNumber();
-      data['transactionId'] = transactionId;
-    });
-  }
-
   createCheque() async {
-    var transactionsList = data['transactionsList'];
+    var transactionsList = [];
     if (currentIndex == 0 || currentIndex == 1) {
       setState(() {});
       if (textController.text.length > 0) {
@@ -192,7 +154,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         'paymentPurposeId': 1,
         'paymentTypeId': 1,
       });
-      // print(textController3);
+
       if (textController3.text.length > 0) {
         list.add({
           'amountIn': textController3.text,
@@ -201,19 +163,21 @@ class _PaymentSampleState extends State<PaymentSample> {
           'paymentTypeId': 1,
         });
       }
+
       list.add({
         'amountIn': textController2.text,
         'amountOut': 0,
         'paymentPurposeId': 9,
         'paymentTypeId': 4,
       });
+
       setState(() {
         data['transactionsList'] = list;
         data['itemsList'] = products;
       });
-      print(data);
+
       final response = await post('/services/desktop/api/cheque', data);
-      print(response);
+
       var sendData = {
         'cashierName': data['loyaltyClientName'],
         'chequeDate': getUnixTime().toString().substring(0, 10),
@@ -231,6 +195,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       }
       return;
     }
+    //print(transactionsList);
     setState(() {
       if (currentIndex == 1) {
         data['change'] = 0;
@@ -238,10 +203,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
-    print(data);
-    // // for (String key in data.keys) {
-    // //   print('$key : ${data[key]}');
-    // // }
+
     final response = await post('/services/desktop/api/cheque', data);
     if (response['success']) {
       controller.hideLoading();
@@ -267,6 +229,46 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['text'] = data['totalPrice'].toString();
     });
     textController.text = '';
+  }
+
+  getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String version = packageInfo.version;
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+    });
+    final username = prefs.getString('username');
+    if (prefs.getString('shift') != null) {
+      final shift = jsonDecode(prefs.getString('shift')!);
+      setState(() {
+        data['shiftId'] = shift['id'];
+      });
+    } else {
+      setState(() {
+        data['shiftId'] = cashbox['id'];
+      });
+    }
+    final transactionId = generateTransactionId(
+        cashbox['posId'].toString(),
+        cashbox['cashboxId'].toString(),
+        prefs.getString('shift') != null
+            ? jsonDecode(prefs.getString('shift')!)['id']
+            : cashbox['cashboxId'].toString());
+    setState(() {
+      data['login'] = username;
+      data['cashierLogin'] = username;
+      data['cashboxId'] = cashbox['cashboxId'];
+      data['cashboxVersion'] = version;
+      data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+      data['currencyId'] = cashbox['defaultCurrency'];
+      data['saleCurrencyId'] = cashbox['defaultCurrency'];
+      data['posId'] = cashbox['posId'];
+      data['chequeNumber'] = generateChequeNumber();
+      data['transactionId'] = transactionId;
+
+      textController.text = data['text'];
+    });
   }
 
   @override

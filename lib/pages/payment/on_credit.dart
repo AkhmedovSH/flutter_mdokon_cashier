@@ -54,6 +54,23 @@ class _OnCreditState extends State<OnCredit> {
     print(sendData);
   }
 
+  calculateChange() {
+    var change = 0;
+    var paid = 0;
+    if (textController.text.isNotEmpty) {
+      paid += int.parse(textController.text);
+    }
+    if (textController2.text.isNotEmpty) {
+      paid += int.parse(textController2.text);
+    }
+    change = (paid - data['totalPrice']) as int;
+
+    setState(() {
+      data['change'] = change;
+      data['paid'] = paid;
+    });
+  }
+
   getClients() async {
     final response = await get('/services/desktop/api/clients-helper');
     //print(response);
@@ -547,30 +564,7 @@ class _OnCreditState extends State<OnCredit> {
                             }
                           },
                           onChanged: (value) {
-                            if (value.length > 0) {
-                              if (textController2.text.length > 0) {
-                                setState(() {
-                                  data['change'] =
-                                      (int.parse(textController.text) +
-                                              int.parse(textController2.text)) -
-                                          (data['totalPrice']);
-                                });
-                              } else {
-                                setState(() {
-                                  data['change'] =
-                                      (int.parse(textController.text)) -
-                                          (data['totalPrice']);
-                                });
-                              }
-                              widget.setData!(
-                                  textController.text, textController2.text);
-                            } else {
-                              setState(() {
-                                data['change'] = 0 - (data['totalPrice']);
-                                widget.setData!(
-                                    textController.text, textController2.text);
-                              });
-                            }
+                            calculateChange();
                           },
                           decoration: InputDecoration(
                             contentPadding:
@@ -616,30 +610,7 @@ class _OnCreditState extends State<OnCredit> {
                             }
                           },
                           onChanged: (value) {
-                            if (value.length > 0) {
-                              if (textController.text.length > 0) {
-                                setState(() {
-                                  data['change'] =
-                                      (int.parse(textController.text) +
-                                              int.parse(textController2.text)) -
-                                          (data['totalPrice']);
-                                });
-                              } else {
-                                setState(() {
-                                  data['change'] =
-                                      (int.parse(textController2.text)) -
-                                          (data['totalPrice']);
-                                });
-                              }
-                              widget.setData!(
-                                  textController.text, textController2.text);
-                            } else {
-                              setState(() {
-                                data['change'] = 0 - (data['totalPrice']);
-                                widget.setData!(
-                                    textController.text, textController2.text);
-                              });
-                            }
+                            calculateChange();
                           },
                           decoration: InputDecoration(
                             contentPadding:
