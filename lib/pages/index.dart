@@ -130,6 +130,23 @@ class _IndexState extends State<Index> {
     final response = await post('/services/desktop/api/client-debt-in', debtIn);
   }
 
+  redirectToCalculator(i) async {
+    final result = await Get.toNamed('/calculator', arguments: products[i]);
+    if (result != null) {
+      var arr = products;
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i]['productId'] == result['productId']) {
+          arr[i]['total_amount'] =
+              double.parse(arr[i]['quantity']) * (arr[i]['salePrice'].round());
+          arr[i] = result;
+        }
+      }
+      setState(() {
+        products = arr;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -302,23 +319,7 @@ class _IndexState extends State<Index> {
               direction: DismissDirection.endToStart,
               child: GestureDetector(
                 onTap: () async {
-                  final result =
-                      await Get.toNamed('/calculator', arguments: products[i]);
-                  if (result != null) {
-                    print(result);
-                    var arr = products;
-                    for (var i = 0; i < arr.length; i++) {
-                      if (arr[i]['productId'] == result['productId']) {
-                        arr[i]['total_amount'] =
-                            double.parse(arr[i]['quantity']) *
-                                (arr[i]['salePrice'].round());
-                        arr[i] = result;
-                      }
-                    }
-                    setState(() {
-                      products = arr;
-                    });
-                  }
+                  redirectToCalculator(i);
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width,

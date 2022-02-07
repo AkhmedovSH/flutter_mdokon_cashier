@@ -17,10 +17,38 @@ class CheqDetail extends StatefulWidget {
 }
 
 class _CheqDetailState extends State<CheqDetail> {
-  dynamic cheque = {};
+  dynamic cheque = {
+    "id": 0,
+    "cashierName": "",
+    "chequeNumber": 0,
+    "chequeDate": 0,
+    "saleCurrencyId": 0,
+    "saleCurrencyName": "Сум",
+    "totalPrice": 0,
+    "discount": 0,
+    "paid": 0,
+    "change": 0,
+    "clientId": 0,
+    "clientName": "",
+    "clientAmount": 0,
+    "clientCurrencyId": 0,
+    "clientCurrencyName": "",
+    "loyaltyClientName": "",
+    "loyaltyClientAmount": 0,
+    "loyaltyBonus": 0,
+    "transactionId": "",
+    "returned": 0,
+    "returnedPrice": 0,
+    "itemsList": [],
+    "transactionsList": []
+  };
   dynamic itemsList = [];
   dynamic transactionsList = [];
-  dynamic cashbox = {};
+  dynamic cashbox = {
+    "posName": "",
+    "posPhone": "",
+    "posAddress": "",
+  };
 
   getCheque() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,7 +65,7 @@ class _CheqDetailState extends State<CheqDetail> {
           (cheque['totalPrice'] * cheque['discount']) / 100;
       cheque['chequeDate'] = formatUnixTime(cheque['chequeDate']);
     });
-    print(cheque);
+    //print(cheque);
   }
 
   @override

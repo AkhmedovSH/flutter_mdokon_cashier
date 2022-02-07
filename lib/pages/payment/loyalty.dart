@@ -78,11 +78,11 @@ class _LoyaltyState extends State<Loyalty> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (search.length == 6 || search.length == 12) {
-        print(cashbox);
+        //print(cashbox);
         var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
         final response =
-            await l_post('/services/gocashapi/api/get-user-balance', sendData);
-        print(response);
+            await lPost('/services/gocashapi/api/get-user-balance', sendData);
+        //print(response);
         if (response['reason'] == "SUCCESS") {
           setState(() {
             textController2.text = response['balance'].round().toString();
@@ -92,6 +92,7 @@ class _LoyaltyState extends State<Loyalty> {
                 response['firstName'] + response['lastName']);
             widget.setPayload!('clientCode', search);
             data['award'] = response['award'].round();
+            print('data${response['firstName']}');
             // data['amount'] = response['amount'].round();
           });
         } else {
@@ -139,13 +140,15 @@ class _LoyaltyState extends State<Loyalty> {
                 ? textController
                 : index == 2
                     ? textController2
-                    : index == 4
+                    : index == 3
                         ? textController3
-                        : index == 5
-                            ? textController4
-                            : index == 6
-                                ? textController5
-                                : null,
+                        : index == 4
+                            ? textController3
+                            : index == 5
+                                ? textController4
+                                : index == 6
+                                    ? textController5
+                                    : null,
             keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -160,10 +163,9 @@ class _LoyaltyState extends State<Loyalty> {
                 searchUserBalance();
               }
               if (index == 3) {
-                if (value.length > 0) {
+                if (value.isNotEmpty) {
                   setState(() {
-                    textController3.text =
-                        (data['totalPrice'] - int.parse(value)).toString();
+                    (data['totalPrice'] - int.parse(value)).toString();
                     widget.setPayload!('loyaltyClientAmount', value);
                     if (data['award'] != null) {
                       textController5.text =
@@ -179,6 +181,7 @@ class _LoyaltyState extends State<Loyalty> {
                     value,
                   );
                 } else {
+                  // textController3.text = value;
                   textController3.text = (data['totalPrice']).toString();
                   widget.setPayload!('loyaltyClientAmount', 0);
                   if (data['award'] != null) {

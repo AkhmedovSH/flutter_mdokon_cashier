@@ -119,16 +119,14 @@ getAccessPos(url, payload, {method}) async {
   }
 }
 
-Future l_post(String url, dynamic payload) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  print(payload);
+Future lPost(String url, dynamic payload) async {
   controller.showLoading;
   try {
     final response = await dio.post(
       'https://cabinet.cashbek.uz' + url,
       data: payload,
     );
-    print(200);
+    print(response);
     controller.hideLoading;
     return response.data;
   } on DioError catch (e) {

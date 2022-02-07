@@ -120,8 +120,6 @@ class _PaymentSampleState extends State<PaymentSample> {
       }
     }
     if (currentIndex == 1) {
-      print(textController.text);
-      print(textController2.text);
       if (textController.text.length > 0) {
         if (textController2.text.length > 0) {
           setState(() {
@@ -189,7 +187,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         'writeOff': data['loyaltyBonus'] ?? 0
       };
       final responseLoyalty =
-          await l_post('/services/gocashapi/api/create-cheque', sendData);
+          await lPost('/services/gocashapi/api/create-cheque', sendData);
       if (responseLoyalty['success']) {
         Get.offAllNamed('/');
       }
@@ -203,13 +201,13 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
-
-    final response = await post('/services/desktop/api/cheque', data);
-    if (response['success']) {
-      controller.hideLoading();
-      setState(() {});
-      Get.offAllNamed('/');
-    }
+    print(data['itemsList']);
+    // final response = await post('/services/desktop/api/cheque', data);
+    // if (response['success']) {
+    //   controller.hideLoading();
+    //   setState(() {});
+    //   Get.offAllNamed('/');
+    // }
   }
 
   setInitState() {
