@@ -362,7 +362,7 @@ class _IndexState extends State<Index> {
                             ],
                           ),
                           Text(
-                            '${products[i]['total_amount']} So\'m',
+                            '${products[i]['totalPrice']} So\'m',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: blue,

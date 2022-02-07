@@ -23,7 +23,7 @@ import 'pages/client_debt.dart';
 import 'pages/sales_on_credit.dart';
 import 'pages/calculator.dart';
 
-void main() { 
+void main() {
   runApp(const MyApp());
 }
 
@@ -48,6 +48,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/splash',
       getPages: [
+        GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/splash', page: () => const Splash()),
         // Auth
         GetPage(name: '/login', page: () => const Login()),
@@ -58,7 +59,6 @@ class MyApp extends StatelessWidget {
 
         GetPage(name: '/return', page: () => const Return()),
 
-        GetPage(name: '/', page: () => const Index()),
         GetPage(name: '/search', page: () => const Search()),
         GetPage(name: '/payment', page: () => const PaymentSample()),
         GetPage(name: '/x-report', page: () => const XReport()),

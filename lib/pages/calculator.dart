@@ -17,7 +17,7 @@ class _CalculatorState extends State<Calculator> {
 
   increment(number) {
     var parsed = "";
-    print(fieldName);
+    //print(fieldName);
     if (product[fieldName].toString()[0] == "0") {
       parsed = number;
     } else {
@@ -28,21 +28,21 @@ class _CalculatorState extends State<Calculator> {
       return;
     }
     if (double.parse(parsed) > 0 && !moreThanOneDots) {
-      print('BLOCK-1');
+      //print('BLOCK-1');
       setState(() {
         print(parsed.runtimeType);
-        product[fieldName] = parsed;
-        product['totalAmount'];
+        product['quantity'] = parsed;
+        product['totalPrice'] = product['salePrice'] * double.parse(parsed);
       });
     } else {
-      print('BLOCK-3');
+      //print('BLOCK-3');
       setState(() {
         product[fieldName] = 0;
       });
     }
   }
 
-  _delete() {
+  delete() {
     if (product[fieldName].runtimeType == String) {
       if ((product[fieldName]).length > 1) {
         String string = product['quantity'].toString();
@@ -70,7 +70,7 @@ class _CalculatorState extends State<Calculator> {
     }
   }
 
-  void _toCheque() {
+  void toCheque() {
     if (product['quantity'].toString() != '0') {
       var str = product['quantity']
           .toString()
@@ -78,6 +78,8 @@ class _CalculatorState extends State<Calculator> {
       if (str == ".") {
         setState(() {
           product['quantity'] = double.parse(str);
+          product['totalPrice'] =
+              product['salePrice'] * double.parse(product['quantity']);
         });
       }
       Get.back(result: product);
@@ -93,7 +95,6 @@ class _CalculatorState extends State<Calculator> {
     setState(() {
       product['quantity'] = product['quantity'].toString();
       product['discount'] = product['discount'].toString();
-      product['totalPrice'] = product['totalPrice'].round().toString();
       prevProduct = copyObject;
     });
   }
@@ -232,7 +233,7 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${product['price']} So\'m x ${product['quantity']} ${product['uomId'] == 1 ? 'шт' : 'кг'}',
+                    '${product['salePrice']} So\'m x ${product['quantity']} ${product['uomId'] == 1 ? 'шт' : 'кг'}',
                     style: TextStyle(color: lightGrey),
                   ),
                   Row(
@@ -343,7 +344,7 @@ class _CalculatorState extends State<Calculator> {
                         ? i == 2
                             ? GestureDetector(
                                 onTap: () {
-                                  _delete();
+                                  delete();
                                 },
                                 child: Container(
                                     margin:
@@ -405,7 +406,7 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                   onPressed: () {
-                    _toCheque();
+                    toCheque();
                   },
                   style: ElevatedButton.styleFrom(
                     primary: blue,
