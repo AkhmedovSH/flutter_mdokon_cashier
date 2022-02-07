@@ -4,10 +4,10 @@ import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key, this.getPayload, this.data, this.setData})
+  const OnCredit({Key? key, this.setPayload, this.data, this.setData})
       : super(key: key);
   final dynamic data;
-  final Function? getPayload;
+  final Function? setPayload;
   final Function? setData;
 
   @override
@@ -55,6 +55,7 @@ class _OnCreditState extends State<OnCredit> {
   }
 
   calculateChange() {
+    widget.setData!(textController.text, textController2.text);
     var change = 0;
     var paid = 0;
     if (textController.text.isNotEmpty) {
@@ -114,7 +115,6 @@ class _OnCreditState extends State<OnCredit> {
       data['change'] = -totalAmount.round();
       data['paid'] = 0;
     });
-    print(textController.text);
   }
 
   @override
@@ -228,9 +228,7 @@ class _OnCreditState extends State<OnCredit> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(
-                                      height: 5,
-                                    ),
+                                    SizedBox(height: 5),
                                     Table(
                                         border: TableBorder(
                                             horizontalInside: BorderSide(
@@ -343,15 +341,13 @@ class _OnCreditState extends State<OnCredit> {
                             );
                           });
                         });
-                    print(result);
                     if (result != null) {
                       setState(() {
                         client = result;
                       });
-                      print(client);
-                      widget.getPayload!('clientName', client['name']);
-                      widget.getPayload!('clientId', client['id']);
-                      widget.getPayload!('clientComment', client['comment']);
+                      widget.setPayload!('clientName', client['name']);
+                      widget.setPayload!('clientId', client['id']);
+                      widget.setPayload!('clientComment', client['comment']);
                     }
                   },
                   style: ElevatedButton.styleFrom(primary: Color(0xFFf1b44c)),
@@ -501,7 +497,11 @@ class _OnCreditState extends State<OnCredit> {
                   return 'Обязательное поле';
                 }
               },
-              onChanged: (value) {},
+              onChanged: (value) {
+                setState(() {
+                  client['comment'] = value;
+                });
+              },
               enableInteractiveSelection: false,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),

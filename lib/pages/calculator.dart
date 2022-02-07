@@ -14,6 +14,7 @@ class _CalculatorState extends State<Calculator> {
   dynamic product = Get.arguments;
   dynamic prevProduct = {};
   dynamic fieldName = 'quantity';
+  dynamic initialQuantity = "";
 
   increment(number) {
     var parsed = "";
@@ -93,7 +94,8 @@ class _CalculatorState extends State<Calculator> {
     Map copyObject = Map.from(product);
     print(product);
     setState(() {
-      product['quantity'] = product['quantity'].toString();
+      initialQuantity = product['quantity'].toString();
+      product['quantity'] = 0;
       product['discount'] = product['discount'].toString();
       prevProduct = copyObject;
     });
@@ -259,25 +261,25 @@ class _CalculatorState extends State<Calculator> {
             ],
           ),
         ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 13, bottom: 5),
-                child: const Text(
-                  'КОЛ-ВО ПОШТУЧНО, УПК',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-              ),
-              Text(
-                '1 упк(30шт) + 15шт  = 1,5 упк',
-                style: TextStyle(fontWeight: FontWeight.w500, color: lightGrey),
-              ),
-            ],
-          ),
-        ),
+        // Container(
+        //   margin: const EdgeInsets.symmetric(horizontal: 20),
+        //   child: Column(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       Container(
+        //         margin: const EdgeInsets.only(top: 13, bottom: 5),
+        //         child: const Text(
+        //           'КОЛ-ВО ПОШТУЧНО, УПК',
+        //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        //         ),
+        //       ),
+        //       Text(
+        //         '1 упк(30шт) + 15шт  = 1,5 упк',
+        //         style: TextStyle(fontWeight: FontWeight.w500, color: lightGrey),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -380,7 +382,10 @@ class _CalculatorState extends State<Calculator> {
                 width: MediaQuery.of(context).size.width * 0.45,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (product['quantity'].toString() != '0') {
+                    if (product['quantity'].toString() == '0') {
+                      setState(() {
+                        product['quantity'] = initialQuantity;
+                      });
                       Get.back(result: prevProduct);
                     }
                   },

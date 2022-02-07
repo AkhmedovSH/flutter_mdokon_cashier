@@ -201,13 +201,13 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['transactionsList'] = transactionsList;
       data['itemsList'] = products;
     });
-    print(data['itemsList']);
-    // final response = await post('/services/desktop/api/cheque', data);
-    // if (response['success']) {
-    //   controller.hideLoading();
-    //   setState(() {});
-    //   Get.offAllNamed('/');
-    // }
+    //print(data);
+    final response = await post('/services/desktop/api/cheque', data);
+    if (response['success']) {
+      controller.hideLoading();
+      setState(() {});
+      Get.offAllNamed('/');
+    }
   }
 
   setInitState() {
@@ -336,10 +336,10 @@ class _PaymentSampleState extends State<PaymentSample> {
               ),
             ),
             currentIndex == 0
-                ? Payment(getPayload: setPayload, data: data, setData: setData)
+                ? Payment(setPayload: setPayload, data: data, setData: setData)
                 : currentIndex == 1
                     ? OnCredit(
-                        getPayload: setPayload, data: data, setData: setData)
+                        setPayload: setPayload, data: data, setData: setData)
                     : Loyalty(
                         setPayload: setPayload, data: data, setData: setData),
             Container(

@@ -16,20 +16,20 @@ Future get(String url, {payload, loading = true, setState}) async {
   if (loading) {
     controller.showLoading;
   }
-  print(hostUrl + url);
+  //print(hostUrl + url);
   try {
     final response = await dio.get(hostUrl + url,
         queryParameters: payload,
         options: Options(headers: {
           "authorization": "Bearer ${prefs.getString('access_token')}",
         }));
-    print(response.data);
+    //print(response.data);
     if (loading) {
       controller.hideLoading;
     }
     return response.data;
   } on DioError catch (e) {
-    print(e.response?.statusCode);
+    //print(e.response?.statusCode);
     return await statuscheker(e, url, payload: payload);
   }
 }
@@ -39,7 +39,7 @@ Future post(String url, dynamic payload) async {
   // print(payload);
   controller.showLoading;
   try {
-    print(hostUrl + url);
+    //print(hostUrl + url);
     final response = await dio.post(hostUrl + url,
         data: payload,
         options: Options(headers: {
@@ -49,8 +49,8 @@ Future post(String url, dynamic payload) async {
     controller.hideLoading;
     return response.data;
   } on DioError catch (e) {
-    print(e.response?.statusCode);
-    print(e.response?.data);
+    //print(e.response?.statusCode);
+    //print(e.response?.data);
     if (e.response?.statusCode == 400) {
       return;
     }
@@ -70,11 +70,11 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
     return response.data;
   } on DioError catch (e) {
     if (e.response?.statusCode == 400) {
-      print(e.response?.statusCode);
+      //print(e.response?.statusCode);
       return;
     }
     if (e.response?.statusCode == 401) {
-      print(e.response?.statusCode);
+      //print(e.response?.statusCode);
     }
   }
 }
@@ -126,12 +126,12 @@ Future lPost(String url, dynamic payload) async {
       'https://cabinet.cashbek.uz' + url,
       data: payload,
     );
-    print(response);
+    //print(response);
     controller.hideLoading;
     return response.data;
   } on DioError catch (e) {
-    print(e.response?.statusCode);
-    print(e.response?.data);
+    //print(e.response?.statusCode);
+    //print(e.response?.data);
     if (e.response?.statusCode == 401) {
       return;
     }

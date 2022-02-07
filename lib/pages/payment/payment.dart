@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.getPayload, this.data, this.setData})
+  const Payment({Key? key, this.setPayload, this.data, this.setData})
       : super(key: key);
-  final Function? getPayload;
+  final Function? setPayload;
   final Function? setData;
   final dynamic data;
 

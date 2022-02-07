@@ -212,7 +212,7 @@ class _CheqDetailState extends State<CheqDetail> {
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          '${cheque['totalPrice']}',
+                          '${itemsList[i]['totalPrice']}',
                           textAlign: TextAlign.end,
                           style: TextStyle(color: b8),
                         ),
@@ -257,7 +257,6 @@ class _CheqDetailState extends State<CheqDetail> {
                       )
                     ],
                   ),
-                buildRow('Сдача', cheque['change']),
                 cheque['clientAmount'] > 0
                     ? buildRow('Сумма долга', cheque['clientAmount'])
                     : Container(),
@@ -267,9 +266,13 @@ class _CheqDetailState extends State<CheqDetail> {
                 (cheque['clientAmount'] == 0 && cheque['clientName'] != null)
                     ? buildRow('Клиент', cheque['clientName'])
                     : Container(),
+                (cheque['loyaltyClientName'] != null)
+                    ? buildRow('Клиент', cheque['loyaltyClientName'])
+                    : Container(),
                 cheque['loyaltyBonus'] > 0
                     ? buildRow('mDokon Loyalty Бонус', cheque['loyaltyBonus'])
                     : Container(),
+                buildRow('Сдача', cheque['change']),
                 Container(
                     margin: EdgeInsets.only(top: 15, bottom: 10),
                     height: 50,

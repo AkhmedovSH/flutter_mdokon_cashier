@@ -85,7 +85,6 @@ class _IndexState extends State<Index> {
   createDebtorOut() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    print(cashbox);
     setState(() {
       expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
       expenseOut['posId'] = cashbox['posId'].toString();
@@ -98,7 +97,6 @@ class _IndexState extends State<Index> {
     });
     final response =
         await post('/services/desktop/api/expense-out', expenseOut);
-    print(response);
     if (response['success']) {
       Navigator.pop(context);
     }
@@ -106,28 +104,44 @@ class _IndexState extends State<Index> {
 
   createClientDebt() async {
     final list = [];
-    print(debtIn['amountIn'].runtimeType);
-    if (textController.text.length > 0) {
+    //print(debtIn['amountIn'].runtimeType);
+    if (debtIn['cash'].length > 0) {
       list.add({
-        "amountIn": textController.text,
+        "amountIn": debtIn['cash'],
         "amountOut": "",
         "paymentTypeId": 1,
-        "paymentPurposeId": 1
+        "paymentPurposeId": 5
       });
     }
-    if (textController2.text.length > 0) {
+    if (debtIn['terminal'].length > 0) {
       list.add({
-        "amountIn": textController2.text,
+        "amountIn": debtIn['terminal'],
         "amountOut": "",
-        "paymentTypeId": 1,
-        "paymentPurposeId": 2
+        "paymentTypeId": 2,
+        "paymentPurposeId": 5
       });
     }
     setState(() {
+      debtIn['amountIn'] =
+          double.parse(debtIn['cash']) + double.parse(debtIn['cash']);
       debtIn['transactionsList'] = list;
     });
-    setState(() {});
-    final response = await post('/services/desktop/api/client-debt-in', debtIn);
+
+    await post('/services/desktop/api/client-debt-in', debtIn);
+    setState(() {
+      debtIn = {
+        "cash": '',
+        "terminal": '',
+        "amountIn": 0,
+        "amountOut": 0,
+        "cashboxId": '',
+        "clientId": 0,
+        "currencyId": 0,
+        "posId": '',
+        "shiftId": '',
+        "transactionsList": []
+      };
+    });
   }
 
   redirectToCalculator(i) async {
@@ -152,7 +166,8 @@ class _IndexState extends State<Index> {
     super.initState();
   }
 
-  buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
+  buildTextField(label, icon, item, index, setDialogState,
+      {scrollPadding, enabled}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,7 +183,7 @@ class _IndexState extends State<Index> {
             keyboardType:
                 index != 2 ? TextInputType.number : TextInputType.text,
             onChanged: (value) {
-              setState(() {
+              setDialogState(() {
                 debtIn[item['fieldName']] = value;
               });
             },
@@ -225,7 +240,7 @@ class _IndexState extends State<Index> {
           SizedBox(
             child: IconButton(
               onPressed: () {
-                showModal();
+                showModalDebtor();
               },
               icon: Icon(Icons.payment),
             ),
@@ -233,7 +248,7 @@ class _IndexState extends State<Index> {
           SizedBox(
             child: IconButton(
               onPressed: () {
-                showModal2();
+                showModalExpense();
               },
               icon: Icon(Icons.paid_outlined),
             ),
@@ -440,8 +455,8 @@ class _IndexState extends State<Index> {
     );
   }
 
-  showModal2() async {
-    final result = await showDialog(
+  showModalExpense() async {
+    await showDialog(
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
@@ -522,7 +537,9 @@ class _IndexState extends State<Index> {
                       width: MediaQuery.of(context).size.width,
                       child: TextFormField(
                         onChanged: (value) {
-                          expenseOut['amountOut'] = value;
+                          setState(() {
+                            expenseOut['amountOut'] = value;
+                          });
                         },
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
@@ -559,7 +576,9 @@ class _IndexState extends State<Index> {
                       width: MediaQuery.of(context).size.width,
                       child: TextFormField(
                         onChanged: (value) {
-                          expenseOut['note'] = value;
+                          setState(() {
+                            expenseOut['note'] = value;
+                          });
                         },
                         decoration: InputDecoration(
                           contentPadding:
@@ -598,10 +617,11 @@ class _IndexState extends State<Index> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        primary: expenseOut['amountOut'].length == 0
-                            ? lightGrey
-                            : blue),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      primary: expenseOut['amountOut'].length == 0
+                          ? lightGrey
+                          : blue,
+                    ),
                     child: Text('Принять'),
                   ),
                 )
@@ -611,11 +631,8 @@ class _IndexState extends State<Index> {
         });
   }
 
-  showModal() async {
+  showModalDebtor() async {
     await getClients();
-    setState(() {
-      debtIn['cash'] = '0';
-    });
     final result = await showDialog(
         context: context,
         useSafeArea: true,
@@ -663,9 +680,7 @@ class _IndexState extends State<Index> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 5,
-                    ),
+                    SizedBox(height: 5),
                     SizedBox(
                         height: MediaQuery.of(context).size.height * 0.2,
                         child: SingleChildScrollView(
@@ -736,7 +751,9 @@ class _IndexState extends State<Index> {
                                             ? Color(0xFF91a0e7)
                                             : Colors.transparent,
                                         child: Text(
-                                            '${content[i]['currencyName']}'),
+                                          content[i]['currencyName'],
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
                                     GestureDetector(
@@ -780,8 +797,13 @@ class _IndexState extends State<Index> {
                       height: 10,
                     ),
                     for (var i = 0; i < itemList.length; i++)
-                      buildTextField(itemList[i]['label'], itemList[i]['icon'],
-                          itemList[i], i)
+                      buildTextField(
+                        itemList[i]['label'],
+                        itemList[i]['icon'],
+                        itemList[i],
+                        i,
+                        setState,
+                      ),
                   ],
                 ),
               ),
@@ -791,20 +813,20 @@ class _IndexState extends State<Index> {
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
                     onPressed: () {
-                      print(client);
                       print(client != null);
-                      if (int.parse(debtIn['cash']) > 0 ||
-                          debtIn['terminal'].toString().length > 0 ||
+                      if (debtIn['cash'].length > 0 ||
+                          debtIn['terminal'].toString().isNotEmpty ||
                           client != null) {
                         Navigator.pop(context, client);
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        primary: int.parse(debtIn['cash']) > 0 ||
-                                int.parse(debtIn['cash']) > 0 && client != null
-                            ? blue
-                            : lightGrey),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      primary: debtIn['cash'].length > 0 ||
+                              debtIn['cash'].length > 0 && client != null
+                          ? blue
+                          : lightGrey,
+                    ),
                     child: Text('Принять'),
                   ),
                 )
