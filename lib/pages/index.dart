@@ -161,6 +161,42 @@ class _IndexState extends State<Index> {
     }
   }
 
+  redirectToSearch() async {
+    final result = await Get.toNamed('/search');
+    print(result);
+    if (result != null) {
+      var found = false;
+      for (var i = 0; i < products.length; i++) {
+        if (products[i]['productId'] == result['productId']) {
+          found = true;
+          dynamic arr = products;
+
+          if (products[i]['quantity'] >= products[i]['balance']) {
+            print('Превышен лимит');
+            return;
+          }
+
+          arr[i]['quantity'] = arr[i]['quantity'] + 1;
+          arr[i]['discount'] = 0;
+          arr[i]['total_amount'] = arr[i]['quantity'] * arr[i]['salePrice'];
+          setState(() {
+            products = arr;
+          });
+          print(products[i]['discount']);
+        }
+      }
+      if (!found) {
+        result['quantity'] = 1;
+        result['discount'] = 0;
+        result['total_amount'] = result['quantity'] * result['salePrice'];
+        result['totalPrice'] = result['total_amount'];
+        setState(() {
+          products.add(result);
+        });
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -412,41 +448,8 @@ class _IndexState extends State<Index> {
           ),
           FloatingActionButton(
             backgroundColor: blue,
-            onPressed: () async {
-              final result = await Get.toNamed('/search');
-              if (result != null) {
-                var found = false;
-                for (var i = 0; i < products.length; i++) {
-                  if (products[i]['productId'] == result['productId']) {
-                    found = true;
-                    dynamic arr = products;
-                    if (arr[i]['quantity'].runtimeType == String) {
-                      arr[i]['quantity'] = int.parse(arr[i]['quantity']) + 1;
-                    } else {
-                      arr[i]['quantity'] = (arr[i]['quantity']) + 1;
-                    }
-
-                    arr[i]['discount'] = 0;
-                    arr[i]['total_amount'] =
-                        (arr[i]['quantity']) * (arr[i]['salePrice']);
-                    setState(() {
-                      products = arr;
-                    });
-                    print(products[i]['discount']);
-                  }
-                }
-                if (!found) {
-                  result['quantity'] = 1;
-                  result['discount'] = 0;
-                  result['discount'] = 0;
-                  result['total_amount'] =
-                      result['quantity'] * result['salePrice'];
-                  result['totalPrice'] = result['total_amount'];
-                  setState(() {
-                    products.add(result);
-                  });
-                }
-              }
+            onPressed: () {
+              redirectToSearch();
             },
             child: const Icon(Icons.add, size: 28),
           )

@@ -165,14 +165,14 @@ class _SearchState extends State<Search> {
                                       height: 5,
                                     ),
                                     Text(
-                                      'Ostatok: ${products[i]['balance'] != null ? products[i]['balance'] : 0}',
+                                      'Ostatok: ${products[i]['balance'] ?? 0}',
                                       style: TextStyle(color: lightGrey),
                                     ),
                                   ],
                                 ),
                                 SizedBox(
                                   child: Text(
-                                    '${products[i]['salePrice'] != null ? products[i]['salePrice'] : 0} So\'m',
+                                    '${products[i]['salePrice'] ?? 0} So\'m',
                                     style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: blue,
