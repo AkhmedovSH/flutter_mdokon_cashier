@@ -44,21 +44,27 @@ formatUnixTime(unixTime) {
 }
 
 showSuccessToast(message) {
-  return Get.snackbar('Успешно', message,
-      colorText: white,
-      onTap: (_) => Get.back(),
-      duration: Duration(milliseconds: 1500),
-      animationDuration: Duration(milliseconds: 300),
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: green);
+  return Get.snackbar(
+    'Успешно',
+    message,
+    colorText: white,
+    onTap: (_) => Get.back(),
+    duration: Duration(milliseconds: 1500),
+    animationDuration: Duration(milliseconds: 300),
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: green,
+  );
 }
 
-showDangerToast() {
-  return Get.snackbar('Ошибка', 'Не найден пользователь',
-      colorText: white,
-      onTap: (_) => Get.back(),
-      duration: Duration(milliseconds: 1500),
-      animationDuration: Duration(milliseconds: 300),
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: red);
+showDangerToast(message) {
+  return Get.snackbar(
+    'Ошибка',
+    message,
+    colorText: white,
+    onTap: (_) => Get.back(),
+    duration: Duration(milliseconds: 2000),
+    animationDuration: Duration(milliseconds: 300),
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: red,
+  );
 }

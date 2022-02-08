@@ -20,6 +20,7 @@ class Index extends StatefulWidget {
 
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  dynamic cashbox = {};
   dynamic products = [];
   dynamic clients = [];
   dynamic textController = TextEditingController();
@@ -34,8 +35,8 @@ class _IndexState extends State<Index> {
   };
   dynamic debtIn = {
     "amountIn": 0,
-    "cash": '',
-    "terminal": '',
+    "cash": "",
+    "terminal": "",
     "amountOut": 0,
     "cashboxId": '',
     "clientId": 0,
@@ -104,7 +105,6 @@ class _IndexState extends State<Index> {
 
   createClientDebt() async {
     final list = [];
-    //print(debtIn['amountIn'].runtimeType);
     if (debtIn['cash'].length > 0) {
       list.add({
         "amountIn": debtIn['cash'],
@@ -121,17 +121,24 @@ class _IndexState extends State<Index> {
         "paymentPurposeId": 5
       });
     }
-    setState(() {
-      debtIn['amountIn'] =
-          double.parse(debtIn['cash']) + double.parse(debtIn['cash']);
-      debtIn['transactionsList'] = list;
-    });
 
-    await post('/services/desktop/api/client-debt-in', debtIn);
+    dynamic sendData = Map.from(debtIn);
+    if (sendData['cash'] != "") {
+      sendData['cash'] = double.parse(sendData['cash']);
+    } else {
+      sendData['cash'] = 0;
+    }
+    if (sendData['terminal'] != "") {
+      sendData['terminal'] = double.parse(sendData['terminal']);
+    } else {
+      sendData['terminal'] = 0;
+    }
+    sendData['amountIn'] = (sendData['cash'] + sendData['terminal']);
+    await post('/services/desktop/api/client-debt-in', sendData);
     setState(() {
       debtIn = {
-        "cash": '',
-        "terminal": '',
+        "cash": "",
+        "terminal": "",
         "amountIn": 0,
         "amountOut": 0,
         "cashboxId": '',
@@ -163,7 +170,7 @@ class _IndexState extends State<Index> {
 
   redirectToSearch() async {
     final result = await Get.toNamed('/search');
-    print(result);
+    //print(result);
     if (result != null) {
       var found = false;
       for (var i = 0; i < products.length; i++) {
@@ -171,8 +178,11 @@ class _IndexState extends State<Index> {
           found = true;
           dynamic arr = products;
 
-          if (products[i]['quantity'] >= products[i]['balance']) {
-            print('Превышен лимит');
+          //print('cashbox${cashbox}');
+
+          if (products[i]['quantity'] >= products[i]['balance'] &&
+              !cashbox['saleMinus']) {
+            showDangerToast('Превышен лимит');
             return;
           }
 
@@ -197,9 +207,17 @@ class _IndexState extends State<Index> {
     }
   }
 
+  getCashbox() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    getCashbox();
   }
 
   buildTextField(label, icon, item, index, setDialogState,
@@ -506,7 +524,7 @@ class _IndexState extends State<Index> {
                             value: expenseOut['paymentPurposeId'],
                             isExpanded: true,
                             hint: Text('${filter[0]['name']}'),
-                            icon: const Icon(Icons.chevron_right),
+                            icon: const Icon(Icons.expand_more_outlined),
                             iconSize: 24,
                             iconEnabledColor: blue,
                             elevation: 16,
