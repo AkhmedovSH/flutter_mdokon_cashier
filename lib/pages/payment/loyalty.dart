@@ -22,11 +22,12 @@ class Loyalty extends StatefulWidget {
 class _LoyaltyState extends State<Loyalty> {
   Timer? _debounce;
   dynamic data = {};
-  dynamic textController = TextEditingController();
+  dynamic textController1 = TextEditingController();
   dynamic textController2 = TextEditingController();
   dynamic textController3 = TextEditingController();
   dynamic textController4 = TextEditingController();
   dynamic textController5 = TextEditingController();
+  dynamic textController6 = TextEditingController();
   dynamic cashbox = {};
   dynamic list = [
     {
@@ -76,7 +77,7 @@ class _LoyaltyState extends State<Loyalty> {
 
   searchUserBalance() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (search.length == 6 || search.length == 12) {
         //print(cashbox);
         var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
@@ -85,24 +86,17 @@ class _LoyaltyState extends State<Loyalty> {
         //print(response);
         if (response['reason'] == "SUCCESS") {
           setState(() {
-            textController2.text = response['balance'].round().toString();
-            textController.text =
+            textController1.text =
                 '${response['firstName'] + ' ' + response['lastName'] + '[' + response['status'] + ' ' + response['award'].round().toString() + '%]'}';
+            textController2.text = response['balance'].round().toString();
             widget.setPayload!('loyaltyClientName',
                 response['firstName'] + response['lastName']);
             widget.setPayload!('clientCode', search);
             data['award'] = response['award'].round();
-            print('data${response['firstName']}');
             // data['amount'] = response['amount'].round();
           });
         } else {
-          Get.snackbar('Ошибка', 'Не найден пользователь',
-              colorText: white,
-              onTap: (_) => Get.back(),
-              duration: Duration(milliseconds: 1500),
-              animationDuration: Duration(milliseconds: 300),
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: red);
+          showDangerToast('Не найден пользователь');
         }
       }
     });
@@ -121,14 +115,53 @@ class _LoyaltyState extends State<Loyalty> {
       data = widget.data!;
     });
     getData();
+    // textController1.text = "1";
+    // textController2.text = "2";
+    // textController3.text = "3";
+    // textController4.text = "4";
+    // textController5.text = "5";
+    // textController6.text = "6";
+  }
+
+  calculateAward(value, type) {
+    if (value == "") {
+      value = "0";
+    }
+    if (type == 'points') {
+      textController4.text = (data['totalPrice'] - int.parse(value)).toString();
+    }
+    if (type == 'cash') {
+      setState(() {
+        data['amountIn'] = value;
+      });
+      widget.setData!(textController3.text, textController4.text);
+    }
+    if (type == 'terminal') {
+      // widget.setData!(textController3.text, textController4.text,
+      //     payload: textController5.text);
+    }
+    dynamic totalPrice = 0;
+    if (textController3.text != "") {
+      totalPrice += int.parse(textController3.text);
+    }
+    if (textController4.text != "") {
+      totalPrice += int.parse(textController4.text);
+    }
+    if (textController5.text != "") {
+      totalPrice += int.parse(textController5.text);
+    }
+    textController6.text =
+        ((data['totalPrice'] - totalPrice) * (data['award'] / 100))
+            .toStringAsFixed(2);
   }
 
   buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
+    //print(index);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$label',
+          label,
           style:
               TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
         ),
@@ -137,17 +170,17 @@ class _LoyaltyState extends State<Loyalty> {
           width: MediaQuery.of(context).size.width,
           child: TextFormField(
             controller: index == 1
-                ? textController
+                ? textController1
                 : index == 2
                     ? textController2
                     : index == 3
                         ? textController3
                         : index == 4
-                            ? textController3
+                            ? textController4
                             : index == 5
-                                ? textController4
+                                ? textController5
                                 : index == 6
-                                    ? textController5
+                                    ? textController6
                                     : null,
             keyboardType: TextInputType.number,
             validator: (value) {
@@ -163,45 +196,56 @@ class _LoyaltyState extends State<Loyalty> {
                 searchUserBalance();
               }
               if (index == 3) {
-                if (value.isNotEmpty) {
-                  setState(() {
-                    (data['totalPrice'] - int.parse(value)).toString();
-                    widget.setPayload!('loyaltyClientAmount', value);
-                    if (data['award'] != null) {
-                      textController5.text =
-                          ((data['totalPrice'] - int.parse(value)) *
-                                  (data['award'] / 100))
-                              .round()
-                              .toString();
-                    }
-                    widget.setPayload!('loyaltyBonus', textController5.text);
-                  });
-                  widget.setData!(
-                    textController3.text,
-                    value,
-                  );
-                } else {
-                  // textController3.text = value;
-                  textController3.text = (data['totalPrice']).toString();
-                  widget.setPayload!('loyaltyClientAmount', 0);
-                  if (data['award'] != null) {
-                    textController5.text =
-                        ((data['totalPrice']) * (data['award'] / 100))
-                            .round()
-                            .toString();
-                  }
-                  widget.setPayload!('loyaltyBonus', textController5.text);
+                if (value != "" &&
+                    double.parse(value) > double.parse(textController2.text)) {
+                  textController3.text = textController3.text
+                      .substring(0, textController3.text.length - 1);
+                  textController3.selection = TextSelection.fromPosition(
+                      TextPosition(offset: textController3.text.length));
+                  return;
                 }
+                calculateAward(value, 'points');
+                // if (value.isNotEmpty) {
+                //   setState(() {
+                //     (data['totalPrice'] - int.parse(value)).toString();
+                //     widget.setPayload!('loyaltyClientAmount', value);
+                //     if (data['award'] != null) {
+                //       textController5.text =
+                //           ((data['totalPrice'] - int.parse(value)) *
+                //                   (data['award'] / 100))
+                //               .round()
+                //               .toString();
+                //     }
+                //     widget.setPayload!('loyaltyBonus', textController5.text);
+                //   });
+                //   widget.setData!(
+                //     textController3.text,
+                //     value,
+                //   );
+                // } else {
+                //   textController3.text = (data['totalPrice']).toString();
+                //   widget.setPayload!('loyaltyClientAmount', 0);
+                //   if (data['award'] != null) {
+                //     textController5.text =
+                //         ((data['totalPrice']) * (data['award'] / 100))
+                //             .round()
+                //             .toString();
+                //   }
+                //   widget.setPayload!('loyaltyBonus', textController5.text);
+                // }
               }
               if (index == 4) {
-                setState(() {
-                  data['amountIn'] = value;
-                });
-                widget.setData!(textController3.text, textController4.text);
+                if (value != "" && double.parse(value) > data['totalPrice']) {
+                  textController4.text = textController4.text
+                      .substring(0, textController4.text.length - 1);
+                  textController4.selection = TextSelection.fromPosition(
+                      TextPosition(offset: textController4.text.length));
+                  return;
+                }
+                calculateAward(value, 'cash');
               }
               if (index == 5) {
-                widget.setData!(textController3.text, textController4.text,
-                    payload: textController5.text);
+                calculateAward(value, 'terminal');
               }
             },
             enabled: item['enabled'],
