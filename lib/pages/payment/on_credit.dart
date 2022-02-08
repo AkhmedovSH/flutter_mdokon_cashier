@@ -538,7 +538,7 @@ class _OnCreditState extends State<OnCredit> {
               ),
               Container(
                   margin: EdgeInsets.only(bottom: 10),
-                  child: Text('${data['totalPrice']} сум',
+                  child: Text('${formatMoney(data['totalPrice'])} сум',
                       style: TextStyle(
                           color: darkGrey,
                           fontSize: 16,
@@ -648,7 +648,7 @@ class _OnCreditState extends State<OnCredit> {
                       fontWeight: FontWeight.bold)),
               Container(
                   margin: EdgeInsets.only(bottom: 10, top: 5),
-                  child: Text('${data['change']} сум',
+                  child: Text('${formatMoney(data['change'])} сум',
                       style: TextStyle(
                           color: darkGrey,
                           fontSize: 16,

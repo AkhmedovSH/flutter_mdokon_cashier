@@ -482,7 +482,8 @@ class _ChequesState extends State<Cheques> {
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
-                                  '${cheques[i]['totalPrice']}',
+                                  //cheques[i]['totalPrice']
+                                  '${formatMoney(cheques[i]['totalPrice'])}',
                                   textAlign: TextAlign.center,
                                 ),
                               ),

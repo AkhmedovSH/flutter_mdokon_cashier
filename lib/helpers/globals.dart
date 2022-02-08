@@ -43,6 +43,15 @@ formatUnixTime(unixTime) {
   return DateFormat('dd.MM.yyyy HH:mm').format(dt);
 }
 
+formatMoney(money) {
+  if (money != null) {
+    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ')
+        .format(money);
+  } else {
+    return 0;
+  }
+}
+
 showSuccessToast(message) {
   return Get.snackbar(
     'Успешно',

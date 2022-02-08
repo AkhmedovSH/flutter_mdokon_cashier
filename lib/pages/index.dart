@@ -425,13 +425,13 @@ class _IndexState extends State<Index> {
                             children: [
                               const SizedBox(height: 5),
                               Text(
-                                '${products[i]['salePrice']} x ${products[i]['quantity']}',
+                                '${formatMoney(products[i]['salePrice'])} x ${products[i]['quantity']}',
                                 style: TextStyle(color: lightGrey),
                               ),
                             ],
                           ),
                           Text(
-                            '${products[i]['totalPrice']} So\'m',
+                            '${formatMoney(products[i]['totalPrice'])} So\'m',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: blue,
