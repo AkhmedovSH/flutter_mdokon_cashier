@@ -68,6 +68,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return LoadingLayout(
       body: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(0.0),
           child: AppBar(
@@ -82,7 +83,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         ),
         body: SafeArea(
           child: Container(
-            margin: EdgeInsets.fromLTRB(20, 0, 20, 0),
+            margin: EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -164,11 +165,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                               payload['password'] = value;
                             });
                           },
-                          onFieldSubmitted: (val) {
-                            if (_formKey.currentState!.validate()) {
-                              login();
-                            }
-                          },
+                          // onFieldSubmitted: (val) {
+                          //   if (_formKey.currentState!.validate()) {
+                          //     login();
+                          //   }
+                          // },
                           obscureText: !showPassword,
                           decoration: InputDecoration(
                               contentPadding:
@@ -213,27 +214,34 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
+                Expanded(
+                  child: SizedBox(),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(150, 50),
+                      primary: blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        login();
+                      }
+                    },
+                    child: Text(
+                      'ВОЙТИ',
+                      style: TextStyle(
+                          color: white, fontSize: 18, letterSpacing: 2.0),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
-        floatingActionButton: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(150, 50),
-            primary: blue,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              login();
-            }
-          },
-          child: Text(
-            'ВОЙТИ',
-            style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
           ),
         ),
       ),
