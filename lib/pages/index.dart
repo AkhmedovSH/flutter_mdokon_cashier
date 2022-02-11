@@ -369,84 +369,135 @@ class _IndexState extends State<Index> {
         width: MediaQuery.of(context).size.width * 0.70,
         child: const DrawerAppBar(),
       ),
-      body: Column(
-        children: [
-          for (var i = 0; i < products.length; i++)
-            Dismissible(
-              key: ValueKey(products[i]['productName']),
-              onDismissed: (DismissDirection direction) {
-                setState(() {
-                  products.removeAt(i);
-                });
-              },
-              background: Container(
-                color: white,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(right: 10),
-                child: Icon(Icons.delete, color: red),
-              ),
-              direction: DismissDirection.endToStart,
-              child: GestureDetector(
-                onTap: () async {
-                  redirectToCalculator(i);
-                },
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 8,
-                  ),
-                  margin: const EdgeInsets.only(bottom: 5),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Color(0xFFF5F3F5), width: 1),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${products[i]['productName']}',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 5),
-                              Text(
-                                '${formatMoney(products[i]['salePrice'])}x ${products[i]['quantity']}',
-                                style: TextStyle(color: lightGrey),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '${formatMoney(products[i]['totalPrice'])}So\'m',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: blue,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+      body: products.length == 0
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'images/barcode-scanner.png',
                 ),
-              ),
+                SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    'Отсканируйте штрихкод с упаковки товара \nили введите его вручную.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              ],
             )
-        ],
-      ),
+          : Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text('Итого', style: TextStyle(fontSize: 16)),
+                    Text('100 Сум', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Скидка', style: TextStyle(fontSize: 16)),
+                    Wrap(
+                      children: const [
+                        Text('0%', style: TextStyle(fontSize: 16)),
+                        SizedBox(width: 10),
+                        Text('0 Сум', style: TextStyle(fontSize: 16)),
+                      ],
+                    )
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: const [
+                        SizedBox(height: 10),
+                        Text('К оплате', style: TextStyle(fontSize: 16)),
+                        Text('0 Сум', style: TextStyle(fontSize: 16)),
+                      ],
+                    )
+                  ],
+                ),
+                Divider(),
+                for (var i = 0; i < products.length; i++)
+                  Dismissible(
+                    key: ValueKey(products[i]['productName']),
+                    onDismissed: (DismissDirection direction) {
+                      setState(() {
+                        products.removeAt(i);
+                      });
+                    },
+                    background: Container(
+                      color: white,
+                      alignment: Alignment.centerRight,
+                      padding: EdgeInsets.only(right: 10),
+                      child: Icon(Icons.delete, color: red),
+                    ),
+                    direction: DismissDirection.endToStart,
+                    child: GestureDetector(
+                      onTap: () async {
+                        redirectToCalculator(i);
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 8,
+                        ),
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom:
+                                BorderSide(color: Color(0xFFF5F3F5), width: 1),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${products[i]['productName']}',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      '${formatMoney(products[i]['salePrice'])}x ${products[i]['quantity']}',
+                                      style: TextStyle(color: lightGrey),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  '${formatMoney(products[i]['totalPrice'])}So\'m',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: blue,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+              ],
+            ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

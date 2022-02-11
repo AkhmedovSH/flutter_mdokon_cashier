@@ -73,25 +73,27 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
         Get.offAllNamed(routeName);
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 10, top: 10),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            SizedBox(width: 15),
             Container(
               margin: const EdgeInsets.only(right: 15),
               child: Icon(
                 icon,
-                size: 26,
-                color: Colors.grey,
+                size: 24,
+                color: Color(0xFF525355),
               ),
             ),
             Text(
               title,
               style: const TextStyle(
-                fontWeight: FontWeight.w500,
                 fontSize: 18,
                 color: Color(0xFF525355),
               ),
-            )
+            ),
+            SizedBox(width: 15),
           ],
         ),
       ),
@@ -103,7 +105,6 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
     return Drawer(
       child: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.max,
           children: [
             Container(
               color: blue,
@@ -144,39 +145,18 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(top: 15, left: 15),
+              margin: EdgeInsets.symmetric(vertical: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 15),
-                    child: Text(
-                      'Меню',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
                   buildListTile(
                     'Продажа',
-                    Icons.home,
+                    Icons.dashboard_outlined,
                     '/',
                   ),
-                  // buildListTile(
-                  //   'Долг клиента',
-                  //   Icons.account_circle_outlined,
-                  //   '/client-debt',
-                  // ),
-                  // buildListTile(
-                  //   'Продажи в долг',
-                  //   Icons.sync_problem,
-                  //   '/sales-on-credit',
-                  // ),
                   buildListTile(
                     'Чеки',
-                    Icons.list_alt,
+                    Icons.list_alt_outlined,
                     '/cheques',
                   ),
                   buildListTile(
@@ -186,7 +166,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                   ),
                   buildListTile(
                     'X Отчет',
-                    Icons.bar_chart,
+                    Icons.bar_chart_outlined,
                     '/x-report',
                   ),
                 ],
