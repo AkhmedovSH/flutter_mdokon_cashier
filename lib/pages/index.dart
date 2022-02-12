@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
-import 'package:kassa/helpers/controller.dart';
 
 import '../components/drawer_app_bar.dart';
 
@@ -21,6 +20,11 @@ class Index extends StatefulWidget {
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic cashbox = {};
+  dynamic chequeData = {
+    "totalPrice": 0.0,
+    "totalPriceBeforeDiscount": 0,
+    "discount": 0,
+  };
   dynamic products = [];
   dynamic clients = [];
   dynamic textController = TextEditingController();
@@ -157,8 +161,9 @@ class _IndexState extends State<Index> {
       var arr = products;
       for (var i = 0; i < arr.length; i++) {
         if (arr[i]['productId'] == result['productId']) {
-          arr[i]['total_amount'] =
+          arr[i]['totalPrice'] =
               double.parse(arr[i]['quantity']) * (arr[i]['salePrice'].round());
+
           arr[i] = result;
         }
       }
@@ -170,15 +175,13 @@ class _IndexState extends State<Index> {
 
   redirectToSearch() async {
     final result = await Get.toNamed('/search');
-    //print(result);
     if (result != null) {
       var found = false;
       for (var i = 0; i < products.length; i++) {
         if (products[i]['productId'] == result['productId']) {
           found = true;
           dynamic arr = products;
-
-          //print('cashbox${cashbox}');
+          double totalPrice = 0;
 
           if (products[i]['quantity'] >= products[i]['balance'] &&
               !cashbox['saleMinus']) {
@@ -188,18 +191,20 @@ class _IndexState extends State<Index> {
 
           arr[i]['quantity'] = arr[i]['quantity'] + 1;
           arr[i]['discount'] = 0;
-          arr[i]['total_amount'] = arr[i]['quantity'] * arr[i]['salePrice'];
+          arr[i]['totalPrice'] = arr[i]['quantity'] * arr[i]['salePrice'];
+          print(arr[i]['totalPrice'].runtimeType);
+          print(chequeData['totalPrice'].runtimeType);
+          totalPrice += arr[i]['totalPrice'];
           setState(() {
             products = arr;
+            chequeData['totalPrice'] = totalPrice.toInt();
           });
-          print(products[i]['discount']);
         }
       }
       if (!found) {
         result['quantity'] = 1;
         result['discount'] = 0;
-        result['total_amount'] = result['quantity'] * result['salePrice'];
-        result['totalPrice'] = result['total_amount'];
+        result['totalPrice'] = result['quantity'] * result['salePrice'];
         setState(() {
           products.add(result);
         });
@@ -309,12 +314,6 @@ class _IndexState extends State<Index> {
           ),
           SizedBox(
             child: IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.qr_code_2_outlined),
-            ),
-          ),
-          SizedBox(
-            child: IconButton(
               onPressed: () {
                 if (products.length > 0) {
                   showDialog(
@@ -389,9 +388,10 @@ class _IndexState extends State<Index> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text('Итого', style: TextStyle(fontSize: 16)),
-                    Text('100 Сум', style: TextStyle(fontSize: 16)),
+                    Text(formatMoney(chequeData['totalPrice']) + ' Сум',
+                        style: TextStyle(fontSize: 16)),
                   ],
                 ),
                 Row(
@@ -400,11 +400,11 @@ class _IndexState extends State<Index> {
                     Text('Скидка', style: TextStyle(fontSize: 16)),
                     Wrap(
                       children: const [
-                        Text('0%', style: TextStyle(fontSize: 16)),
+                        Text('(0%)', style: TextStyle(fontSize: 16)),
                         SizedBox(width: 10),
                         Text('0 Сум', style: TextStyle(fontSize: 16)),
                       ],
-                    )
+                    ),
                   ],
                 ),
                 Row(
@@ -412,16 +412,17 @@ class _IndexState extends State<Index> {
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: const [
+                      children: [
                         SizedBox(height: 10),
                         Text('К оплате', style: TextStyle(fontSize: 16)),
-                        Text('0 Сум', style: TextStyle(fontSize: 16)),
+                        Text(formatMoney(chequeData['totalPrice']) + ' Сум',
+                            style: TextStyle(fontSize: 16)),
                       ],
                     )
                   ],
                 ),
                 Divider(),
-                for (var i = 0; i < products.length; i++)
+                for (var i = products.length - 1; i >= 0; i--)
                   Dismissible(
                     key: ValueKey(products[i]['productName']),
                     onDismissed: (DismissDirection direction) {
@@ -458,7 +459,7 @@ class _IndexState extends State<Index> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${products[i]['productName']}',
+                              '${(i + 1).toString() + '. ' + products[i]['productName']}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
@@ -710,7 +711,7 @@ class _IndexState extends State<Index> {
         useSafeArea: true,
         builder: (BuildContext context) {
           dynamic content = clients;
-          dynamic client = null;
+          dynamic client = '';
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
@@ -885,10 +886,9 @@ class _IndexState extends State<Index> {
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
                     onPressed: () {
-                      print(client != null);
                       if (debtIn['cash'].length > 0 ||
                           debtIn['terminal'].toString().isNotEmpty ||
-                          client != null) {
+                          client != '') {
                         Navigator.pop(context, client);
                       }
                     },

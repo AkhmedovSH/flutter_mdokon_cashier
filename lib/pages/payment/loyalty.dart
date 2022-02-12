@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -83,8 +82,8 @@ class _LoyaltyState extends State<Loyalty> {
         var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
         final response =
             await lPost('/services/gocashapi/api/get-user-balance', sendData);
-        //print(response);
-        if (response['reason'] == "SUCCESS") {
+        print(response);
+        if (response != null && response['reason'] == "SUCCESS") {
           setState(() {
             textController1.text =
                 '${response['firstName'] + ' ' + response['lastName'] + '[' + response['status'] + ' ' + response['award'].round().toString() + '%]'}';

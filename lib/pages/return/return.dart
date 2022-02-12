@@ -73,13 +73,26 @@ class _ReturnState extends State<Return> {
   }
 
   addToReturnList(item, index) {
+    if (item['returned'] == 1) {
+      item['initialQuantity'] = item['quantity'];
+      item['oldQuantity'] = item['quantity'] - item['returnedQuantity'];
+      item['quantity'] = item['quantity'] - item['returnedQuantity'];
+    }
+
+    if (item['returned'] == 2) {
+      showDangerToast('Товар уже возвращен');
+      return;
+    }
+
     item['controller'] = TextEditingController();
     item['controller'].text = item['quantity'].round().toString();
     item['errorText'] = '';
+
     setState(() {
       itemsList.removeAt(index);
       sendData['itemsList'].add(item);
     });
+
     dynamic totalAmount = 0;
     for (var i = 0; i < sendData['itemsList'].length; i++) {
       totalAmount += (sendData['itemsList'][i]['salePrice'] -
@@ -88,16 +101,20 @@ class _ReturnState extends State<Return> {
                   100)) *
           sendData['itemsList'][i]['quantity'];
     }
+
     setState(() {
       sendData['totalAmount'] = totalAmount;
     });
   }
 
   addToItemsList(item, index) {
+    item['quantity'] = item['initialQuantity'];
+
     setState(() {
       sendData['itemsList'].removeAt(index);
       itemsList.add(item);
     });
+
     dynamic totalAmount = 0;
     for (var i = 0; i < sendData['itemsList'].length; i++) {
       totalAmount += (sendData['itemsList'][i]['salePrice'] -
@@ -106,6 +123,7 @@ class _ReturnState extends State<Return> {
                   100)) *
           sendData['itemsList'][i]['quantity'];
     }
+
     setState(() {
       sendData['totalAmount'] = totalAmount;
     });
@@ -113,13 +131,11 @@ class _ReturnState extends State<Return> {
 
   setQuantity(item, i, value) {
     var itemCopy = Map.from(item);
-    //print(itemCopy);
-    if (value == '') {
-      setState(() {
-        sendData['itemsList'][i]['validate'] = true;
-        sendData['itemsList'][i]['validateText'] = 'Введите кол.';
-        height = 20;
-      });
+
+    if (value == '' || value == 0) {
+      item['controller'].text = "1";
+      item['controller'].selection = TextSelection.fromPosition(
+          TextPosition(offset: item['controller'].text.length));
       return;
     }
 
@@ -207,7 +223,7 @@ class _ReturnState extends State<Return> {
     final response =
         await post('/services/desktop/api/cheque-returned', sendData);
     if (response['success']) {
-      showSuccessToast('Возврат выполнен');
+      showSuccessToast('Возврат выполнен успешно');
       setInitState();
     }
   }
@@ -506,7 +522,7 @@ class _ReturnState extends State<Return> {
                                               textAlign: TextAlign.center,
                                             )
                                           : Text(
-                                              '${itemsList[i]['salePrice']}',
+                                              '${formatMoney(itemsList[i]['salePrice'])}',
                                               style: TextStyle(
                                                   color: Color(0xFF495057)),
                                               textAlign: TextAlign.center,
@@ -521,7 +537,7 @@ class _ReturnState extends State<Return> {
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
                                       child: Text(
-                                        '${itemsList[i]['quantity']}',
+                                        '${formatMoney(itemsList[i]['quantity'])} / ${formatMoney(itemsList[i]['returnedQuantity'])}',
                                         style:
                                             TextStyle(color: Color(0xFF495057)),
                                         textAlign: TextAlign.center,
@@ -536,7 +552,7 @@ class _ReturnState extends State<Return> {
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
                                       child: Text(
-                                        '${itemsList[i]['totalPrice']}',
+                                        '${formatMoney(itemsList[i]['totalPrice'])}',
                                         style:
                                             TextStyle(color: Color(0xFF495057)),
                                         textAlign: TextAlign.end,
@@ -625,7 +641,7 @@ class _ReturnState extends State<Return> {
                                   Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
-                                      child: Container(
+                                      child: SizedBox(
                                         height: 30,
                                         width: 50,
                                         child: Row(
@@ -637,15 +653,15 @@ class _ReturnState extends State<Return> {
                                               child: IconButton(
                                                   onPressed: () {
                                                     addToItemsList(
-                                                        sendData['itemsList']
-                                                            [i],
-                                                        i);
+                                                      sendData['itemsList'][i],
+                                                      i,
+                                                    );
                                                   },
                                                   padding: EdgeInsets.zero,
                                                   constraints: BoxConstraints(),
                                                   icon: Icon(
                                                     Icons.arrow_back_ios,
-                                                    size: 16,
+                                                    size: 14,
                                                   )),
                                             ),
                                             SizedBox(
@@ -660,7 +676,7 @@ class _ReturnState extends State<Return> {
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 1,
                                               ),
-                                            )
+                                            ),
                                           ],
                                         ),
                                       )),
@@ -684,7 +700,7 @@ class _ReturnState extends State<Return> {
                                             height: 30,
                                             alignment: Alignment.center,
                                             child: Text(
-                                              '${sendData['itemsList'][i]['salePrice']}',
+                                              '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
                                               style: TextStyle(
                                                   color: Color(0xFF495057)),
                                               textAlign: TextAlign.center,
@@ -764,7 +780,7 @@ class _ReturnState extends State<Return> {
                                         height: 30,
                                         alignment: Alignment.centerRight,
                                         child: Text(
-                                          '${sendData['itemsList'][i]['totalPrice']}',
+                                          '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
                                           style: TextStyle(
                                               color: Color(0xFF495057)),
                                           textAlign: TextAlign.end,
@@ -801,7 +817,7 @@ class _ReturnState extends State<Return> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${sendData['totalAmount'].round()}',
+                          '${formatMoney(sendData['totalAmount'])}',
                           style: TextStyle(
                               color: blue,
                               fontSize: 32,

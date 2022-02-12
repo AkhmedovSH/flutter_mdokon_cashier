@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kassa/components/drawer_app_bar.dart';
@@ -33,12 +34,13 @@ class _XReportState extends State<XReport> {
     dynamic response =
         await get('/services/desktop/api/shift-xreport/$cashboxId');
 
-    print(response);
-
     setState(() {
       report = response;
       reportList = report['xReportList'];
-      report['shiftNumber'] = report['shiftNumber'];
+      report['shiftOpenDate'] =
+          DateFormat('dd.MM.yyyy HH:ss').format(DateTime.parse(
+        response['shiftOpenDate'],
+      ));
     });
   }
 
@@ -170,7 +172,9 @@ class _XReportState extends State<XReport> {
                   ),
                   buildRow('Кассир', report['cashierName']),
                   buildRow('Касса №', report['shiftNumber']),
-                  buildRow('ИНН', report['tin'] ?? ''),
+                  report['tin'] != null
+                      ? buildRow('ИНН', report['tin'] ?? '')
+                      : Container(),
                   buildRow('Дата', report['shiftOpenDate']),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),

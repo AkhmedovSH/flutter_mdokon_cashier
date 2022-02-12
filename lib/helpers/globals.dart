@@ -48,7 +48,8 @@ formatMoney(money) {
     return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ')
         .format(money);
   } else {
-    return 0;
+    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ')
+        .format(0);
   }
 }
 

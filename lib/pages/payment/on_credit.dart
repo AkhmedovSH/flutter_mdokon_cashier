@@ -107,7 +107,7 @@ class _OnCreditState extends State<OnCredit> {
     super.initState();
     dynamic totalAmount = 0;
     for (var i = 0; i < products.length; i++) {
-      totalAmount += products[i]['total_amount'];
+      totalAmount += products[i]['totalPrice'];
     }
     setState(() {
       data = widget.data!;

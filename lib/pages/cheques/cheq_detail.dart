@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -54,7 +53,7 @@ class _CheqDetailState extends State<CheqDetail> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     dynamic response =
         await get('/services/desktop/api/cheque-byId/${Get.arguments}');
-
+    //print(response);
     setState(() {
       cashbox = jsonDecode(prefs.getString('cashbox')!);
       cheque = response;
@@ -66,6 +65,16 @@ class _CheqDetailState extends State<CheqDetail> {
       cheque['chequeDate'] = formatUnixTime(cheque['chequeDate']);
     });
     //print(cheque);
+  }
+
+  getColor(status) {
+    if (status == 0) {
+      return null;
+    } else if (status == 1) {
+      return Colors.yellow;
+    } else if (status == 2) {
+      return Colors.red;
+    }
   }
 
   @override
@@ -140,7 +149,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'Телефон: ${cashbox['posPhone']}',
+                    'Телефон: ${cashbox['posPhone'] ?? ''}',
                     style: TextStyle(
                         fontWeight: FontWeight.w700, color: b8, fontSize: 16),
                   ),
@@ -149,7 +158,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'Адресс: ${cashbox['posAddress']}',
+                    'Адресс: ${cashbox['posAddress'] ?? ''}',
                     style: TextStyle(
                         fontWeight: FontWeight.w700, color: b8, fontSize: 16),
                   ),
@@ -199,22 +208,40 @@ class _CheqDetailState extends State<CheqDetail> {
                         padding: EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           '${i + 1} ${itemsList[i]['productName']}',
-                          style: TextStyle(color: b8),
+                          style: TextStyle(
+                            color: b8,
+                            decoration: itemsList[i]['returned'] > 0
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: getColor(itemsList[i]['returned']),
+                          ),
                         ),
                       ),
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          '${itemsList[i]['quantity']} * ${itemsList[i]['salePrice']}',
-                          style: TextStyle(color: b8),
+                          '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
+                          style: TextStyle(
+                            color: b8,
+                            decoration: itemsList[i]['returned'] > 0
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: getColor(itemsList[i]['returned']),
+                          ),
                         ),
                       ),
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          '${itemsList[i]['totalPrice']}',
+                          '${formatMoney(itemsList[i]['totalPrice'])}',
                           textAlign: TextAlign.end,
-                          style: TextStyle(color: b8),
+                          style: TextStyle(
+                            color: b8,
+                            decoration: itemsList[i]['returned'] > 0
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: getColor(itemsList[i]['returned']),
+                          ),
                         ),
                       ),
                     ])
@@ -229,16 +256,17 @@ class _CheqDetailState extends State<CheqDetail> {
                     softWrap: false,
                   ),
                 ),
-                buildRow('Сумма продажи', cheque['totalPrice']),
-                buildRow('Скидка', cheque['discount']),
-                buildRow('К оплате', cheque['to_pay'], fz: 20.0),
-                buildRow('Оплачено', cheque['paid']),
-                buildRow('НДС %', cheque['totalVatAmount'] ?? 0),
+                buildRow('Сумма продажи', formatMoney(cheque['totalPrice'])),
+                buildRow('Скидка', formatMoney(cheque['discount'])),
+                buildRow('К оплате', formatMoney(cheque['to_pay']), fz: 20.0),
+                buildRow('Оплачено', formatMoney(cheque['paid'])),
+                buildRow('НДС %',
+                    formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
                 cheque['saleCurrencyId'] == 1
-                    ? buildRow('Валюта', 'Сум')
+                    ? buildRow('Валюта', 'Сум ')
                     : Container(),
                 cheque['saleCurrencyId'] == 2
-                    ? buildRow('Валюта', 'USD')
+                    ? buildRow('Валюта', 'USD ')
                     : Container(),
                 for (var i = 0; i < transactionsList.length; i++)
                   Row(
@@ -252,13 +280,14 @@ class _CheqDetailState extends State<CheqDetail> {
                             fontSize: 16),
                       ),
                       Text(
-                        '${transactionsList[i]['amountIn']}',
+                        '${formatMoney(transactionsList[i]['amountIn'])}',
                         style: TextStyle(color: b8, fontSize: 16),
                       )
                     ],
                   ),
                 cheque['clientAmount'] > 0
-                    ? buildRow('Сумма долга', cheque['clientAmount'])
+                    ? buildRow(
+                        'Сумма долга', formatMoney(cheque['clientAmount']))
                     : Container(),
                 cheque['clientAmount'] > 0
                     ? buildRow('Должник', cheque['clientName'])
@@ -270,9 +299,10 @@ class _CheqDetailState extends State<CheqDetail> {
                     ? buildRow('Клиент', cheque['loyaltyClientName'])
                     : Container(),
                 cheque['loyaltyBonus'] > 0
-                    ? buildRow('mDokon Loyalty Бонус', cheque['loyaltyBonus'])
+                    ? buildRow('mDokon Loyalty Бонус',
+                        formatMoney(cheque['loyaltyBonus']))
                     : Container(),
-                buildRow('Сдача', cheque['change']),
+                buildRow('Сдача', formatMoney(cheque['change'])),
                 Container(
                     margin: EdgeInsets.only(top: 15, bottom: 10),
                     height: 50,

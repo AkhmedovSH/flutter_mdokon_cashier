@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
-import 'package:kassa/helpers/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import './controller.dart';
