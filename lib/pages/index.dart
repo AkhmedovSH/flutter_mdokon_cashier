@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -379,9 +380,14 @@ class _IndexState extends State<Index> {
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'images/barcode-scanner.png',
+                SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: Lottie.asset('images/lottie/scan_1.json'),
                 ),
+                // Image.asset(
+                //   'images/barcode-scanner.png',
+                // ),
                 SizedBox(height: 20),
                 Center(
                   child: Text(
