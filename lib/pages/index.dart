@@ -177,11 +177,11 @@ class _IndexState extends State<Index> {
     final result = await Get.toNamed('/search');
     if (result != null) {
       var found = false;
+      double totalPrice = 0;
+      dynamic arr = products;
       for (var i = 0; i < products.length; i++) {
         if (products[i]['productId'] == result['productId']) {
           found = true;
-          dynamic arr = products;
-          double totalPrice = 0;
 
           if (products[i]['quantity'] >= products[i]['balance'] &&
               !cashbox['saleMinus']) {
@@ -192,8 +192,6 @@ class _IndexState extends State<Index> {
           arr[i]['quantity'] = arr[i]['quantity'] + 1;
           arr[i]['discount'] = 0;
           arr[i]['totalPrice'] = arr[i]['quantity'] * arr[i]['salePrice'];
-          print(arr[i]['totalPrice'].runtimeType);
-          print(chequeData['totalPrice'].runtimeType);
           totalPrice += arr[i]['totalPrice'];
           setState(() {
             products = arr;
@@ -204,9 +202,18 @@ class _IndexState extends State<Index> {
       if (!found) {
         result['quantity'] = 1;
         result['discount'] = 0;
-        result['totalPrice'] = result['quantity'] * result['salePrice'];
+
         setState(() {
           products.add(result);
+        });
+
+        for (var i = 0; i < products.length; i++) {
+          arr[i]['totalPrice'] = arr[i]['quantity'] * arr[i]['salePrice'];
+          totalPrice += arr[i]['totalPrice'];
+        }
+
+        setState(() {
+          chequeData['totalPrice'] = totalPrice.toInt();
         });
       }
     }
