@@ -26,33 +26,7 @@ class _PaymentSampleState extends State<PaymentSample> {
   final Controller controller = Get.put(Controller());
   int currentIndex = 0;
   bool loading = false;
-  dynamic data = {
-    "cashboxVersion": '',
-    "login": '',
-    "cashboxId": '',
-    "change": 0,
-    "chequeDate": 0,
-    "chequeNumber": "",
-    "clientAmount": 0,
-    "clientComment": "",
-    "clientId": 0,
-    "currencyId": '',
-    "currencyRate": 0,
-    "discount": 0,
-    "note": "",
-    "offline": false,
-    "outType": false,
-    "paid": 0,
-    "posId": '',
-    "saleCurrencyId": '',
-    "shiftId": '',
-    "totalPriceBeforeDiscount": 0, // this is only for showing when sale v
-    "totalPrice": 0,
-    "transactionId": "",
-    "itemsList": [],
-    "transactionsList": []
-  };
-  dynamic products = Get.arguments;
+  dynamic data = Get.arguments;
   dynamic textController = TextEditingController();
   dynamic textController2 = TextEditingController();
   dynamic textController3 = TextEditingController();
@@ -105,11 +79,8 @@ class _PaymentSampleState extends State<PaymentSample> {
 
       if (textController2.text.length > 0) {
         setState(() {
-          data['paid'] =
-              int.parse(textController.text) + int.parse(textController2.text);
-          data['change'] = (int.parse(textController.text) +
-                  int.parse(textController2.text)) -
-              (data['totalPrice']);
+          data['paid'] = int.parse(textController.text) + int.parse(textController2.text);
+          data['change'] = (int.parse(textController.text) + int.parse(textController2.text)) - (data['totalPrice']);
         });
       } else {
         setState(() {
@@ -123,19 +94,13 @@ class _PaymentSampleState extends State<PaymentSample> {
       if (textController.text.length > 0) {
         if (textController2.text.length > 0) {
           setState(() {
-            data['change'] = (int.parse(textController.text) +
-                    int.parse(textController2.text)) -
-                (data['totalPrice']);
-            data['paid'] = int.parse(textController.text) +
-                int.parse(textController2.text);
-            data['clientAmount'] = data['totalPrice'] -
-                (int.parse(textController.text) +
-                    int.parse(textController2.text));
+            data['change'] = (int.parse(textController.text) + int.parse(textController2.text)) - (data['totalPrice']);
+            data['paid'] = int.parse(textController.text) + int.parse(textController2.text);
+            data['clientAmount'] = data['totalPrice'] - (int.parse(textController.text) + int.parse(textController2.text));
           });
         } else {
           setState(() {
-            data['clientAmount'] =
-                data['totalPrice'] - int.parse(textController.text);
+            data['clientAmount'] = data['totalPrice'] - int.parse(textController.text);
             data['paid'] = int.parse(textController.text);
           });
         }
@@ -171,7 +136,7 @@ class _PaymentSampleState extends State<PaymentSample> {
 
       setState(() {
         data['transactionsList'] = list;
-        data['itemsList'] = products;
+        data['itemsList'] = data["itemsList"];
       });
 
       final response = await post('/services/desktop/api/cheque', data);
@@ -182,12 +147,11 @@ class _PaymentSampleState extends State<PaymentSample> {
         'chequeId': response['id'],
         'clientCode': data['clientCode'],
         'key': cashbox['loyaltyApi'],
-        'products': [],
+        'data["itemsList"]': [],
         'totalAmount': data['totalPrice'],
         'writeOff': data['loyaltyBonus'] ?? 0
       };
-      final responseLoyalty =
-          await lPost('/services/gocashapi/api/create-cheque', sendData);
+      final responseLoyalty = await lPost('/services/gocashapi/api/create-cheque', sendData);
       if (responseLoyalty['success']) {
         Get.offAllNamed('/');
       }
@@ -199,7 +163,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['change'] = 0;
       }
       data['transactionsList'] = transactionsList;
-      data['itemsList'] = products;
+      data['itemsList'] = data["itemsList"];
     });
     //print(data);
     final response = await post('/services/desktop/api/cheque', data);
@@ -211,19 +175,8 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   setInitState() {
-    dynamic totalAmount = 0;
-    for (var i = 0; i < products.length; i++) {
-      if (products[i]['quantity'].runtimeType == int) {
-        totalAmount += products[i]['salePrice'] * (products[i]['quantity']);
-      } else {
-        totalAmount +=
-            products[i]['salePrice'] * int.parse(products[i]['quantity']);
-      }
-    }
     setState(() {
-      data['totalPrice'] = totalAmount.round();
       data['change'] = 0;
-      data['paid'] = totalAmount.round();
       data['text'] = data['totalPrice'].toString();
     });
     textController.text = '';
@@ -247,12 +200,8 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['shiftId'] = cashbox['id'];
       });
     }
-    final transactionId = generateTransactionId(
-        cashbox['posId'].toString(),
-        cashbox['cashboxId'].toString(),
-        prefs.getString('shift') != null
-            ? jsonDecode(prefs.getString('shift')!)['id']
-            : cashbox['cashboxId'].toString());
+    final transactionId = generateTransactionId(cashbox['posId'].toString(), cashbox['cashboxId'].toString(),
+        prefs.getString('shift') != null ? jsonDecode(prefs.getString('shift')!)['id'] : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
@@ -317,10 +266,8 @@ class _PaymentSampleState extends State<PaymentSample> {
                 labelColor: black,
                 indicatorColor: blue,
                 indicatorWeight: 3,
-                labelStyle: TextStyle(
-                    fontSize: 14.0, color: black, fontWeight: FontWeight.w500),
-                unselectedLabelStyle:
-                    TextStyle(fontSize: 14.0, color: Color(0xFF9B9B9B)),
+                labelStyle: TextStyle(fontSize: 14.0, color: black, fontWeight: FontWeight.w500),
+                unselectedLabelStyle: TextStyle(fontSize: 14.0, color: Color(0xFF9B9B9B)),
                 // controller: ,
                 tabs: const [
                   Tab(
@@ -338,10 +285,8 @@ class _PaymentSampleState extends State<PaymentSample> {
             currentIndex == 0
                 ? Payment(setPayload: setPayload, data: data, setData: setData)
                 : currentIndex == 1
-                    ? OnCredit(
-                        setPayload: setPayload, data: data, setData: setData)
-                    : Loyalty(
-                        setPayload: setPayload, data: data, setData: setData),
+                    ? OnCredit(setPayload: setPayload, data: data, setData: setData)
+                    : Loyalty(setPayload: setPayload, data: data, setData: setData),
             Container(
               margin: EdgeInsets.only(bottom: 70),
             )
@@ -355,9 +300,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                 if (currentIndex == 0 && data['change'] >= 0) {
                   createCheque();
                 }
-                if (currentIndex == 1 &&
-                    data['change'] < 0 &&
-                    data['clientId'] != 0) {
+                if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
                   createCheque();
                 }
                 if (currentIndex == 2) {
@@ -375,9 +318,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                           ? data['clientId'] == 0
                               ? lightGrey
                               : blue
-                          : data['loyaltyClientName'] == null &&
-                                  data['loyaltyClientAmount'] == null &&
-                                  data['loyaltyBonus'] == null
+                          : data['loyaltyClientName'] == null && data['loyaltyClientAmount'] == null && data['loyaltyBonus'] == null
                               ? lightGrey
                               : blue),
               child: Text('ПРИНЯТЬ')),

@@ -32,8 +32,7 @@ class _SearchState extends State<Search> {
     setState(() {});
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    final response = await get(
-        '/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
+    final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
     // controller.hideLoading();
     setState(() {
       products = response;
@@ -104,10 +103,7 @@ class _SearchState extends State<Search> {
                           height: 35,
                           width: 35,
                           margin: EdgeInsets.only(left: 15),
-                          decoration: BoxDecoration(
-                              border: Border.all(width: 1, color: blue),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(50))),
+                          decoration: BoxDecoration(border: Border.all(width: 1, color: blue), borderRadius: BorderRadius.all(Radius.circular(50))),
                           child: Icon(
                             Icons.qr_code_2_outlined,
                             color: blue,
@@ -120,18 +116,17 @@ class _SearchState extends State<Search> {
                   for (var i = 0; i < products.length; i++)
                     GestureDetector(
                       onTap: () {
+                        products[i]['selected'] = false;
                         Get.back(result: products[i]);
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                         margin: const EdgeInsets.only(bottom: 10),
                         decoration: BoxDecoration(
                           color: white,
                           border: Border.all(color: borderColor),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(5)),
+                          borderRadius: const BorderRadius.all(Radius.circular(5)),
                           boxShadow: const [
                             BoxShadow(
                               color: Colors.black,
@@ -147,9 +142,7 @@ class _SearchState extends State<Search> {
                           children: [
                             Text(
                               '${products[i]['productName']}',
-                              style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               softWrap: false,
@@ -173,10 +166,7 @@ class _SearchState extends State<Search> {
                                 SizedBox(
                                   child: Text(
                                     '${formatMoney(products[i]['salePrice']) ?? 0} So\'m',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: blue,
-                                        fontSize: 16),
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: blue, fontSize: 16),
                                   ),
                                 )
                               ],

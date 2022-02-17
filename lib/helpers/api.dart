@@ -7,7 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './controller.dart';
 
 const hostUrl = "https://cabinet.mdokon.uz";
-var dio = Dio();
+BaseOptions options = BaseOptions(
+  baseUrl: hostUrl,
+  receiveDataWhenStatusError: true,
+  connectTimeout: 10 * 1000, // 10 seconds
+  receiveTimeout: 10 * 1000, // 10 seconds
+);
+var dio = Dio(options);
+
 final Controller controller = Get.put(Controller());
 
 Future get(String url, {payload, loading = true, setState}) async {

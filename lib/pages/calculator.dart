@@ -14,7 +14,6 @@ class _CalculatorState extends State<Calculator> {
   dynamic product = Get.arguments;
   dynamic prevProduct = {};
   dynamic fieldName = 'quantity';
-  dynamic initialQuantity = "";
 
   increment(number) {
     var parsed = "";
@@ -31,9 +30,14 @@ class _CalculatorState extends State<Calculator> {
     if (double.parse(parsed) > 0 && !moreThanOneDots) {
       //print('BLOCK-1');
       setState(() {
-        print(parsed.runtimeType);
-        product['quantity'] = parsed;
-        product['totalPrice'] = product['salePrice'] * double.parse(parsed);
+        if (fieldName == "quantity") {
+          product[fieldName] = parsed;
+          product['totalPrice'] = double.parse(product['salePrice'].toString()) * double.parse(parsed.toString());
+        }
+        if (fieldName == "salePrice") {
+          product[fieldName] = parsed;
+          product['totalPrice'] = double.parse(product['salePrice'].toString()) * double.parse(parsed.toString());
+        }
       });
     } else {
       //print('BLOCK-3');
@@ -72,15 +76,20 @@ class _CalculatorState extends State<Calculator> {
   }
 
   void toCheque() {
-    if (product['quantity'].toString() != '0') {
-      var str = product['quantity']
-          .toString()
-          .substring(product['quantity'].toString().length - 1);
+    if (product[fieldName].toString() != '0') {
+      var str = product['quantity'].toString().substring(product['quantity'].toString().length - 1);
       if (str == ".") {
         setState(() {
-          product['quantity'] = double.parse(str);
-          product['totalPrice'] =
-              product['salePrice'] * double.parse(product['quantity']);
+          if (fieldName == "quantity") {
+            product['quantity'] = double.parse(str);
+            product['totalPrice'] = product['quantity'] * product['salePrice'];
+          }
+          if (fieldName == "salePrice") {
+            product['salePrice'] = double.parse(str);
+            product['totalPrice'] = double.parse(product['quantity']) * double.parse(product['salePrice']);
+          }
+
+          product['totalPrice'] = product['salePrice'] * double.parse(product['quantity']);
         });
       }
       Get.back(result: product);
@@ -92,9 +101,9 @@ class _CalculatorState extends State<Calculator> {
     super.initState();
     final product = Get.arguments;
     Map copyObject = Map.from(product);
-    print(product);
     setState(() {
-      initialQuantity = product['quantity'].toString();
+      product['initialQuantity'] = product['quantity'].toString();
+      product['initialSalePrice'] = product['salePrice'].toString();
       product['quantity'] = 0;
       product['discount'] = product['discount'].toString();
       prevProduct = copyObject;
@@ -137,16 +146,11 @@ class _CalculatorState extends State<Calculator> {
       child: Container(
           // margin: const EdgeInsets.symmetric(vertical: 1),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: const BoxDecoration(
-              border: Border(
-                  top: BorderSide(color: Color(0xFFDADADA)),
-                  bottom: BorderSide(color: Color(0xFFDADADA)))),
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFDADADA)), bottom: BorderSide(color: Color(0xFFDADADA)))),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-                border: item['title'] == '.' ||
-                        item['title'] == '0' ||
-                        int.parse(item['title']) % 3 != 0
+                border: item['title'] == '.' || item['title'] == '0' || int.parse(item['title']) % 3 != 0
                     ? const Border(right: BorderSide(color: Color(0xFFDADADA)))
                     : const Border()),
             child: Text(
@@ -170,10 +174,12 @@ class _CalculatorState extends State<Calculator> {
             if (number == 1) {
               items[3]['active'] = true;
               fieldName = 'quantity';
+              product['quantity'] = 0;
             }
             if (number == 2) {
               items2[3]['active'] = true;
               fieldName = 'salePrice';
+              product['salePrice'] = 0;
             }
             if (number == 3) {
               items3[3]['active'] = true;
@@ -191,8 +197,7 @@ class _CalculatorState extends State<Calculator> {
         color: item['active'] ? blue : const Color(0xFFDADADA),
         child: Text(
           item['title'],
-          style: TextStyle(
-              color: white, fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(color: white, fontWeight: FontWeight.bold, fontSize: 16),
           textAlign: TextAlign.center,
         ),
       ),
@@ -206,6 +211,7 @@ class _CalculatorState extends State<Calculator> {
             child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // HEADER
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -245,14 +251,12 @@ class _CalculatorState extends State<Calculator> {
                         margin: const EdgeInsets.only(right: 5),
                         child: Text(
                           '${product['totalPrice']}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                       ),
                       const Text(
                         'So\'m',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500, fontSize: 12),
+                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
                       )
                     ],
                   )
@@ -260,7 +264,7 @@ class _CalculatorState extends State<Calculator> {
               ),
             ],
           ),
-        ),
+        ), // HEADER
         // Container(
         //   margin: const EdgeInsets.symmetric(horizontal: 20),
         //   child: Column(
@@ -281,6 +285,7 @@ class _CalculatorState extends State<Calculator> {
         //   ),
         // ),
         Expanded(
+          // RESULT
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             alignment: Alignment.centerRight,
@@ -289,51 +294,38 @@ class _CalculatorState extends State<Calculator> {
               style: TextStyle(fontSize: 36, fontWeight: FontWeight.w300),
             ),
           ),
+          // RESULT
         ),
         Container(
             margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             padding: const EdgeInsets.symmetric(vertical: 8),
             width: MediaQuery.of(context).size.width,
-            decoration: BoxDecoration(
-                color: blue,
-                borderRadius: const BorderRadius.all(Radius.circular(20))),
+            decoration: BoxDecoration(color: blue, borderRadius: const BorderRadius.all(Radius.circular(20))),
             child: Text(
               'Продажа в распакованном виде',
               style: TextStyle(color: white),
               textAlign: TextAlign.center,
             )),
+        // CALCULATOR
         Column(children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(
-                    flex: 2,
-                    child: items[i]['id'] == 1
-                        ? buildNumber(items[i])
-                        : buildButton(items[i], 1))
+              for (var i = 0; i < items.length; i++) Expanded(flex: 2, child: items[i]['id'] == 1 ? buildNumber(items[i]) : buildButton(items[i], 1))
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 0; i < items2.length; i++)
-                Expanded(
-                    flex: 2,
-                    child: items2[i]['id'] == 1
-                        ? buildNumber(items2[i])
-                        : buildButton(items2[i], 2))
+                Expanded(flex: 2, child: items2[i]['id'] == 1 ? buildNumber(items2[i]) : buildButton(items2[i], 2))
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 0; i < items3.length; i++)
-                Expanded(
-                    flex: 2,
-                    child: items3[i]['id'] == 1
-                        ? buildNumber(items3[i])
-                        : buildButton(items3[i], 3))
+                Expanded(flex: 2, child: items3[i]['id'] == 1 ? buildNumber(items3[i]) : buildButton(items3[i], 3))
             ],
           ),
           Row(
@@ -341,38 +333,34 @@ class _CalculatorState extends State<Calculator> {
             children: [
               for (var i = 0; i < items4.length; i++)
                 Expanded(
-                    flex: 2,
-                    child: items4[i]['id'] == 1
-                        ? i == 2
-                            ? GestureDetector(
-                                onTap: () {
-                                  delete();
-                                },
-                                child: Container(
-                                    margin:
-                                        const EdgeInsets.symmetric(vertical: 1),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            top: BorderSide(
-                                                color: Color(0xFFDADADA)),
-                                            bottom: BorderSide(
-                                                color: Color(0xFFDADADA)))),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                      child: const Icon(
-                                        Icons.backspace_outlined,
-                                        size: 18,
-                                      ),
-                                    )),
-                              )
-                            : buildNumber(items4[i])
-                        : buildButton(items4[i], 4))
+                  flex: 2,
+                  child: items4[i]['id'] == 1
+                      ? i == 2
+                          ? GestureDetector(
+                              onTap: () {
+                                delete();
+                              },
+                              child: Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 1),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: const BoxDecoration(
+                                      border: Border(top: BorderSide(color: Color(0xFFDADADA)), bottom: BorderSide(color: Color(0xFFDADADA)))),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    child: const Icon(
+                                      Icons.backspace_outlined,
+                                      size: 18,
+                                    ),
+                                  )),
+                            )
+                          : buildNumber(items4[i])
+                      : buildButton(items4[i], 4),
+                ),
             ],
           ),
         ]),
+        // CALCULATOR
+        // BOTTOM BUTTONS
         Container(
           margin: const EdgeInsets.only(top: 15, bottom: 15),
           child: Row(
@@ -384,7 +372,8 @@ class _CalculatorState extends State<Calculator> {
                   onPressed: () {
                     if (product['quantity'].toString() == '0') {
                       setState(() {
-                        product['quantity'] = initialQuantity;
+                        product['quantity'] = product['initialQuantity'];
+                        product['salePrice'] = product['initialSalePrice'];
                       });
                       Get.back(result: prevProduct);
                     }
@@ -399,11 +388,7 @@ class _CalculatorState extends State<Calculator> {
                   ),
                   child: Text(
                     'ОТМЕНА',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: blue,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, color: blue, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -432,6 +417,7 @@ class _CalculatorState extends State<Calculator> {
             ],
           ),
         )
+        // BOTTOM BUTTONS
       ],
     )));
   }

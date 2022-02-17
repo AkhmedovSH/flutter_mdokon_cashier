@@ -24,18 +24,12 @@ getUnixTime() {
 }
 
 generateChequeNumber() {
-  return getUnixTime()
-      .toString()
-      .substring(getUnixTime().toString().length - 8);
+  return getUnixTime().toString().substring(getUnixTime().toString().length - 8);
 }
 
 generateTransactionId(posId, cashboxId, shiftId) {
   var rng = Random();
-  return posId.toString() +
-      cashboxId.toString() +
-      shiftId.toString() +
-      getUnixTime().toString() +
-      (rng.nextInt(999999).floor().toString());
+  return posId.toString() + cashboxId.toString() + shiftId.toString() + getUnixTime().toString() + (rng.nextInt(999999).floor().toString());
 }
 
 formatUnixTime(unixTime) {
@@ -45,11 +39,10 @@ formatUnixTime(unixTime) {
 
 formatMoney(money) {
   if (money != null) {
-    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ')
-        .format(money);
+    money = double.parse(money.toString());
+    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ').format(money);
   } else {
-    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ')
-        .format(0);
+    return NumberFormat.currency(symbol: '', decimalDigits: 0, locale: 'UZ').format(0);
   }
 }
 

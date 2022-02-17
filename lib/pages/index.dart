@@ -20,16 +20,40 @@ class Index extends StatefulWidget {
 
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  dynamic cashbox = {};
-  dynamic chequeData = {
-    "totalPrice": 0.0,
-    "totalPriceBeforeDiscount": 0,
-    "discount": 0,
-  };
-  dynamic products = [];
-  dynamic clients = [];
+  dynamic shortcutController = TextEditingController();
+  dynamic shortcutFocusNode = FocusNode();
   dynamic textController = TextEditingController();
   dynamic textController2 = TextEditingController();
+
+  dynamic data = {
+    "cashboxVersion": '',
+    "login": '',
+    "cashboxId": '',
+    "change": 0,
+    "chequeDate": 0,
+    "chequeNumber": "",
+    "clientAmount": 0,
+    "clientComment": "",
+    "clientId": 0,
+    "currencyId": '',
+    "currencyRate": 0,
+    "discount": 0,
+    "note": "",
+    "offline": false,
+    "outType": false,
+    "paid": 0,
+    "posId": '',
+    "saleCurrencyId": '',
+    "shiftId": '',
+    "totalPriceBeforeDiscount": 0, // this is only for showing when sale
+    "totalPrice": 0,
+    "transactionId": "",
+    "itemsList": [],
+    "transactionsList": []
+  };
+
+  dynamic cashbox = {};
+  dynamic clients = [];
   dynamic expenseOut = {
     "cashboxId": '',
     "posId": '',
@@ -57,7 +81,7 @@ class _IndexState extends State<Index> {
       'fieldName': 'cash',
     },
     {
-      'label': 'Банковская карточка',
+      'label': 'Терминал',
       'icon': Icons.payment,
       'fieldName': 'terminal',
     },
@@ -66,12 +90,12 @@ class _IndexState extends State<Index> {
       'fieldName': 'note',
     },
   ];
+  dynamic shortCutList = ["+", "-", "*", "/", "%", "%-"];
 
   getClients() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    final response =
-        await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
+    final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
     //print(response);
     for (var i = 0; i < response.length; i++) {
       response[i]['selected'] = false;
@@ -101,8 +125,7 @@ class _IndexState extends State<Index> {
         expenseOut['shiftId'] = cashbox['id'].toString();
       }
     });
-    final response =
-        await post('/services/desktop/api/expense-out', expenseOut);
+    final response = await post('/services/desktop/api/expense-out', expenseOut);
     if (response['success']) {
       Navigator.pop(context);
     }
@@ -111,20 +134,10 @@ class _IndexState extends State<Index> {
   createClientDebt() async {
     final list = [];
     if (debtIn['cash'].length > 0) {
-      list.add({
-        "amountIn": debtIn['cash'],
-        "amountOut": "",
-        "paymentTypeId": 1,
-        "paymentPurposeId": 5
-      });
+      list.add({"amountIn": debtIn['cash'], "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
     }
     if (debtIn['terminal'].length > 0) {
-      list.add({
-        "amountIn": debtIn['terminal'],
-        "amountOut": "",
-        "paymentTypeId": 2,
-        "paymentPurposeId": 5
-      });
+      list.add({"amountIn": debtIn['terminal'], "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
     }
 
     dynamic sendData = Map.from(debtIn);
@@ -157,67 +170,223 @@ class _IndexState extends State<Index> {
   }
 
   redirectToCalculator(i) async {
-    final result = await Get.toNamed('/calculator', arguments: products[i]);
-    if (result != null) {
-      var arr = products;
-      for (var i = 0; i < arr.length; i++) {
-        if (arr[i]['productId'] == result['productId']) {
-          arr[i]['totalPrice'] =
-              double.parse(arr[i]['quantity']) * (arr[i]['salePrice'].round());
+    final product = await Get.toNamed('/calculator', arguments: data["itemsList"][i]);
+    //print('product${product}');
+    if (product != null) {
+      var arr = data["itemsList"];
+      double totalPrice = 0;
 
-          arr[i] = result;
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i]['productId'] == product['productId']) {
+          arr[i]['totalPrice'] = double.parse(arr[i]['quantity'].toString()) * double.parse(arr[i]['salePrice'].toString());
+          arr[i] = product;
         }
+        totalPrice += double.parse(arr[i]['quantity'].toString()) * double.parse(arr[i]['salePrice'].toString());
       }
+
       setState(() {
-        products = arr;
+        data["itemsList"] = arr;
+        data["totalPrice"] = totalPrice;
       });
     }
   }
 
   redirectToSearch() async {
-    final result = await Get.toNamed('/search');
-    if (result != null) {
-      var found = false;
+    final product = await Get.toNamed('/search');
+    if (product != null) {
+      var existSameProduct = false;
       double totalPrice = 0;
-      dynamic arr = products;
-      for (var i = 0; i < products.length; i++) {
-        if (products[i]['productId'] == result['productId']) {
-          found = true;
+      dynamic productsCopy = data["itemsList"];
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['productId'] == product['productId']) {
+          existSameProduct = true;
 
-          if (products[i]['quantity'] >= products[i]['balance'] &&
-              !cashbox['saleMinus']) {
+          if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
             showDangerToast('Превышен лимит');
             return;
           }
 
-          arr[i]['quantity'] = arr[i]['quantity'] + 1;
-          arr[i]['discount'] = 0;
-          arr[i]['totalPrice'] = arr[i]['quantity'] * arr[i]['salePrice'];
-          totalPrice += arr[i]['totalPrice'];
+          productsCopy[i]['quantity'] = productsCopy[i]['quantity'] + 1;
+          productsCopy[i]['discount'] = 0;
+          productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
+          totalPrice += productsCopy[i]['totalPrice'];
+
           setState(() {
-            products = arr;
-            chequeData['totalPrice'] = totalPrice.toInt();
+            data["itemsList"] = productsCopy;
+            data['totalPrice'] = totalPrice;
           });
         }
       }
-      if (!found) {
-        result['quantity'] = 1;
-        result['discount'] = 0;
 
-        setState(() {
-          products.add(result);
-        });
+      if (!existSameProduct) {
+        product['quantity'] = 1;
+        product['discount'] = 0;
+        productsCopy.add(product);
 
-        for (var i = 0; i < products.length; i++) {
-          arr[i]['totalPrice'] = arr[i]['quantity'] * arr[i]['salePrice'];
-          totalPrice += arr[i]['totalPrice'];
+        for (var i = 0; i < productsCopy.length; i++) {
+          productsCopy[i]['selected'] = false;
+          productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
+          totalPrice += productsCopy[i]['totalPrice'];
         }
+        productsCopy[productsCopy.length - 1]['selected'] = true;
 
         setState(() {
-          chequeData['totalPrice'] = totalPrice.toInt();
+          data["itemsList"] = productsCopy;
+          data['totalPrice'] = totalPrice;
         });
       }
     }
+  }
+
+  addToList(product) {}
+
+  deleteProduct(i) {
+    double totalPrice = 0;
+    dynamic productsCopy = data["itemsList"];
+    productsCopy.removeAt(i);
+
+    for (var i = 0; i < productsCopy.length; i++) {
+      productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
+      totalPrice += productsCopy[i]['totalPrice'];
+    }
+
+    setState(() {
+      data["itemsList"] = productsCopy;
+      data['totalPrice'] = totalPrice;
+    });
+  }
+
+  handleShortCut(type) {
+    if (shortcutController.text.length == 0) return;
+    dynamic productsCopy = data["itemsList"];
+    var inputData = shortcutController.text;
+    var isFloat = '.'.allMatches(inputData).isEmpty ? false : true;
+
+    if (type == "+") {
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['selected']) {
+          // Штучные товары нельзя вводить дробным числом
+          if (isFloat && productsCopy[i]['uomId'] == 1) {
+            showDangerToast('Неверное количество');
+            shortcutController.text = "";
+            FocusManager.instance.primaryFocus?.unfocus();
+            return;
+          } else {
+            if (!cashbox['saleMinus'] && (double.parse(inputData) > productsCopy[i]['balance'])) {
+              showDangerToast('Превышен лимит');
+              productsCopy[i]['quantity'] = productsCopy[i]['balance'];
+              calculateTotalPrice(productsCopy);
+              shortcutController.text = "";
+              FocusManager.instance.primaryFocus?.unfocus();
+            } else {
+              shortcutController.text = "";
+              FocusManager.instance.primaryFocus?.unfocus();
+              productsCopy[i]['quantity'] = inputData;
+              calculateTotalPrice(productsCopy);
+            }
+            break;
+          }
+        }
+      }
+    } else {
+      shortcutController.text = "";
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+
+    if (type == "*") {
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['selected']) {
+          if (double.parse(inputData) < productsCopy[i]['price']) {
+            showDangerToast('Цена продажи не может быть ниже чем цена поступления');
+            shortcutController.text = "";
+            FocusManager.instance.primaryFocus?.unfocus();
+            break;
+          } else {
+            productsCopy[i]['salePrice'] = double.parse(inputData);
+            calculateTotalPrice(productsCopy);
+            shortcutController.text = "";
+            FocusManager.instance.primaryFocus?.unfocus();
+            break;
+          }
+        }
+      }
+    }
+    if (type == "-") {
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['selected']) {
+          if (isFloat && productsCopy[i]['uomId'] == 1) {
+            showDangerToast('Неверное количество');
+            shortcutController.text = "";
+          } else {
+            if (!cashbox['saleMinus'] && (double.parse(inputData) / productsCopy[i]['salePrice'] > productsCopy[i]['balance'])) {
+              showDangerToast('Превышен лимит');
+            } else if (!cashbox['saleMinus'] && (productsCopy[i]['balance'] > (double.parse(inputData) / productsCopy[i]['salePrice']))) {
+              productsCopy[i]['quantity'] = double.parse(inputData) / productsCopy[i]['salePrice'];
+            } else {
+              productsCopy[i]['quantity'] = double.parse(inputData) / productsCopy[i]['salePrice'];
+            }
+          }
+          calculateTotalPrice(productsCopy);
+          shortcutController.text = "";
+          FocusManager.instance.primaryFocus?.unfocus();
+          break;
+        }
+      }
+    }
+    if (type == "/") {
+      shortcutController.text = "";
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['selected'] && productsCopy[i]['unitList'].length > 0) {
+          //
+        }
+      }
+    }
+    if (type == "%") {
+      //calculateDiscount();
+      shortcutController.text = "";
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+    if (type == "%Сум") {
+      //calculateDiscount();
+      shortcutController.text = "";
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+    setState(() {
+      data["itemsList"] = productsCopy;
+    });
+  }
+
+  calculateTotalPrice(productsCopy) {
+    dynamic totalPrice = 0;
+    for (var i = 0; i < productsCopy.length; i++) {
+      productsCopy[i]['totalPrice'] = double.parse(productsCopy[i]['quantity'].toString()) * double.parse(productsCopy[i]['salePrice'].toString());
+      totalPrice += productsCopy[i]['totalPrice'];
+    }
+    setState(() {
+      data['totalPrice'] = totalPrice;
+      data["itemsList"] = productsCopy;
+    });
+  }
+
+  calculateDiscount(type, inputData) {
+    dynamic chequeDataCopy = data;
+    if (chequeDataCopy['discount']) {
+      chequeDataCopy['discount'] = 0;
+      chequeDataCopy['totalPrice'] = chequeDataCopy['totalPriceBeforeDiscount'];
+      chequeDataCopy['totalPriceBeforeDiscount'] = 0;
+      for (var i = 0; i < data["itemsList"]; i++) {}
+    }
+  }
+
+  selectProduct(index) {
+    dynamic productsCopy = data["itemsList"];
+    for (var i = 0; i < productsCopy.length; i++) {
+      productsCopy[i]['selected'] = false;
+    }
+    productsCopy[index]['selected'] = true;
+    setState(() {
+      data["itemsList"] = productsCopy;
+    });
   }
 
   getCashbox() async {
@@ -233,22 +402,19 @@ class _IndexState extends State<Index> {
     getCashbox();
   }
 
-  buildTextField(label, icon, item, index, setDialogState,
-      {scrollPadding, enabled}) {
+  buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$label',
-          style:
-              TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
         ),
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
           child: TextFormField(
-            keyboardType:
-                index != 2 ? TextInputType.number : TextInputType.text,
+            keyboardType: index != 2 ? TextInputType.number : TextInputType.text,
             onChanged: (value) {
               setDialogState(() {
                 debtIn[item['fieldName']] = value;
@@ -260,13 +426,13 @@ class _IndexState extends State<Index> {
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
                   color: blue,
-                  width: 2,
+                  width: 1,
                 ),
               ),
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
                   color: blue,
-                  width: 2,
+                  width: 1,
                 ),
               ),
               suffixIcon: Icon(icon),
@@ -323,7 +489,7 @@ class _IndexState extends State<Index> {
           SizedBox(
             child: IconButton(
               onPressed: () {
-                if (products.length > 0) {
+                if (data["itemsList"].length > 0) {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) => AlertDialog(
@@ -337,10 +503,7 @@ class _IndexState extends State<Index> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(
-                                    primary: red,
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(primary: red, padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Отмена'),
                               ),
                             ),
@@ -349,13 +512,11 @@ class _IndexState extends State<Index> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   setState(() {
-                                    products = [];
+                                    data["itemsList"] = [];
                                   });
                                   Get.back();
                                 },
-                                style: ElevatedButton.styleFrom(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Продолжить'),
                               ),
                             )
@@ -376,7 +537,7 @@ class _IndexState extends State<Index> {
         width: MediaQuery.of(context).size.width * 0.70,
         child: const DrawerAppBar(),
       ),
-      body: products.length == 0
+      body: data["itemsList"].length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -400,11 +561,51 @@ class _IndexState extends State<Index> {
           : Column(
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    for (var i = 0; i < shortCutList.length; i++)
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            handleShortCut(shortCutList[i]);
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 3),
+                            color: blue,
+                            padding: EdgeInsets.all(5),
+                            child: Text(
+                              shortCutList[i],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white, fontSize: 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: TextField(
+                          controller: shortcutController,
+                          focusNode: shortcutFocusNode,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintStyle: TextStyle(color: lightGrey, fontSize: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Итого', style: TextStyle(fontSize: 16)),
-                    Text(formatMoney(chequeData['totalPrice']) + ' Сум',
-                        style: TextStyle(fontSize: 16)),
+                    Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
                   ],
                 ),
                 Row(
@@ -428,20 +629,16 @@ class _IndexState extends State<Index> {
                       children: [
                         SizedBox(height: 10),
                         Text('К оплате', style: TextStyle(fontSize: 16)),
-                        Text(formatMoney(chequeData['totalPrice']) + ' Сум',
-                            style: TextStyle(fontSize: 16)),
+                        Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
                       ],
                     )
                   ],
                 ),
-                Divider(),
-                for (var i = products.length - 1; i >= 0; i--)
+                for (var i = data["itemsList"].length - 1; i >= 0; i--)
                   Dismissible(
-                    key: ValueKey(products[i]['productName']),
+                    key: ValueKey(data["itemsList"][i]['productName']),
                     onDismissed: (DismissDirection direction) {
-                      setState(() {
-                        products.removeAt(i);
-                      });
+                      deleteProduct(i);
                     },
                     background: Container(
                       color: white,
@@ -452,19 +649,15 @@ class _IndexState extends State<Index> {
                     direction: DismissDirection.endToStart,
                     child: GestureDetector(
                       onTap: () async {
-                        redirectToCalculator(i);
+                        selectProduct(i);
+                        //redirectToCalculator(i);
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 8,
-                        ),
                         margin: const EdgeInsets.only(bottom: 5),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(
-                            bottom:
-                                BorderSide(color: Color(0xFFF5F3F5), width: 1),
+                            bottom: BorderSide(color: data["itemsList"][i]['selected'] ? Color(0xFF5b73e8) : Color(0xFFF5F3F5), width: 1),
                           ),
                         ),
                         child: Column(
@@ -472,7 +665,7 @@ class _IndexState extends State<Index> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${(i + 1).toString() + '. ' + products[i]['productName']}',
+                              '${(i + 1).toString() + '. ' + data["itemsList"][i]['productName']}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
@@ -490,18 +683,14 @@ class _IndexState extends State<Index> {
                                   children: [
                                     const SizedBox(height: 5),
                                     Text(
-                                      '${formatMoney(products[i]['salePrice'])}x ${products[i]['quantity']}',
+                                      '${formatMoney(data["itemsList"][i]['salePrice'])}x ${data["itemsList"][i]['quantity']}',
                                       style: TextStyle(color: lightGrey),
                                     ),
                                   ],
                                 ),
                                 Text(
-                                  '${formatMoney(products[i]['totalPrice'])}So\'m',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: blue,
-                                    fontSize: 16,
-                                  ),
+                                  '${formatMoney(data["itemsList"][i]['totalPrice'])}So\'m',
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: blue, fontSize: 16),
                                 ),
                               ],
                             ),
@@ -519,13 +708,12 @@ class _IndexState extends State<Index> {
             margin: EdgeInsets.only(left: 32),
             child: ElevatedButton(
               onPressed: () {
-                if (products.length > 0) {
-                  Get.toNamed('/payment', arguments: products);
+                if (data["itemsList"].length > 0) {
+                  Get.toNamed('/payment', arguments: data);
                 }
               },
               style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                  primary: products.length > 0 ? blue : lightGrey),
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32), primary: data["itemsList"].length > 0 ? blue : lightGrey),
               child: Text('Продать'),
             ),
           ),
@@ -548,7 +736,6 @@ class _IndexState extends State<Index> {
         builder: (BuildContext context) {
           List filter = [
             {"id": 1, "name": "Продажа"},
-            {"id": 2, "name": "Сдача"},
             {"id": 3, "name": "Возврат товаров"},
             {"id": 4, "name": "Долг"},
             {"id": 5, "name": "Погашение задолженности "},
@@ -575,10 +762,7 @@ class _IndexState extends State<Index> {
                       width: double.infinity,
                       decoration: ShapeDecoration(
                         shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 1.0,
-                              style: BorderStyle.solid,
-                              color: Color(0xFFECECEC)),
+                          side: BorderSide(width: 1.0, style: BorderStyle.solid, color: Color(0xFFECECEC)),
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
                         ),
                       ),
@@ -615,8 +799,7 @@ class _IndexState extends State<Index> {
                     ),
                     Text(
                       'Наличные (Сум)',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
                     ),
                     Container(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -629,8 +812,7 @@ class _IndexState extends State<Index> {
                         },
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          contentPadding:
-                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: blue,
@@ -654,8 +836,7 @@ class _IndexState extends State<Index> {
                     ),
                     Text(
                       'ПРИМЕЧАНИЕ',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
                     ),
                     Container(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -667,8 +848,7 @@ class _IndexState extends State<Index> {
                           });
                         },
                         decoration: InputDecoration(
-                          contentPadding:
-                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: blue,
@@ -704,9 +884,7 @@ class _IndexState extends State<Index> {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      primary: expenseOut['amountOut'].length == 0
-                          ? lightGrey
-                          : blue,
+                      primary: expenseOut['amountOut'].length == 0 ? lightGrey : blue,
                     ),
                     child: Text('Принять'),
                   ),
@@ -744,8 +922,7 @@ class _IndexState extends State<Index> {
                       child: TextFormField(
                         onChanged: (value) {},
                         decoration: InputDecoration(
-                          contentPadding:
-                              const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                               color: blue,
@@ -771,11 +948,7 @@ class _IndexState extends State<Index> {
                         height: MediaQuery.of(context).size.height * 0.2,
                         child: SingleChildScrollView(
                           child: Table(
-                              border: TableBorder(
-                                  horizontalInside: BorderSide(
-                                      width: 1,
-                                      color: Color(0xFFDADADa),
-                                      style: BorderStyle.solid)),
+                              border: TableBorder(horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid)),
                               children: [
                                 TableRow(children: const [
                                   Text(
@@ -798,9 +971,7 @@ class _IndexState extends State<Index> {
                                         if (arr[i]['selected']) {
                                           arr[i]['selected'] = false;
                                         } else {
-                                          for (var j = 0;
-                                              j < content.length;
-                                              j++) {
+                                          for (var j = 0; j < content.length; j++) {
                                             arr[j]['selected'] = false;
                                           }
                                           arr[i]['selected'] = true;
@@ -811,31 +982,23 @@ class _IndexState extends State<Index> {
                                         });
                                       },
                                       child: Container(
-                                        padding:
-                                            EdgeInsets.fromLTRB(5, 8, 0, 8),
-                                        color: content[i]['selected']
-                                            ? Color(0xFF91a0e7)
-                                            : Colors.transparent,
-                                        child:
-                                            Text('${content[i]['clientName']}'),
+                                        padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
+                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text('${content[i]['clientName']}'),
                                       ),
                                     ),
                                     GestureDetector(
                                       onTap: () {
                                         dynamic arr = content;
-                                        arr[i]['selected'] =
-                                            !arr[i]['selected'];
+                                        arr[i]['selected'] = !arr[i]['selected'];
                                         setState(() {
                                           content = arr;
                                           client = arr[i];
                                         });
                                       },
                                       child: Container(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 8),
-                                        color: content[i]['selected']
-                                            ? Color(0xFF91a0e7)
-                                            : Colors.transparent,
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
                                           content[i]['currencyName'],
                                           textAlign: TextAlign.center,
@@ -845,19 +1008,15 @@ class _IndexState extends State<Index> {
                                     GestureDetector(
                                       onTap: () {
                                         dynamic arr = content;
-                                        arr[i]['selected'] =
-                                            !arr[i]['selected'];
+                                        arr[i]['selected'] = !arr[i]['selected'];
                                         setState(() {
                                           content = arr;
                                           client = arr[i];
                                         });
                                       },
                                       child: Container(
-                                        padding:
-                                            EdgeInsets.fromLTRB(0, 8, 5, 8),
-                                        color: content[i]['selected']
-                                            ? Color(0xFF91a0e7)
-                                            : Colors.transparent,
+                                        padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
+                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
                                           '${content[i]['balance']}',
                                           textAlign: TextAlign.end,
@@ -870,9 +1029,7 @@ class _IndexState extends State<Index> {
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(color: blue, width: 4))),
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: blue, width: 4))),
                       child: Text(
                         'Приход',
                         style: TextStyle(fontSize: 20, color: blue),
@@ -899,18 +1056,13 @@ class _IndexState extends State<Index> {
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
                     onPressed: () {
-                      if (debtIn['cash'].length > 0 ||
-                          debtIn['terminal'].toString().isNotEmpty ||
-                          client != '') {
+                      if (debtIn['cash'].length > 0 || debtIn['terminal'].toString().isNotEmpty || client != '') {
                         Navigator.pop(context, client);
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      primary: debtIn['cash'].length > 0 ||
-                              debtIn['cash'].length > 0 && client != null
-                          ? blue
-                          : lightGrey,
+                      primary: debtIn['cash'].length > 0 || debtIn['cash'].length > 0 && client != null ? blue : lightGrey,
                     ),
                     child: Text('Принять'),
                   ),
