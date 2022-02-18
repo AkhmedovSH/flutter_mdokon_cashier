@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,24 +27,27 @@ class _IndexState extends State<Index> {
   dynamic textController2 = TextEditingController();
 
   dynamic data = {
-    "cashboxVersion": '',
-    "login": '',
-    "cashboxId": '',
+    "cashboxVersion": "",
+    "login": "",
+    "loyaltyBonus": 0,
+    "loyaltyClientAmount": 0,
+    "loyaltyClientName": "",
+    "cashboxId": "",
     "change": 0,
     "chequeDate": 0,
     "chequeNumber": "",
     "clientAmount": 0,
     "clientComment": "",
     "clientId": 0,
-    "currencyId": '',
+    "currencyId": "",
     "currencyRate": 0,
     "discount": 0,
     "note": "",
     "offline": false,
     "outType": false,
     "paid": 0,
-    "posId": '',
-    "saleCurrencyId": '',
+    "posId": "",
+    "saleCurrencyId": "",
     "shiftId": '',
     "totalPriceBeforeDiscount": 0, // this is only for showing when sale
     "totalPrice": 0,
@@ -192,6 +196,10 @@ class _IndexState extends State<Index> {
   }
 
   redirectToSearch() async {
+    if (data['discount'] > 0) {
+      showDangerToast('Была пременина скидка');
+      return;
+    }
     final product = await Get.toNamed('/search');
     if (product != null) {
       var existSameProduct = false;
@@ -241,6 +249,10 @@ class _IndexState extends State<Index> {
   addToList(product) {}
 
   deleteProduct(i) {
+    if (data["itemsList"].length == 1) {
+      deleteAllProducts();
+      return;
+    }
     double totalPrice = 0;
     dynamic productsCopy = data["itemsList"];
     productsCopy.removeAt(i);
@@ -253,6 +265,40 @@ class _IndexState extends State<Index> {
     setState(() {
       data["itemsList"] = productsCopy;
       data['totalPrice'] = totalPrice;
+    });
+  }
+
+  deleteAllProducts() {
+    setState(() {
+      data = {
+        "cashboxVersion": "",
+        "login": "",
+        "loyaltyBonus": 0,
+        "loyaltyClientAmount": 0,
+        "loyaltyClientName": "",
+        "cashboxId": "",
+        "change": 0,
+        "chequeDate": 0,
+        "chequeNumber": "",
+        "clientAmount": 0,
+        "clientComment": "",
+        "clientId": 0,
+        "currencyId": "",
+        "currencyRate": 0,
+        "discount": 0,
+        "note": "",
+        "offline": false,
+        "outType": false,
+        "paid": 0,
+        "posId": "",
+        "saleCurrencyId": "",
+        "shiftId": '',
+        "totalPriceBeforeDiscount": 0, // this is only for showing when sale
+        "totalPrice": 0,
+        "transactionId": "",
+        "itemsList": [],
+        "transactionsList": []
+      };
     });
   }
 
@@ -342,14 +388,16 @@ class _IndexState extends State<Index> {
       }
     }
     if (type == "%") {
-      //calculateDiscount();
+      calculateDiscount("%", inputData);
       shortcutController.text = "";
       FocusManager.instance.primaryFocus?.unfocus();
+      return;
     }
-    if (type == "%Сум") {
-      //calculateDiscount();
+    if (type == "%-") {
+      calculateDiscount("%-", inputData);
       shortcutController.text = "";
       FocusManager.instance.primaryFocus?.unfocus();
+      return;
     }
     setState(() {
       data["itemsList"] = productsCopy;
@@ -368,14 +416,46 @@ class _IndexState extends State<Index> {
     });
   }
 
-  calculateDiscount(type, inputData) {
-    dynamic chequeDataCopy = data;
-    if (chequeDataCopy['discount']) {
-      chequeDataCopy['discount'] = 0;
-      chequeDataCopy['totalPrice'] = chequeDataCopy['totalPriceBeforeDiscount'];
-      chequeDataCopy['totalPriceBeforeDiscount'] = 0;
-      for (var i = 0; i < data["itemsList"]; i++) {}
+  calculateDiscount(key, value) {
+    value = double.parse(value);
+    dynamic dataCopy = data;
+    if (dataCopy['discount'] > 0) {
+      dataCopy['discount'] = 0;
+      dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'];
+      dataCopy['totalPriceBeforeDiscount'] = 0;
+      for (var i = 0; i < dataCopy["itemsList"].length; i++) {
+        dataCopy["itemsList"][i]['discount'] = 0;
+        dataCopy["itemsList"][i]['totalPrice'] = dataCopy["itemsList"][i]['salePrice'] * dataCopy["itemsList"][i]['quantity'];
+      }
     }
+
+    if (key == "%") {
+      dataCopy['discount'] = value;
+      dataCopy['totalPrice'] = 0;
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        dataCopy['totalPrice'] +=
+            double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+        dataCopy['itemsList'][i]['discount'] = value;
+        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - (dataCopy['itemsList'][i]['totalPrice'] * value) / 100;
+      }
+      dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
+      dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * value) / 100;
+    }
+    if (key == "%-") {
+      dynamic percent = 100 / (dataCopy['totalPrice'] / value);
+      dataCopy['discount'] = percent;
+      dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
+      dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'] - (dataCopy['totalPrice'] * percent) / 100;
+
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        dataCopy['itemsList'][i]['discount'] = percent;
+        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - ((dataCopy['itemsList'][i]['totalPrice'] * percent) / 100);
+      }
+    }
+
+    setState(() {
+      data = dataCopy;
+    });
   }
 
   selectProduct(index) {
@@ -511,10 +591,7 @@ class _IndexState extends State<Index> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  setState(() {
-                                    data["itemsList"] = [];
-                                  });
-                                  Get.back();
+                                  deleteAllProducts();
                                 },
                                 style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Продолжить'),
@@ -558,148 +635,157 @@ class _IndexState extends State<Index> {
                 )
               ],
             )
-          : Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    for (var i = 0; i < shortCutList.length; i++)
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            handleShortCut(shortCutList[i]);
-                          },
-                          child: Container(
-                            margin: EdgeInsets.symmetric(horizontal: 3),
-                            color: blue,
-                            padding: EdgeInsets.all(5),
-                            child: Text(
-                              shortCutList[i],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white, fontSize: 20),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 40,
-                        child: TextField(
-                          controller: shortcutController,
-                          focusNode: shortcutFocusNode,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintStyle: TextStyle(color: lightGrey, fontSize: 14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Итого', style: TextStyle(fontSize: 16)),
-                    Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Скидка', style: TextStyle(fontSize: 16)),
-                    Wrap(
-                      children: const [
-                        Text('(0%)', style: TextStyle(fontSize: 16)),
-                        SizedBox(width: 10),
-                        Text('0 Сум', style: TextStyle(fontSize: 16)),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SizedBox(height: 10),
-                        Text('К оплате', style: TextStyle(fontSize: 16)),
-                        Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
-                      ],
-                    )
-                  ],
-                ),
-                for (var i = data["itemsList"].length - 1; i >= 0; i--)
-                  Dismissible(
-                    key: ValueKey(data["itemsList"][i]['productName']),
-                    onDismissed: (DismissDirection direction) {
-                      deleteProduct(i);
-                    },
-                    background: Container(
-                      color: white,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 10),
-                      child: Icon(Icons.delete, color: red),
-                    ),
-                    direction: DismissDirection.endToStart,
-                    child: GestureDetector(
-                      onTap: () async {
-                        selectProduct(i);
-                        //redirectToCalculator(i);
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width,
-                        margin: const EdgeInsets.only(bottom: 5),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: data["itemsList"][i]['selected'] ? Color(0xFF5b73e8) : Color(0xFFF5F3F5), width: 1),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${(i + 1).toString() + '. ' + data["itemsList"][i]['productName']}',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      for (var i = 0; i < shortCutList.length; i++)
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              handleShortCut(shortCutList[i]);
+                            },
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 3),
+                              color: blue,
+                              padding: EdgeInsets.all(5),
+                              child: Text(
+                                shortCutList[i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white, fontSize: 20),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              softWrap: false,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      '${formatMoney(data["itemsList"][i]['salePrice'])}x ${data["itemsList"][i]['quantity']}',
-                                      style: TextStyle(color: lightGrey),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  '${formatMoney(data["itemsList"][i]['totalPrice'])}So\'m',
-                                  style: TextStyle(fontWeight: FontWeight.w600, color: blue, fontSize: 16),
-                                ),
-                              ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: TextField(
+                            controller: shortcutController,
+                            focusNode: shortcutFocusNode,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintStyle: TextStyle(color: lightGrey, fontSize: 14),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-              ],
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Итого', style: TextStyle(fontSize: 16)),
+                      data['discount'] == 0
+                          ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
+                          : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Скидка', style: TextStyle(fontSize: 16)),
+                      Wrap(
+                        children: [
+                          data['discount'] == 0
+                              ? Text('(0%)', style: TextStyle(fontSize: 16))
+                              : Text('(' + formatMoney(data['discount']) + '%)', style: TextStyle(fontSize: 16)),
+                          SizedBox(width: 10),
+                          data['discount'] == 0
+                              ? Text('0 Сум', style: TextStyle(fontSize: 16))
+                              : Text(
+                                  formatMoney(
+                                          double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
+                                      'Сум',
+                                  style: TextStyle(fontSize: 16)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(height: 10),
+                          Text('К оплате', style: TextStyle(fontSize: 16)),
+                          Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
+                        ],
+                      )
+                    ],
+                  ),
+                  for (var i = data["itemsList"].length - 1; i >= 0; i--)
+                    Dismissible(
+                      key: ValueKey(data["itemsList"][i]['productName']),
+                      onDismissed: (DismissDirection direction) {
+                        deleteProduct(i);
+                      },
+                      background: Container(
+                        color: white,
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(right: 10),
+                        child: Icon(Icons.delete, color: red),
+                      ),
+                      direction: DismissDirection.endToStart,
+                      child: GestureDetector(
+                        onTap: () async {
+                          selectProduct(i);
+                          //redirectToCalculator(i);
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(bottom: 5),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: data["itemsList"][i]['selected'] ? Color(0xFF5b73e8) : Color(0xFFF5F3F5), width: 1),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${(i + 1).toString() + '. ' + data["itemsList"][i]['productName']}',
+                                style: const TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        '${formatMoney(data["itemsList"][i]['salePrice'])}x ${data["itemsList"][i]['quantity']}',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    '${formatMoney(data["itemsList"][i]['totalPrice'])}So\'m',
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: blue, fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                ],
+              ),
             ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -718,7 +804,7 @@ class _IndexState extends State<Index> {
             ),
           ),
           FloatingActionButton(
-            backgroundColor: blue,
+            backgroundColor: data['discount'] == 0 ? blue : lightGrey,
             onPressed: () {
               redirectToSearch();
             },

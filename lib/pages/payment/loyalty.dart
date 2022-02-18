@@ -8,8 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class Loyalty extends StatefulWidget {
-  const Loyalty({Key? key, this.setPayload, this.data, this.setData})
-      : super(key: key);
+  const Loyalty({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
   final dynamic data;
   final Function? setPayload;
   final Function? setData;
@@ -21,56 +20,21 @@ class Loyalty extends StatefulWidget {
 class _LoyaltyState extends State<Loyalty> {
   Timer? _debounce;
   dynamic data = {};
-  dynamic textController1 = TextEditingController();
-  dynamic textController2 = TextEditingController();
-  dynamic textController3 = TextEditingController();
-  dynamic textController4 = TextEditingController();
-  dynamic textController5 = TextEditingController();
-  dynamic textController6 = TextEditingController();
+  dynamic clientInfoController = TextEditingController();
+  dynamic clientBalanceController = TextEditingController();
+  dynamic pointsController = TextEditingController();
+  dynamic cashController = TextEditingController();
+  dynamic terminalController = TextEditingController();
+  dynamic awardController = TextEditingController();
   dynamic cashbox = {};
   dynamic list = [
-    {
-      'label': 'Введите QR код или Номер телефона',
-      'icon': Icons.person_pin_rounded,
-      'fieldName': 'search',
-      'enabled': true
-    },
-    {
-      'label': 'Клиент',
-      'icon': Icons.person,
-      'fieldName': '',
-      'enabled': false
-    },
-    {
-      'label': 'Накопленные баллы',
-      'icon': Icons.add,
-      'fieldName': '',
-      'enabled': false
-    },
-    {
-      'label': 'Баллы к списанию',
-      'icon': Icons.remove,
-      'fieldName': '',
-      'enabled': true
-    },
-    {
-      'label': 'Сумма наличные',
-      'icon': Icons.payments,
-      'fieldName': '',
-      'enabled': true
-    },
-    {
-      'label': 'Сумма терминал',
-      'icon': Icons.payment,
-      'fieldName': '',
-      'enabled': true
-    },
-    {
-      'label': 'Баллы к начислению',
-      'icon': Icons.payments,
-      'fieldName': '',
-      'enabled': false
-    },
+    {'label': 'Введите QR код или Номер телефона', 'icon': Icons.person_pin_rounded, 'fieldName': 'search', 'enabled': true},
+    {'label': 'Клиент', 'icon': Icons.person, 'fieldName': '', 'enabled': false},
+    {'label': 'Накопленные баллы', 'icon': Icons.add, 'fieldName': '', 'enabled': false},
+    {'label': 'Баллы к списанию', 'icon': Icons.remove, 'fieldName': '', 'enabled': true},
+    {'label': 'Сумма наличные', 'icon': Icons.payments, 'fieldName': '', 'enabled': true},
+    {'label': 'Сумма терминал', 'icon': Icons.payment, 'fieldName': '', 'enabled': true},
+    {'label': 'Баллы к начислению', 'icon': Icons.payments, 'fieldName': '', 'enabled': false},
   ];
   dynamic search = '';
 
@@ -80,16 +44,14 @@ class _LoyaltyState extends State<Loyalty> {
       if (search.length == 6 || search.length == 12) {
         //print(cashbox);
         var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
-        final response =
-            await lPost('/services/gocashapi/api/get-user-balance', sendData);
+        final response = await lPost('/services/gocashapi/api/get-user-balance', sendData);
         print(response);
         if (response != null && response['reason'] == "SUCCESS") {
           setState(() {
-            textController1.text =
+            clientInfoController.text =
                 '${response['firstName'] + ' ' + response['lastName'] + '[' + response['status'] + ' ' + response['award'].round().toString() + '%]'}';
-            textController2.text = response['balance'].round().toString();
-            widget.setPayload!('loyaltyClientName',
-                response['firstName'] + response['lastName']);
+            clientBalanceController.text = response['balance'].round().toString();
+            widget.setPayload!('loyaltyClientName', response['firstName'] + response['lastName']);
             widget.setPayload!('clientCode', search);
             data['award'] = response['award'].round();
             // data['amount'] = response['amount'].round();
@@ -104,7 +66,6 @@ class _LoyaltyState extends State<Loyalty> {
   getData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     cashbox = jsonDecode(prefs.getString('cashbox')!);
-    print(cashbox);
   }
 
   @override
@@ -114,12 +75,12 @@ class _LoyaltyState extends State<Loyalty> {
       data = widget.data!;
     });
     getData();
-    // textController1.text = "1";
-    // textController2.text = "2";
-    // textController3.text = "3";
-    // textController4.text = "4";
-    // textController5.text = "5";
-    // textController6.text = "6";
+    // clientInfoController.text = "1";
+    // clientBalanceController.text = "2";
+    // pointsController.text = "3";
+    // cashController.text = "4";
+    // terminalController.text = "5";
+    // awardController.text = "6";
   }
 
   calculateAward(value, type) {
@@ -127,31 +88,29 @@ class _LoyaltyState extends State<Loyalty> {
       value = "0";
     }
     if (type == 'points') {
-      textController4.text = (data['totalPrice'] - int.parse(value)).toString();
+      cashController.text = (data['totalPrice'] - int.parse(value)).toString();
     }
     if (type == 'cash') {
       setState(() {
         data['amountIn'] = value;
       });
-      widget.setData!(textController3.text, textController4.text);
+      widget.setData!(pointsController.text, cashController.text);
     }
     if (type == 'terminal') {
-      // widget.setData!(textController3.text, textController4.text,
-      //     payload: textController5.text);
+      // widget.setData!(pointsController.text, cashController.text,
+      //     payload: terminalController.text);
     }
     dynamic totalPrice = 0;
-    if (textController3.text != "") {
-      totalPrice += int.parse(textController3.text);
+    if (pointsController.text != "") {
+      totalPrice += double.parse(pointsController.text);
     }
-    if (textController4.text != "") {
-      totalPrice += int.parse(textController4.text);
+    if (cashController.text != "") {
+      totalPrice += double.parse(cashController.text);
     }
-    if (textController5.text != "") {
-      totalPrice += int.parse(textController5.text);
+    if (terminalController.text != "") {
+      totalPrice += double.parse(terminalController.text);
     }
-    textController6.text =
-        ((data['totalPrice'] - totalPrice) * (data['award'] / 100))
-            .toStringAsFixed(2);
+    awardController.text = ((data['totalPrice'] - totalPrice) * (data['award'] / 100)).toStringAsFixed(2);
   }
 
   buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
@@ -161,25 +120,24 @@ class _LoyaltyState extends State<Loyalty> {
       children: [
         Text(
           label,
-          style:
-              TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
         ),
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
           child: TextFormField(
             controller: index == 1
-                ? textController1
+                ? clientInfoController
                 : index == 2
-                    ? textController2
+                    ? clientBalanceController
                     : index == 3
-                        ? textController3
+                        ? pointsController
                         : index == 4
-                            ? textController4
+                            ? cashController
                             : index == 5
-                                ? textController5
+                                ? terminalController
                                 : index == 6
-                                    ? textController6
+                                    ? awardController
                                     : null,
             keyboardType: TextInputType.number,
             validator: (value) {
@@ -195,12 +153,9 @@ class _LoyaltyState extends State<Loyalty> {
                 searchUserBalance();
               }
               if (index == 3) {
-                if (value != "" &&
-                    double.parse(value) > double.parse(textController2.text)) {
-                  textController3.text = textController3.text
-                      .substring(0, textController3.text.length - 1);
-                  textController3.selection = TextSelection.fromPosition(
-                      TextPosition(offset: textController3.text.length));
+                if (value != "" && double.parse(value) > double.parse(clientBalanceController.text)) {
+                  pointsController.text = pointsController.text.substring(0, pointsController.text.length - 1);
+                  pointsController.selection = TextSelection.fromPosition(TextPosition(offset: pointsController.text.length));
                   return;
                 }
                 calculateAward(value, 'points');
@@ -209,36 +164,34 @@ class _LoyaltyState extends State<Loyalty> {
                 //     (data['totalPrice'] - int.parse(value)).toString();
                 //     widget.setPayload!('loyaltyClientAmount', value);
                 //     if (data['award'] != null) {
-                //       textController5.text =
+                //       terminalController.text =
                 //           ((data['totalPrice'] - int.parse(value)) *
                 //                   (data['award'] / 100))
                 //               .round()
                 //               .toString();
                 //     }
-                //     widget.setPayload!('loyaltyBonus', textController5.text);
+                //     widget.setPayload!('loyaltyBonus', terminalController.text);
                 //   });
                 //   widget.setData!(
-                //     textController3.text,
+                //     pointsController.text,
                 //     value,
                 //   );
                 // } else {
-                //   textController3.text = (data['totalPrice']).toString();
+                //   pointsController.text = (data['totalPrice']).toString();
                 //   widget.setPayload!('loyaltyClientAmount', 0);
                 //   if (data['award'] != null) {
-                //     textController5.text =
+                //     terminalController.text =
                 //         ((data['totalPrice']) * (data['award'] / 100))
                 //             .round()
                 //             .toString();
                 //   }
-                //   widget.setPayload!('loyaltyBonus', textController5.text);
+                //   widget.setPayload!('loyaltyBonus', terminalController.text);
                 // }
               }
               if (index == 4) {
                 if (value != "" && double.parse(value) > data['totalPrice']) {
-                  textController4.text = textController4.text
-                      .substring(0, textController4.text.length - 1);
-                  textController4.selection = TextSelection.fromPosition(
-                      TextPosition(offset: textController4.text.length));
+                  cashController.text = cashController.text.substring(0, cashController.text.length - 1);
+                  cashController.selection = TextSelection.fromPosition(TextPosition(offset: cashController.text.length));
                   return;
                 }
                 calculateAward(value, 'cash');
@@ -284,21 +237,12 @@ class _LoyaltyState extends State<Loyalty> {
         children: [
           Container(
             margin: EdgeInsets.only(top: 20),
-            child: Text('К ОПЛАТЕ',
-                style: TextStyle(
-                    color: darkGrey,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
+            child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           Container(
               margin: EdgeInsets.only(bottom: 10),
-              child: Text('${data['totalPrice']} сум',
-                  style: TextStyle(
-                      color: darkGrey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold))),
-          for (var i = 0; i < list.length; i++)
-            buildTextField(list[i]['label'], list[i]['icon'], list[i], i)
+              child: Text('${data['totalPrice']} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+          for (var i = 0; i < list.length; i++) buildTextField(list[i]['label'], list[i]['icon'], list[i], i)
         ],
       ),
     );

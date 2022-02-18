@@ -4,8 +4,7 @@ import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.setPayload, this.data, this.setData})
-      : super(key: key);
+  const Payment({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
   final Function? setPayload;
   final Function? setData;
   final dynamic data;
@@ -25,15 +24,15 @@ class _PaymentState extends State<Payment> {
 
   calculateChange() {
     widget.setData!(textController.text, textController2.text);
-    var change = 0;
-    var paid = 0;
+    dynamic change = 0;
+    dynamic paid = 0;
     if (textController.text.isNotEmpty) {
-      paid += int.parse(textController.text);
+      paid += double.parse(textController.text);
     }
     if (textController2.text.isNotEmpty) {
-      paid += int.parse(textController2.text);
+      paid += double.parse(textController2.text);
     }
-    change = (paid - data['totalPrice']) as int;
+    change = (paid - double.parse(data['totalPrice'].toString()));
 
     setState(() {
       data['change'] = change;
@@ -59,29 +58,17 @@ class _PaymentState extends State<Payment> {
         children: [
           Container(
             margin: EdgeInsets.only(top: 20),
-            child: Text('К ОПЛАТЕ',
-                style: TextStyle(
-                    color: darkGrey,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
+            child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           Container(
               margin: EdgeInsets.only(bottom: 10),
-              child: Text('${formatMoney(data['totalPrice'])} сум',
-                  style: TextStyle(
-                      color: darkGrey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold))),
+              child: Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
           Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                      margin: EdgeInsets.only(bottom: 5),
-                      child: Text('Наличные',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: grey))),
+                  Container(margin: EdgeInsets.only(bottom: 5), child: Text('Наличные', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                   Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: TextFormField(
@@ -96,8 +83,7 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(
                           Icons.payments_outlined,
                           size: 30,
@@ -123,11 +109,7 @@ class _PaymentState extends State<Payment> {
                       ),
                     ),
                   ),
-                  Container(
-                      margin: EdgeInsets.only(bottom: 5),
-                      child: Text('Банковская карточка',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: grey))),
+                  Container(margin: EdgeInsets.only(bottom: 5), child: Text('Терминал', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                   Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: TextFormField(
@@ -142,8 +124,7 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(
                           Icons.payment_outlined,
                           size: 30,
@@ -170,16 +151,10 @@ class _PaymentState extends State<Payment> {
                   ),
                 ],
               )),
-          Text('СДАЧА:',
-              style: TextStyle(
-                  color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text('СДАЧА:', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
           Container(
               margin: EdgeInsets.only(bottom: 10, top: 5),
-              child: Text('${formatMoney(data['change'])} сум',
-                  style: TextStyle(
-                      color: darkGrey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold))),
+              child: Text('${formatMoney(data['change'])} Сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
         ],
       ),
     );

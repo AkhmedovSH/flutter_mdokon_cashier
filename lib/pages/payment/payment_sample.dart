@@ -33,6 +33,9 @@ class _PaymentSampleState extends State<PaymentSample> {
   dynamic cashbox = {};
 
   setData(payload, payload2, {dynamic payload3}) {
+    print(payload);
+    print(payload2);
+    print(payload3);
     setState(() {
       textController.text = payload;
       textController2.text = payload2;
@@ -138,7 +141,10 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['transactionsList'] = list;
         data['itemsList'] = data["itemsList"];
       });
-
+      print(data['loyaltyBonus']);
+      print(data['loyaltyClientAmount']);
+      print(data['transactionsList']);
+      return;
       final response = await post('/services/desktop/api/cheque', data);
 
       var sendData = {

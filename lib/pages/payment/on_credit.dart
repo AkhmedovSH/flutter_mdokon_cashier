@@ -4,8 +4,7 @@ import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key, this.setPayload, this.data, this.setData})
-      : super(key: key);
+  const OnCredit({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
   final dynamic data;
   final Function? setPayload;
   final Function? setData;
@@ -24,30 +23,10 @@ class _OnCreditState extends State<OnCredit> {
   final textController2 = TextEditingController();
   dynamic sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
   dynamic addList = [
-    {
-      'name': 'Наименование контакта',
-      'value': '',
-      'icon': Icons.person,
-      'keyboardType': TextInputType.text
-    },
-    {
-      'name': 'Телефон',
-      'value': '',
-      'icon': Icons.phone,
-      'keyboardType': TextInputType.number
-    },
-    {
-      'name': 'Телефон',
-      'value': '',
-      'icon': Icons.phone,
-      'keyboardType': TextInputType.number
-    },
-    {
-      'name': 'Комментарий',
-      'value': '',
-      'icon': Icons.comment_outlined,
-      'keyboardType': TextInputType.text
-    },
+    {'name': 'Наименование контакта', 'value': '', 'icon': Icons.person, 'keyboardType': TextInputType.text},
+    {'name': 'Телефон', 'value': '', 'icon': Icons.phone, 'keyboardType': TextInputType.number},
+    {'name': 'Телефон', 'value': '', 'icon': Icons.phone, 'keyboardType': TextInputType.number},
+    {'name': 'Комментарий', 'value': '', 'icon': Icons.comment_outlined, 'keyboardType': TextInputType.text},
   ];
 
   createClient() {
@@ -128,8 +107,7 @@ class _OnCreditState extends State<OnCredit> {
             margin: EdgeInsets.only(top: 20, bottom: 5),
             child: Text(
               'КЛИЕНТ:',
-              style: TextStyle(
-                  fontSize: 16, color: darkGrey, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, color: darkGrey, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
@@ -182,8 +160,7 @@ class _OnCreditState extends State<OnCredit> {
                             return AlertDialog(
                               title: Text(''),
                               titlePadding: EdgeInsets.all(0),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 10),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
                               insetPadding: EdgeInsets.all(10),
                               actionsPadding: EdgeInsets.all(0),
                               buttonPadding: EdgeInsets.all(0),
@@ -205,9 +182,7 @@ class _OnCreditState extends State<OnCredit> {
                                           _onSearchChanged(value);
                                         },
                                         decoration: InputDecoration(
-                                          contentPadding:
-                                              const EdgeInsets.fromLTRB(
-                                                  10, 15, 10, 10),
+                                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                                           enabledBorder: UnderlineInputBorder(
                                             borderSide: BorderSide(
                                               color: blue,
@@ -230,11 +205,8 @@ class _OnCreditState extends State<OnCredit> {
                                     ),
                                     SizedBox(height: 5),
                                     Table(
-                                        border: TableBorder(
-                                            horizontalInside: BorderSide(
-                                                width: 1,
-                                                color: Color(0xFFDADADa),
-                                                style: BorderStyle.solid)),
+                                        border:
+                                            TableBorder(horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid)),
                                         children: [
                                           TableRow(children: const [
                                             Text(
@@ -247,9 +219,7 @@ class _OnCreditState extends State<OnCredit> {
                                             ),
                                             Text('Комментарий'),
                                           ]),
-                                          for (var i = 0;
-                                              i < content.length;
-                                              i++)
+                                          for (var i = 0; i < content.length; i++)
                                             TableRow(children: [
                                               GestureDetector(
                                                 onTap: () {
@@ -257,11 +227,8 @@ class _OnCreditState extends State<OnCredit> {
                                                   if (arr[i]['selected']) {
                                                     arr[i]['selected'] = false;
                                                   } else {
-                                                    for (var j = 0;
-                                                        j < content.length;
-                                                        j++) {
-                                                      arr[j]['selected'] =
-                                                          false;
+                                                    for (var j = 0; j < content.length; j++) {
+                                                      arr[j]['selected'] = false;
                                                     }
                                                     arr[i]['selected'] = true;
                                                   }
@@ -270,51 +237,37 @@ class _OnCreditState extends State<OnCredit> {
                                                   });
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 8),
-                                                  color: content[i]['selected']
-                                                      ? Color(0xFF91a0e7)
-                                                      : Colors.transparent,
-                                                  child: Text(
-                                                      '${content[i]['name']}'),
+                                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text('${content[i]['name']}'),
                                                 ),
                                               ),
                                               GestureDetector(
                                                 onTap: () {
                                                   dynamic arr = content;
-                                                  arr[i]['selected'] =
-                                                      !arr[i]['selected'];
+                                                  arr[i]['selected'] = !arr[i]['selected'];
                                                   setState(() {
                                                     content = arr;
                                                   });
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 8),
-                                                  color: content[i]['selected']
-                                                      ? Color(0xFF91a0e7)
-                                                      : Colors.transparent,
-                                                  child: Text(
-                                                      '${content[i]['phone1']}'),
+                                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text('${content[i]['phone1']}'),
                                                 ),
                                               ),
                                               GestureDetector(
                                                 onTap: () {
                                                   dynamic arr = content;
-                                                  arr[i]['selected'] =
-                                                      !arr[i]['selected'];
+                                                  arr[i]['selected'] = !arr[i]['selected'];
                                                   setState(() {
                                                     content = arr;
                                                   });
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 8),
-                                                  color: content[i]['selected']
-                                                      ? Color(0xFF91a0e7)
-                                                      : Colors.transparent,
-                                                  child: Text(
-                                                      '${content[i]['comment']}'),
+                                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text('${content[i]['comment']}'),
                                                 ),
                                               ),
                                             ]),
@@ -366,8 +319,7 @@ class _OnCreditState extends State<OnCredit> {
                             return AlertDialog(
                               title: Text(''),
                               titlePadding: EdgeInsets.all(0),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 10),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
                               insetPadding: EdgeInsets.all(10),
                               actionsPadding: EdgeInsets.all(0),
                               buttonPadding: EdgeInsets.all(0),
@@ -379,26 +331,18 @@ class _OnCreditState extends State<OnCredit> {
                                   children: [
                                     for (var i = 0; i < addList.length; i++)
                                       Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             '${addList[i]['name']}',
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: b8),
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
                                           ),
                                           Container(
-                                            margin: const EdgeInsets.only(
-                                                bottom: 10),
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
+                                            margin: const EdgeInsets.only(bottom: 10),
+                                            width: MediaQuery.of(context).size.width,
                                             child: TextFormField(
                                               validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
+                                                if (value == null || value.isEmpty) {
                                                   return 'Обязательное поле';
                                                 }
                                               },
@@ -424,28 +368,22 @@ class _OnCreditState extends State<OnCredit> {
                                                   });
                                                 }
                                               },
-                                              keyboardType: addList[i]
-                                                  ['keyboardType'],
+                                              keyboardType: addList[i]['keyboardType'],
                                               decoration: InputDecoration(
-                                                contentPadding:
-                                                    const EdgeInsets.fromLTRB(
-                                                        10, 15, 10, 10),
-                                                enabledBorder:
-                                                    UnderlineInputBorder(
+                                                contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                                enabledBorder: UnderlineInputBorder(
                                                   borderSide: BorderSide(
                                                     color: blue,
                                                     width: 2,
                                                   ),
                                                 ),
-                                                focusedBorder:
-                                                    UnderlineInputBorder(
+                                                focusedBorder: UnderlineInputBorder(
                                                   borderSide: BorderSide(
                                                     color: blue,
                                                     width: 2,
                                                   ),
                                                 ),
-                                                suffixIcon:
-                                                    Icon(addList[i]['icon']),
+                                                suffixIcon: Icon(addList[i]['icon']),
                                                 filled: true,
                                                 fillColor: borderColor,
                                                 focusColor: blue,
@@ -485,8 +423,7 @@ class _OnCreditState extends State<OnCredit> {
             margin: EdgeInsets.only(top: 10, bottom: 5),
             child: Text(
               'ПРИМЕЧАНИЕ',
-              style: TextStyle(
-                  fontSize: 16, color: a2, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, color: a2, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
@@ -530,29 +467,19 @@ class _OnCreditState extends State<OnCredit> {
             children: [
               Container(
                 margin: EdgeInsets.only(top: 20),
-                child: Text('К ОПЛАТЕ',
-                    style: TextStyle(
-                        color: darkGrey,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold)),
+                child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
               Container(
                   margin: EdgeInsets.only(bottom: 10),
-                  child: Text('${formatMoney(data['totalPrice'])} сум',
-                      style: TextStyle(
-                          color: darkGrey,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold))),
+                  child:
+                      Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
               Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                          margin: EdgeInsets.only(bottom: 5),
-                          child: Text('Наличные',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: grey))),
+                          margin: EdgeInsets.only(bottom: 5), child: Text('Наличные', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: TextFormField(
@@ -567,8 +494,7 @@ class _OnCreditState extends State<OnCredit> {
                             calculateChange();
                           },
                           decoration: InputDecoration(
-                            contentPadding:
-                                const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                            contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                             suffixIcon: Icon(
                               Icons.payments_outlined,
                               size: 30,
@@ -595,10 +521,7 @@ class _OnCreditState extends State<OnCredit> {
                         ),
                       ),
                       Container(
-                          margin: EdgeInsets.only(bottom: 5),
-                          child: Text('Банковская карточка',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: grey))),
+                          margin: EdgeInsets.only(bottom: 5), child: Text('Терминал', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: TextFormField(
@@ -613,8 +536,7 @@ class _OnCreditState extends State<OnCredit> {
                             calculateChange();
                           },
                           decoration: InputDecoration(
-                            contentPadding:
-                                const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                            contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                             suffixIcon: Icon(
                               Icons.payment_outlined,
                               size: 30,
@@ -641,18 +563,10 @@ class _OnCreditState extends State<OnCredit> {
                       ),
                     ],
                   )),
-              Text('СУММА ДОЛГА:',
-                  style: TextStyle(
-                      color: darkGrey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
+              Text('СУММА ДОЛГА:', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
               Container(
                   margin: EdgeInsets.only(bottom: 10, top: 5),
-                  child: Text('${formatMoney(data['change'])} сум',
-                      style: TextStyle(
-                          color: darkGrey,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold))),
+                  child: Text('${formatMoney(data['change'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
             ],
           ),
         ],
