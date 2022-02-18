@@ -16,21 +16,21 @@ class Payment extends StatefulWidget {
 class _PaymentState extends State<Payment> {
   int currentIndex = 0;
   final _formKey = GlobalKey<FormState>();
-  final textController = TextEditingController();
-  final textController2 = TextEditingController();
+  final cashController = TextEditingController();
+  final terminalController = TextEditingController();
   dynamic products = Get.arguments;
   dynamic sendData = {};
   dynamic data = {};
 
   calculateChange() {
-    widget.setData!(textController.text, textController2.text);
+    widget.setData!(cashController.text, terminalController.text);
     dynamic change = 0;
     dynamic paid = 0;
-    if (textController.text.isNotEmpty) {
-      paid += double.parse(textController.text);
+    if (cashController.text.isNotEmpty) {
+      paid += double.parse(cashController.text);
     }
-    if (textController2.text.isNotEmpty) {
-      paid += double.parse(textController2.text);
+    if (terminalController.text.isNotEmpty) {
+      paid += double.parse(terminalController.text);
     }
     change = (paid - double.parse(data['totalPrice'].toString()));
 
@@ -45,7 +45,7 @@ class _PaymentState extends State<Payment> {
     super.initState();
     setState(() {
       data = widget.data;
-      textController.text = data['text'];
+      cashController.text = double.parse(data['text']).toStringAsFixed(0);
     });
   }
 
@@ -72,7 +72,7 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: TextFormField(
-                      controller: textController,
+                      controller: cashController,
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -113,7 +113,7 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: TextFormField(
-                      controller: textController2,
+                      controller: terminalController,
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {

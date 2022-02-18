@@ -27,20 +27,20 @@ class _PaymentSampleState extends State<PaymentSample> {
   int currentIndex = 0;
   bool loading = false;
   dynamic data = Get.arguments;
-  dynamic textController = TextEditingController();
-  dynamic textController2 = TextEditingController();
-  dynamic textController3 = TextEditingController();
+  dynamic cashController = TextEditingController();
+  dynamic terminalController = TextEditingController();
+  dynamic loyaltyController = TextEditingController();
   dynamic cashbox = {};
 
   setData(payload, payload2, {dynamic payload3}) {
-    print(payload);
-    print(payload2);
-    print(payload3);
+    //print(payload);
+    //print(payload2);
+    //print(payload3);
     setState(() {
-      textController.text = payload;
-      textController2.text = payload2;
+      cashController.text = payload;
+      terminalController.text = payload2;
       if (payload3 != null && payload3.length > 0) {
-        textController3.text = payload3;
+        loyaltyController.text = payload3;
       }
     });
   }
@@ -55,17 +55,17 @@ class _PaymentSampleState extends State<PaymentSample> {
     var transactionsList = [];
     if (currentIndex == 0 || currentIndex == 1) {
       setState(() {});
-      if (textController.text.length > 0) {
+      if (cashController.text.length > 0) {
         transactionsList.add({
-          'amountIn': textController.text,
+          'amountIn': cashController.text,
           'amountOut': 0,
           'paymentPurposeId': 1,
           'paymentTypeId': 1,
         });
       }
-      if (textController2.text.length > 0) {
+      if (terminalController.text.length > 0) {
         transactionsList.add({
-          'amountIn': textController2.text,
+          'amountIn': terminalController.text,
           'amountOut': 0,
           'paymentPurposeId': 1,
           'paymentTypeId': 2,
@@ -80,31 +80,31 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       }
 
-      if (textController2.text.length > 0) {
+      if (terminalController.text.length > 0) {
         setState(() {
-          data['paid'] = int.parse(textController.text) + int.parse(textController2.text);
-          data['change'] = (int.parse(textController.text) + int.parse(textController2.text)) - (data['totalPrice']);
+          data['paid'] = int.parse(cashController.text) + int.parse(terminalController.text);
+          data['change'] = (int.parse(cashController.text) + int.parse(terminalController.text)) - (data['totalPrice']);
         });
       } else {
         setState(() {
           if (currentIndex == 0) {
-            data['paid'] = (textController.text);
+            data['paid'] = (cashController.text);
           }
         });
       }
     }
     if (currentIndex == 1) {
-      if (textController.text.length > 0) {
-        if (textController2.text.length > 0) {
+      if (cashController.text.length > 0) {
+        if (terminalController.text.length > 0) {
           setState(() {
-            data['change'] = (int.parse(textController.text) + int.parse(textController2.text)) - (data['totalPrice']);
-            data['paid'] = int.parse(textController.text) + int.parse(textController2.text);
-            data['clientAmount'] = data['totalPrice'] - (int.parse(textController.text) + int.parse(textController2.text));
+            data['change'] = (int.parse(cashController.text) + int.parse(terminalController.text)) - (data['totalPrice']);
+            data['paid'] = int.parse(cashController.text) + int.parse(terminalController.text);
+            data['clientAmount'] = data['totalPrice'] - (int.parse(cashController.text) + int.parse(terminalController.text));
           });
         } else {
           setState(() {
-            data['clientAmount'] = data['totalPrice'] - int.parse(textController.text);
-            data['paid'] = int.parse(textController.text);
+            data['clientAmount'] = data['totalPrice'] - int.parse(cashController.text);
+            data['paid'] = int.parse(cashController.text);
           });
         }
       } else {
@@ -115,15 +115,15 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (currentIndex == 2) {
       var list = [];
       list.add({
-        'amountIn': textController.text,
+        'amountIn': cashController.text,
         'amountOut': 0,
         'paymentPurposeId': 1,
         'paymentTypeId': 1,
       });
 
-      if (textController3.text.length > 0) {
+      if (loyaltyController.text.length > 0) {
         list.add({
-          'amountIn': textController3.text,
+          'amountIn': loyaltyController.text,
           'amountOut': 0,
           'paymentPurposeId': 1,
           'paymentTypeId': 1,
@@ -131,7 +131,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       }
 
       list.add({
-        'amountIn': textController2.text,
+        'amountIn': terminalController.text,
         'amountOut': 0,
         'paymentPurposeId': 9,
         'paymentTypeId': 4,
@@ -185,7 +185,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['change'] = 0;
       data['text'] = data['totalPrice'].toString();
     });
-    textController.text = '';
+    cashController.text = '';
   }
 
   getData() async {
@@ -220,8 +220,27 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['chequeNumber'] = generateChequeNumber();
       data['transactionId'] = transactionId;
 
-      textController.text = data['text'];
+      cashController.text = data['text'];
     });
+  }
+
+  isDisabled() {
+    if (currentIndex == 0) {
+      return data['change'] < 0 ? lightGrey : blue;
+    }
+
+    if (currentIndex == 1) {
+      return data['clientId'] == 0 ? lightGrey : blue;
+      //
+    }
+
+    if (currentIndex == 2) {
+      if (data['loyaltyClientName'] != null && data['loyaltyClientAmount'] != null && data['loyaltyBonus'] != null) {
+        return blue;
+      } else {
+        return lightGrey;
+      }
+    }
   }
 
   @override
@@ -302,32 +321,24 @@ class _PaymentSampleState extends State<PaymentSample> {
           margin: EdgeInsets.only(left: 32),
           width: MediaQuery.of(context).size.width,
           child: ElevatedButton(
-              onPressed: () {
-                if (currentIndex == 0 && data['change'] >= 0) {
-                  createCheque();
-                }
-                if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
-                  createCheque();
-                }
-                if (currentIndex == 2) {
-                  createCheque();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  primary: currentIndex == 0
-                      ? data['change'] < 0
-                          ? lightGrey
-                          : blue
-                      : currentIndex == 1
-                          ? data['clientId'] == 0
-                              ? lightGrey
-                              : blue
-                          : data['loyaltyClientName'] == null && data['loyaltyClientAmount'] == null && data['loyaltyBonus'] == null
-                              ? lightGrey
-                              : blue),
-              child: Text('ПРИНЯТЬ')),
+            onPressed: () {
+              if (currentIndex == 0 && data['change'] >= 0) {
+                createCheque();
+              }
+              if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
+                createCheque();
+              }
+              if (currentIndex == 2) {
+                createCheque();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              padding: EdgeInsets.symmetric(vertical: 16),
+              primary: isDisabled(),
+            ),
+            child: Text('ПРИНЯТЬ'),
+          ),
         ),
       ),
     );

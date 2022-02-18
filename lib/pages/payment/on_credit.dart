@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/api.dart';
@@ -83,10 +85,11 @@ class _OnCreditState extends State<OnCredit> {
 
   @override
   void initState() {
+    debugger();
     super.initState();
     dynamic totalAmount = 0;
-    for (var i = 0; i < products.length; i++) {
-      totalAmount += products[i]['totalPrice'];
+    for (var i = 0; i < data['itemsList'].length; i++) {
+      totalAmount += data['itemsList'][i]['totalPrice'];
     }
     setState(() {
       data = widget.data!;

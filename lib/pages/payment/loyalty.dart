@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:kassa/helpers/api.dart';
@@ -42,7 +43,6 @@ class _LoyaltyState extends State<Loyalty> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (search.length == 6 || search.length == 12) {
-        //print(cashbox);
         var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
         final response = await lPost('/services/gocashapi/api/get-user-balance', sendData);
         print(response);
@@ -54,7 +54,8 @@ class _LoyaltyState extends State<Loyalty> {
             widget.setPayload!('loyaltyClientName', response['firstName'] + response['lastName']);
             widget.setPayload!('clientCode', search);
             data['award'] = response['award'].round();
-            // data['amount'] = response['amount'].round();
+
+            awardController.text = (data['totalPrice'] * (double.parse(data['award'].toString()) / 100)).toStringAsFixed(2);
           });
         } else {
           showDangerToast('Не найден пользователь');
@@ -84,22 +85,22 @@ class _LoyaltyState extends State<Loyalty> {
   }
 
   calculateAward(value, type) {
+    //debugger();
     if (value == "") {
       value = "0";
     }
+
     if (type == 'points') {
-      cashController.text = (data['totalPrice'] - int.parse(value)).toString();
+      cashController.text = (data['totalPrice'] - double.parse(value)).toStringAsFixed(0);
     }
     if (type == 'cash') {
-      setState(() {
-        data['amountIn'] = value;
-      });
       widget.setData!(pointsController.text, cashController.text);
     }
     if (type == 'terminal') {
       // widget.setData!(pointsController.text, cashController.text,
       //     payload: terminalController.text);
     }
+
     dynamic totalPrice = 0;
     if (pointsController.text != "") {
       totalPrice += double.parse(pointsController.text);
@@ -110,7 +111,17 @@ class _LoyaltyState extends State<Loyalty> {
     if (terminalController.text != "") {
       totalPrice += double.parse(terminalController.text);
     }
-    awardController.text = ((data['totalPrice'] - totalPrice) * (data['award'] / 100)).toStringAsFixed(2);
+
+    dynamic loyaltyAmountIn = 0;
+    if (pointsController.text == "") {
+      loyaltyAmountIn = "0";
+    } else {
+      loyaltyAmountIn = pointsController.text;
+    }
+
+    awardController.text =
+        ((double.parse(data['totalPrice'].toString()) - double.parse(loyaltyAmountIn)) * (double.parse(data['award'].toString()) / 100))
+            .toStringAsFixed(2);
   }
 
   buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
@@ -159,6 +170,7 @@ class _LoyaltyState extends State<Loyalty> {
                   return;
                 }
                 calculateAward(value, 'points');
+                //calculateAward(value, 'points');
                 // if (value.isNotEmpty) {
                 //   setState(() {
                 //     (data['totalPrice'] - int.parse(value)).toString();

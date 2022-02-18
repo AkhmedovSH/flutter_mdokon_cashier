@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,12 +20,28 @@ class Search extends StatefulWidget {
 
 class _SearchState extends State<Search> {
   final Controller controller = Get.put(Controller());
+  Timer? _debounce;
   dynamic products = [];
+  dynamic cashbox = {};
 
   @override
   void initState() {
     super.initState();
     getProducts();
+    getCashbox();
+  }
+
+  searchProducts(value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      final response =
+          await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
+      if (response != null && response.length > 0) {
+        setState(() {
+          products = response;
+        });
+      }
+    });
   }
 
   getProducts() async {
@@ -36,6 +53,13 @@ class _SearchState extends State<Search> {
     // controller.hideLoading();
     setState(() {
       products = response;
+    });
+  }
+
+  getCashbox() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      cashbox = jsonDecode(prefs.getString('cashbox')!);
     });
   }
 
@@ -76,6 +100,9 @@ class _SearchState extends State<Search> {
                           child: SizedBox(
                             height: 35,
                             child: TextField(
+                              onChanged: (value) {
+                                searchProducts(value);
+                              },
                               decoration: InputDecoration(
                                 contentPadding: const EdgeInsets.all(2),
                                 isDense: true,
