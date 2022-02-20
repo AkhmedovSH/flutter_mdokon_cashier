@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:kassa/helpers/api.dart';
@@ -9,10 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class Loyalty extends StatefulWidget {
-  const Loyalty({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
+  const Loyalty({Key? key, this.setPayload, this.data, this.setLoyaltyData}) : super(key: key);
   final dynamic data;
   final Function? setPayload;
-  final Function? setData;
+  final Function? setLoyaltyData;
 
   @override
   _LoyaltyState createState() => _LoyaltyState();
@@ -29,13 +28,13 @@ class _LoyaltyState extends State<Loyalty> {
   dynamic awardController = TextEditingController();
   dynamic cashbox = {};
   dynamic list = [
-    {'label': 'Введите QR код или Номер телефона', 'icon': Icons.person_pin_rounded, 'fieldName': 'search', 'enabled': true},
-    {'label': 'Клиент', 'icon': Icons.person, 'fieldName': '', 'enabled': false},
-    {'label': 'Накопленные баллы', 'icon': Icons.add, 'fieldName': '', 'enabled': false},
-    {'label': 'Баллы к списанию', 'icon': Icons.remove, 'fieldName': '', 'enabled': true},
-    {'label': 'Сумма наличные', 'icon': Icons.payments, 'fieldName': '', 'enabled': true},
-    {'label': 'Сумма терминал', 'icon': Icons.payment, 'fieldName': '', 'enabled': true},
-    {'label': 'Баллы к начислению', 'icon': Icons.payments, 'fieldName': '', 'enabled': false},
+    {'label': 'Введите QR код или Номер телефона', 'icon': Icons.person_pin_rounded, 'enabled': true},
+    {'label': 'Клиент', 'icon': Icons.person, 'enabled': false},
+    {'label': 'Накопленные баллы', 'icon': Icons.add, 'enabled': false},
+    {'label': 'Баллы к списанию', 'icon': Icons.remove, 'enabled': true},
+    {'label': 'Сумма наличные', 'icon': Icons.payments, 'enabled': true},
+    {'label': 'Сумма терминал', 'icon': Icons.payment, 'enabled': true},
+    {'label': 'Баллы к начислению', 'icon': Icons.payments, 'enabled': false},
   ];
   dynamic search = '';
 
@@ -93,13 +92,8 @@ class _LoyaltyState extends State<Loyalty> {
     if (type == 'points') {
       cashController.text = (data['totalPrice'] - double.parse(value)).toStringAsFixed(0);
     }
-    if (type == 'cash') {
-      widget.setData!(pointsController.text, cashController.text);
-    }
-    if (type == 'terminal') {
-      // widget.setData!(pointsController.text, cashController.text,
-      //     payload: terminalController.text);
-    }
+    if (type == 'cash') {}
+    if (type == 'terminal') {}
 
     dynamic totalPrice = 0;
     if (pointsController.text != "") {
@@ -122,6 +116,14 @@ class _LoyaltyState extends State<Loyalty> {
     awardController.text =
         ((double.parse(data['totalPrice'].toString()) - double.parse(loyaltyAmountIn)) * (double.parse(data['award'].toString()) / 100))
             .toStringAsFixed(2);
+
+    dynamic loyaltyData = {
+      "points": pointsController.text,
+      "cash": cashController.text,
+      "terminal": terminalController.text,
+      "loyaltyBonus": awardController.text,
+    };
+    widget.setLoyaltyData!(loyaltyData);
   }
 
   buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
@@ -170,35 +172,6 @@ class _LoyaltyState extends State<Loyalty> {
                   return;
                 }
                 calculateAward(value, 'points');
-                //calculateAward(value, 'points');
-                // if (value.isNotEmpty) {
-                //   setState(() {
-                //     (data['totalPrice'] - int.parse(value)).toString();
-                //     widget.setPayload!('loyaltyClientAmount', value);
-                //     if (data['award'] != null) {
-                //       terminalController.text =
-                //           ((data['totalPrice'] - int.parse(value)) *
-                //                   (data['award'] / 100))
-                //               .round()
-                //               .toString();
-                //     }
-                //     widget.setPayload!('loyaltyBonus', terminalController.text);
-                //   });
-                //   widget.setData!(
-                //     pointsController.text,
-                //     value,
-                //   );
-                // } else {
-                //   pointsController.text = (data['totalPrice']).toString();
-                //   widget.setPayload!('loyaltyClientAmount', 0);
-                //   if (data['award'] != null) {
-                //     terminalController.text =
-                //         ((data['totalPrice']) * (data['award'] / 100))
-                //             .round()
-                //             .toString();
-                //   }
-                //   widget.setPayload!('loyaltyBonus', terminalController.text);
-                // }
               }
               if (index == 4) {
                 if (value != "" && double.parse(value) > data['totalPrice']) {
@@ -253,7 +226,7 @@ class _LoyaltyState extends State<Loyalty> {
           ),
           Container(
               margin: EdgeInsets.only(bottom: 10),
-              child: Text('${data['totalPrice']} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+              child: Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
           for (var i = 0; i < list.length; i++) buildTextField(list[i]['label'], list[i]['icon'], list[i], i)
         ],
       ),

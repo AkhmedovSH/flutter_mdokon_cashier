@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -349,18 +348,18 @@ class _IndexState extends State<Index> {
             break;
           } else {
             productsCopy[i]['salePrice'] = double.parse(inputData);
-            calculateTotalPrice(productsCopy);
-            shortcutController.text = "";
-            FocusManager.instance.primaryFocus?.unfocus();
-            break;
           }
+          calculateTotalPrice(productsCopy);
+          shortcutController.text = "";
+          FocusManager.instance.primaryFocus?.unfocus();
+          break;
         }
       }
     }
     if (type == "-") {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
-          if (isFloat && productsCopy[i]['uomId'] == 1) {
+          if (productsCopy[i]['uomId'] == 1) {
             showDangerToast('Неверное количество');
             shortcutController.text = "";
           } else {
@@ -661,24 +660,36 @@ class _IndexState extends State<Index> {
                         ),
                     ],
                   ),
+                  SizedBox(height: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: SizedBox(
-                          height: 40,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5),
                           child: TextField(
                             controller: shortcutController,
                             focusNode: shortcutFocusNode,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              hintStyle: TextStyle(color: lightGrey, fontSize: 14),
+                              contentPadding: const EdgeInsets.all(10),
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: borderColor),
+                                borderRadius: const BorderRadius.all(Radius.circular(24)),
+                              ),
+                              hintText: 'Введите значение',
+                              hintStyle: TextStyle(
+                                color: lightGrey,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
+                  SizedBox(height: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -699,7 +710,7 @@ class _IndexState extends State<Index> {
                               : Text('(' + formatMoney(data['discount']) + '%)', style: TextStyle(fontSize: 16)),
                           SizedBox(width: 10),
                           data['discount'] == 0
-                              ? Text('0 Сум', style: TextStyle(fontSize: 16))
+                              ? Text('0,00 Сум', style: TextStyle(fontSize: 16))
                               : Text(
                                   formatMoney(
                                           double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +

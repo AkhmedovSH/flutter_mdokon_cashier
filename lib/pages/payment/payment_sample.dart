@@ -32,16 +32,21 @@ class _PaymentSampleState extends State<PaymentSample> {
   dynamic loyaltyController = TextEditingController();
   dynamic cashbox = {};
 
-  setData(payload, payload2, {dynamic payload3}) {
-    //print(payload);
-    //print(payload2);
-    //print(payload3);
+  setData(payload, payload2) {
     setState(() {
       cashController.text = payload;
       terminalController.text = payload2;
-      if (payload3 != null && payload3.length > 0) {
-        loyaltyController.text = payload3;
-      }
+    });
+  }
+
+  setLoyaltyData(payload) {
+    print('loyaltyData${payload}');
+    setState(() {
+      data['loyaltyClientAmount'] = payload['points'];
+      cashController.text = payload['cash'];
+      terminalController.text = payload['terminal'];
+      loyaltyController.text = payload['points'];
+      data['loyaltyBonus'] = payload['loyaltyBonus'];
     });
   }
 
@@ -114,12 +119,23 @@ class _PaymentSampleState extends State<PaymentSample> {
     }
     if (currentIndex == 2) {
       var list = [];
-      list.add({
-        'amountIn': cashController.text,
-        'amountOut': 0,
-        'paymentPurposeId': 1,
-        'paymentTypeId': 1,
-      });
+      if (cashController.text.length > 0) {
+        list.add({
+          'amountIn': cashController.text,
+          'amountOut': 0,
+          'paymentPurposeId': 1,
+          'paymentTypeId': 1,
+        });
+      }
+
+      if (terminalController.text.length > 0) {
+        list.add({
+          'amountIn': terminalController.text,
+          'amountOut': 0,
+          'paymentPurposeId': 9,
+          'paymentTypeId': 4,
+        });
+      }
 
       if (loyaltyController.text.length > 0) {
         list.add({
@@ -130,37 +146,30 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       }
 
-      list.add({
-        'amountIn': terminalController.text,
-        'amountOut': 0,
-        'paymentPurposeId': 9,
-        'paymentTypeId': 4,
-      });
-
       setState(() {
         data['transactionsList'] = list;
-        data['itemsList'] = data["itemsList"];
       });
-      print(data['loyaltyBonus']);
-      print(data['loyaltyClientAmount']);
-      print(data['transactionsList']);
-      return;
+
+      // print(data['loyaltyClientName']);
+      // print(data['loyaltyBonus']);
+      // print(data['loyaltyClientAmount']);
+      // print(data['transactionsList']);
+      // return;
       final response = await post('/services/desktop/api/cheque', data);
 
       var sendData = {
-        'cashierName': data['loyaltyClientName'],
-        'chequeDate': getUnixTime().toString().substring(0, 10),
-        'chequeId': response['id'],
-        'clientCode': data['clientCode'],
-        'key': cashbox['loyaltyApi'],
-        'data["itemsList"]': [],
-        'totalAmount': data['totalPrice'],
-        'writeOff': data['loyaltyBonus'] ?? 0
+        "cashierName": data['loyaltyClientName'],
+        "chequeDate": getUnixTime().toString().substring(0, 10),
+        "chequeId": response['id'],
+        "clientCode": data['clientCode'],
+        "key": cashbox['loyaltyApi'],
+        "products": data["itemsList"],
+        "totalAmount": data['totalPrice'],
+        "writeOff": data['loyaltyBonus'] ?? 0
       };
+      print('sendData ${sendData}');
       final responseLoyalty = await lPost('/services/gocashapi/api/create-cheque', sendData);
-      if (responseLoyalty['success']) {
-        Get.offAllNamed('/');
-      }
+      Get.offAllNamed('/');
       return;
     }
     //print(transactionsList);
@@ -169,7 +178,6 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['change'] = 0;
       }
       data['transactionsList'] = transactionsList;
-      data['itemsList'] = data["itemsList"];
     });
     //print(data);
     final response = await post('/services/desktop/api/cheque', data);
@@ -231,7 +239,6 @@ class _PaymentSampleState extends State<PaymentSample> {
 
     if (currentIndex == 1) {
       return data['clientId'] == 0 ? lightGrey : blue;
-      //
     }
 
     if (currentIndex == 2) {
@@ -311,7 +318,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                 ? Payment(setPayload: setPayload, data: data, setData: setData)
                 : currentIndex == 1
                     ? OnCredit(setPayload: setPayload, data: data, setData: setData)
-                    : Loyalty(setPayload: setPayload, data: data, setData: setData),
+                    : Loyalty(setPayload: setPayload, data: data, setLoyaltyData: setLoyaltyData),
             Container(
               margin: EdgeInsets.only(bottom: 70),
             )

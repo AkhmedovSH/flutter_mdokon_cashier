@@ -85,7 +85,7 @@ class _OnCreditState extends State<OnCredit> {
 
   @override
   void initState() {
-    debugger();
+    //debugger();
     super.initState();
     dynamic totalAmount = 0;
     for (var i = 0; i < data['itemsList'].length; i++) {
