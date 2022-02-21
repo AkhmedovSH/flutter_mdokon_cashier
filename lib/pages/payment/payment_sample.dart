@@ -40,13 +40,13 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   setLoyaltyData(payload) {
-    print('loyaltyData${payload}');
     setState(() {
       data['loyaltyClientAmount'] = payload['points'];
       cashController.text = payload['cash'];
       terminalController.text = payload['terminal'];
       loyaltyController.text = payload['points'];
       data['loyaltyBonus'] = payload['loyaltyBonus'];
+      data['paid'] = payload['paid'];
     });
   }
 
@@ -59,6 +59,18 @@ class _PaymentSampleState extends State<PaymentSample> {
   createCheque() async {
     dynamic dataCopy = data;
     dataCopy['transactionsList'] = [];
+
+    if (currentIndex == 2) {
+      dataCopy['clientId'] = 0;
+      dataCopy['clientAmount'] = 0;
+      dataCopy['clientComment'] = "";
+    }
+
+    if (currentIndex == 1) {
+      dataCopy.remove('loyaltyBonus');
+      dataCopy.remove('loyaltyClientAmount');
+      dataCopy.remove('loyaltyClientName');
+    }
 
     if (cashController.text.length > 0) {
       dataCopy['transactionsList'].add({
@@ -91,26 +103,36 @@ class _PaymentSampleState extends State<PaymentSample> {
       dataCopy['change'] = 0;
     }
 
-    print(dataCopy);
-    return;
+    if (currentIndex == 1) {
+      if (cashController.text.length > 0) {
+        if (terminalController.text.length > 0) {
+          setState(() {
+            dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
+            dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
+          });
+        } else {
+          dataCopy['clientAmount'] = dataCopy['totalPrice'] - double.parse(cashController.text);
+          dataCopy['paid'] = double.parse(cashController.text);
+        }
+      } else {
+        dataCopy['clientAmount'] = dataCopy['totalPrice'];
+        dataCopy['paid'] = 0;
+      }
+    }
 
     if (currentIndex == 2) {
       if (loyaltyController.text.length > 0) {
         dataCopy['transactionsList'].add({
           'amountIn': loyaltyController.text,
           'amountOut': 0,
-          'paymentPurposeId': 1,
-          'paymentTypeId': 1,
+          'paymentPurposeId': 9,
+          'paymentTypeId': 4,
         });
       }
+    }
+    final response = await post('/services/desktop/api/cheque', dataCopy);
 
-      // print(data['loyaltyClientName']);
-      // print(data['loyaltyBonus']);
-      // print(data['loyaltyClientAmount']);
-      // print(data['transactionsList']);
-      // return;
-      final response = await post('/services/desktop/api/cheque', dataCopy);
-
+    if (currentIndex == 2) {
       var sendData = {
         "cashierName": dataCopy['loyaltyClientName'],
         "chequeDate": getUnixTime().toString().substring(0, 10),
@@ -131,17 +153,8 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       }
       await lPost('/services/gocashapi/api/create-cheque', sendData);
-      Get.offAllNamed('/');
-      return;
     }
-    //print(transactionsList);
-    setState(() {
-      if (currentIndex == 1) {
-        dataCopy['change'] = 0;
-      }
-    });
-    //print(data);
-    final response = await post('/services/desktop/api/cheque', dataCopy);
+
     if (response['success']) {
       controller.hideLoading();
       setState(() {});
@@ -203,7 +216,10 @@ class _PaymentSampleState extends State<PaymentSample> {
     }
 
     if (currentIndex == 2) {
-      if (data['loyaltyClientName'] != null && data['loyaltyClientAmount'] != null && data['loyaltyBonus'] != null) {
+      if (data['loyaltyClientName'] != null &&
+          data['loyaltyClientAmount'] != null &&
+          data['loyaltyBonus'] != null &&
+          (data['totalPrice'] == data['paid'])) {
         return blue;
       } else {
         return lightGrey;

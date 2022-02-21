@@ -20,8 +20,8 @@ class _OnCreditState extends State<OnCredit> {
   dynamic data = Get.arguments;
   dynamic client = {'name': 'КЛИЕНТ'};
   final _formKey = GlobalKey<FormState>();
-  final textController = TextEditingController();
-  final textController2 = TextEditingController();
+  final cashController = TextEditingController();
+  final terminalController = TextEditingController();
   dynamic sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
   dynamic addList = [
     {'name': 'Наименование контакта', 'value': '', 'icon': Icons.person, 'keyboardType': TextInputType.text},
@@ -35,16 +35,16 @@ class _OnCreditState extends State<OnCredit> {
   }
 
   calculateChange() {
-    widget.setData!(textController.text, textController2.text);
-    var change = 0;
-    var paid = 0;
-    if (textController.text.isNotEmpty) {
-      paid += int.parse(textController.text);
+    widget.setData!(cashController.text, terminalController.text);
+    dynamic change = 0;
+    dynamic paid = 0;
+    if (cashController.text.isNotEmpty) {
+      paid += double.parse(cashController.text);
     }
-    if (textController2.text.isNotEmpty) {
-      paid += int.parse(textController2.text);
+    if (terminalController.text.isNotEmpty) {
+      paid += double.parse(terminalController.text);
     }
-    change = (paid - data['totalPrice']) as int;
+    change = (paid - data['totalPrice']) as double;
 
     setState(() {
       data['change'] = change;
@@ -79,7 +79,6 @@ class _OnCreditState extends State<OnCredit> {
     setState(() {
       clients = _searchList;
     });
-    print(clients);
   }
 
   @override
@@ -92,8 +91,8 @@ class _OnCreditState extends State<OnCredit> {
     }
     setState(() {
       data = widget.data!;
-      data['totalPrice'] = totalAmount.round();
-      data['change'] = -totalAmount.round();
+      data['totalPrice'] = double.parse(totalAmount.toString());
+      data['change'] = -double.parse(totalAmount.toString());
       data['paid'] = 0;
     });
   }
@@ -440,6 +439,7 @@ class _OnCreditState extends State<OnCredit> {
                 setState(() {
                   client['comment'] = value;
                 });
+                widget.setPayload!('clientComment', client['comment']);
               },
               enableInteractiveSelection: false,
               decoration: InputDecoration(
@@ -485,7 +485,7 @@ class _OnCreditState extends State<OnCredit> {
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: TextFormField(
-                          controller: textController,
+                          controller: cashController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -527,7 +527,7 @@ class _OnCreditState extends State<OnCredit> {
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: TextFormField(
-                          controller: textController2,
+                          controller: terminalController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {

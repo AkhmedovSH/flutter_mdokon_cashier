@@ -259,7 +259,7 @@ class _IndexState extends State<Index> {
     }
   }
 
-  addToList(response, {weight = 0}) {
+  addToList(response, {weight = 0, unit = false}) {
     dynamic dataCopy = data;
     dataCopy['totalPrice'] = 0;
     dynamic index = dataCopy['itemsList'].indexWhere((e) => e['balanceId'] == response['balanceId']);
@@ -295,6 +295,9 @@ class _IndexState extends State<Index> {
         if (weight > 0) {
           dataCopy['itemsList'][index]['quantity'] =
               double.parse(dataCopy['itemsList'][index]['quantity'].toString()) + double.parse(weight.toString());
+        } else if (unit) {
+          // not needed
+          // dataCopy['itemsList'][index]['quantity'] = response['quantity']
         } else {
           dataCopy['itemsList'][index]['quantity'] = double.parse(dataCopy['itemsList'][index]['quantity'].toString()) + 1;
         }
@@ -323,14 +326,16 @@ class _IndexState extends State<Index> {
     setState(() {
       data = dataCopy;
     });
-    //Navigator.pop(context);
+    if (unit) {
+      Navigator.pop(context);
+    }
   }
 
   addToListUnit() {
     setState(() {
       productWithParams['quantity'] = productWithParamsUnit['quantity'];
     });
-    addToList(productWithParams);
+    addToList(productWithParams, unit: true);
   }
 
   deleteProduct(i) {
@@ -774,7 +779,6 @@ class _IndexState extends State<Index> {
           ),
         ],
       ),
-      drawerEnableOpenDragGesture: false,
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.70,
         child: const DrawerAppBar(),
@@ -783,14 +787,9 @@ class _IndexState extends State<Index> {
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: Lottie.asset('images/lottie/scan_1.json'),
+                Image.asset(
+                  'images/barcode-scanner.png',
                 ),
-                // Image.asset(
-                //   'images/barcode-scanner.png',
-                // ),
                 SizedBox(height: 20),
                 Center(
                   child: Text(
@@ -1349,6 +1348,7 @@ class _IndexState extends State<Index> {
     var closed = await showDialog(
       context: context,
       useSafeArea: true,
+      useRootNavigator: false,
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
@@ -1377,6 +1377,7 @@ class _IndexState extends State<Index> {
                         calculateProductWithParamsUnit(setState);
                       },
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         enabledBorder: UnderlineInputBorder(
@@ -1411,6 +1412,8 @@ class _IndexState extends State<Index> {
                       onChanged: (value) {
                         calculateProductWithParamsUnit(setState);
                       },
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         enabledBorder: UnderlineInputBorder(

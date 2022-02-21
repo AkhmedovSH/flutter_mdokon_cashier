@@ -122,6 +122,7 @@ class _LoyaltyState extends State<Loyalty> {
       "cash": cashController.text,
       "terminal": terminalController.text,
       "loyaltyBonus": awardController.text,
+      "paid": totalPrice,
     };
     widget.setLoyaltyData!(loyaltyData);
   }
