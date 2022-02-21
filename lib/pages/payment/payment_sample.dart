@@ -163,12 +163,20 @@ class _PaymentSampleState extends State<PaymentSample> {
         "chequeId": response['id'],
         "clientCode": data['clientCode'],
         "key": cashbox['loyaltyApi'],
-        "products": data["itemsList"],
+        "products": [],
         "totalAmount": data['totalPrice'],
         "writeOff": data['loyaltyBonus'] ?? 0
       };
-      print('sendData ${sendData}');
-      final responseLoyalty = await lPost('/services/gocashapi/api/create-cheque', sendData);
+      for (var i = 0; i < data['itemsList'].length; i++) {
+        sendData['products'].add({
+          "amount": data['itemsList'][i]['salePrice'],
+          "barcode": data['itemsList'][i]['barcode'],
+          "name": data['itemsList'][i]['productName'],
+          "quantity": data['itemsList'][i]['quantity'],
+          "unit": data['itemsList'][i]['uomId'],
+        });
+      }
+      await lPost('/services/gocashapi/api/create-cheque', sendData);
       Get.offAllNamed('/');
       return;
     }

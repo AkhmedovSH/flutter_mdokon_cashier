@@ -26,9 +26,9 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   login() async {
     controller.showLoading();
-    print(controller.loading);
     setState(() {});
     final data = await guestPost('/auth/login', payload, loading: false);
+    print(data);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('access_token', data['access_token']);
     prefs.setString('username', payload['username'].toString().toLowerCase());
@@ -51,8 +51,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   getAccessPos() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final response =
-        await get('/services/desktop/api/get-access-pos', loading: false);
+    final response = await get('/services/desktop/api/get-access-pos', loading: false);
     if (response['openShift']) {
       prefs.remove('shift');
       prefs.setString('cashbox', jsonEncode(response['shift']));
@@ -129,8 +128,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                           },
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            contentPadding:
-                                const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                            contentPadding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
                             prefixIcon: Icon(
                               Icons.person_outline,
                               size: 30,
@@ -172,8 +170,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                           // },
                           obscureText: !showPassword,
                           decoration: InputDecoration(
-                              contentPadding:
-                                  const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                              contentPadding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 size: 30,
@@ -235,8 +232,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                     },
                     child: Text(
                       'ВОЙТИ',
-                      style: TextStyle(
-                          color: white, fontSize: 18, letterSpacing: 2.0),
+                      style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
                     ),
                   ),
                 ),

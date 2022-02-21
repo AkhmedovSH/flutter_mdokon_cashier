@@ -45,15 +45,17 @@ class _SearchState extends State<Search> {
   }
 
   getProducts() async {
-    // controller.showLoading();
+    controller.showLoading();
     setState(() {});
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
     final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
-    // controller.hideLoading();
-    setState(() {
-      products = response;
-    });
+    controller.hideLoading();
+    if (response != null && response.length > 0) {
+      setState(() {
+        products = response;
+      });
+    }
   }
 
   getCashbox() async {

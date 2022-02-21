@@ -38,7 +38,7 @@ formatUnixTime(unixTime) {
 }
 
 formatMoney(amount) {
-  if (amount != null) {
+  if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
     return NumberFormat.currency(symbol: '', decimalDigits: 2, locale: 'UZ').format(amount);
   } else {

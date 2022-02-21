@@ -10,8 +10,8 @@ const hostUrl = "https://cabinet.mdokon.uz";
 BaseOptions options = BaseOptions(
   baseUrl: hostUrl,
   receiveDataWhenStatusError: true,
-  connectTimeout: 10 * 1000, // 10 seconds
-  receiveTimeout: 10 * 1000, // 10 seconds
+  connectTimeout: 60 * 1000, // 10 seconds
+  receiveTimeout: 60 * 1000, // 10 seconds
 );
 var dio = Dio(options);
 
@@ -69,18 +69,20 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
       controller.showLoading;
     }
     final response = await dio.post(hostUrl + url, data: payload);
+    print(response);
     if (loading) {
       controller.hideLoading;
     }
     // Get.snackbar('Успешно', 'Операция выполнена успешно');
     return response.data;
   } on DioError catch (e) {
+    print(e);
     if (e.response?.statusCode == 400) {
-      //print(e.response?.statusCode);
+      print(e.response?.statusCode);
       return;
     }
     if (e.response?.statusCode == 401) {
-      //print(e.response?.statusCode);
+      print(e.response?.statusCode);
     }
   }
 }
@@ -132,12 +134,12 @@ Future lPost(String url, dynamic payload) async {
       'https://cabinet.cashbek.uz' + url,
       data: payload,
     );
-    //print(response);
+    print(response);
     controller.hideLoading;
     return response.data;
   } on DioError catch (e) {
-    //print(e.response?.statusCode);
-    //print(e.response?.data);
+    print(e.response?.statusCode);
+    print(e.response?.data);
     if (e.response?.statusCode == 401) {
       return;
     }

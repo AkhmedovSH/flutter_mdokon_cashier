@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -18,12 +19,22 @@ class Index extends StatefulWidget {
   _IndexState createState() => _IndexState();
 }
 
+// class ProductWithParamsUnit {
+//   final String packaging;
+//   final String piece;
+//   final double quantity;
+//   final double totalPrice;
+//   const ProductWithParamsUnit(this.packaging, this.piece, this.quantity, this.totalPrice);
+// }
+
 class _IndexState extends State<Index> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic shortcutController = TextEditingController();
   dynamic shortcutFocusNode = FocusNode();
   dynamic textController = TextEditingController();
   dynamic textController2 = TextEditingController();
+  dynamic packagingController = TextEditingController();
+  dynamic pieceController = TextEditingController();
 
   dynamic data = {
     "cashboxVersion": "",
@@ -53,6 +64,19 @@ class _IndexState extends State<Index> {
     "transactionId": "",
     "itemsList": [],
     "transactionsList": []
+  };
+
+  dynamic productWithParams = {
+    "selectedUnit": {"name": "", "quantity": ""},
+    "modificationList": [],
+    'unitList': [],
+  };
+
+  dynamic productWithParamsUnit = {
+    "packaging": "",
+    "piece": "",
+    "quantity": "0",
+    "totalPrice": "0",
   };
 
   dynamic cashbox = {};
@@ -201,6 +225,16 @@ class _IndexState extends State<Index> {
     }
     final product = await Get.toNamed('/search');
     if (product != null) {
+      if (product['unitList'].length > 0) {
+        setState(() {
+          productWithParams = product;
+          productWithParams['quantity'] = "";
+          productWithParams['totalPrice'] = "";
+          productWithParams['selectedUnit'] = product['unitList'][0];
+        });
+        showProductsWithParams();
+        return;
+      }
       var existSameProduct = false;
       double totalPrice = 0;
       dynamic productsCopy = data["itemsList"];
@@ -245,7 +279,77 @@ class _IndexState extends State<Index> {
     }
   }
 
-  addToList(product) {}
+  addToList(response, {weight = 0}) {
+    dynamic dataCopy = data;
+    dataCopy['totalPrice'] = 0;
+    dynamic index = dataCopy['itemsList'].indexWhere((e) => e['balanceId'] == response['balanceId']);
+    if (index == -1) {
+      if (!response.containsKey('quantity')) {
+        response['quantity'] = 1;
+        if (weight != 0) {
+          response['quantity'] = weight;
+        }
+      }
+      response['selected'] = false;
+      response['totalPrice'] = 0;
+      dataCopy['itemsList'].add(response);
+
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        dataCopy['itemsList'][i]['selected'] = false;
+      }
+      dataCopy['itemsList'][dataCopy['itemsList'].length - 1]['selected'] = true;
+
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        if (dataCopy['itemsList'][i]['wholesale'] == true) {
+          //
+        } else {
+          dataCopy['itemsList'][i]['totalPrice'] =
+              double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+        }
+      }
+    } else {
+      if (response['quantity'] != "") {
+        // if scaleProduct
+        if (weight > 0) {
+          dataCopy['itemsList'][index]['quantity'] =
+              double.parse(dataCopy['itemsList'][index]['quantity'].toString()) + double.parse(weight.toString());
+        } else {
+          dataCopy['itemsList'][index]['quantity'] = double.parse(dataCopy['itemsList'][index]['quantity'].toString()) + 1;
+        }
+      } else {
+        dataCopy['itemsList'][index]['quantity'] = response['quantity'];
+      }
+
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        if (dataCopy['itemsList'][i]['wholesale'] == true) {
+          dataCopy['itemsList'][i]['wholesale'] = true;
+          dataCopy['itemsList'][i]['salePrice'] = double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString());
+          dataCopy['totalPrice'] +=
+              double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+          dataCopy['itemsList'][i]['totalPrice'] =
+              double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+        } else {
+          dataCopy['itemsList'][i]['wholesale'] = false;
+          dataCopy['totalPrice'] +=
+              double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+          dataCopy['itemsList'][i]['totalPrice'] =
+              double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+        }
+      }
+    }
+    print(dataCopy['itemsList']);
+    setState(() {
+      data = dataCopy;
+    });
+    Navigator.pop(context);
+  }
+
+  addToListUnit() {
+    setState(() {
+      productWithParams['quantity'] = productWithParamsUnit['quantity'];
+    });
+    addToList(productWithParams);
+  }
 
   deleteProduct(i) {
     if (data["itemsList"].length == 1) {
@@ -455,6 +559,74 @@ class _IndexState extends State<Index> {
     setState(() {
       data = dataCopy;
     });
+  }
+
+  calculateProductWithParamsUnit(Function setDialogState) {
+    //debugger();
+    dynamic quantity = 0;
+    dynamic totalPrice = 0;
+
+    dynamic packaging = packagingController.text.length == 0 ? 0 : double.parse(packagingController.text);
+    dynamic piece = pieceController.text.length == 0 ? 0 : double.parse(pieceController.text);
+
+    dynamic salePrice = double.parse(productWithParams['salePrice'].toString());
+    dynamic selectedUnitQuantity = double.parse(productWithParams['selectedUnit']['quantity'].toString());
+
+    if (packaging == 0 && piece == 0) {
+      setDialogState(() {
+        productWithParamsUnit['packaging'] = "";
+        productWithParamsUnit['piece'] = "";
+        productWithParamsUnit['quantity'] = "0";
+        productWithParamsUnit['totalPrice'] = "0";
+      });
+      return;
+    }
+
+    if (packaging > 0 && piece == 0) {
+      quantity = packaging;
+      totalPrice = salePrice * packaging;
+      setDialogState(() {
+        productWithParamsUnit['quantity'] = quantity.toString();
+        productWithParamsUnit['totalPrice'] = totalPrice.toString();
+      });
+      return;
+    }
+
+    if (piece != 0 && piece > selectedUnitQuantity) {
+      setDialogState(() {
+        productWithParamsUnit['piece'] = "";
+      });
+      return;
+    }
+
+    if (packaging > 0 && piece > 0) {
+      if (piece == selectedUnitQuantity) {
+        quantity = packaging + 1;
+        totalPrice = salePrice * packaging + 1;
+        setDialogState(() {
+          productWithParamsUnit['quantity'] = quantity.toString();
+          productWithParamsUnit['totalPrice'] = totalPrice.toString();
+        });
+      } else {
+        quantity = packaging + piece / selectedUnitQuantity;
+        totalPrice = salePrice * quantity;
+        setDialogState(() {
+          productWithParamsUnit['quantity'] = quantity.toString();
+          productWithParamsUnit['totalPrice'] = totalPrice.toString();
+        });
+      }
+      return;
+    }
+
+    if (packaging == 0 && piece > 0) {
+      quantity = piece / selectedUnitQuantity;
+      totalPrice = salePrice * quantity;
+      setDialogState(() {
+        productWithParamsUnit['quantity'] = quantity.toString();
+        productWithParamsUnit['totalPrice'] = totalPrice.toString();
+      });
+      return;
+    }
   }
 
   selectProduct(index) {
@@ -747,9 +919,8 @@ class _IndexState extends State<Index> {
                       ),
                       direction: DismissDirection.endToStart,
                       child: GestureDetector(
-                        onTap: () async {
+                        onTap: () {
                           selectProduct(i);
-                          //redirectToCalculator(i);
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.width,
@@ -779,7 +950,7 @@ class _IndexState extends State<Index> {
                                     children: [
                                       const SizedBox(height: 5),
                                       Text(
-                                        '${formatMoney(data["itemsList"][i]['salePrice'])}x ${data["itemsList"][i]['quantity']}',
+                                        '${formatMoney(data["itemsList"][i]['salePrice'])}x ${formatMoney(data["itemsList"][i]['quantity'])}',
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     ],
@@ -1177,6 +1348,137 @@ class _IndexState extends State<Index> {
         debtIn['currencyId'] = result['currencyId'];
       });
       createClientDebt();
+    }
+  }
+
+  showProductsWithParams() async {
+    var closed = await showDialog(
+      context: context,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: Text(''),
+            titlePadding: EdgeInsets.all(0),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10),
+            insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            actionsPadding: EdgeInsets.all(0),
+            buttonPadding: EdgeInsets.all(0),
+            scrollable: true,
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Кол во',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    width: MediaQuery.of(context).size.width,
+                    child: TextFormField(
+                      controller: packagingController,
+                      onChanged: (value) {
+                        calculateProductWithParamsUnit(setState);
+                      },
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: borderColor,
+                        focusColor: blue,
+                        hintText: '0',
+                        hintStyle: TextStyle(color: a2),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Из упаковки',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    width: MediaQuery.of(context).size.width,
+                    child: TextFormField(
+                      controller: pieceController,
+                      onChanged: (value) {
+                        calculateProductWithParamsUnit(setState);
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: borderColor,
+                        focusColor: blue,
+                        hintText: '0',
+                        hintStyle: TextStyle(color: a2),
+                      ),
+                    ),
+                  ),
+                  Text('Наименование: ${productWithParams['productName']}'),
+                  Text('В упаковке: ${formatMoney(productWithParams['selectedUnit']['quantity'])}'),
+                  Text('Цена: ${formatMoney(productWithParams['salePrice'])}'),
+                  Text('Кол-во: ${formatMoney(productWithParamsUnit['quantity'])}'),
+                  Text('К оплате: ${formatMoney(productWithParamsUnit['totalPrice'])}'),
+                  SizedBox(height: 10),
+                ],
+              ),
+            ),
+            actions: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (packagingController.text != "" || pieceController.text != "") {
+                      addToListUnit();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    primary: (packagingController.text != "" || pieceController.text != "") ? blue : lightGrey,
+                  ),
+                  child: Text('Принять'),
+                ),
+              )
+            ],
+          );
+        });
+      },
+    );
+    if (closed == null) {
+      packagingController.text = "";
+      pieceController.text = "";
+      setState(() {
+        productWithParamsUnit = {
+          "quantity": "",
+          "totalPrice": "",
+        };
+      });
     }
   }
 }
