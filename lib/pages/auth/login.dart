@@ -28,7 +28,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     controller.showLoading();
     setState(() {});
     final data = await guestPost('/auth/login', payload, loading: false);
-    print(data);
+    if (data == null) {
+      controller.hideLoading();
+      setState(() {});
+      return;
+    }
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('access_token', data['access_token']);
     prefs.setString('username', payload['username'].toString().toLowerCase());

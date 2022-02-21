@@ -69,14 +69,12 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
       controller.showLoading;
     }
     final response = await dio.post(hostUrl + url, data: payload);
-    print(response);
     if (loading) {
       controller.hideLoading;
     }
     // Get.snackbar('Успешно', 'Операция выполнена успешно');
     return response.data;
   } on DioError catch (e) {
-    print(e);
     if (e.response?.statusCode == 400) {
       print(e.response?.statusCode);
       return;
