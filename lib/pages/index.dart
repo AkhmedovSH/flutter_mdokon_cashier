@@ -225,6 +225,10 @@ class _IndexState extends State<Index> {
     }
     final product = await Get.toNamed('/search');
     if (product != null) {
+      product['discount'] = 0;
+      product['wholesale'] = false;
+      product['outType'] = false;
+
       if (product['unitList'].length > 0) {
         setState(() {
           productWithParams = product;
@@ -236,7 +240,6 @@ class _IndexState extends State<Index> {
         return;
       }
       var existSameProduct = false;
-      double totalPrice = 0;
       dynamic productsCopy = data["itemsList"];
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['productId'] == product['productId']) {
@@ -246,35 +249,12 @@ class _IndexState extends State<Index> {
             showDangerToast('Превышен лимит');
             return;
           }
-
-          productsCopy[i]['quantity'] = productsCopy[i]['quantity'] + 1;
-          productsCopy[i]['discount'] = 0;
-          productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
-          totalPrice += productsCopy[i]['totalPrice'];
-
-          setState(() {
-            data["itemsList"] = productsCopy;
-            data['totalPrice'] = totalPrice;
-          });
+          addToList(productsCopy[i]);
         }
       }
 
       if (!existSameProduct) {
-        product['quantity'] = 1;
-        product['discount'] = 0;
-        productsCopy.add(product);
-
-        for (var i = 0; i < productsCopy.length; i++) {
-          productsCopy[i]['selected'] = false;
-          productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
-          totalPrice += productsCopy[i]['totalPrice'];
-        }
-        productsCopy[productsCopy.length - 1]['selected'] = true;
-
-        setState(() {
-          data["itemsList"] = productsCopy;
-          data['totalPrice'] = totalPrice;
-        });
+        addToList(product);
       }
     }
   }
@@ -303,6 +283,8 @@ class _IndexState extends State<Index> {
         if (dataCopy['itemsList'][i]['wholesale'] == true) {
           //
         } else {
+          dataCopy['totalPrice'] +=
+              double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
           dataCopy['itemsList'][i]['totalPrice'] =
               double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
         }
@@ -337,11 +319,11 @@ class _IndexState extends State<Index> {
         }
       }
     }
-    print(dataCopy['itemsList']);
+
     setState(() {
       data = dataCopy;
     });
-    Navigator.pop(context);
+    //Navigator.pop(context);
   }
 
   addToListUnit() {
@@ -406,7 +388,7 @@ class _IndexState extends State<Index> {
   }
 
   handleShortCut(type) {
-    if (shortcutController.text.length == 0) return;
+    if (shortcutController.text.length == 0 && type != "/") return;
     dynamic productsCopy = data["itemsList"];
     var inputData = shortcutController.text;
     var isFloat = '.'.allMatches(inputData).isEmpty ? false : true;
@@ -460,6 +442,7 @@ class _IndexState extends State<Index> {
         }
       }
     }
+
     if (type == "-") {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
@@ -482,26 +465,37 @@ class _IndexState extends State<Index> {
         }
       }
     }
+
     if (type == "/") {
       shortcutController.text = "";
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected'] && productsCopy[i]['unitList'].length > 0) {
-          //
+          setState(() {
+            productWithParams = productsCopy[i];
+            productWithParams['quantity'] = "";
+            productWithParams['totalPrice'] = "";
+            productWithParams['selectedUnit'] = productsCopy[i]['unitList'][0];
+          });
+          showProductsWithParams();
+          return;
         }
       }
     }
+
     if (type == "%") {
       calculateDiscount("%", inputData);
       shortcutController.text = "";
       FocusManager.instance.primaryFocus?.unfocus();
       return;
     }
+
     if (type == "%-") {
       calculateDiscount("%-", inputData);
       shortcutController.text = "";
       FocusManager.instance.primaryFocus?.unfocus();
       return;
     }
+
     setState(() {
       data["itemsList"] = productsCopy;
     });

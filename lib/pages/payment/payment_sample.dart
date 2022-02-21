@@ -57,88 +57,46 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
-    var transactionsList = [];
-    if (currentIndex == 0 || currentIndex == 1) {
-      setState(() {});
-      if (cashController.text.length > 0) {
-        transactionsList.add({
-          'amountIn': cashController.text,
-          'amountOut': 0,
-          'paymentPurposeId': 1,
-          'paymentTypeId': 1,
-        });
-      }
-      if (terminalController.text.length > 0) {
-        transactionsList.add({
-          'amountIn': terminalController.text,
-          'amountOut': 0,
-          'paymentPurposeId': 1,
-          'paymentTypeId': 2,
-        });
-      }
-      if (data['change'] > 0) {
-        transactionsList.add({
-          'amountIn': 0,
-          'amountOut': data['change'],
-          'paymentPurposeId': 2,
-          'paymentTypeId': 1,
-        });
-      }
+    dynamic dataCopy = data;
+    dataCopy['transactionsList'] = [];
 
-      if (terminalController.text.length > 0) {
-        setState(() {
-          data['paid'] = int.parse(cashController.text) + int.parse(terminalController.text);
-          data['change'] = (int.parse(cashController.text) + int.parse(terminalController.text)) - (data['totalPrice']);
-        });
-      } else {
-        setState(() {
-          if (currentIndex == 0) {
-            data['paid'] = (cashController.text);
-          }
-        });
-      }
+    if (cashController.text.length > 0) {
+      dataCopy['transactionsList'].add({
+        'amountIn': cashController.text,
+        'amountOut': 0,
+        'paymentPurposeId': 1,
+        'paymentTypeId': 1,
+      });
     }
-    if (currentIndex == 1) {
-      if (cashController.text.length > 0) {
-        if (terminalController.text.length > 0) {
-          setState(() {
-            data['change'] = (int.parse(cashController.text) + int.parse(terminalController.text)) - (data['totalPrice']);
-            data['paid'] = int.parse(cashController.text) + int.parse(terminalController.text);
-            data['clientAmount'] = data['totalPrice'] - (int.parse(cashController.text) + int.parse(terminalController.text));
-          });
-        } else {
-          setState(() {
-            data['clientAmount'] = data['totalPrice'] - int.parse(cashController.text);
-            data['paid'] = int.parse(cashController.text);
-          });
-        }
-      } else {
-        setPayload('clientAmount', data['totalPrice']);
-        setPayload('paid', 0);
-      }
+
+    if (terminalController.text.length > 0) {
+      dataCopy['transactionsList'].add({
+        'amountIn': terminalController.text,
+        'amountOut': 0,
+        'paymentPurposeId': 1,
+        'paymentTypeId': 2,
+      });
     }
+
+    if (dataCopy['change'] > 0 && dataCopy['paid'] != dataCopy['change']) {
+      dataCopy['transactionsList'].add({
+        'amountIn': 0,
+        'amountOut': dataCopy['change'],
+        'paymentPurposeId': 2,
+        'paymentTypeId': 1,
+      });
+    }
+
+    if (dataCopy['clientId'] != 0) {
+      dataCopy['change'] = 0;
+    }
+
+    print(dataCopy);
+    return;
+
     if (currentIndex == 2) {
-      var list = [];
-      if (cashController.text.length > 0) {
-        list.add({
-          'amountIn': cashController.text,
-          'amountOut': 0,
-          'paymentPurposeId': 1,
-          'paymentTypeId': 1,
-        });
-      }
-
-      if (terminalController.text.length > 0) {
-        list.add({
-          'amountIn': terminalController.text,
-          'amountOut': 0,
-          'paymentPurposeId': 9,
-          'paymentTypeId': 4,
-        });
-      }
-
       if (loyaltyController.text.length > 0) {
-        list.add({
+        dataCopy['transactionsList'].add({
           'amountIn': loyaltyController.text,
           'amountOut': 0,
           'paymentPurposeId': 1,
@@ -146,34 +104,30 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       }
 
-      setState(() {
-        data['transactionsList'] = list;
-      });
-
       // print(data['loyaltyClientName']);
       // print(data['loyaltyBonus']);
       // print(data['loyaltyClientAmount']);
       // print(data['transactionsList']);
       // return;
-      final response = await post('/services/desktop/api/cheque', data);
+      final response = await post('/services/desktop/api/cheque', dataCopy);
 
       var sendData = {
-        "cashierName": data['loyaltyClientName'],
+        "cashierName": dataCopy['loyaltyClientName'],
         "chequeDate": getUnixTime().toString().substring(0, 10),
         "chequeId": response['id'],
-        "clientCode": data['clientCode'],
+        "clientCode": dataCopy['clientCode'],
         "key": cashbox['loyaltyApi'],
         "products": [],
-        "totalAmount": data['totalPrice'],
-        "writeOff": data['loyaltyBonus'] ?? 0
+        "totalAmount": dataCopy['totalPrice'],
+        "writeOff": dataCopy['loyaltyBonus'] ?? 0
       };
-      for (var i = 0; i < data['itemsList'].length; i++) {
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
         sendData['products'].add({
-          "amount": data['itemsList'][i]['salePrice'],
-          "barcode": data['itemsList'][i]['barcode'],
-          "name": data['itemsList'][i]['productName'],
-          "quantity": data['itemsList'][i]['quantity'],
-          "unit": data['itemsList'][i]['uomId'],
+          "amount": dataCopy['itemsList'][i]['salePrice'],
+          "barcode": dataCopy['itemsList'][i]['barcode'],
+          "name": dataCopy['itemsList'][i]['productName'],
+          "quantity": dataCopy['itemsList'][i]['quantity'],
+          "unit": dataCopy['itemsList'][i]['uomId'],
         });
       }
       await lPost('/services/gocashapi/api/create-cheque', sendData);
@@ -183,12 +137,11 @@ class _PaymentSampleState extends State<PaymentSample> {
     //print(transactionsList);
     setState(() {
       if (currentIndex == 1) {
-        data['change'] = 0;
+        dataCopy['change'] = 0;
       }
-      data['transactionsList'] = transactionsList;
     });
     //print(data);
-    final response = await post('/services/desktop/api/cheque', data);
+    final response = await post('/services/desktop/api/cheque', dataCopy);
     if (response['success']) {
       controller.hideLoading();
       setState(() {});

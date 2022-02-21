@@ -10,8 +10,8 @@ const hostUrl = "https://cabinet.mdokon.uz";
 BaseOptions options = BaseOptions(
   baseUrl: hostUrl,
   receiveDataWhenStatusError: true,
-  connectTimeout: 60 * 1000, // 10 seconds
-  receiveTimeout: 60 * 1000, // 10 seconds
+  connectTimeout: 20 * 1000, // 10 seconds
+  receiveTimeout: 20 * 1000, // 10 seconds
 );
 var dio = Dio(options);
 

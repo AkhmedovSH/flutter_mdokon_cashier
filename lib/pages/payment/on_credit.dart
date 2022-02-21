@@ -17,8 +17,7 @@ class OnCredit extends StatefulWidget {
 
 class _OnCreditState extends State<OnCredit> {
   dynamic clients = [];
-  dynamic products = Get.arguments;
-  dynamic data = {};
+  dynamic data = Get.arguments;
   dynamic client = {'name': 'КЛИЕНТ'};
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
@@ -85,7 +84,7 @@ class _OnCreditState extends State<OnCredit> {
 
   @override
   void initState() {
-    //debugger();
+    print(data['itemsList']);
     super.initState();
     dynamic totalAmount = 0;
     for (var i = 0; i < data['itemsList'].length; i++) {
