@@ -159,27 +159,25 @@ class _IndexState extends State<Index> {
   }
 
   createClientDebt() async {
-    final list = [];
-    if (debtIn['cash'].length > 0) {
-      list.add({"amountIn": debtIn['cash'], "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
-    }
-    if (debtIn['terminal'].length > 0) {
-      list.add({"amountIn": debtIn['terminal'], "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
-    }
+    dynamic debtInCopy = Map.from(debtIn);
 
-    dynamic sendData = Map.from(debtIn);
-    if (sendData['cash'] != "") {
-      sendData['cash'] = double.parse(sendData['cash']);
-    } else {
-      sendData['cash'] = 0;
+    final list = [];
+    if (debtInCopy['cash'].length > 0) {
+      list.add({"amountIn": double.parse(debtInCopy['cash']), "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
+      debtInCopy['amountIn'] += double.parse(debtInCopy['cash']);
     }
-    if (sendData['terminal'] != "") {
-      sendData['terminal'] = double.parse(sendData['terminal']);
-    } else {
-      sendData['terminal'] = 0;
+    if (debtInCopy['terminal'].length > 0) {
+      list.add({"amountIn": double.parse(debtInCopy['terminal']), "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
+      debtInCopy['amountIn'] += double.parse(debtInCopy['terminal']);
     }
-    sendData['amountIn'] = (sendData['cash'] + sendData['terminal']);
-    await post('/services/desktop/api/client-debt-in', sendData);
+    debtInCopy['transactionsList'] = list;
+
+    //clientId
+    //currencyId
+
+    print(debtInCopy);
+    return;
+    await post('/services/desktop/api/client-debt-in', debtInCopy);
     setState(() {
       debtIn = {
         "cash": "",
@@ -194,6 +192,7 @@ class _IndexState extends State<Index> {
         "transactionsList": []
       };
     });
+    Navigator.pop(context);
   }
 
   redirectToCalculator(i) async {
@@ -358,7 +357,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  deleteAllProducts() {
+  deleteAllProducts({type = false}) {
     setState(() {
       data = {
         "cashboxVersion": "",
@@ -390,6 +389,9 @@ class _IndexState extends State<Index> {
         "transactionsList": []
       };
     });
+    if (type) {
+      Navigator.pop(context);
+    }
   }
 
   handleShortCut(type) {
@@ -761,7 +763,7 @@ class _IndexState extends State<Index> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  deleteAllProducts();
+                                  deleteAllProducts(type: true);
                                 },
                                 style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Продолжить'),
@@ -1163,7 +1165,6 @@ class _IndexState extends State<Index> {
         useSafeArea: true,
         builder: (BuildContext context) {
           dynamic content = clients;
-          dynamic client = '';
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
@@ -1239,22 +1240,32 @@ class _IndexState extends State<Index> {
                                         }
                                         setState(() {
                                           content = arr;
-                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
                                         padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
                                         color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                        child: Text('${content[i]['clientName']}'),
+                                        child: Text(
+                                          '${content[i]['clientName']}',
+                                          style: TextStyle(
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     GestureDetector(
                                       onTap: () {
                                         dynamic arr = content;
-                                        arr[i]['selected'] = !arr[i]['selected'];
+                                        if (arr[i]['selected']) {
+                                          arr[i]['selected'] = false;
+                                        } else {
+                                          for (var j = 0; j < content.length; j++) {
+                                            arr[j]['selected'] = false;
+                                          }
+                                          arr[i]['selected'] = true;
+                                        }
                                         setState(() {
                                           content = arr;
-                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
@@ -1269,17 +1280,23 @@ class _IndexState extends State<Index> {
                                     GestureDetector(
                                       onTap: () {
                                         dynamic arr = content;
-                                        arr[i]['selected'] = !arr[i]['selected'];
+                                        if (arr[i]['selected']) {
+                                          arr[i]['selected'] = false;
+                                        } else {
+                                          for (var j = 0; j < content.length; j++) {
+                                            arr[j]['selected'] = false;
+                                          }
+                                          arr[i]['selected'] = true;
+                                        }
                                         setState(() {
                                           content = arr;
-                                          client = arr[i];
                                         });
                                       },
                                       child: Container(
                                         padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
                                         color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
-                                          '${content[i]['balance']}',
+                                          '${formatMoney(content[i]['balance'])}',
                                           textAlign: TextAlign.end,
                                         ),
                                       ),
@@ -1317,13 +1334,13 @@ class _IndexState extends State<Index> {
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
                     onPressed: () {
-                      if (debtIn['cash'].length > 0 || debtIn['terminal'].toString().isNotEmpty || client != '') {
-                        Navigator.pop(context, client);
+                      if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
+                        createClientDebt();
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      primary: debtIn['cash'].length > 0 || debtIn['cash'].length > 0 && client != null ? blue : lightGrey,
+                      primary: (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) ? blue : lightGrey,
                     ),
                     child: Text('Принять'),
                   ),
@@ -1340,7 +1357,6 @@ class _IndexState extends State<Index> {
         debtIn['currencyName'] = result['currencyName'];
         debtIn['currencyId'] = result['currencyId'];
       });
-      createClientDebt();
     }
   }
 
