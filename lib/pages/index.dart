@@ -1187,34 +1187,34 @@ class _IndexState extends State<Index> {
                 width: MediaQuery.of(context).size.width,
                 child: Column(
                   children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      width: MediaQuery.of(context).size.width,
-                      child: TextFormField(
-                        onChanged: (value) {},
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: borderColor,
-                          focusColor: blue,
-                          hintText: 'Поиск по контактам',
-                          hintStyle: TextStyle(color: a2),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
+                    // Container(
+                    //   margin: const EdgeInsets.only(bottom: 10),
+                    //   width: MediaQuery.of(context).size.width,
+                    //   child: TextFormField(
+                    //     onChanged: (value) {},
+                    //     decoration: InputDecoration(
+                    //       contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                    //       enabledBorder: UnderlineInputBorder(
+                    //         borderSide: BorderSide(
+                    //           color: blue,
+                    //           width: 2,
+                    //         ),
+                    //       ),
+                    //       focusedBorder: UnderlineInputBorder(
+                    //         borderSide: BorderSide(
+                    //           color: blue,
+                    //           width: 2,
+                    //         ),
+                    //       ),
+                    //       filled: true,
+                    //       fillColor: borderColor,
+                    //       focusColor: blue,
+                    //       hintText: 'Поиск по контактам',
+                    //       hintStyle: TextStyle(color: a2),
+                    //     ),
+                    //   ),
+                    // ),
+                    // SizedBox(height: 5),
                     SizedBox(
                         height: MediaQuery.of(context).size.height * 0.2,
                         child: SingleChildScrollView(

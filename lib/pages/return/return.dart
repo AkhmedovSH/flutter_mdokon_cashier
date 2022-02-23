@@ -71,6 +71,10 @@ class _ReturnState extends State<Return> {
   }
 
   addToReturnList(item, index) {
+    if (item['returned'] == 0) {
+      item['initialQuantity'] = item['quantity'];
+    }
+
     if (item['returned'] == 1) {
       item['initialQuantity'] = item['quantity'];
       item['oldQuantity'] = item['quantity'] - item['returnedQuantity'];
@@ -83,7 +87,7 @@ class _ReturnState extends State<Return> {
     }
 
     item['controller'] = TextEditingController();
-    item['controller'].text = item['quantity'].round().toString();
+    item['controller'].text = item['quantity'].toString();
     item['errorText'] = '';
 
     setState(() {
@@ -122,10 +126,11 @@ class _ReturnState extends State<Return> {
   }
 
   setQuantity(item, i, value) {
+    print(value);
     var itemCopy = Map.from(item);
 
     if (value == '' || value == 0) {
-      item['controller'].text = "1";
+      item['controller'].text = "";
       item['controller'].selection = TextSelection.fromPosition(TextPosition(offset: item['controller'].text.length));
       return;
     }
@@ -141,10 +146,10 @@ class _ReturnState extends State<Return> {
     }
 
     if (value[value.length - 1] != '.') {
-      if (double.parse(value).round() > (itemCopy['quantity'].round())) {
+      if (double.parse(value) > double.parse(itemCopy['quantity'].toString())) {
         setState(() {
           sendData['itemsList'][i]['validate'] = true;
-          sendData['itemsList'][i]['validateText'] = 'Не больше ${itemCopy['quantity'].round()}';
+          sendData['itemsList'][i]['validateText'] = 'Не больше ${itemCopy['quantity'] - itemCopy['returnedQuantity']}';
           height = 20;
         });
         return;
@@ -194,7 +199,7 @@ class _ReturnState extends State<Return> {
 
   returnCheque() async {
     if (!isValid()) {
-      showSuccessToast('Проверьте количество');
+      showDangerToast('Проверьте количество');
       return;
     }
     setState(() {
@@ -314,7 +319,6 @@ class _ReturnState extends State<Return> {
           centerTitle: true,
           backgroundColor: blue,
           elevation: 0,
-          // centerTitle: true,
           leading: IconButton(
             onPressed: () {
               _scaffoldKey.currentState!.openDrawer();
@@ -516,7 +520,7 @@ class _ReturnState extends State<Return> {
                                     child: Container(
                                       padding: EdgeInsets.symmetric(vertical: 8),
                                       child: Text(
-                                        '${formatMoney(itemsList[i]['quantity'])} / ${formatMoney(itemsList[i]['returnedQuantity'])}',
+                                        '${formatMoney(itemsList[i]['quantity'])} ${itemsList[i]['returnedQuantity'] > 0 ? formatMoney(itemsList[i]['returnedQuantity']) : ''}',
                                         style: TextStyle(color: Color(0xFF495057)),
                                         textAlign: TextAlign.center,
                                       ),
@@ -599,7 +603,6 @@ class _ReturnState extends State<Return> {
                               ]),
                               for (var i = 0; i < sendData['itemsList'].length; i++)
                                 TableRow(children: [
-                                  // HERE IT IS...
                                   Container(
                                       padding: EdgeInsets.symmetric(vertical: 8),
                                       child: SizedBox(
@@ -612,10 +615,7 @@ class _ReturnState extends State<Return> {
                                               margin: EdgeInsets.only(left: 5),
                                               child: IconButton(
                                                   onPressed: () {
-                                                    addToItemsList(
-                                                      sendData['itemsList'][i],
-                                                      i,
-                                                    );
+                                                    addToItemsList(sendData['itemsList'][i], i);
                                                   },
                                                   padding: EdgeInsets.zero,
                                                   constraints: BoxConstraints(),
@@ -636,7 +636,6 @@ class _ReturnState extends State<Return> {
                                           ],
                                         ),
                                       )),
-
                                   Container(
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: (sendData['itemsList'][i]['discount']) > 0
@@ -768,43 +767,4 @@ class _ReturnState extends State<Return> {
           ),
         ));
   }
-
-  // showConfirmModal() {
-  //   return showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) => AlertDialog(
-  //       title: const Text('Вы уверены?'),
-  //       // content: const Text('AlertDialog description'),
-  //       actions: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             SizedBox(
-  //               width: MediaQuery.of(context).size.width * 0.33,
-  //               child: ElevatedButton(
-  //                 onPressed: () => Navigator.pop(context),
-  //                 style: ElevatedButton.styleFrom(
-  //                     primary: red,
-  //                     padding: EdgeInsets.symmetric(vertical: 10)),
-  //                 child: const Text('Отмена'),
-  //               ),
-  //             ),
-  //             SizedBox(
-  //               width: MediaQuery.of(context).size.width * 0.33,
-  //               child: ElevatedButton(
-  //                 onPressed: () {
-  //                   returnCheque();
-  //                   Navigator.pop(context);
-  //                 },
-  //                 style: ElevatedButton.styleFrom(
-  //                     padding: EdgeInsets.symmetric(vertical: 10)),
-  //                 child: const Text('Продолжить'),
-  //               ),
-  //             )
-  //           ],
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
 }

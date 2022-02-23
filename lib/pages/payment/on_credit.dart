@@ -81,6 +81,17 @@ class _OnCreditState extends State<OnCredit> {
     });
   }
 
+  selectDebtorClient(Function setDebtorState, index) {
+    dynamic clientsCopy = clients;
+    for (var i = 0; i < clientsCopy.length; i++) {
+      clientsCopy[i]['selected'] = false;
+    }
+    clientsCopy[index]['selected'] = true;
+    setDebtorState(() {
+      clients = clientsCopy;
+    });
+  }
+
   @override
   void initState() {
     print(data['itemsList']);
@@ -156,7 +167,6 @@ class _OnCreditState extends State<OnCredit> {
                         context: context,
                         useSafeArea: true,
                         builder: (BuildContext context) {
-                          dynamic content = clients;
                           return StatefulBuilder(builder: (context, setState) {
                             return AlertDialog(
                               title: Text(''),
@@ -170,105 +180,90 @@ class _OnCreditState extends State<OnCredit> {
                                 width: MediaQuery.of(context).size.width,
                                 child: Column(
                                   children: [
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 10),
-                                      width: MediaQuery.of(context).size.width,
-                                      child: TextFormField(
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Обязательное поле';
-                                          }
-                                        },
-                                        onChanged: (value) {
-                                          _onSearchChanged(value);
-                                        },
-                                        decoration: InputDecoration(
-                                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: blue,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: blue,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          filled: true,
-                                          fillColor: borderColor,
-                                          focusColor: blue,
-                                          hintText: 'Поиск по контактам',
-                                          hintStyle: TextStyle(color: a2),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 5),
+                                    // Container(
+                                    //   margin: const EdgeInsets.only(bottom: 10),
+                                    //   width: MediaQuery.of(context).size.width,
+                                    //   child: TextFormField(
+                                    //     validator: (value) {
+                                    //       if (value == null || value.isEmpty) {
+                                    //         return 'Обязательное поле';
+                                    //       }
+                                    //     },
+                                    //     onChanged: (value) {
+                                    //       _onSearchChanged(value);
+                                    //     },
+                                    //     decoration: InputDecoration(
+                                    //       contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                    //       enabledBorder: UnderlineInputBorder(
+                                    //         borderSide: BorderSide(
+                                    //           color: blue,
+                                    //           width: 2,
+                                    //         ),
+                                    //       ),
+                                    //       focusedBorder: UnderlineInputBorder(
+                                    //         borderSide: BorderSide(
+                                    //           color: blue,
+                                    //           width: 2,
+                                    //         ),
+                                    //       ),
+                                    //       filled: true,
+                                    //       fillColor: borderColor,
+                                    //       focusColor: blue,
+                                    //       hintText: 'Поиск по контактам',
+                                    //       hintStyle: TextStyle(color: a2),
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    // SizedBox(height: 5),
                                     Table(
-                                        border:
-                                            TableBorder(horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid)),
+                                        border: TableBorder(
+                                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                                        ),
                                         children: [
                                           TableRow(children: const [
                                             Text(
                                               'Контакт',
-                                              textAlign: TextAlign.center,
                                             ),
                                             Text(
-                                              'Номер телефона',
-                                              textAlign: TextAlign.center,
+                                              'Номер',
                                             ),
                                             Text('Комментарий'),
                                           ]),
-                                          for (var i = 0; i < content.length; i++)
+                                          for (var i = 0; i < clients.length; i++)
                                             TableRow(children: [
                                               GestureDetector(
                                                 onTap: () {
-                                                  dynamic arr = content;
-                                                  if (arr[i]['selected']) {
-                                                    arr[i]['selected'] = false;
-                                                  } else {
-                                                    for (var j = 0; j < content.length; j++) {
-                                                      arr[j]['selected'] = false;
-                                                    }
-                                                    arr[i]['selected'] = true;
-                                                  }
-                                                  setState(() {
-                                                    content = arr;
-                                                  });
+                                                  selectDebtorClient(setState, i);
                                                 },
                                                 child: Container(
                                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text('${content[i]['name']}'),
+                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text(
+                                                    '${clients[i]['name']}',
+                                                    style: TextStyle(
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                               GestureDetector(
                                                 onTap: () {
-                                                  dynamic arr = content;
-                                                  arr[i]['selected'] = !arr[i]['selected'];
-                                                  setState(() {
-                                                    content = arr;
-                                                  });
+                                                  selectDebtorClient(setState, i);
                                                 },
                                                 child: Container(
                                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text('${content[i]['phone1']}'),
+                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text('${clients[i]['phone1']}'),
                                                 ),
                                               ),
                                               GestureDetector(
                                                 onTap: () {
-                                                  dynamic arr = content;
-                                                  arr[i]['selected'] = !arr[i]['selected'];
-                                                  setState(() {
-                                                    content = arr;
-                                                  });
+                                                  selectDebtorClient(setState, i);
                                                 },
                                                 child: Container(
                                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text('${content[i]['comment']}'),
+                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                                  child: Text("${clients[i]['comment'] == null ? '' : clients[i]['comment']}"),
                                                 ),
                                               ),
                                             ]),
@@ -282,9 +277,9 @@ class _OnCreditState extends State<OnCredit> {
                                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      for (var i = 0; i < content.length; i++) {
-                                        if (content[i]['selected']) {
-                                          Navigator.pop(context, content[i]);
+                                      for (var i = 0; i < clients.length; i++) {
+                                        if (clients[i]['selected']) {
+                                          Navigator.pop(context, clients);
                                         }
                                       }
                                     },
