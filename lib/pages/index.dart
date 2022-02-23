@@ -172,11 +172,6 @@ class _IndexState extends State<Index> {
     }
     debtInCopy['transactionsList'] = list;
 
-    //clientId
-    //currencyId
-
-    print(debtInCopy);
-    return;
     await post('/services/desktop/api/client-debt-in', debtInCopy);
     setState(() {
       debtIn = {
@@ -647,6 +642,19 @@ class _IndexState extends State<Index> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       cashbox = jsonDecode(prefs.getString('cashbox')!);
+    });
+  }
+
+  selectDebtorClient(Function setDebtorState, index) {
+    dynamic clientsCopy = clients;
+    for (var i = 0; i < clientsCopy.length; i++) {
+      clientsCopy[i]['selected'] = false;
+    }
+    clientsCopy[index]['selected'] = true;
+    setDebtorState(() {
+      clients = clientsCopy;
+      debtIn['clientId'] = clientsCopy[index]['clientId'];
+      debtIn['currencyId'] = clientsCopy[index]['currencyId'];
     });
   }
 
@@ -1162,11 +1170,10 @@ class _IndexState extends State<Index> {
 
   showModalDebtor() async {
     await getClients();
-    final result = await showDialog(
+    var closed = await showDialog(
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
-          dynamic content = clients;
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
@@ -1227,28 +1234,17 @@ class _IndexState extends State<Index> {
                                     textAlign: TextAlign.end,
                                   ),
                                 ]),
-                                for (var i = 0; i < content.length; i++)
+                                for (var i = 0; i < clients.length; i++)
                                   TableRow(children: [
                                     GestureDetector(
                                       onTap: () {
-                                        dynamic arr = content;
-                                        if (arr[i]['selected']) {
-                                          arr[i]['selected'] = false;
-                                        } else {
-                                          for (var j = 0; j < content.length; j++) {
-                                            arr[j]['selected'] = false;
-                                          }
-                                          arr[i]['selected'] = true;
-                                        }
-                                        setState(() {
-                                          content = arr;
-                                        });
+                                        selectDebtorClient(setState, i);
                                       },
                                       child: Container(
                                         padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
-                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
-                                          '${content[i]['clientName']}',
+                                          '${clients[i]['clientName']}',
                                           style: TextStyle(
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -1257,48 +1253,26 @@ class _IndexState extends State<Index> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        dynamic arr = content;
-                                        if (arr[i]['selected']) {
-                                          arr[i]['selected'] = false;
-                                        } else {
-                                          for (var j = 0; j < content.length; j++) {
-                                            arr[j]['selected'] = false;
-                                          }
-                                          arr[i]['selected'] = true;
-                                        }
-                                        setState(() {
-                                          content = arr;
-                                        });
+                                        selectDebtorClient(setState, i);
                                       },
                                       child: Container(
                                         padding: EdgeInsets.symmetric(vertical: 8),
-                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
-                                          content[i]['currencyName'],
+                                          clients[i]['currencyName'],
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        dynamic arr = content;
-                                        if (arr[i]['selected']) {
-                                          arr[i]['selected'] = false;
-                                        } else {
-                                          for (var j = 0; j < content.length; j++) {
-                                            arr[j]['selected'] = false;
-                                          }
-                                          arr[i]['selected'] = true;
-                                        }
-                                        setState(() {
-                                          content = arr;
-                                        });
+                                        selectDebtorClient(setState, i);
                                       },
                                       child: Container(
                                         padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
-                                        color: content[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
-                                          '${formatMoney(content[i]['balance'])}',
+                                          '${formatMoney(clients[i]['balance'])}',
                                           textAlign: TextAlign.end,
                                         ),
                                       ),
@@ -1351,13 +1325,20 @@ class _IndexState extends State<Index> {
             );
           });
         });
-    if (result != null) {
+    if (closed == null) {
       setState(() {
-        debtIn['clientId'] = result['clientId'];
-        debtIn['balance'] = result['balance'];
-        debtIn['clientName'] = result['clientName'];
-        debtIn['currencyName'] = result['currencyName'];
-        debtIn['currencyId'] = result['currencyId'];
+        debtIn = {
+          "cash": "",
+          "terminal": "",
+          "amountIn": 0,
+          "amountOut": 0,
+          "cashboxId": '',
+          "clientId": 0,
+          "currencyId": 0,
+          "posId": '',
+          "shiftId": '',
+          "transactionsList": []
+        };
       });
     }
   }
