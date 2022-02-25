@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.kassa">
+    package="com.mdokon.cabinet">
    <application
         android:label="mDokon Kassa"
         android:icon="@mipmap/launcher_icon">

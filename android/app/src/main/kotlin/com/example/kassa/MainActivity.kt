@@ -1,4 +1,4 @@
-package com.example.kassa
+package com.mdokon.cabinet
 
 import io.flutter.embedding.android.FlutterActivity
 
