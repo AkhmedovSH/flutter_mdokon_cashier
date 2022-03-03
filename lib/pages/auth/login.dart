@@ -19,7 +19,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  dynamic payload = {'username': 'united', 'password': '0777'};
+  dynamic payload = {'username': '', 'password': ''};
   bool showPassword = false;
   bool loading = false;
   final Controller controller = Get.put(Controller());
