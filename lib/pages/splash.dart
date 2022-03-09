@@ -16,73 +16,33 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
-  AppUpdateInfo? updateInfo;
-  dynamic test = {};
-
-  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
-
-  bool flexibleUpdateAvailable = false;
-
   @override
   void initState() {
     super.initState();
-    checkForUpdate();
     checkVersion();
-    // startTimer();
   }
 
   void checkVersion() async {
     final newVersion = NewVersion(androidId: 'com.mdokon.cabinet');
     // newVersion.showAlertIfNecessary(context: context);
     final status = await newVersion.getVersionStatus();
-    setState(() {
-      test = status;
-    });
-    print(status!.canUpdate);
-    print(status.localVersion);
-    print(status.storeVersion);
-    print(status.appStoreLink);
-    newVersion.showUpdateDialog(
-      context: context,
-      versionStatus: status,
-      dialogTitle: 'Вышло обновление',
-      dialogText: 'Вы можете обновиться с версии ${status.localVersion} до ${status.storeVersion}',
-      updateButtonText: 'Обновить',
-      dismissButtonText: 'Позже',
-      dismissAction: () => SystemNavigator.pop(),
-    );
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> checkForUpdate() async {
-    InAppUpdate.checkForUpdate().then((info) {
-      print('Starting app updates');
-
-      setState(() {
-        updateInfo = info;
-      });
-      print(updateInfo?.updateAvailability);
-      print(UpdateAvailability.updateAvailable);
-      print(updateInfo?.updateAvailability == UpdateAvailability.updateAvailable);
-      // if (updateInfo?.updateAvailability == UpdateAvailability.updateAvailable) {
-      //   print(111);
-      // InAppUpdate.performImmediateUpdate().catchError((e) => print(e.toString() + '312312312'));
-      // }
-      setState(() {});
-    }).catchError((e) {
-      print(e);
-      showSnack(e.toString());
-    });
-  }
-
-  void showSnack(String text) {
-    if (scaffoldKey.currentContext != null) {
-      ScaffoldMessenger.of(scaffoldKey.currentContext!).showSnackBar(SnackBar(content: Text(text)));
+    if (status!.canUpdate) {
+      newVersion.showUpdateDialog(
+        context: context,
+        versionStatus: status,
+        dialogTitle: 'Вышло обновление',
+        dialogText: 'Вы можете обновиться с версии ${status.localVersion} до ${status.storeVersion}',
+        updateButtonText: 'Обновить',
+        dismissButtonText: 'Позже',
+        dismissAction: () => SystemNavigator.pop(),
+      );
+    } else {
+      startTimer();
     }
   }
 
   startTimer() {
-    var _duration = const Duration(milliseconds: 2000);
+    var _duration = const Duration(milliseconds: 1500);
     return Timer(_duration, navigate);
   }
 
@@ -96,30 +56,6 @@ class _SplashState extends State<Splash> {
     //     MediaQuery.of(context).platformBrightness == Brightness.light;
     return Scaffold(
       backgroundColor: globals.white,
-      // body: SafeArea(
-      //     child: Column(
-      //   children: [
-      //     Center(
-      //       child: Text('Update info: $updateInfo'),
-      //     ),
-      //     Center(
-      //       child: Text(updateInfo?.updateAvailability == UpdateAvailability.updateAvailable ? 'true' : 'false'),
-      //     ),
-      //     Center(
-      //       child: Text('${test.localVersion}'),
-      //     ),
-      //     Center(
-      //       child: Text('${test.storeVersion}'),
-      //     ),
-      //     Center(
-      //       child: Text('${test.appStoreLink}'),
-      //     ),
-      //     ElevatedButton(
-      //       child: Text('Check for Update'),
-      //       onPressed: () => checkForUpdate(),
-      //     ),
-      //   ],
-      // ))
       body: Center(
         child: Image.asset(
           'images/splash_logo.png',
