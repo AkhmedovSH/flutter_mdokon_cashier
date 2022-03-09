@@ -28,12 +28,12 @@ class _SplashState extends State<Splash> {
     super.initState();
     checkForUpdate();
     checkVersion();
-    startTimer();
+    // startTimer();
   }
 
   void checkVersion() async {
     final newVersion = NewVersion(androidId: 'com.mdokon.cabinet');
-    newVersion.showAlertIfNecessary(context: context);
+    // newVersion.showAlertIfNecessary(context: context);
     final status = await newVersion.getVersionStatus();
     setState(() {
       test = status;
@@ -45,10 +45,10 @@ class _SplashState extends State<Splash> {
     newVersion.showUpdateDialog(
       context: context,
       versionStatus: status,
-      dialogTitle: 'Custom dialog title',
-      dialogText: 'Custom dialog text',
-      updateButtonText: 'Custom update button text',
-      dismissButtonText: 'Custom dismiss button text',
+      dialogTitle: 'Вышло обновление',
+      dialogText: 'Вы можете обновиться с версии ${status.localVersion} до ${status.storeVersion}',
+      updateButtonText: 'Обновить',
+      dismissButtonText: 'Позже',
       dismissAction: () => SystemNavigator.pop(),
     );
   }
@@ -66,7 +66,7 @@ class _SplashState extends State<Splash> {
       print(updateInfo?.updateAvailability == UpdateAvailability.updateAvailable);
       // if (updateInfo?.updateAvailability == UpdateAvailability.updateAvailable) {
       //   print(111);
-      InAppUpdate.performImmediateUpdate().catchError((e) => print(e.toString() + '312312312'));
+      // InAppUpdate.performImmediateUpdate().catchError((e) => print(e.toString() + '312312312'));
       // }
       setState(() {});
     }).catchError((e) {
@@ -95,38 +95,38 @@ class _SplashState extends State<Splash> {
     // bool lightMode =
     //     MediaQuery.of(context).platformBrightness == Brightness.light;
     return Scaffold(
-        backgroundColor: globals.white,
-        // body: SafeArea(
-        //     child: Column(
-        //   children: [
-        //     Center(
-        //       child: Text('Update info: $updateInfo'),
-        //     ),
-        //     Center(
-        //       child: Text(updateInfo?.updateAvailability == UpdateAvailability.updateAvailable ? 'true' : 'false'),
-        //     ),
-        //     Center(
-        //       child: Text('${test.localVersion}'),
-        //     ),
-        //     Center(
-        //       child: Text('${test.storeVersion}'),
-        //     ),
-        //     Center(
-        //       child: Text('${test.appStoreLink}'),
-        //     ),
-        //     ElevatedButton(
-        //       child: Text('Check for Update'),
-        //       onPressed: () => checkForUpdate(),
-        //     ),
-        //   ],
-        // ))
-        body: Center(
-          child: Image.asset(
-            'images/splash_logo.png',
-            height: 200,
-            width: 200,
-          ),
+      backgroundColor: globals.white,
+      // body: SafeArea(
+      //     child: Column(
+      //   children: [
+      //     Center(
+      //       child: Text('Update info: $updateInfo'),
+      //     ),
+      //     Center(
+      //       child: Text(updateInfo?.updateAvailability == UpdateAvailability.updateAvailable ? 'true' : 'false'),
+      //     ),
+      //     Center(
+      //       child: Text('${test.localVersion}'),
+      //     ),
+      //     Center(
+      //       child: Text('${test.storeVersion}'),
+      //     ),
+      //     Center(
+      //       child: Text('${test.appStoreLink}'),
+      //     ),
+      //     ElevatedButton(
+      //       child: Text('Check for Update'),
+      //       onPressed: () => checkForUpdate(),
+      //     ),
+      //   ],
+      // ))
+      body: Center(
+        child: Image.asset(
+          'images/splash_logo.png',
+          height: 200,
+          width: 200,
         ),
-        );
+      ),
+    );
   }
 }
