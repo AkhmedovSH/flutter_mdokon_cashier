@@ -43,8 +43,7 @@ class _ChequesState extends State<Cheques> {
     'endDate': '',
     'posId': '',
     'outType': false,
-    'search': '',
-    'fromPaid': '',
+    'search': '', 
     'toPaid': '',
     'size': 2000,
   };
