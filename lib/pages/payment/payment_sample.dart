@@ -103,6 +103,10 @@ class _PaymentSampleState extends State<PaymentSample> {
       dataCopy['change'] = 0;
     }
 
+    if (dataCopy['discount'] > 0) {
+      dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'];
+    }
+
     if (currentIndex == 1) {
       if (cashController.text.length > 0) {
         if (terminalController.text.length > 0) {
@@ -130,6 +134,8 @@ class _PaymentSampleState extends State<PaymentSample> {
         });
       }
     }
+    //print(dataCopy);
+    //return;
     final response = await post('/services/desktop/api/cheque', dataCopy);
 
     if (currentIndex == 2) {

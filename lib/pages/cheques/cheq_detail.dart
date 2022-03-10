@@ -237,7 +237,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   ),
                 ),
                 buildRow('Сумма продажи', formatMoney(cheque['totalPrice'])),
-                buildRow('Скидка', formatMoney(cheque['discount'])),
+                buildRow('Скидка', formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
                 buildRow('К оплате', formatMoney(cheque['to_pay']), fz: 20.0),
                 buildRow('Оплачено', formatMoney(cheque['paid'])),
                 buildRow('НДС %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
