@@ -76,55 +76,20 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
 
 statuscheker(e) async {
   if (e.response?.statusCode == 400) {
-    Fluttertoast.showToast(
-        msg: e.message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 1,
-        backgroundColor: red,
-        textColor: white,
-        fontSize: 16.0);
+    showErrorToast(e.message);
   }
   if (e.response?.statusCode == 401) {
-    Fluttertoast.showToast(
-        msg: "Неправильный логин или пароль",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 1,
-        backgroundColor: red,
-        textColor: white,
-        fontSize: 16.0);
+    showErrorToast('Неправильный логин или пароль');
   }
   if (e.response?.statusCode == 403) {}
   if (e.response?.statusCode == 404) {
-    Fluttertoast.showToast(
-        msg: 'Не найдено',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 1,
-        backgroundColor: red,
-        textColor: white,
-        fontSize: 16.0);
+    showErrorToast('Не найдено');
   }
   if (e.response?.statusCode == 415) {
-    Fluttertoast.showToast(
-        msg: 'Ошибка',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 1,
-        backgroundColor: red,
-        textColor: white,
-        fontSize: 16.0);
+    showErrorToast('Ошибка');
   }
   if (e.response?.statusCode == 500) {
-    Fluttertoast.showToast(
-        msg: e.message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 1,
-        backgroundColor: red,
-        textColor: white,
-        fontSize: 16.0);
+    showErrorToast(e.message);
   }
 }
 
@@ -141,4 +106,15 @@ Future lPost(String url, dynamic payload) async {
   } on DioError catch (e) {
     statuscheker(e);
   }
+}
+
+showErrorToast(message) {
+  return Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+      timeInSecForIosWeb: 1,
+      backgroundColor: red,
+      textColor: white,
+      fontSize: 16.0);
 }
