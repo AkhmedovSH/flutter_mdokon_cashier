@@ -25,74 +25,80 @@ class _SplashState extends State<Splash> {
   void checkVersion() async {
     final newVersion = NewVersion(androidId: 'com.mdokon.cabinet');
     final status = await newVersion.getVersionStatus();
-    print(status!.storeVersion);
-    print(status.appStoreLink);
-    dynamic requiredUpdate = false;
-    print(status.localVersion.substring(2, 3));
-    if (status.localVersion.substring(0, 1) != status.storeVersion.substring(0, 1)) {
-      requiredUpdate = true;
-    }
-    if (status.localVersion.substring(2, 3) != status.storeVersion.substring(2, 3)) {
-      requiredUpdate = true;
-    }
-    if (status.canUpdate) {
-      if (requiredUpdate) {
-        Navigator.of(context).push(RequiredUpdatePage(status.appStoreLink.toString()));
-      } else {
-        showDialog(
-            context: context,
-            useSafeArea: true,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                // title: Text('Вышло обновление'),
-                titlePadding: EdgeInsets.all(0),
-                insetPadding: EdgeInsets.symmetric(horizontal: 50),
-                content: Container(
-                  height: MediaQuery.of(context).size.height * 0.14,
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'images/splash_logo.png',
-                        height: 50,
-                        // width: 50,
-                      ),
-                      Container(
-                          margin: EdgeInsets.only(top: 15),
-                          child: Text(
-                            'Вы можете обновиться с версии ${status.localVersion} до ${status.storeVersion}',
-                            style: TextStyle(color: globals.b8, fontWeight: FontWeight.w500, fontSize: 16),
-                            textAlign: TextAlign.center,
-                          ))
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        startTimer();
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(primary: globals.blue),
-                      child: Text(
-                        'Позже',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      )),
-                  TextButton(
-                      onPressed: () {
-                        launch(status.appStoreLink);
-                      },
-                      style: TextButton.styleFrom(primary: globals.blue),
-                      child: Text(
-                        'Обновить',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      )),
-                ],
-              );
-            });
-      }
+    if (status!.storeVersion != status.localVersion) {
+      Navigator.of(context).push(RequiredUpdatePage(status.appStoreLink.toString()));
+      return;
     } else {
       startTimer();
     }
+    //print(status.storeVersion);
+    // print(status.appStoreLink);
+    // dynamic requiredUpdate = false;
+    // print(status.localVersion.substring(2, 3));
+    // if (status.localVersion.substring(0, 1) != status.storeVersion.substring(0, 1)) {
+    //   requiredUpdate = true;
+    // }
+    // if (status.localVersion.substring(2, 3) != status.storeVersion.substring(2, 3)) {
+    //   requiredUpdate = true;
+    // }
+    // if (status.canUpdate) {
+    //   if (requiredUpdate) {
+    //     Navigator.of(context).push(RequiredUpdatePage(status.appStoreLink.toString()));
+    //   } else {
+    //     showDialog(
+    //         context: context,
+    //         useSafeArea: true,
+    //         builder: (BuildContext context) {
+    //           return AlertDialog(
+    //             // title: Text('Вышло обновление'),
+    //             titlePadding: EdgeInsets.all(0),
+    //             insetPadding: EdgeInsets.symmetric(horizontal: 50),
+    //             content: SizedBox(
+    //               height: MediaQuery.of(context).size.height * 0.14,
+    //               child: Column(
+    //                 children: [
+    //                   Image.asset(
+    //                     'images/splash_logo.png',
+    //                     height: 50,
+    //                     // width: 50,
+    //                   ),
+    //                   Container(
+    //                       margin: EdgeInsets.only(top: 15),
+    //                       child: Text(
+    //                         'Вы можете обновиться с версии ${status.localVersion} до ${status.storeVersion}',
+    //                         style: TextStyle(color: globals.b8, fontWeight: FontWeight.w500, fontSize: 16),
+    //                         textAlign: TextAlign.center,
+    //                       ))
+    //                 ],
+    //               ),
+    //             ),
+    //             actions: [
+    //               TextButton(
+    //                   onPressed: () {
+    //                     startTimer();
+    //                     Navigator.pop(context);
+    //                   },
+    //                   style: TextButton.styleFrom(primary: globals.blue),
+    //                   child: Text(
+    //                     'Позже',
+    //                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    //                   )),
+    //               TextButton(
+    //                   onPressed: () {
+    //                     launch(status.appStoreLink);
+    //                   },
+    //                   style: TextButton.styleFrom(primary: globals.blue),
+    //                   child: Text(
+    //                     'Обновить',
+    //                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    //                   )),
+    //             ],
+    //           );
+    //         });
+    //   }
+    // } else {
+    //   startTimer();
+    // }
   }
 
   startTimer() {
