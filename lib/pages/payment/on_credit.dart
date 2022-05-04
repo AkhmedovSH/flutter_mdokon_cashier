@@ -70,6 +70,7 @@ class _OnCreditState extends State<OnCredit> {
       setState(() {});
       return;
     }
+
     clients.forEach((client) {
       if (client['name'].contains(text)) {
         _searchList.add(client);
@@ -94,7 +95,7 @@ class _OnCreditState extends State<OnCredit> {
 
   @override
   void initState() {
-    print(data['itemsList']);
+    //print(data['itemsList']);
     super.initState();
     dynamic totalAmount = 0;
     for (var i = 0; i < data['itemsList'].length; i++) {
@@ -180,41 +181,6 @@ class _OnCreditState extends State<OnCredit> {
                                 width: MediaQuery.of(context).size.width,
                                 child: Column(
                                   children: [
-                                    // Container(
-                                    //   margin: const EdgeInsets.only(bottom: 10),
-                                    //   width: MediaQuery.of(context).size.width,
-                                    //   child: TextFormField(
-                                    //     validator: (value) {
-                                    //       if (value == null || value.isEmpty) {
-                                    //         return 'Обязательное поле';
-                                    //       }
-                                    //     },
-                                    //     onChanged: (value) {
-                                    //       _onSearchChanged(value);
-                                    //     },
-                                    //     decoration: InputDecoration(
-                                    //       contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                    //       enabledBorder: UnderlineInputBorder(
-                                    //         borderSide: BorderSide(
-                                    //           color: blue,
-                                    //           width: 2,
-                                    //         ),
-                                    //       ),
-                                    //       focusedBorder: UnderlineInputBorder(
-                                    //         borderSide: BorderSide(
-                                    //           color: blue,
-                                    //           width: 2,
-                                    //         ),
-                                    //       ),
-                                    //       filled: true,
-                                    //       fillColor: borderColor,
-                                    //       focusColor: blue,
-                                    //       hintText: 'Поиск по контактам',
-                                    //       hintStyle: TextStyle(color: a2),
-                                    //     ),
-                                    //   ),
-                                    // ),
-                                    // SizedBox(height: 5),
                                     Table(
                                         border: TableBorder(
                                           horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
@@ -291,12 +257,16 @@ class _OnCreditState extends State<OnCredit> {
                           });
                         });
                     if (result != null) {
-                      setState(() {
-                        client = result;
-                      });
-                      widget.setPayload!('clientName', client['name']);
-                      widget.setPayload!('clientId', client['id']);
-                      widget.setPayload!('clientComment', client['comment']);
+                      for (var i = 0; i < result.length; i++) {
+                        if (result[i]['selected'] == true) {
+                          widget.setPayload!('clientName', result[i]['name'].toString());
+                          widget.setPayload!('clientId', result[i]['id']);
+                          widget.setPayload!('clientComment', result[i]['comment']);
+                          setState(() {
+                            client = result[i];
+                          });
+                        }
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(primary: Color(0xFFf1b44c)),
