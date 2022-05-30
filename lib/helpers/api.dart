@@ -26,7 +26,7 @@ Future get(String url, {payload, loading = true, setState}) async {
   }
 
   if (prefs.getString('access_token') != null) {
-    dio.options.headers["authorization"] = "Bearer ${prefs.getString('token')}";
+    dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
     dio.options.headers["Accept"] = "application/json";
   }
 
