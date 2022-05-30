@@ -4,8 +4,10 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import 'package:new_version/new_version.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../helpers/api.dart';
 import '../helpers/globals.dart' as globals;
 
 class Splash extends StatefulWidget {
@@ -16,14 +18,27 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
-  String vesrion = '';
-  String url = '';
+  dynamic vesrion = '';
+  dynamic url = 'https://play.google.com/store/apps/details?id=com.mdokon.cabinet';
+  bool isRequired = false;
 
   checkVersion() async {
-    final newVersion = NewVersion(androidId: 'com.mdokon.cabinet');
-    final status = await newVersion.getVersionStatus();
-    if (status!.storeVersion != status.localVersion) {
-      Navigator.of(context).push(RequiredUpdatePage(status.appStoreLink.toString()));
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String localVersion = packageInfo.version;
+
+    var playMarketVersion = await get('/services/admin/api/get-version?name=com.mdokon.cabinet');
+    if (playMarketVersion == null) {
+      startTimer();
+    }
+    print(playMarketVersion);
+    if (playMarketVersion['version'] != localVersion) {
+      if (playMarketVersion['required']) {
+        setState(() {
+          isRequired = true;
+        });
+      }
+
+      await showUpdateDialog();
       return;
     } else {
       startTimer();
@@ -58,115 +73,93 @@ class _SplashState extends State<Splash> {
       ),
     );
   }
-}
 
-class RequiredUpdatePage extends ModalRoute<void> {
-  final String url;
-
-  RequiredUpdatePage(this.url);
-
-  @override
-  Duration get transitionDuration => Duration(milliseconds: 200);
-
-  @override
-  bool get opaque => false;
-
-  @override
-  bool get barrierDismissible => false;
-
-  @override
-  Color get barrierColor => Colors.black.withOpacity(0.5);
-
-  @override
-  String get barrierLabel => '';
-
-  @override
-  bool get maintainState => true;
-
-  @override
-  Widget buildPage(
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-  ) {
-    // This makes sure that text and other content follows the material style
-    return Material(
-      type: MaterialType.transparency,
-      // make sure that the overlay content is not cut off
-      child: SafeArea(
-        child: _buildOverlayContent(context),
-      ),
-    );
-  }
-
-  Widget _buildOverlayContent(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          color: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'images/splash_logo.png',
-                height: 50,
-                // width: 50,
+  showUpdateDialog() async {
+    await showDialog(
+        context: context,
+        // barrierDismissible: !isRequired,
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 50, vertical: 40),
+              title: Text(
+                'Обновить приложение moneyBek',
+                style: const TextStyle(color: Colors.black),
+                // textAlign: TextAlign.center,
               ),
-              Container(
-                margin: EdgeInsets.only(top: 10, bottom: 10),
-                child: Text(
-                  'Чтобы использовать mDokon, загрузите последнюю версию',
-                  style: TextStyle(fontSize: 16, color: globals.b8, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
-                  softWrap: true,
+              scrollable: true,
+              content: SizedBox(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    Text(
+                      isRequired
+                          ? 'Требуется установить последнюю версию чтобы продолжить использовать приложение moneyBek'
+                          : 'Рекомендуем установить последнюю версию приложения moneyBek Во время скачивания обновлений вы по-прежнему сможете им пользоваться.',
+                      style: const TextStyle(color: Colors.black, height: 1.2),
+                    ),
+                    const SizedBox(
+                      height: 30,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          isRequired
+                              ? Container()
+                              : Container(
+                                  margin: const EdgeInsets.only(right: 10),
+                                  child: TextButton(
+                                    onPressed: () {
+                                      Get.back();
+                                    },
+                                    style: TextButton.styleFrom(primary: const Color(0xFF00865F)),
+                                    child: Text(
+                                      'НЕТ, СПАСИБО',
+                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ),
+                          ElevatedButton(
+                            onPressed: () {
+                              launch(url);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              primary: const Color(0xFF00865F),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text('Обновить'),
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 20),
+                      child: Image.asset(
+                        'images/google_play.png',
+                        height: 25,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  ],
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: ElevatedButton(
-                    onPressed: () {
-                      launch(url);
-                    },
-                    style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 12)),
-                    child: Text(
-                      'Обновить',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    )),
-              ),
-              SizedBox(
-                height: 20,
-              )
-            ],
-          ),
-        ),
-        Positioned(
-            top: 10,
-            right: 10,
-            child: IconButton(
-                onPressed: () {
-                  SystemNavigator.pop();
-                },
-                icon: Icon(
-                  Icons.close,
-                  size: 32,
-                )))
-      ],
-    );
-  }
-
-  @override
-  Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
-    // You can add your own animations for the overlay content
-    return FadeTransition(
-      opacity: animation,
-      child: ScaleTransition(
-        scale: animation,
-        child: child,
-      ),
-    );
+            );
+          });
+        });
   }
 }
