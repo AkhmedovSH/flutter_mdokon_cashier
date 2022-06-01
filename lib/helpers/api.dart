@@ -75,6 +75,18 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
   }
 }
 
+Future guestGet(String url, {payload}) async {
+  try {
+    final response = await dio.get(
+      hostUrl + url,
+      queryParameters: payload,
+    );
+    return response.data;
+  } on DioError catch (e) {
+    statuscheker(e);
+  }
+}
+
 statuscheker(e) async {
   if (e.response?.statusCode == 400) {
     showErrorToast(e.message);

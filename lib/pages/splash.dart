@@ -26,7 +26,7 @@ class _SplashState extends State<Splash> {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String localVersion = packageInfo.version;
 
-    var playMarketVersion = await get('/services/admin/api/get-version?name=com.mdokon.cabinet');
+    var playMarketVersion = await guestGet('/services/admin/api/get-version?name=com.mdokon.cabinet');
     if (playMarketVersion == null) {
       startTimer();
     }
