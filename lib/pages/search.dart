@@ -34,11 +34,21 @@ class _SearchState extends State<Search> {
   searchProducts(value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
+      var arr = [];
       final response =
           await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
       if (response != null && response.length > 0) {
+        for (var i = 0; i < response.length; i++) {
+          if (response[i]['balance'] == null || response[i]['balance'] == 0) {
+            if (cashbox['saleMinus']) {
+              arr.add(response[i]);
+            }
+          } else {
+            arr.add(response[i]);
+          }
+        }
         setState(() {
-          products = response;
+          products = arr;
         });
       }
     });
@@ -49,6 +59,7 @@ class _SearchState extends State<Search> {
     setState(() {});
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    print(cashbox);
     final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
     controller.hideLoading();
     if (response != null && response.length > 0) {
@@ -82,10 +93,11 @@ class _SearchState extends State<Search> {
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
-              onPressed: () {
-                Get.back();
-              },
-              icon: Icon(Icons.arrow_back_ios, color: black)),
+            onPressed: () {
+              Get.back();
+            },
+            icon: Icon(Icons.arrow_back_ios, color: black),
+          ),
         ),
         body: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -100,7 +112,7 @@ class _SearchState extends State<Search> {
                         Expanded(
                           flex: 6,
                           child: SizedBox(
-                            height: 35,
+                            height: 45,
                             child: TextField(
                               onChanged: (value) {
                                 searchProducts(value);
@@ -129,14 +141,17 @@ class _SearchState extends State<Search> {
                           ),
                         ),
                         Container(
-                          height: 35,
-                          width: 35,
+                          height: 45,
+                          width: 45,
                           margin: EdgeInsets.only(left: 15),
-                          decoration: BoxDecoration(border: Border.all(width: 1, color: blue), borderRadius: BorderRadius.all(Radius.circular(50))),
+                          decoration: BoxDecoration(
+                            border: Border.all(width: 1, color: blue),
+                            borderRadius: BorderRadius.all(Radius.circular(50)),
+                          ),
                           child: Icon(
                             Icons.qr_code_2_outlined,
                             color: blue,
-                            size: 18,
+                            size: 24,
                           ),
                         )
                       ],

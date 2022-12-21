@@ -132,7 +132,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                           },
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                            contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
                             prefixIcon: Icon(
                               Icons.person_outline,
                               size: 30,
@@ -174,7 +174,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                           // },
                           obscureText: !showPassword,
                           decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                              contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 size: 30,
@@ -223,7 +223,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(150, 50),
-                      primary: blue,
+                      backgroundColor: blue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

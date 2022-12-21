@@ -69,7 +69,7 @@ class _CheqDetailState extends State<CheqDetail> {
     if (status == 0) {
       return null;
     } else if (status == 1) {
-      return Colors.yellow;
+      return const Color(0xFFF3A919);
     } else if (status == 2) {
       return Colors.red;
     }
@@ -201,28 +201,65 @@ class _CheqDetailState extends State<CheqDetail> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                          style: TextStyle(
-                            color: b8,
-                            decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                            decorationColor: getColor(itemsList[i]['returned']),
-                          ),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          itemsList[i]['returnedQuantity'] != itemsList[i]['quantity']
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
+                                    style: TextStyle(
+                                      color: b8,
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                          itemsList[i]['returnedQuantity'] != 0
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '${formatMoney(itemsList[i]['returnedQuantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
+                                    style: TextStyle(
+                                      color: b8,
+                                      decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
+                                      decorationColor: getColor(itemsList[i]['returned']),
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                        ],
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '${formatMoney(itemsList[i]['totalPrice'])}',
-                          textAlign: TextAlign.end,
-                          style: TextStyle(
-                            color: b8,
-                            decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                            decorationColor: getColor(itemsList[i]['returned']),
-                          ),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          itemsList[i]['returnedPrice'] != itemsList[i]['totalPrice']
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '${formatMoney(itemsList[i]['totalPrice'])}',
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                      color: b8,
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                          itemsList[i]['returnedPrice'] != 0
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '${formatMoney(itemsList[i]['returnedPrice'])}',
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                      color: b8,
+                                      decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
+                                      decorationColor: getColor(itemsList[i]['returned']),
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                        ],
                       ),
                     ])
                 ]),
@@ -307,7 +344,10 @@ class _CheqDetailState extends State<CheqDetail> {
               onPressed: () {
                 Get.offAllNamed('/return', arguments: cheque['chequeNumber']);
               },
-              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14), primary: Color(0xFFf46a6a)),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: Color(0xFFf46a6a),
+              ),
               child: Text('ВОЗВРАТ'),
             ),
           ),

@@ -163,7 +163,7 @@ class _ClientDebtState extends State<ClientDebt> {
                 margin: const EdgeInsets.only(left: 48, right: 32, bottom: 20),
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      primary: blue,
+                      backgroundColor: blue,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -181,7 +181,7 @@ class _ClientDebtState extends State<ClientDebt> {
                 margin: EdgeInsets.only(left: 48, right: 32),
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      primary: white,
+                      backgroundColor: white,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         side: BorderSide(

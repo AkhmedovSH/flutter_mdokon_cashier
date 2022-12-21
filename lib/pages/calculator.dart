@@ -379,7 +379,7 @@ class _CalculatorState extends State<Calculator> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: white,
+                    backgroundColor: white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(color: blue, width: 1),
@@ -399,7 +399,7 @@ class _CalculatorState extends State<Calculator> {
                     toCheque();
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: blue,
+                    backgroundColor: blue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),

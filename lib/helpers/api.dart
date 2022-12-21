@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -9,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import './controller.dart';
 
 const hostUrl = "https://cabinet.mdokon.uz";
+
 BaseOptions options = BaseOptions(
   baseUrl: hostUrl,
   receiveDataWhenStatusError: true,
@@ -31,7 +30,13 @@ Future get(String url, {payload, loading = true, setState}) async {
   }
 
   try {
-    final response = await dio.get(hostUrl + url, queryParameters: payload);
+    final response = await dio.get(
+      hostUrl + url,
+      queryParameters: payload,
+      options: Options(headers: {
+        "authorization": "Bearer ${prefs.getString('access_token')}",
+      }),
+    );
     if (loading) {
       controller.hideLoading;
     }
@@ -46,6 +51,10 @@ Future post(String url, dynamic payload) async {
   // print(payload);
   controller.showLoading;
   try {
+    if (prefs.getString('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
+      dio.options.headers["Accept"] = "application/json";
+    }
     //print(hostUrl + url);
     final response = await dio.post(hostUrl + url,
         data: payload,
@@ -61,6 +70,11 @@ Future post(String url, dynamic payload) async {
 
 Future guestPost(String url, dynamic payload, {loading = true}) async {
   try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('access_token') != null) {
+      dio.options.headers["authorization"] = "";
+      dio.options.headers["Accept"] = "application/json";
+    }
     if (loading) {
       controller.showLoading;
     }
@@ -77,6 +91,11 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
 
 Future guestGet(String url, {payload}) async {
   try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('access_token') != null) {
+      dio.options.headers["authorization"] = "";
+      dio.options.headers["Accept"] = "application/json";
+    }
     final response = await dio.get(
       hostUrl + url,
       queryParameters: payload,
@@ -109,6 +128,11 @@ statuscheker(e) async {
 Future lPost(String url, dynamic payload) async {
   controller.showLoading;
   try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('access_token') != null) {
+      dio.options.headers["authorization"] = "";
+      dio.options.headers["Accept"] = "application/json";
+    }
     final response = await dio.post(
       'https://cabinet.cashbek.uz' + url,
       data: payload,

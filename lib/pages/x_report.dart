@@ -20,25 +20,26 @@ class _XReportState extends State<XReport> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic report = {};
   dynamic reportList = [];
+  dynamic cashbox = {};
 
   getReport() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    final prefsCashbox = jsonDecode(prefs.getString('cashbox')!);
     int cashboxId = 0;
-    if (cashbox['id'] != null) {
-      cashboxId = cashbox['id'];
+    if (prefsCashbox['id'] != null) {
+      cashboxId = prefsCashbox['id'];
+      cashbox = prefsCashbox;
     } else {
       final shift = jsonDecode(prefs.getString('shift')!);
       cashboxId = shift['id'];
+      cashbox = shift;
     }
-    dynamic response =
-        await get('/services/desktop/api/shift-xreport/$cashboxId');
+    dynamic response = await get('/services/desktop/api/shift-xreport/$cashboxId');
 
     setState(() {
       report = response;
       reportList = report['xReportList'];
-      report['shiftOpenDate'] =
-          DateFormat('dd.MM.yyyy HH:ss').format(DateTime.parse(
+      report['shiftOpenDate'] = DateFormat('dd.MM.yyyy HH:ss').format(DateTime.parse(
         response['shiftOpenDate'],
       ));
     });
@@ -55,12 +56,11 @@ class _XReportState extends State<XReport> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          text,
-          style:
-              TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
+          text ?? '',
+          style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
         ),
         Text(
-          '$text2',
+          '${text2 ?? ''}',
           style: TextStyle(color: b8, fontSize: fz),
         )
       ],
@@ -77,8 +77,7 @@ class _XReportState extends State<XReport> {
                 flex: 6,
                 child: Text(
                   text,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600, color: b8, fontSize: fz),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
                 )),
             Expanded(
               flex: 3,
@@ -139,8 +138,7 @@ class _XReportState extends State<XReport> {
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
                       'ДУБЛИКАТ',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, color: b8, fontSize: 18),
+                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 18),
                     ),
                   ),
                   Container(
@@ -148,33 +146,33 @@ class _XReportState extends State<XReport> {
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
                       '${report['posName']}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
                     ),
                   ),
                   Container(
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'Телефон: 998977655885',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                      'Телефон: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
                     ),
                   ),
                   Container(
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'Адресс: Glinka',
+                      'Адресс: ${cashbox['posAddress']}',
                       style: TextStyle(
-                          fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                        fontWeight: FontWeight.w700,
+                        color: b8,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   buildRow('Кассир', report['cashierName']),
                   buildRow('Касса №', report['shiftNumber']),
-                  report['tin'] != null
-                      ? buildRow('ИНН', report['tin'] ?? '')
-                      : Container(),
+                  report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
                   buildRow('Дата', report['shiftOpenDate']),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),

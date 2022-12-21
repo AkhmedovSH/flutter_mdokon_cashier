@@ -318,14 +318,14 @@ class _PaymentSampleState extends State<PaymentSample> {
               if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
                 createCheque();
               }
-              if (currentIndex == 2) {
+              if (currentIndex == 2 && (isDisabled() == blue)) {
                 createCheque();
               }
             },
             style: ElevatedButton.styleFrom(
               elevation: 0,
               padding: EdgeInsets.symmetric(vertical: 16),
-              primary: isDisabled(),
+              backgroundColor: isDisabled(),
             ),
             child: Text('ПРИНЯТЬ'),
           ),

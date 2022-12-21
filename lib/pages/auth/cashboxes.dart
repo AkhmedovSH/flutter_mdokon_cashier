@@ -98,7 +98,7 @@ class _CashBoxesState extends State<CashBoxes> {
                             width: MediaQuery.of(context).size.width * 0.6,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                primary: blue,
+                                backgroundColor: blue,
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 14, horizontal: 20),
                                 side: const BorderSide(
@@ -131,7 +131,7 @@ class _CashBoxesState extends State<CashBoxes> {
             Get.offAllNamed('/login');
           },
           style: ElevatedButton.styleFrom(
-              primary: white,
+              backgroundColor: white,
               padding:
                   const EdgeInsets.symmetric(vertical: 12, horizontal: 30)),
           child: Text(

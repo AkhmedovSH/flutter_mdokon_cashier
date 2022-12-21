@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lottie/lottie.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -137,57 +135,6 @@ class _IndexState extends State<Index> {
         debtIn['shiftId'] = cashbox['id'];
       }
     });
-  }
-
-  createDebtorOut() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    setState(() {
-      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
-      expenseOut['posId'] = cashbox['posId'].toString();
-      expenseOut['currencyId'] = cashbox['defaultCurrency'].toString();
-      if (prefs.getString('shift') != null) {
-        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
-      } else {
-        expenseOut['shiftId'] = cashbox['id'].toString();
-      }
-    });
-    final response = await post('/services/desktop/api/expense-out', expenseOut);
-    if (response['success']) {
-      Navigator.pop(context);
-    }
-  }
-
-  createClientDebt() async {
-    dynamic debtInCopy = Map.from(debtIn);
-
-    final list = [];
-    if (debtInCopy['cash'].length > 0) {
-      list.add({"amountIn": double.parse(debtInCopy['cash']), "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
-      debtInCopy['amountIn'] += double.parse(debtInCopy['cash']);
-    }
-    if (debtInCopy['terminal'].length > 0) {
-      list.add({"amountIn": double.parse(debtInCopy['terminal']), "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
-      debtInCopy['amountIn'] += double.parse(debtInCopy['terminal']);
-    }
-    debtInCopy['transactionsList'] = list;
-
-    await post('/services/desktop/api/client-debt-in', debtInCopy);
-    setState(() {
-      debtIn = {
-        "cash": "",
-        "terminal": "",
-        "amountIn": 0,
-        "amountOut": 0,
-        "cashboxId": '',
-        "clientId": 0,
-        "currencyId": 0,
-        "posId": '',
-        "shiftId": '',
-        "transactionsList": []
-      };
-    });
-    Navigator.pop(context);
   }
 
   redirectToCalculator(i) async {
@@ -765,7 +712,10 @@ class _IndexState extends State<Index> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(primary: red, padding: EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: red,
+                                  padding: EdgeInsets.symmetric(vertical: 10),
+                                ),
                                 child: const Text('Отмена'),
                               ),
                             ),
@@ -837,7 +787,7 @@ class _IndexState extends State<Index> {
                         ),
                     ],
                   ),
-                  SizedBox(height: 5),
+                  SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -849,7 +799,7 @@ class _IndexState extends State<Index> {
                             focusNode: shortcutFocusNode,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.all(10),
+                              contentPadding: const EdgeInsets.all(12),
                               isDense: true,
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(color: borderColor),
@@ -866,50 +816,62 @@ class _IndexState extends State<Index> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Итого', style: TextStyle(fontSize: 16)),
-                      data['discount'] == 0
-                          ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
-                          : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
-                    ],
+                  SizedBox(height: 15),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Итого', style: TextStyle(fontSize: 16)),
+                        data['discount'] == 0
+                            ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
+                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Скидка', style: TextStyle(fontSize: 16)),
-                      Wrap(
-                        children: [
-                          data['discount'] == 0
-                              ? Text('(0%)', style: TextStyle(fontSize: 16))
-                              : Text('(' + formatMoney(data['discount']) + '%)', style: TextStyle(fontSize: 16)),
-                          SizedBox(width: 10),
-                          data['discount'] == 0
-                              ? Text('0,00 Сум', style: TextStyle(fontSize: 16))
-                              : Text(
-                                  formatMoney(
-                                          double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
-                                      'Сум',
-                                  style: TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                    ],
+                  SizedBox(height: 10),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Скидка', style: TextStyle(fontSize: 16)),
+                        Wrap(
+                          children: [
+                            data['discount'] == 0
+                                ? Text('(0%)', style: TextStyle(fontSize: 16))
+                                : Text('(' + formatMoney(data['discount']) + '%)', style: TextStyle(fontSize: 16)),
+                            SizedBox(width: 10),
+                            data['discount'] == 0
+                                ? Text('0,00 Сум', style: TextStyle(fontSize: 16))
+                                : Text(
+                                    formatMoney(
+                                            double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
+                                        'Сум',
+                                    style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          SizedBox(height: 10),
-                          Text('К оплате', style: TextStyle(fontSize: 16)),
-                          Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
-                        ],
-                      )
-                    ],
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            SizedBox(height: 10),
+                            Text('К оплате', style: TextStyle(fontSize: 16)),
+                            SizedBox(height: 5),
+                            Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
+                  SizedBox(height: 20),
                   for (var i = data["itemsList"].length - 1; i >= 0; i--)
                     Dismissible(
                       key: ValueKey(data["itemsList"][i]['productName']),
@@ -930,6 +892,7 @@ class _IndexState extends State<Index> {
                         child: Container(
                           width: MediaQuery.of(context).size.width,
                           margin: const EdgeInsets.only(bottom: 5),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(color: data["itemsList"][i]['selected'] ? Color(0xFF5b73e8) : Color(0xFFF5F3F5), width: 1),
@@ -986,7 +949,9 @@ class _IndexState extends State<Index> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32), primary: data["itemsList"].length > 0 ? blue : lightGrey),
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                backgroundColor: data["itemsList"].length > 0 ? blue : lightGrey,
+              ),
               child: Text('Продать'),
             ),
           ),
@@ -1000,6 +965,33 @@ class _IndexState extends State<Index> {
         ],
       ),
     );
+  }
+
+  bool loading = false;
+
+  createDebtorOut(setState) async {
+    setState(() {
+      loading = true;
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final cashbox = jsonDecode(prefs.getString('cashbox')!);
+    setState(() {
+      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
+      expenseOut['posId'] = cashbox['posId'].toString();
+      expenseOut['currencyId'] = cashbox['defaultCurrency'].toString();
+      if (prefs.getString('shift') != null) {
+        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
+      } else {
+        expenseOut['shiftId'] = cashbox['id'].toString();
+      }
+    });
+    final response = await post('/services/desktop/api/expense-out', expenseOut);
+    if (response['success']) {
+      Navigator.pop(context);
+    }
+    setState(() {
+      loading = false;
+    });
   }
 
   showModalExpense() async {
@@ -1150,14 +1142,17 @@ class _IndexState extends State<Index> {
                   width: MediaQuery.of(context).size.width,
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (expenseOut['amountOut'].length != 0) {
-                        createDebtorOut();
-                      }
-                    },
+                    onPressed: !loading
+                        ? () {
+                            if (expenseOut['amountOut'].length != 0) {
+                              createDebtorOut(setState);
+                            }
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      primary: expenseOut['amountOut'].length == 0 ? lightGrey : blue,
+                      backgroundColor: expenseOut['amountOut'].length == 0 ? lightGrey : blue,
+                      disabledBackgroundColor: grey,
                     ),
                     child: Text('Принять'),
                   ),
@@ -1166,6 +1161,44 @@ class _IndexState extends State<Index> {
             );
           });
         });
+  }
+
+  createClientDebt(setState) async {
+    setState(() {
+      loading = true;
+    });
+    dynamic debtInCopy = Map.from(debtIn);
+
+    final list = [];
+    if (debtInCopy['cash'].length > 0) {
+      list.add({"amountIn": double.parse(debtInCopy['cash']), "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
+      debtInCopy['amountIn'] += double.parse(debtInCopy['cash']);
+    }
+    if (debtInCopy['terminal'].length > 0) {
+      list.add({"amountIn": double.parse(debtInCopy['terminal']), "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
+      debtInCopy['amountIn'] += double.parse(debtInCopy['terminal']);
+    }
+    debtInCopy['transactionsList'] = list;
+
+    await post('/services/desktop/api/client-debt-in', debtInCopy);
+    setState(() {
+      debtIn = {
+        "cash": "",
+        "terminal": "",
+        "amountIn": 0,
+        "amountOut": 0,
+        "cashboxId": '',
+        "clientId": 0,
+        "currencyId": 0,
+        "posId": '',
+        "shiftId": '',
+        "transactionsList": []
+      };
+    });
+    Navigator.pop(context);
+    setState(() {
+      loading = false;
+    });
   }
 
   showModalDebtor() async {
@@ -1283,7 +1316,9 @@ class _IndexState extends State<Index> {
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: blue, width: 4))),
+                      decoration: BoxDecoration(
+                        border: Border(bottom: BorderSide(color: blue, width: 4)),
+                      ),
                       child: Text(
                         'Приход',
                         style: TextStyle(fontSize: 20, color: blue),
@@ -1309,14 +1344,17 @@ class _IndexState extends State<Index> {
                   width: MediaQuery.of(context).size.width,
                   margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
-                        createClientDebt();
-                      }
-                    },
+                    onPressed: !loading
+                        ? () {
+                            if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
+                              createClientDebt(setState);
+                            }
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      primary: (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) ? blue : lightGrey,
+                      backgroundColor: debtIn['clientId'] != 0 && (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) ? blue : lightGrey,
+                      disabledBackgroundColor: grey,
                     ),
                     child: Text('Принять'),
                   ),
@@ -1456,7 +1494,7 @@ class _IndexState extends State<Index> {
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12),
-                    primary: (packagingController.text != "" || pieceController.text != "") ? blue : lightGrey,
+                    backgroundColor: (packagingController.text != "" || pieceController.text != "") ? blue : lightGrey,
                   ),
                   child: Text('Принять'),
                 ),

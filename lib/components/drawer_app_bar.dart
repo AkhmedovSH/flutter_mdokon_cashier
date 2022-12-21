@@ -47,12 +47,8 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
     } else {
       id = cashbox['id'];
     }
-    final response = await post('/services/desktop/api/close-shift', {
-      'cashboxId': cashbox['cashboxId'],
-      'posId': cashbox['posId'],
-      'offline': false,
-      'id': id
-    });
+    final response =
+        await post('/services/desktop/api/close-shift', {'cashboxId': cashbox['cashboxId'], 'posId': cashbox['posId'], 'offline': false, 'id': id});
     if (response['success']) {
       Get.offAllNamed('/login');
     }
@@ -60,7 +56,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
   }
 
   void _launchURL() async {
-    if (!await launch("tel://+998994398808")) throw 'Could not launch';
+    if (!await launch("tel://+998781137373")) throw 'Could not launch';
   }
 
   Widget buildListTile(
@@ -189,10 +185,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                               width: MediaQuery.of(context).size.width * 0.33,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(
-                                    primary: red,
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(backgroundColor: red, padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Отмена'),
                               ),
                             ),
@@ -203,9 +196,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                                   closeShift();
                                   Get.back();
                                 },
-                                style: ElevatedButton.styleFrom(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 10)),
+                                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
                                 child: const Text('Продолжить'),
                               ),
                             )
@@ -215,7 +206,7 @@ class _DrawerAppBarState extends State<DrawerAppBar> {
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(primary: red),
+                style: ElevatedButton.styleFrom(backgroundColor: red),
                 child: const Text('Закрыть смену'),
               ),
             ),

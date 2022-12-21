@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         textTheme: Theme.of(context).textTheme.apply(),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            primary: blue,
+            backgroundColor: blue,
           ),
         ),
       ),

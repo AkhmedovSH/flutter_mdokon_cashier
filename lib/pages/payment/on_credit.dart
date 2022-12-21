@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/api.dart';
@@ -30,8 +28,12 @@ class _OnCreditState extends State<OnCredit> {
     {'name': 'Комментарий', 'value': '', 'icon': Icons.comment_outlined, 'keyboardType': TextInputType.text},
   ];
 
-  createClient() {
-    print(sendData);
+  createClient() async {
+    final response = await post('/services/desktop/api/clients', sendData);
+    if (response != null && response['success']) {
+      Get.back();
+      showSelectUserDialog();
+    }
   }
 
   calculateChange() {
@@ -60,25 +62,6 @@ class _OnCreditState extends State<OnCredit> {
     }
     setState(() {
       clients = response;
-    });
-  }
-
-  _onSearchChanged(String text) {
-    List<dynamic> _searchList = [];
-    if (text.isEmpty) {
-      _searchList = clients;
-      setState(() {});
-      return;
-    }
-
-    clients.forEach((client) {
-      if (client['name'].contains(text)) {
-        _searchList.add(client);
-      }
-    });
-
-    setState(() {
-      clients = _searchList;
     });
   }
 
@@ -163,113 +146,9 @@ class _OnCreditState extends State<OnCredit> {
                 width: MediaQuery.of(context).size.width * 0.4,
                 child: ElevatedButton(
                   onPressed: () async {
-                    await getClients();
-                    final result = await showDialog(
-                        context: context,
-                        useSafeArea: true,
-                        builder: (BuildContext context) {
-                          return StatefulBuilder(builder: (context, setState) {
-                            return AlertDialog(
-                              title: Text(''),
-                              titlePadding: EdgeInsets.all(0),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                              insetPadding: EdgeInsets.all(10),
-                              actionsPadding: EdgeInsets.all(0),
-                              buttonPadding: EdgeInsets.all(0),
-                              scrollable: true,
-                              content: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                child: Column(
-                                  children: [
-                                    Table(
-                                        border: TableBorder(
-                                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
-                                        ),
-                                        children: [
-                                          TableRow(children: const [
-                                            Text(
-                                              'Контакт',
-                                            ),
-                                            Text(
-                                              'Номер',
-                                            ),
-                                            Text('Комментарий'),
-                                          ]),
-                                          for (var i = 0; i < clients.length; i++)
-                                            TableRow(children: [
-                                              GestureDetector(
-                                                onTap: () {
-                                                  selectDebtorClient(setState, i);
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text(
-                                                    '${clients[i]['name']}',
-                                                    style: TextStyle(
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  selectDebtorClient(setState, i);
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text('${clients[i]['phone1']}'),
-                                                ),
-                                              ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  selectDebtorClient(setState, i);
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                                  child: Text("${clients[i]['comment'] == null ? '' : clients[i]['comment']}"),
-                                                ),
-                                              ),
-                                            ]),
-                                        ])
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      for (var i = 0; i < clients.length; i++) {
-                                        if (clients[i]['selected']) {
-                                          Navigator.pop(context, clients);
-                                        }
-                                      }
-                                    },
-                                    child: Text('Выбрать'),
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                        });
-                    if (result != null) {
-                      for (var i = 0; i < result.length; i++) {
-                        if (result[i]['selected'] == true) {
-                          widget.setPayload!('clientName', result[i]['name'].toString());
-                          widget.setPayload!('clientId', result[i]['id']);
-                          widget.setPayload!('clientComment', result[i]['comment']);
-                          setState(() {
-                            client = result[i];
-                          });
-                        }
-                      }
-                    }
+                    showSelectUserDialog();
                   },
-                  style: ElevatedButton.styleFrom(primary: Color(0xFFf1b44c)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFf1b44c)),
                   child: Text('Выбрать'),
                 ),
               ),
@@ -539,5 +418,113 @@ class _OnCreditState extends State<OnCredit> {
         ],
       ),
     );
+  }
+
+  showSelectUserDialog() async {
+    await getClients();
+    final result = await showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.all(10),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: [
+                    Table(
+                        border: TableBorder(
+                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                        ),
+                        children: [
+                          TableRow(children: const [
+                            Text(
+                              'Контакт',
+                            ),
+                            Text(
+                              'Номер',
+                            ),
+                            Text('Комментарий'),
+                          ]),
+                          for (var i = 0; i < clients.length; i++)
+                            TableRow(children: [
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text(
+                                    '${clients[i]['name']}',
+                                    style: TextStyle(
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text('${clients[i]['phone1']}'),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text("${clients[i]['comment'] == null ? '' : clients[i]['comment']}"),
+                                ),
+                              ),
+                            ]),
+                        ])
+                  ],
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      for (var i = 0; i < clients.length; i++) {
+                        if (clients[i]['selected']) {
+                          Navigator.pop(context, clients);
+                        }
+                      }
+                    },
+                    child: Text('Выбрать'),
+                  ),
+                )
+              ],
+            );
+          });
+        });
+    if (result != null) {
+      for (var i = 0; i < result.length; i++) {
+        if (result[i]['selected'] == true) {
+          widget.setPayload!('clientName', result[i]['name'].toString());
+          widget.setPayload!('clientId', result[i]['id']);
+          widget.setPayload!('clientComment', result[i]['comment']);
+          setState(() {
+            client = result[i];
+          });
+        }
+      }
+    }
   }
 }

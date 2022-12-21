@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 
-import 'package:new_version/new_version.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -123,7 +121,7 @@ class _SplashState extends State<Splash> {
                                     onPressed: () {
                                       Get.back();
                                     },
-                                    style: TextButton.styleFrom(primary: const Color(0xFF00865F)),
+                                    style: TextButton.styleFrom(backgroundColor: const Color(0xFF00865F)),
                                     child: Text(
                                       'НЕТ, СПАСИБО',
                                       style: const TextStyle(fontWeight: FontWeight.w500),
@@ -135,7 +133,7 @@ class _SplashState extends State<Splash> {
                               launch(url);
                             },
                             style: ElevatedButton.styleFrom(
-                              primary: const Color(0xFF00865F),
+                              backgroundColor: const Color(0xFF00865F),
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),

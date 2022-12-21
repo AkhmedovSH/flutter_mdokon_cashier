@@ -57,9 +57,7 @@ class _ReturnState extends State<Return> {
       final list = itemsList;
       for (var i = 0; i < list.length; i++) {
         list[i]['validate'] = false;
-        print(list[i]['discount'].runtimeType);
         list[i]['discount'] = list[i]['discount'].round();
-        print(list[i]['uomId']);
         if (list[i]['uomId'] == 1) {
           list[i]['uomId'].round();
         }
@@ -87,7 +85,7 @@ class _ReturnState extends State<Return> {
     }
 
     item['controller'] = TextEditingController();
-    item['controller'].text = item['quantity'].toString();
+    item['controller'].text = double.parse(item['quantity'].toString()).round().toString();
     item['errorText'] = '';
 
     setState(() {
@@ -126,7 +124,6 @@ class _ReturnState extends State<Return> {
   }
 
   setQuantity(item, i, value) {
-    print(value);
     var itemCopy = Map.from(item);
 
     if (value == '' || value == 0) {
@@ -144,7 +141,9 @@ class _ReturnState extends State<Return> {
       });
       return;
     }
-
+    print(item);
+    print(i);
+    print(value);
     if (value[value.length - 1] != '.') {
       if (double.parse(value) > double.parse(itemCopy['quantity'].toString())) {
         setState(() {
@@ -157,7 +156,7 @@ class _ReturnState extends State<Return> {
     }
 
     setState(() {
-      sendData['itemsList'][i]['quantity'] = int.parse(value);
+      sendData['itemsList'][i]['changedQuantity'] = int.parse(value);
       sendData['itemsList'][i]['totalPrice'] =
           (sendData['itemsList'][i]['salePrice'] - (sendData['itemsList'][i]['salePrice'] * sendData['itemsList'][i]['discount'] / 100)) *
               int.parse(value);
@@ -166,7 +165,7 @@ class _ReturnState extends State<Return> {
     dynamic totalAmount = 0;
     for (var i = 0; i < sendData['itemsList'].length; i++) {
       totalAmount += (sendData['itemsList'][i]['salePrice'] - (sendData['itemsList'][i]['salePrice'] * sendData['itemsList'][i]['discount'] / 100)) *
-          sendData['itemsList'][i]['quantity'];
+          int.parse(value);
     }
 
     setState(() {
@@ -184,7 +183,9 @@ class _ReturnState extends State<Return> {
     }
 
     for (var i = 0; i < sendData['itemsList'].length; i++) {
-      if (sendData['itemsList'][i]['validateText'] != "") {
+      if (sendData['itemsList'][i]['validateText'] != "" && sendData['itemsList'][i]['validateText'] != null) {
+        print(sendData['itemsList'][i]['validateText']);
+        print(sendData['itemsList'][i]);
         error = true;
         break;
       }
@@ -225,6 +226,7 @@ class _ReturnState extends State<Return> {
         setState(() {
           sendData['itemsList'][i]['controller'] = null;
           sendData['itemsList'][i]['validate'] = null;
+          sendData['itemsList'][i]['quantity'] = sendData['itemsList'][i]['changedQuantity'] ?? sendData['itemsList'][i]['quantity'];
         });
       }
     });
@@ -305,466 +307,481 @@ class _ReturnState extends State<Return> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarIconBrightness: Brightness.light,
-            statusBarColor: blue, // Status bar
-          ),
-          bottomOpacity: 0.0,
-          title: Text(
-            'Возврат',
-            style: TextStyle(color: white),
-          ),
-          centerTitle: true,
-          backgroundColor: blue,
-          elevation: 0,
-          leading: IconButton(
-            onPressed: () {
-              _scaffoldKey.currentState!.openDrawer();
-            },
-            icon: Icon(Icons.menu, color: white),
-          ),
+      key: _scaffoldKey,
+      appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.light,
+          statusBarColor: blue, // Status bar
         ),
-        drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.70,
-          child: const DrawerAppBar(),
+        bottomOpacity: 0.0,
+        title: Text(
+          'Возврат',
+          style: TextStyle(color: white),
         ),
-        body: SingleChildScrollView(
-          child: Container(
-            margin: EdgeInsets.only(top: 10, left: 8, right: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.7,
-                      margin: EdgeInsets.only(bottom: 10),
-                      height: 40,
-                      child: TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            search = value;
-                          });
-                        },
-                        onSubmitted: (value) {
-                          if (search.length > 0) {
-                            searchCheque(null);
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.only(top: 5, left: 10),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFced4da),
-                              width: 2,
-                            ),
+        centerTitle: true,
+        backgroundColor: blue,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            _scaffoldKey.currentState!.openDrawer();
+          },
+          icon: Icon(Icons.menu, color: white),
+        ),
+      ),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.70,
+        child: const DrawerAppBar(),
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          margin: EdgeInsets.only(top: 10, left: 8, right: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.7,
+                    margin: EdgeInsets.only(bottom: 10),
+                    height: 40,
+                    child: TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          search = value;
+                        });
+                      },
+                      onSubmitted: (value) {
+                        if (search.length > 0) {
+                          searchCheque(null);
+                        }
+                      },
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.only(top: 5, left: 10),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color(0xFFced4da),
+                            width: 2,
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFced4da),
-                              width: 2,
-                            ),
-                          ),
-                          hintText: 'Поиск',
-                          filled: true,
-                          fillColor: white,
-                          focusColor: blue,
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color(0xFFced4da),
+                            width: 2,
+                          ),
+                        ),
+                        hintText: 'Поиск',
+                        filled: true,
+                        fillColor: white,
+                        focusColor: blue,
                       ),
                     ),
-                    Container(
-                      margin: EdgeInsets.only(bottom: 10),
-                      width: MediaQuery.of(context).size.width * 0.23,
-                      height: 40,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (search.length > 0) {
-                            searchCheque(null);
-                          }
-                        },
-                        child: Text('Поиск'),
-                      ),
-                    )
-                  ],
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(bottom: 10),
+                    width: MediaQuery.of(context).size.width * 0.23,
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (search.length > 0) {
+                          searchCheque(null);
+                        }
+                      },
+                      child: Text('Поиск'),
+                    ),
+                  )
+                ],
+              ),
+              Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFced4da), width: 5),
+                  ),
                 ),
-                Container(
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                        border: Border(
-                      bottom: BorderSide(color: Color(0xFFced4da), width: 1),
-                    )),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(bottom: 5),
-                            child: Text(
-                              'Кассовый чек №: ${data['chequeNumber']}',
-                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: b8),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(bottom: 5),
+                        child: Text(
+                          'Кассовый чек №: ${data['chequeNumber']}',
+                          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: b8),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Дата: ',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: b8),
                             ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Дата: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: b8),
+                            Container(
+                              margin: EdgeInsets.only(right: 20),
+                              child: Text(
+                                '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
+                                style: TextStyle(color: b8),
+                              ),
+                            ),
+                            Text(
+                              'Кассир: ',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: b8),
+                            ),
+                            Text(
+                              '${data['cashierName']}',
+                              style: TextStyle(color: b8),
+                            )
+                          ],
+                        ),
+                      ),
+                      Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(4),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(3),
+                        },
+                        border: TableBorder(
+                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                        ),
+                        children: [
+                          TableRow(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Наименование товара',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
                                 ),
-                                Container(
-                                  margin: EdgeInsets.only(right: 20),
-                                  child: Text(
-                                    '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
-                                    style: TextStyle(color: b8),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Цена со скидкой',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Кол-во',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Сумма оплаты',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ],
+                          ),
+                          for (var i = 0; i < itemsList.length; i++)
+                            TableRow(
+                              children: [
+                                // HERE IT IS...
+                                TableRowInkWell(
+                                  onDoubleTap: () {
+                                    addToReturnList(itemsList[i], i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: Text(
+                                      '${itemsList[i]['productName']} ',
+                                      style: TextStyle(color: Color(0xFF495057)),
+                                    ),
                                   ),
                                 ),
-                                Text(
-                                  'Кассир: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: b8),
+                                TableRowInkWell(
+                                  onDoubleTap: () {
+                                    addToReturnList(itemsList[i], i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: (itemsList[i]['discount']) > 0
+                                        ? Text(
+                                            '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                            style: TextStyle(color: Color(0xFF495057)),
+                                            textAlign: TextAlign.center,
+                                          )
+                                        : Text(
+                                            '${formatMoney(itemsList[i]['salePrice'])}',
+                                            style: TextStyle(color: Color(0xFF495057)),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                  ),
                                 ),
-                                Text(
-                                  '${data['cashierName']}',
-                                  style: TextStyle(color: b8),
-                                )
+                                TableRowInkWell(
+                                  onDoubleTap: () {
+                                    addToReturnList(itemsList[i], i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: Text(
+                                      '${formatMoney(itemsList[i]['quantity'])} ${itemsList[i]['returnedQuantity'] > 0 ? formatMoney(itemsList[i]['returnedQuantity']) : ''}',
+                                      style: TextStyle(color: Color(0xFF495057)),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                TableRowInkWell(
+                                  onDoubleTap: () {
+                                    addToReturnList(itemsList[i], i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: Text(
+                                      '${formatMoney(itemsList[i]['totalPrice'])}',
+                                      style: TextStyle(color: Color(0xFF495057)),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                          Table(
-                            columnWidths: const {
-                              0: FlexColumnWidth(4),
-                              1: FlexColumnWidth(3),
-                              2: FlexColumnWidth(2),
-                              3: FlexColumnWidth(3),
-                            },
-                            border: TableBorder(
-                              horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
-                            ),
-                            children: [
-                              TableRow(children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Наименование товара',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Цена со скидкой',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Кол-во',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Сумма оплаты',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ),
-                              ]),
-                              for (var i = 0; i < itemsList.length; i++)
-                                TableRow(children: [
-                                  // HERE IT IS...
-                                  TableRowInkWell(
-                                    onDoubleTap: () {
-                                      addToReturnList(itemsList[i], i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: Text(
-                                        '${itemsList[i]['productName']} ',
-                                        style: TextStyle(color: Color(0xFF495057)),
-                                      ),
-                                    ),
-                                  ),
-                                  TableRowInkWell(
-                                    onDoubleTap: () {
-                                      addToReturnList(itemsList[i], i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: (itemsList[i]['discount']) > 0
-                                          ? Text(
-                                              '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                              style: TextStyle(color: Color(0xFF495057)),
-                                              textAlign: TextAlign.center,
-                                            )
-                                          : Text(
-                                              '${formatMoney(itemsList[i]['salePrice'])}',
-                                              style: TextStyle(color: Color(0xFF495057)),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                    ),
-                                  ),
-                                  TableRowInkWell(
-                                    onDoubleTap: () {
-                                      addToReturnList(itemsList[i], i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: Text(
-                                        '${formatMoney(itemsList[i]['quantity'])} ${itemsList[i]['returnedQuantity'] > 0 ? formatMoney(itemsList[i]['returnedQuantity']) : ''}',
-                                        style: TextStyle(color: Color(0xFF495057)),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                  TableRowInkWell(
-                                    onDoubleTap: () {
-                                      addToReturnList(itemsList[i], i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: Text(
-                                        '${formatMoney(itemsList[i]['totalPrice'])}',
-                                        style: TextStyle(color: Color(0xFF495057)),
-                                        textAlign: TextAlign.end,
-                                      ),
-                                    ),
-                                  ),
-                                ]),
-                            ],
-                          )
                         ],
-                      ),
-                    )),
-                Container(
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                        border: Border(
-                      bottom: BorderSide(color: Color(0xFFced4da), width: 1),
-                    )),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Table(
-                            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                            columnWidths: const {
-                              0: FixedColumnWidth(130.0),
-                              1: FlexColumnWidth(3),
-                              2: FlexColumnWidth(2),
-                              3: FlexColumnWidth(3),
-                            },
-                            border: TableBorder(
-                              horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
-                            ),
-                            children: [
-                              TableRow(children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Наименование товара',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Цена со скидкой',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Кол-во возврата',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    'Сумма оплаты',
-                                    style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ),
-                              ]),
-                              for (var i = 0; i < sendData['itemsList'].length; i++)
-                                TableRow(children: [
-                                  Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: SizedBox(
-                                        height: 30,
-                                        width: 50,
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.only(left: 5),
-                                              child: IconButton(
-                                                  onPressed: () {
-                                                    addToItemsList(sendData['itemsList'][i], i);
-                                                  },
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: BoxConstraints(),
-                                                  icon: Icon(
-                                                    Icons.arrow_back_ios,
-                                                    size: 14,
-                                                  )),
-                                            ),
-                                            SizedBox(
-                                              width: MediaQuery.of(context).size.width * 0.25,
-                                              child: Text(
-                                                '${sendData['itemsList'][i]['productName']} ',
-                                                style: TextStyle(color: Color(0xFF495057)),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    child: (sendData['itemsList'][i]['discount']) > 0
-                                        ? Container(
-                                            height: 30,
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                              style: TextStyle(color: Color(0xFF495057)),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          )
-                                        : Container(
-                                            height: 30,
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
-                                              style: TextStyle(color: Color(0xFF495057)),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                  ),
-                                  Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: SizedBox(
-                                          child: Column(
-                                        children: [
-                                          SizedBox(
-                                            height: 30,
-                                            child: TextFormField(
-                                              textAlign: TextAlign.center,
-                                              controller: sendData['itemsList'][i]['controller'],
-                                              onChanged: (value) {
-                                                setQuantity(sendData['itemsList'][i], i, value);
-                                              },
-                                              keyboardType: TextInputType.number,
-                                              decoration: InputDecoration(
-                                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                                errorBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 5,
-                                                ),
-                                                // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
-                                                // errorStyle: TextStyle(fontSize: 10)
-                                              ),
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-                                          sendData['itemsList'][i]['validateText'] != null
-                                              ? Text(
-                                                  '${sendData['itemsList'][i]['validateText'] ?? ''}',
-                                                  overflow: TextOverflow.fade,
-                                                  maxLines: 1,
-                                                  style: TextStyle(fontSize: 8, color: Color(0xFFf46a6a)),
-                                                )
-                                              : Container()
-                                        ],
-                                      ))),
-                                  Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      child: Container(
-                                        height: 30,
-                                        alignment: Alignment.centerRight,
-                                        child: Text(
-                                          '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
-                                          style: TextStyle(color: Color(0xFF495057)),
-                                          textAlign: TextAlign.end,
-                                        ),
-                                      )),
-                                ]),
-                            ],
-                          )
-                        ],
-                      ),
-                    )),
-              ],
-            ),
-          ),
-        ),
-        // resizeToAvoidBottomPadding: false,
-        resizeToAvoidBottomInset: false,
-        floatingActionButton: Container(
-          margin: EdgeInsets.only(left: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SizedBox(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'К ВЫПЛАТЕ:',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${formatMoney(sendData['totalAmount'])}',
-                          style: TextStyle(color: blue, fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'сум',
-                          style: TextStyle(color: blue, fontWeight: FontWeight.w500, fontSize: 18),
-                        )
-                      ],
-                    ),
-                  ],
+                      )
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(
+              Container(
+                height: MediaQuery.of(context).size.height * 0.3,
                 width: MediaQuery.of(context).size.width,
-                child: ElevatedButton(
-                    onPressed: () {
-                      returnCheque();
-                    },
-                    style: ElevatedButton.styleFrom(
-                        primary: sendData['itemsList'].length > 0 ? Color(0xFFf46a6a) : Color(0xFFf46a6a).withOpacity(0.65),
-                        elevation: 0,
-                        padding: EdgeInsets.symmetric(vertical: 12)),
-                    child: Text(
-                      'Осуществить возврат',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    )),
-              )
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFced4da), width: 5),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Table(
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                        columnWidths: const {
+                          0: FixedColumnWidth(130.0),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(3),
+                        },
+                        border: TableBorder(
+                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                        ),
+                        children: [
+                          TableRow(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Наименование товара',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Цена со скидкой',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Кол-во возврата',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Сумма оплаты',
+                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ],
+                          ),
+                          for (var i = 0; i < sendData['itemsList'].length; i++)
+                            TableRow(children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: SizedBox(
+                                  height: 30,
+                                  width: 50,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        margin: EdgeInsets.only(left: 5),
+                                        child: IconButton(
+                                            onPressed: () {
+                                              addToItemsList(sendData['itemsList'][i], i);
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: BoxConstraints(),
+                                            icon: Icon(
+                                              Icons.arrow_back_ios,
+                                              size: 14,
+                                            )),
+                                      ),
+                                      SizedBox(
+                                        width: MediaQuery.of(context).size.width * 0.25,
+                                        child: Text(
+                                          '${sendData['itemsList'][i]['productName']} ',
+                                          style: TextStyle(color: Color(0xFF495057)),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: (sendData['itemsList'][i]['discount']) > 0
+                                    ? Container(
+                                        height: 30,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                          style: TextStyle(color: Color(0xFF495057)),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      )
+                                    : Container(
+                                        height: 30,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
+                                          style: TextStyle(color: Color(0xFF495057)),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: SizedBox(
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height: 30,
+                                        child: TextFormField(
+                                          textAlign: TextAlign.center,
+                                          controller: sendData['itemsList'][i]['controller'],
+                                          onChanged: (value) {
+                                            setQuantity(sendData['itemsList'][i], i, value);
+                                          },
+                                          keyboardType: TextInputType.number,
+                                          decoration: InputDecoration(
+                                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
+                                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
+                                            errorBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
+                                            contentPadding: EdgeInsets.only(
+                                              top: 5,
+                                            ),
+                                            // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
+                                            // errorStyle: TextStyle(fontSize: 10)
+                                          ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                      sendData['itemsList'][i]['validateText'] != null
+                                          ? Text(
+                                              '${sendData['itemsList'][i]['validateText'] ?? ''}',
+                                              overflow: TextOverflow.fade,
+                                              maxLines: 1,
+                                              style: TextStyle(fontSize: 8, color: Color(0xFFf46a6a)),
+                                            )
+                                          : Container()
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Container(
+                                  height: 30,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
+                                    style: TextStyle(color: Color(0xFF495057)),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ),
+                            ]),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-        ));
+        ),
+      ),
+      // resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(left: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'К ВЫПЛАТЕ:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${formatMoney(sendData['totalAmount'])}',
+                        style: TextStyle(color: blue, fontSize: 32, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'сум',
+                        style: TextStyle(color: blue, fontWeight: FontWeight.w500, fontSize: 18),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: ElevatedButton(
+                  onPressed: () {
+                    returnCheque();
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: sendData['itemsList'].length > 0 ? Color(0xFFf46a6a) : Color(0xFFf46a6a).withOpacity(0.65),
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(vertical: 12)),
+                  child: Text(
+                    'Осуществить возврат',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  )),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
