@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 
@@ -37,7 +38,11 @@ class _SplashState extends State<Splash> {
       }
 
       await showUpdateDialog();
-      return;
+      if (isRequired) {
+        SystemNavigator.pop();
+      } else {
+        startTimer();
+      }
     } else {
       startTimer();
     }
