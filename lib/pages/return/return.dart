@@ -42,6 +42,9 @@ class _ReturnState extends State<Return> {
     'transactionId': "",
   };
 
+  int focusedFieldIndex = 0;
+  bool scrollMargin = false;
+
   searchCheque(id) async {
     dynamic response;
     if (id != null) {
@@ -613,115 +616,139 @@ class _ReturnState extends State<Return> {
                             ],
                           ),
                           for (var i = 0; i < sendData['itemsList'].length; i++)
-                            TableRow(children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: SizedBox(
-                                  height: 30,
-                                  width: 50,
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        margin: EdgeInsets.only(left: 5),
-                                        child: IconButton(
-                                            onPressed: () {
-                                              addToItemsList(sendData['itemsList'][i], i);
-                                            },
-                                            padding: EdgeInsets.zero,
-                                            constraints: BoxConstraints(),
-                                            icon: Icon(
-                                              Icons.arrow_back_ios,
-                                              size: 14,
-                                            )),
-                                      ),
-                                      SizedBox(
-                                        width: MediaQuery.of(context).size.width * 0.25,
-                                        child: Text(
-                                          '${sendData['itemsList'][i]['productName']} ',
-                                          style: TextStyle(color: Color(0xFF495057)),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
+                            TableRow(
+                              children: [
+                                Container(
+                                  margin: MediaQuery.of(context).viewInsets.bottom > 0 && i == sendData['itemsList'].length - 1
+                                      ? EdgeInsets.only(bottom: 100)
+                                      : EdgeInsets.zero,
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: SizedBox(
+                                    height: 30,
+                                    width: 50,
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          margin: EdgeInsets.only(left: 5),
+                                          child: IconButton(
+                                              onPressed: () {
+                                                addToItemsList(sendData['itemsList'][i], i);
+                                              },
+                                              padding: EdgeInsets.zero,
+                                              constraints: BoxConstraints(),
+                                              icon: Icon(
+                                                Icons.arrow_back_ios,
+                                                size: 14,
+                                              )),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: (sendData['itemsList'][i]['discount']) > 0
-                                    ? Container(
-                                        height: 30,
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                          style: TextStyle(color: Color(0xFF495057)),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      )
-                                    : Container(
-                                        height: 30,
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
-                                          style: TextStyle(color: Color(0xFF495057)),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: SizedBox(
-                                  child: Column(
-                                    children: [
-                                      SizedBox(
-                                        height: 30,
-                                        child: TextFormField(
-                                          textAlign: TextAlign.center,
-                                          controller: sendData['itemsList'][i]['controller'],
-                                          onChanged: (value) {
-                                            setQuantity(sendData['itemsList'][i], i, value);
-                                          },
-                                          keyboardType: TextInputType.number,
-                                          decoration: InputDecoration(
-                                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                            errorBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2))),
-                                            contentPadding: EdgeInsets.only(
-                                              top: 5,
-                                            ),
-                                            // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
-                                            // errorStyle: TextStyle(fontSize: 10)
+                                        SizedBox(
+                                          width: MediaQuery.of(context).size.width * 0.25,
+                                          child: Text(
+                                            '${sendData['itemsList'][i]['productName']} ',
+                                            style: TextStyle(color: Color(0xFF495057)),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
-                                          style: TextStyle(fontSize: 12),
                                         ),
-                                      ),
-                                      sendData['itemsList'][i]['validateText'] != null
-                                          ? Text(
-                                              '${sendData['itemsList'][i]['validateText'] ?? ''}',
-                                              overflow: TextOverflow.fade,
-                                              maxLines: 1,
-                                              style: TextStyle(fontSize: 8, color: Color(0xFFf46a6a)),
-                                            )
-                                          : Container()
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Container(
-                                  height: 30,
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
-                                    style: TextStyle(color: Color(0xFF495057)),
-                                    textAlign: TextAlign.end,
+                                Container(
+                                  margin: MediaQuery.of(context).viewInsets.bottom > 0 && i == sendData['itemsList'].length - 1
+                                      ? EdgeInsets.only(bottom: 100)
+                                      : EdgeInsets.zero,
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: (sendData['itemsList'][i]['discount']) > 0
+                                      ? Container(
+                                          height: 30,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '${sendData['itemsList'][i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
+                                            style: TextStyle(color: Color(0xFF495057)),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        )
+                                      : Container(
+                                          height: 30,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
+                                            style: TextStyle(color: Color(0xFF495057)),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                ),
+                                Container(
+                                  margin: MediaQuery.of(context).viewInsets.bottom > 0 && i == sendData['itemsList'].length - 1
+                                      ? EdgeInsets.only(bottom: 100)
+                                      : EdgeInsets.zero,
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: SizedBox(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 30,
+                                          child: TextFormField(
+                                            textAlign: TextAlign.center,
+                                            controller: sendData['itemsList'][i]['controller'],
+                                            onChanged: (value) {
+                                              setQuantity(sendData['itemsList'][i], i, value);
+                                            },
+                                            keyboardType: TextInputType.number,
+                                            scrollPadding: EdgeInsets.only(bottom: 100),
+                                            decoration: InputDecoration(
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
+                                              ),
+                                              errorBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
+                                              ),
+                                              contentPadding: EdgeInsets.only(
+                                                top: 5,
+                                              ),
+                                              // errorText: sendData['itemsList'][i]['validate'] ? '${sendData['itemsList'][i]['validateText']}' : null,
+                                              // errorStyle: TextStyle(fontSize: 10)
+                                            ),
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                        sendData['itemsList'][i]['validateText'] != null
+                                            ? Text(
+                                                '${sendData['itemsList'][i]['validateText'] ?? ''}',
+                                                overflow: TextOverflow.fade,
+                                                maxLines: 1,
+                                                style: TextStyle(
+                                                  fontSize: 8,
+                                                  color: Color(0xFFf46a6a),
+                                                ),
+                                              )
+                                            : Container()
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ]),
+                                Container(
+                                  margin: MediaQuery.of(context).viewInsets.bottom > 0 && i == sendData['itemsList'].length - 1
+                                      ? EdgeInsets.only(bottom: 100)
+                                      : EdgeInsets.zero,
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Container(
+                                    height: 30,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
+                                      style: TextStyle(color: Color(0xFF495057)),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       )
                     ],
@@ -767,17 +794,18 @@ class _ReturnState extends State<Return> {
             SizedBox(
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
-                  onPressed: () {
-                    returnCheque();
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: sendData['itemsList'].length > 0 ? Color(0xFFf46a6a) : Color(0xFFf46a6a).withOpacity(0.65),
-                      elevation: 0,
-                      padding: EdgeInsets.symmetric(vertical: 12)),
-                  child: Text(
-                    'Осуществить возврат',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  )),
+                onPressed: () {
+                  returnCheque();
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: sendData['itemsList'].length > 0 ? Color(0xFFf46a6a) : Color(0xFFf46a6a).withOpacity(0.65),
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 12)),
+                child: Text(
+                  'Осуществить возврат',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
             )
           ],
         ),
