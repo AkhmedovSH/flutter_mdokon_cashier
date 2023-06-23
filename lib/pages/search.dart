@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -20,6 +22,7 @@ class Search extends StatefulWidget {
 
 class _SearchState extends State<Search> {
   final Controller controller = Get.put(Controller());
+  TextEditingController textEditingController = TextEditingController();
   Timer? _debounce;
   dynamic products = [];
   dynamic cashbox = {};
@@ -52,6 +55,28 @@ class _SearchState extends State<Search> {
         });
       }
     });
+  }
+
+  getQrCode() async {
+    print(1111);
+    await Permission.camera.request();
+    var status = await Permission.camera.status;
+
+    // final permission = await getCameraPermission();
+    if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
+      return;
+    }
+    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", "Назад", false, ScanMode.BARCODE);
+    print(result);
+    // final result = await Get.toNamed('/qr-scanner');
+
+    print(result);
+    if (result != '-1') {
+      setState(() {
+        searchProducts(result);
+        textEditingController.text = result;
+      });
+    }
   }
 
   getProducts() async {
@@ -114,6 +139,7 @@ class _SearchState extends State<Search> {
                           child: SizedBox(
                             height: 45,
                             child: TextField(
+                              controller: textEditingController,
                               onChanged: (value) {
                                 searchProducts(value);
                               },
@@ -140,18 +166,23 @@ class _SearchState extends State<Search> {
                             ),
                           ),
                         ),
-                        Container(
-                          height: 45,
-                          width: 45,
-                          margin: EdgeInsets.only(left: 15),
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 1, color: blue),
-                            borderRadius: BorderRadius.all(Radius.circular(50)),
-                          ),
-                          child: Icon(
-                            Icons.qr_code_2_outlined,
-                            color: blue,
-                            size: 24,
+                        GestureDetector(
+                          onTap: () {
+                            getQrCode();
+                          },
+                          child: Container(
+                            height: 45,
+                            width: 45,
+                            margin: EdgeInsets.only(left: 15),
+                            decoration: BoxDecoration(
+                              border: Border.all(width: 1, color: blue),
+                              borderRadius: BorderRadius.all(Radius.circular(50)),
+                            ),
+                            child: Icon(
+                              Icons.qr_code_2_outlined,
+                              color: blue,
+                              size: 24,
+                            ),
                           ),
                         )
                       ],
