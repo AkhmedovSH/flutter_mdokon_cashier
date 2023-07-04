@@ -113,6 +113,7 @@ class _OnCreditState extends State<OnCredit> {
                 if (value == null || value.isEmpty) {
                   return 'Обязательное поле';
                 }
+                return null;
               },
               onChanged: (value) {},
               enabled: false,
@@ -190,6 +191,7 @@ class _OnCreditState extends State<OnCredit> {
                                                 if (value == null || value.isEmpty) {
                                                   return 'Обязательное поле';
                                                 }
+                                                return null;
                                               },
                                               onChanged: (value) {
                                                 if (i == 0) {
@@ -278,6 +280,7 @@ class _OnCreditState extends State<OnCredit> {
                 if (value == null || value.isEmpty) {
                   return 'Обязательное поле';
                 }
+                return null;
               },
               onChanged: (value) {
                 setState(() {
@@ -335,6 +338,7 @@ class _OnCreditState extends State<OnCredit> {
                             if (value == null || value.isEmpty) {
                               return 'Обязательное поле';
                             }
+                            return null;
                           },
                           onChanged: (value) {
                             calculateChange();
@@ -377,6 +381,7 @@ class _OnCreditState extends State<OnCredit> {
                             if (value == null || value.isEmpty) {
                               return 'Обязательное поле';
                             }
+                            return null;
                           },
                           onChanged: (value) {
                             calculateChange();

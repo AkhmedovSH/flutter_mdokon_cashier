@@ -11,16 +11,16 @@ import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/controller.dart';
 
-import '../../components/drawer_app_bar.dart';
+import '../../components/agent_drawer_app_bar.dart';
 
-class Cheques extends StatefulWidget {
-  const Cheques({Key? key}) : super(key: key);
+class AgentHistory extends StatefulWidget {
+  const AgentHistory({Key? key}) : super(key: key);
 
   @override
-  _ChequesState createState() => _ChequesState();
+  _AgentHistoryState createState() => _AgentHistoryState();
 }
 
-class _ChequesState extends State<Cheques> {
+class _AgentHistoryState extends State<AgentHistory> {
   final Controller controller = Get.put(Controller());
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime selectedDate = DateTime.now();
@@ -57,7 +57,7 @@ class _ChequesState extends State<Cheques> {
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });
-    final response = await get('/services/desktop/api/cashier-cheque-pageList', payload: sendData);
+    final response = await get('/services/desktop/api/cheque-online-list/${cashbox['posId']}');
     controller.hideLoading();
     if (response != null) {
       setState(() {
@@ -139,7 +139,7 @@ class _ChequesState extends State<Cheques> {
         ),
         drawer: SizedBox(
           width: MediaQuery.of(context).size.width * 0.70,
-          child: const DrawerAppBar(),
+          child: const AgentDrawerAppBar(),
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -155,7 +155,7 @@ class _ChequesState extends State<Cheques> {
                     TableRow(children: [
                       Container(
                         padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Статус', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text('Имя агента', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                       Container(
                         padding: EdgeInsets.only(bottom: 10),
@@ -172,28 +172,25 @@ class _ChequesState extends State<Cheques> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.offAllNamed('/agent', arguments: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               child: Text(
-                                '${i + 1}. ${getStatus(cheques[i]['returned'])}',
-                                style: TextStyle(
-                                  color: getColor(cheques[i]['returned']),
-                                ),
+                                '${i + 1}. ${cheques[i]['agentName']}',
                               ),
                             ),
                           ),
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.offAllNamed('/agent', arguments: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               child: Text(
                                 //cheques[i]['totalPrice']
-                                '${formatMoney(cheques[i]['totalPrice'])}',
+                                '${formatMoney(jsonDecode(cheques[i]['cheque'])['totalPrice'])}',
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -201,12 +198,12 @@ class _ChequesState extends State<Cheques> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              Get.offAllNamed('/agent', arguments: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               child: Text(
-                                '${formatUnixTime(cheques[i]['chequeDate'])}',
+                                '${formatDate(cheques[i]['createdDate'])}',
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -240,7 +237,7 @@ class _ChequesState extends State<Cheques> {
     }
     print(picked!.toUtc().millisecondsSinceEpoch);
     if (date == 2) {
-      if (picked != null && picked != filter['startDate'].text) {
+      if (picked != filter['startDate'].text) {
         setState(() {
           filter['endDate'].text = DateFormat('dd.MM.yyyy').format(picked);
           sendData['endDate'] = picked.toUtc().millisecondsSinceEpoch;

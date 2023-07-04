@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kassa/helpers/globals.dart';
-import '../components/drawer_app_bar.dart';
+
+import '../../components/drawer_app_bar.dart';
 
 class SalesOnCredit extends StatefulWidget {
   const SalesOnCredit({Key? key}) : super(key: key);
@@ -57,8 +58,7 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
                             borderSide: BorderSide(
                               color: borderColor,
                             ),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(24))),
+                            borderRadius: const BorderRadius.all(Radius.circular(24))),
                         hintText: 'Поиск по номеру, фио клиента ...',
                         hintStyle: TextStyle(color: lightGrey, fontSize: 14)),
                   ),
@@ -66,8 +66,7 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
                 for (var i = 0; i < 7; i++)
                   Container(
                     width: MediaQuery.of(context).size.width,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                     margin: const EdgeInsets.only(bottom: 15),
                     decoration: BoxDecoration(
                       border: Border.all(color: borderColor),
@@ -94,9 +93,7 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
                                   children: [
                                     const Text(
                                       'Durdona Abdulazizova',
-                                      style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
+                                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(
                                       height: 5,
@@ -116,31 +113,22 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
                                     margin: EdgeInsets.only(right: 30),
                                     child: Text(
                                       'Баланс(UZS):',
-                                      style: TextStyle(
-                                          color: lightGrey,
-                                          fontWeight: FontWeight.w500),
+                                      style: TextStyle(color: lightGrey, fontWeight: FontWeight.w500),
                                     ),
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Container(
                                         margin: EdgeInsets.only(right: 5),
                                         child: Text(
                                           '- 0 000 000.00',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: red),
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: red),
                                         ),
                                       ),
                                       Text(
                                         'СУМ',
-                                        style: TextStyle(
-                                            color: red,
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 12),
+                                        style: TextStyle(color: red, fontWeight: FontWeight.w400, fontSize: 12),
                                       )
                                     ],
                                   ),
@@ -156,31 +144,22 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
                                     margin: EdgeInsets.only(right: 30),
                                     child: Text(
                                       'Баланс(USD):',
-                                      style: TextStyle(
-                                          color: lightGrey,
-                                          fontWeight: FontWeight.w500),
+                                      style: TextStyle(color: lightGrey, fontWeight: FontWeight.w500),
                                     ),
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Container(
                                         margin: EdgeInsets.only(right: 5),
                                         child: Text(
                                           '- 0 000 000.00',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: red),
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: red),
                                         ),
                                       ),
                                       Text(
                                         'USD',
-                                        style: TextStyle(
-                                            color: red,
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 12),
+                                        style: TextStyle(color: red, fontWeight: FontWeight.w400, fontSize: 12),
                                       )
                                     ],
                                   ),

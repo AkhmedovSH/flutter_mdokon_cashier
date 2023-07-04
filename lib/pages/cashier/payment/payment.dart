@@ -78,6 +78,7 @@ class _PaymentState extends State<Payment> {
                         if (value == null || value.isEmpty) {
                           return 'Обязательное поле';
                         }
+                        return null;
                       },
                       onChanged: (value) {
                         calculateChange();
@@ -119,6 +120,7 @@ class _PaymentState extends State<Payment> {
                         if (value == null || value.isEmpty) {
                           return 'Обязательное поле';
                         }
+                        return null;
                       },
                       onChanged: (value) {
                         calculateChange();

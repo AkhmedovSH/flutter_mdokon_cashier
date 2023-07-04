@@ -41,16 +41,35 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     final account = await get('/services/uaa/api/account');
     prefs.setString('account', jsonEncode(account));
 
-    var checker = false;
+    var checker = '';
     for (var i = 0; i < account['authorities'].length; i++) {
       if (account['authorities'][i] == "ROLE_CASHIER") {
-        checker = true;
+        checker = 'ROLE_CASHIER';
+      }
+      if (account['authorities'][i] == "ROLE_AGENT") {
+        checker = 'ROLE_AGENT';
       }
     }
-    if (checker == true) {
-      prefs.setString('user_roles', account['authorities'].toString());
+    if (checker == 'ROLE_CASHIER') {
+      prefs.setString('user_roles', jsonEncode(account['authorities']));
       getAccessPos();
+    } else if (checker == 'ROLE_AGENT') {
+      prefs.setString('user_roles', jsonEncode(account['authorities']));
+      getAgentPosId();
+    } else {
+      showErrorToast('Нет доступа');
     }
+    controller.hideLoading();
+    setState(() {});
+  }
+
+  getAgentPosId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final response = await get('/services/desktop/api/get-access-pos', loading: false);
+    prefs.setString('cashbox', jsonEncode(response));
+    Get.offAllNamed('/agent');
+    controller.hideLoading();
+    setState(() {});
   }
 
   getAccessPos() async {
@@ -123,6 +142,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                             if (value == null || value.isEmpty) {
                               return 'Обязательное поле';
                             }
+                            return null;
                           },
                           initialValue: payload['username'],
                           onChanged: (value) {
@@ -160,6 +180,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                             if (value == null || value.isEmpty) {
                               return 'Обязательное поле';
                             }
+                            return null;
                           },
                           initialValue: payload['password'],
                           onChanged: (value) {

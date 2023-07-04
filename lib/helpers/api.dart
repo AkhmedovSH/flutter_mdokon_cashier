@@ -68,6 +68,28 @@ Future post(String url, dynamic payload) async {
   }
 }
 
+Future put(String url, dynamic payload) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  // print(payload);
+  controller.showLoading;
+  try {
+    if (prefs.getString('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
+      dio.options.headers["Accept"] = "application/json";
+    }
+    //print(hostUrl + url);
+    final response = await dio.put(hostUrl + url,
+        data: payload,
+        options: Options(headers: {
+          "authorization": "Bearer ${prefs.getString('access_token')}",
+        }));
+    controller.hideLoading;
+    return response.data;
+  } on DioError catch (e) {
+    statuscheker(e);
+  }
+}
+
 Future guestPost(String url, dynamic payload, {loading = true}) async {
   try {
     SharedPreferences prefs = await SharedPreferences.getInstance();

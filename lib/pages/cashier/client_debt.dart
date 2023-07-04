@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/globals.dart';
-import '../components/drawer_app_bar.dart';
+
+import '../../components/drawer_app_bar.dart';
 
 class ClientDebt extends StatefulWidget {
   const ClientDebt({Key? key}) : super(key: key);
@@ -62,10 +63,7 @@ class _ClientDebtState extends State<ClientDebt> {
                     ),
                     const Text(
                       'Durdona Abdulazizova',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
+                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                     Container(
                       margin: const EdgeInsets.only(top: 10, bottom: 30),
@@ -76,8 +74,7 @@ class _ClientDebtState extends State<ClientDebt> {
                     ),
                     Text(
                       'Баланс:',
-                      style: TextStyle(
-                          color: lightGrey, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: lightGrey, fontWeight: FontWeight.w600),
                     ),
                     Container(
                       margin: EdgeInsets.only(bottom: 10, top: 10),
@@ -89,18 +86,12 @@ class _ClientDebtState extends State<ClientDebt> {
                             margin: EdgeInsets.only(right: 5),
                             child: Text(
                               '- 0 000 000.00',
-                              style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                  color: red),
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: red),
                             ),
                           ),
                           Text(
                             'СУМ',
-                            style: TextStyle(
-                                color: red,
-                                fontWeight: FontWeight.w400,
-                                fontSize: 16),
+                            style: TextStyle(color: red, fontWeight: FontWeight.w400, fontSize: 16),
                           )
                         ],
                       ),
@@ -113,18 +104,12 @@ class _ClientDebtState extends State<ClientDebt> {
                           margin: EdgeInsets.only(right: 5),
                           child: Text(
                             '- 0 000 000.00',
-                            style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
-                                color: red),
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: red),
                           ),
                         ),
                         Text(
                           'USD',
-                          style: TextStyle(
-                              color: red,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 16),
+                          style: TextStyle(color: red, fontWeight: FontWeight.w400, fontSize: 16),
                         )
                       ],
                     ),
@@ -134,9 +119,7 @@ class _ClientDebtState extends State<ClientDebt> {
               Container(
                 margin: EdgeInsets.only(top: 15),
                 padding: EdgeInsets.symmetric(vertical: 5),
-                decoration: BoxDecoration(
-                    color: orange,
-                    borderRadius: const BorderRadius.all(Radius.circular(20))),
+                decoration: BoxDecoration(color: orange, borderRadius: const BorderRadius.all(Radius.circular(20))),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -146,8 +129,7 @@ class _ClientDebtState extends State<ClientDebt> {
                     ),
                     Text(
                       'История взаиморасчетов',
-                      style:
-                          TextStyle(color: white, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: white, fontWeight: FontWeight.bold),
                     )
                   ],
                 ),

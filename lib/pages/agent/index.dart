@@ -8,13 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
-import '../components/drawer_app_bar.dart';
+import '../../components/agent_drawer_app_bar.dart';
 
-class Index extends StatefulWidget {
-  const Index({Key? key}) : super(key: key);
+class AgentIndex extends StatefulWidget {
+  const AgentIndex({Key? key}) : super(key: key);
 
   @override
-  _IndexState createState() => _IndexState();
+  _AgentIndexState createState() => _AgentIndexState();
 }
 
 // class ProductWithParamsUnit {
@@ -25,12 +25,10 @@ class Index extends StatefulWidget {
 //   const ProductWithParamsUnit(this.packaging, this.piece, this.quantity, this.totalPrice);
 // }
 
-class _IndexState extends State<Index> {
+class _AgentIndexState extends State<AgentIndex> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   dynamic shortcutController = TextEditingController();
   dynamic shortcutFocusNode = FocusNode();
-  dynamic textController = TextEditingController();
-  dynamic textController2 = TextEditingController();
   dynamic packagingController = TextEditingController();
   dynamic pieceController = TextEditingController();
 
@@ -79,14 +77,6 @@ class _IndexState extends State<Index> {
 
   dynamic cashbox = {};
   dynamic clients = [];
-  dynamic expenseOut = {
-    "cashboxId": '',
-    "posId": '',
-    "shiftId": '',
-    'note': '',
-    'amountOut': '',
-    'paymentPurposeId': '1',
-  };
   dynamic debtIn = {
     "amountIn": 0,
     "cash": "",
@@ -99,42 +89,26 @@ class _IndexState extends State<Index> {
     "shiftId": '',
     "transactionsList": []
   };
-  dynamic itemList = [
-    {
-      'label': 'Наличные',
-      'icon': Icons.payments,
-      'fieldName': 'cash',
-    },
-    {
-      'label': 'Терминал',
-      'icon': Icons.payment,
-      'fieldName': 'terminal',
-    },
-    {
-      'label': 'Примечание',
-      'fieldName': 'note',
-    },
-  ];
   dynamic shortCutList = ["+", "-", "*", "/", "%", "%-"];
+  bool isEdit = false;
 
-  getClients() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
-    //print(response);
-    for (var i = 0; i < response.length; i++) {
-      response[i]['selected'] = false;
+  sendToCashbox() async {
+    var sendData = {
+      'posId': cashbox['posId'],
+      'cheque': jsonEncode(data),
+    };
+    if (isEdit) {
+      sendData['id'] = data['id'];
     }
-    setState(() {
-      clients = response;
-      debtIn['cashboxId'] = cashbox['cashboxId'];
-      debtIn['posId'] = cashbox['posId'];
-      if (prefs.getString('shift') != null) {
-        debtIn['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
-      } else {
-        debtIn['shiftId'] = cashbox['id'];
-      }
-    });
+    var response;
+    if (isEdit) {
+      response = await put('/services/desktop/api/cheque-online', sendData);
+    } else {
+      response = await post('/services/desktop/api/cheque-online', sendData);
+    }
+    if (response != null && response['success']) {
+      deleteAllProducts();
+    }
   }
 
   redirectToCalculator(i) async {
@@ -609,6 +583,13 @@ class _IndexState extends State<Index> {
   void initState() {
     super.initState();
     getCashbox();
+    if (Get.arguments != null && Get.arguments['cheque'] != null) {
+      setState(() {
+        isEdit = true;
+        data = jsonDecode(Get.arguments['cheque']);
+        data['id'] = Get.arguments['id'];
+      });
+    }
   }
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
@@ -679,71 +660,21 @@ class _IndexState extends State<Index> {
           icon: Icon(Icons.menu, color: white),
         ),
         actions: [
-          SizedBox(
-            child: IconButton(
-              onPressed: () {
-                showModalDebtor();
-              },
-              icon: Icon(Icons.payment),
-            ),
-          ),
-          SizedBox(
-            child: IconButton(
-              onPressed: () {
-                showModalExpense();
-              },
-              icon: Icon(Icons.paid_outlined),
-            ),
-          ),
-          SizedBox(
-            child: IconButton(
-              onPressed: () {
-                if (data["itemsList"].length > 0) {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) => AlertDialog(
-                      title: const Text('Вы уверены?'),
-                      // content: const Text('AlertDialog description'),
-                      actions: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.33,
-                              child: ElevatedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: red,
-                                  padding: EdgeInsets.symmetric(vertical: 10),
-                                ),
-                                child: const Text('Отмена'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.33,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  deleteAllProducts(type: true);
-                                },
-                                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
-                                child: const Text('Продолжить'),
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                  );
-                }
-              },
-              icon: Icon(Icons.delete),
-            ),
-          ),
+          data["itemsList"].length > 0
+              ? SizedBox(
+                  child: IconButton(
+                    onPressed: () {
+                      showDeleteDialog();
+                    },
+                    icon: Icon(Icons.delete),
+                  ),
+                )
+              : SizedBox(),
         ],
       ),
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.70,
-        child: const DrawerAppBar(),
+        child: const AgentDrawerAppBar(),
       ),
       body: data["itemsList"].length == 0
           ? Column(
@@ -774,9 +705,17 @@ class _IndexState extends State<Index> {
                               handleShortCut(shortCutList[i]);
                             },
                             child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 3),
-                              color: blue,
-                              padding: EdgeInsets.all(5),
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              alignment: Alignment.center,
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: blue,
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(10),
+                                  bottomRight: Radius.circular(10),
+                                ),
+                              ),
                               child: Text(
                                 shortCutList[i],
                                 textAlign: TextAlign.center,
@@ -944,15 +883,13 @@ class _IndexState extends State<Index> {
             margin: EdgeInsets.only(left: 32),
             child: ElevatedButton(
               onPressed: () {
-                if (data["itemsList"].length > 0) {
-                  Get.toNamed('/payment', arguments: data);
-                }
+                sendToCashbox();
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                 backgroundColor: data["itemsList"].length > 0 ? blue : lightGrey,
               ),
-              child: Text('Продать'),
+              child: Text(isEdit ? 'Изменить на кассе' : 'Отправить на кассу'),
             ),
           ),
           FloatingActionButton(
@@ -967,418 +904,42 @@ class _IndexState extends State<Index> {
     );
   }
 
-  bool loading = false;
-
-  createDebtorOut(setState) async {
-    setState(() {
-      loading = true;
-    });
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    setState(() {
-      expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
-      expenseOut['posId'] = cashbox['posId'].toString();
-      expenseOut['currencyId'] = cashbox['defaultCurrency'].toString();
-      if (prefs.getString('shift') != null) {
-        expenseOut['shiftId'] = jsonDecode(prefs.getString('shift')!)['id'];
-      } else {
-        expenseOut['shiftId'] = cashbox['id'].toString();
-      }
-    });
-    final response = await post('/services/desktop/api/expense-out', expenseOut);
-    if (response['success']) {
-      Navigator.pop(context);
-    }
-    setState(() {
-      loading = false;
-    });
-  }
-
-  showModalExpense() async {
-    await showDialog(
-        context: context,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          List filter = [
-            {"id": 1, "name": "Продажа"},
-            {"id": 3, "name": "Возврат товаров"},
-            {"id": 4, "name": "Долг"},
-            {"id": 5, "name": "Погашение задолженности "},
-            {"id": 6, "name": "Для собственных нужд"},
-            {"id": 7, "name": "Для нужд торговой точки"},
-            {"id": 8, "name": "Прочие"},
-          ];
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              title: Text(''),
-              titlePadding: EdgeInsets.all(0),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              actionsPadding: EdgeInsets.all(0),
-              buttonPadding: EdgeInsets.all(0),
-              scrollable: true,
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(bottom: 15),
-                      width: double.infinity,
-                      decoration: ShapeDecoration(
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(width: 1.0, style: BorderStyle.solid, color: Color(0xFFECECEC)),
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: ButtonTheme(
-                          alignedDropdown: true,
-                          child: DropdownButton(
-                            value: expenseOut['paymentPurposeId'],
-                            isExpanded: true,
-                            hint: Text('${filter[0]['name']}'),
-                            icon: const Icon(Icons.expand_more_outlined),
-                            iconSize: 24,
-                            iconEnabledColor: blue,
-                            elevation: 16,
-                            style: const TextStyle(color: Color(0xFF313131)),
-                            underline: Container(
-                              height: 2,
-                              color: blue,
-                            ),
-                            onChanged: (newValue) {
-                              setState(() {
-                                expenseOut['paymentPurposeId'] = newValue;
-                              });
-                            },
-                            items: filter.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: '${item['id']}',
-                                child: Text(item['name']),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Наличные (Сум)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      width: MediaQuery.of(context).size.width,
-                      child: TextFormField(
-                        onChanged: (value) {
-                          setState(() {
-                            expenseOut['amountOut'] = value;
-                          });
-                        },
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          suffixIcon: Icon(Icons.payment),
-                          filled: true,
-                          fillColor: borderColor,
-                          focusColor: blue,
-                          hintText: '0 сум',
-                          hintStyle: TextStyle(color: a2),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'ПРИМЕЧАНИЕ',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      width: MediaQuery.of(context).size.width,
-                      child: TextFormField(
-                        onChanged: (value) {
-                          setState(() {
-                            expenseOut['note'] = value;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: blue,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: borderColor,
-                          focusColor: blue,
-                          hintText: 'Примечание',
-                          hintStyle: TextStyle(color: a2),
-                        ),
-                      ),
-                    ),
-                  ],
+  showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Вы уверены?'),
+        // content: const Text('AlertDialog description'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.33,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: red,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('Отмена'),
                 ),
               ),
-              actions: [
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                  child: ElevatedButton(
-                    onPressed: !loading
-                        ? () {
-                            if (expenseOut['amountOut'].length != 0) {
-                              createDebtorOut(setState);
-                            }
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: expenseOut['amountOut'].length == 0 ? lightGrey : blue,
-                      disabledBackgroundColor: grey,
-                    ),
-                    child: Text('Принять'),
-                  ),
-                )
-              ],
-            );
-          });
-        });
-  }
-
-  createClientDebt(setState) async {
-    setState(() {
-      loading = true;
-    });
-    dynamic debtInCopy = Map.from(debtIn);
-
-    final list = [];
-    if (debtInCopy['cash'].length > 0) {
-      list.add({"amountIn": double.parse(debtInCopy['cash']), "amountOut": "", "paymentTypeId": 1, "paymentPurposeId": 5});
-      debtInCopy['amountIn'] += double.parse(debtInCopy['cash']);
-    }
-    if (debtInCopy['terminal'].length > 0) {
-      list.add({"amountIn": double.parse(debtInCopy['terminal']), "amountOut": "", "paymentTypeId": 2, "paymentPurposeId": 5});
-      debtInCopy['amountIn'] += double.parse(debtInCopy['terminal']);
-    }
-    debtInCopy['transactionsList'] = list;
-
-    await post('/services/desktop/api/client-debt-in', debtInCopy);
-    setState(() {
-      debtIn = {
-        "cash": "",
-        "terminal": "",
-        "amountIn": 0,
-        "amountOut": 0,
-        "cashboxId": '',
-        "clientId": 0,
-        "currencyId": 0,
-        "posId": '',
-        "shiftId": '',
-        "transactionsList": []
-      };
-    });
-    Navigator.pop(context);
-    setState(() {
-      loading = false;
-    });
-  }
-
-  showModalDebtor() async {
-    await getClients();
-    var closed = await showDialog(
-        context: context,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              title: Text(''),
-              titlePadding: EdgeInsets.all(0),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              actionsPadding: EdgeInsets.all(0),
-              buttonPadding: EdgeInsets.all(0),
-              scrollable: true,
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  children: [
-                    // Container(
-                    //   margin: const EdgeInsets.only(bottom: 10),
-                    //   width: MediaQuery.of(context).size.width,
-                    //   child: TextFormField(
-                    //     onChanged: (value) {},
-                    //     decoration: InputDecoration(
-                    //       contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                    //       enabledBorder: UnderlineInputBorder(
-                    //         borderSide: BorderSide(
-                    //           color: blue,
-                    //           width: 2,
-                    //         ),
-                    //       ),
-                    //       focusedBorder: UnderlineInputBorder(
-                    //         borderSide: BorderSide(
-                    //           color: blue,
-                    //           width: 2,
-                    //         ),
-                    //       ),
-                    //       filled: true,
-                    //       fillColor: borderColor,
-                    //       focusColor: blue,
-                    //       hintText: 'Поиск по контактам',
-                    //       hintStyle: TextStyle(color: a2),
-                    //     ),
-                    //   ),
-                    // ),
-                    // SizedBox(height: 5),
-                    SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.2,
-                        child: SingleChildScrollView(
-                          child: Table(
-                              border: TableBorder(horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid)),
-                              children: [
-                                TableRow(children: const [
-                                  Text(
-                                    'Контакт',
-                                  ),
-                                  Text(
-                                    'Валюта',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  Text(
-                                    'Сумма долга',
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ]),
-                                for (var i = 0; i < clients.length; i++)
-                                  TableRow(children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        selectDebtorClient(setState, i);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
-                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                        child: Text(
-                                          '${clients[i]['clientName']}',
-                                          style: TextStyle(
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        selectDebtorClient(setState, i);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(vertical: 8),
-                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                        child: Text(
-                                          clients[i]['currencyName'],
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        selectDebtorClient(setState, i);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
-                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                        child: Text(
-                                          '${formatMoney(clients[i]['balance'])}',
-                                          textAlign: TextAlign.end,
-                                        ),
-                                      ),
-                                    ),
-                                  ]),
-                              ]),
-                        )),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: blue, width: 4)),
-                      ),
-                      child: Text(
-                        'Приход',
-                        style: TextStyle(fontSize: 20, color: blue),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    for (var i = 0; i < itemList.length; i++)
-                      buildTextField(
-                        itemList[i]['label'],
-                        itemList[i]['icon'],
-                        itemList[i],
-                        i,
-                        setState,
-                      ),
-                  ],
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.33,
+                child: ElevatedButton(
+                  onPressed: () {
+                    deleteAllProducts(type: true);
+                  },
+                  style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 10)),
+                  child: const Text('Продолжить'),
                 ),
-              ),
-              actions: [
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                  child: ElevatedButton(
-                    onPressed: !loading
-                        ? () {
-                            if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
-                              createClientDebt(setState);
-                            }
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: debtIn['clientId'] != 0 && (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) ? blue : lightGrey,
-                      disabledBackgroundColor: grey,
-                    ),
-                    child: Text('Принять'),
-                  ),
-                )
-              ],
-            );
-          });
-        });
-    if (closed == null) {
-      setState(() {
-        debtIn = {
-          "cash": "",
-          "terminal": "",
-          "amountIn": 0,
-          "amountOut": 0,
-          "cashboxId": '',
-          "clientId": 0,
-          "currencyId": 0,
-          "posId": '',
-          "shiftId": '',
-          "transactionsList": []
-        };
-      });
-    }
+              )
+            ],
+          )
+        ],
+      ),
+    );
   }
 
   showProductsWithParams() async {

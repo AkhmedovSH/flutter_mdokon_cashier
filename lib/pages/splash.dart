@@ -26,17 +26,16 @@ class _SplashState extends State<Splash> {
     String localVersion = packageInfo.version;
 
     var playMarketVersion = await guestGet('/services/admin/api/get-version?name=com.mdokon.cabinet');
-    if (playMarketVersion == null) {
+    if (playMarketVersion == null || playMarketVersion['version'] == null) {
       startTimer();
+      return;
     }
-    print(playMarketVersion);
-    if (playMarketVersion['version'] != localVersion) {
+    if (int.parse(playMarketVersion['version'].split('.')[2]) > int.parse(localVersion.split('.')[2])) {
       if (playMarketVersion['required']) {
         setState(() {
           isRequired = true;
         });
       }
-
       await showUpdateDialog();
       if (isRequired) {
         SystemNavigator.pop();

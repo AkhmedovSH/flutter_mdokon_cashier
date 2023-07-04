@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:simple_moment/simple_moment.dart';
+import 'package:get/get.dart';
 
 Color blue = const Color(0xFF5b73e8);
 Color grey = const Color(0xFF838488);
@@ -32,7 +33,25 @@ generateTransactionId(posId, cashboxId, shiftId) {
   return posId.toString() + cashboxId.toString() + shiftId.toString() + getUnixTime().toString() + (random.nextInt(999999).floor().toString());
 }
 
+formatDate(date) {
+  Moment rawDate = Moment.parse(date);
+  return rawDate.format("dd-MM-yyyy HH:mm");
+}
+
+formatDateMonth(date, {format = "dd.MM.yyyy"}) {
+  Moment rawDate = Moment.parse(date);
+  return rawDate.format(format);
+}
+
+formatDateHour(date) {
+  Moment rawDate = Moment.parse(date);
+  return rawDate.format("HH:mm");
+}
+
 formatUnixTime(unixTime) {
+  if (unixTime == null) {
+    return '';
+  }
   var dt = DateTime.fromMillisecondsSinceEpoch(unixTime);
   return DateFormat('dd.MM.yyyy HH:mm').format(dt);
 }

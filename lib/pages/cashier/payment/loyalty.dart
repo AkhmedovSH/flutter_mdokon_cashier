@@ -158,6 +158,7 @@ class _LoyaltyState extends State<Loyalty> {
               if (value == null || value.isEmpty) {
                 return 'Обязательное поле';
               }
+              return null;
             },
             onChanged: (value) {
               if (index == 0) {
