@@ -72,26 +72,6 @@ class _AgentHistoryState extends State<AgentHistory> {
     }
   }
 
-  getStatus(status) {
-    if (status == 0) {
-      return 'Успешно';
-    } else if (status == 1) {
-      return 'Товар возвращен частично';
-    } else if (status == 2) {
-      return 'Товар возвращен';
-    }
-  }
-
-  getColor(status) {
-    if (status == 0) {
-      return null;
-    } else if (status == 1) {
-      return yellow;
-    } else if (status == 2) {
-      return red;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -149,23 +129,46 @@ class _AgentHistoryState extends State<AgentHistory> {
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Table(
                   border: TableBorder(
-                      horizontalInside: BorderSide(
-                          width: 1, color: Color(0xFFDADADA), style: BorderStyle.solid)), // Allows to add a border decoration around your table
+                    horizontalInside: BorderSide(
+                      width: 1,
+                      color: Color(0xFFDADADA),
+                      style: BorderStyle.solid,
+                    ),
+                  ), // Allows to add a border decoration around your table
                   children: [
-                    TableRow(children: [
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Имя агента', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Итоговая сумма', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Дата', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ]),
+                    TableRow(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Имя агента',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Итоговая сумма',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Дата',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     for (var i = 0; i < cheques.length; i++)
                       TableRow(
                         children: [

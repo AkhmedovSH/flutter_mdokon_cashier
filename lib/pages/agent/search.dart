@@ -37,6 +37,8 @@ class _AgentSearchState extends State<AgentSearch> {
   searchProducts(value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
+      controller.showLoading();
+      setState(() {});
       var arr = [];
       final response =
           await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
@@ -50,10 +52,12 @@ class _AgentSearchState extends State<AgentSearch> {
             arr.add(response[i]);
           }
         }
-        setState(() {
-          products = arr;
-        });
+        products = arr;
+      } else if (response != null && response.length == 0) {
+        products = [];
       }
+      controller.hideLoading();
+      setState(() {});
     });
   }
 
@@ -90,6 +94,10 @@ class _AgentSearchState extends State<AgentSearch> {
     if (response != null && response.length > 0) {
       setState(() {
         products = response;
+      });
+    } else if (response != null && response.length == 0) {
+      setState(() {
+        products = [];
       });
     }
   }
