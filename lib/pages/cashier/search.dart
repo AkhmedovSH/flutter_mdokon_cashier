@@ -37,32 +37,37 @@ class _SearchState extends State<Search> {
   searchProducts(value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      controller.showLoading();
-      setState(() {});
-      var arr = [];
-      final response =
-          await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
-      if (response != null && response.length > 0) {
-        for (var i = 0; i < response.length; i++) {
-          if (response[i]['balance'] == null || response[i]['balance'] == 0) {
-            if (cashbox['saleMinus']) {
+      if (value.length >= 1) {
+        controller.showLoading();
+        setState(() {});
+        var arr = [];
+        final response =
+            await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
+        if (response != null && response.length > 0) {
+          for (var i = 0; i < response.length; i++) {
+            if (response[i]['balance'] == null || response[i]['balance'] == 0) {
+              if (cashbox['saleMinus'] != null && cashbox['saleMinus']) {
+                arr.add(response[i]);
+              }
+            } else {
               arr.add(response[i]);
             }
-          } else {
-            arr.add(response[i]);
           }
+          products = arr;
+        } else if (response != null && response.length == 0) {
+          products = [];
         }
-        products = arr;
-      } else if (response != null && response.length == 0) {
-        products = [];
+        controller.hideLoading();
+        setState(() {});
+      } else {
+        setState(() {
+          products = [];
+        });
       }
-      controller.hideLoading();
-      setState(() {});
     });
   }
 
   getQrCode() async {
-    print(1111);
     await Permission.camera.request();
     var status = await Permission.camera.status;
 

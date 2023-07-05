@@ -37,32 +37,36 @@ class _AgentSearchState extends State<AgentSearch> {
   searchProducts(value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      controller.showLoading();
-      setState(() {});
-      var arr = [];
-      final response =
-          await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
-      if (response != null && response.length > 0) {
-        for (var i = 0; i < response.length; i++) {
-          if (response[i]['balance'] == null || response[i]['balance'] == 0) {
-            if (cashbox['saleMinus']) {
+      if (value.length >= 1) {
+        controller.showLoading();
+        setState(() {});
+        var arr = [];
+        final response =
+            await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
+        if (response != null && response.length > 0) {
+          for (var i = 0; i < response.length; i++) {
+            if (response[i]['balance'] == null || response[i]['balance'] == 0) {
+              if (cashbox['saleMinus'] != null && cashbox['saleMinus']) {
+                arr.add(response[i]);
+              }
+            } else {
               arr.add(response[i]);
             }
-          } else {
-            arr.add(response[i]);
           }
+          products = arr;
+        } else if (response != null && response.length == 0) {
+          products = [];
         }
-        products = arr;
-      } else if (response != null && response.length == 0) {
+        controller.hideLoading();
+        setState(() {});
+      } else {
         products = [];
       }
-      controller.hideLoading();
-      setState(() {});
     });
+    setState(() {});
   }
 
   getQrCode() async {
-    print(1111);
     await Permission.camera.request();
     var status = await Permission.camera.status;
 
@@ -79,25 +83,6 @@ class _AgentSearchState extends State<AgentSearch> {
       setState(() {
         searchProducts(result);
         textEditingController.text = result;
-      });
-    }
-  }
-
-  getProducts() async {
-    controller.showLoading();
-    setState(() {});
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cashbox = jsonDecode(prefs.getString('cashbox')!);
-    print(cashbox);
-    final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
-    controller.hideLoading();
-    if (response != null && response.length > 0) {
-      setState(() {
-        products = response;
-      });
-    } else if (response != null && response.length == 0) {
-      setState(() {
-        products = [];
       });
     }
   }

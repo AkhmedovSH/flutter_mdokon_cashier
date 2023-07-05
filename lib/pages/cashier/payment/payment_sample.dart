@@ -183,6 +183,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     setState(() {
       cashbox = jsonDecode(prefs.getString('cashbox')!);
     });
+    var account = jsonDecode(prefs.getString('account')!);
     final username = prefs.getString('username');
     if (prefs.getString('shift') != null) {
       final shift = jsonDecode(prefs.getString('shift')!);
@@ -194,11 +195,13 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['shiftId'] = cashbox['id'];
       });
     }
+    print(account);
     final transactionId = generateTransactionId(cashbox['posId'].toString(), cashbox['cashboxId'].toString(),
         prefs.getString('shift') != null ? jsonDecode(prefs.getString('shift')!)['id'] : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
+      data['cashierName'] = account['firstName'];
       data['cashboxId'] = cashbox['cashboxId'];
       data['cashboxVersion'] = version;
       data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
