@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:kassa/helpers/api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
 
+import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
 class Loyalty extends StatefulWidget {
@@ -18,6 +18,8 @@ class Loyalty extends StatefulWidget {
 }
 
 class _LoyaltyState extends State<Loyalty> {
+  GetStorage storage = GetStorage();
+
   Timer? _debounce;
   dynamic data = {};
   dynamic clientInfoController = TextEditingController();
@@ -64,8 +66,7 @@ class _LoyaltyState extends State<Loyalty> {
   }
 
   getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    cashbox = jsonDecode(prefs.getString('cashbox')!);
+    cashbox = jsonDecode(storage.read('cashbox')!);
   }
 
   @override

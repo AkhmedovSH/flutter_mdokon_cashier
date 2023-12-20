@@ -3,15 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:kassa/components/loading_layout.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/controller.dart';
-
-import '../../../components/drawer_app_bar.dart';
+import 'package:unicons/unicons.dart';
 
 class Cheques extends StatefulWidget {
   const Cheques({Key? key}) : super(key: key);
@@ -23,6 +22,8 @@ class Cheques extends StatefulWidget {
 class _ChequesState extends State<Cheques> {
   final Controller controller = Get.put(Controller());
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  GetStorage storage = GetStorage();
+
   DateTime selectedDate = DateTime.now();
   dynamic cheques = [];
   dynamic filter = {
@@ -48,12 +49,11 @@ class _ChequesState extends State<Cheques> {
     'size': 2000,
   };
 
-  getCheques() async {
+  Future<void> getCheques() async {
     controller.showLoading();
     print(controller.loading);
     setState(() {});
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    dynamic cashbox = jsonDecode(prefs.getString('cashbox')!);
+    dynamic cashbox = jsonDecode(storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });
@@ -74,21 +74,21 @@ class _ChequesState extends State<Cheques> {
 
   getStatus(status) {
     if (status == 0) {
-      return 'Успешно';
+      return 'Успешно'.tr;
     } else if (status == 1) {
-      return 'Товар возвращен частично';
+      return 'Товар возвращен частично'.tr;
     } else if (status == 2) {
-      return 'Товар возвращен';
+      return 'Товар возвращен'.tr;
     }
   }
 
   getColor(status) {
     if (status == 0) {
-      return null;
+      return success;
     } else if (status == 1) {
-      return yellow;
+      return warning;
     } else if (status == 2) {
-      return red;
+      return danger;
     }
   }
 
@@ -122,101 +122,115 @@ class _ChequesState extends State<Cheques> {
           centerTitle: true,
           backgroundColor: blue,
           elevation: 0,
-          // centerTitle: true,
-          leading: IconButton(
-            onPressed: () {
-              _scaffoldKey.currentState!.openDrawer();
-            },
-            icon: Icon(Icons.menu, color: white),
-          ),
           actions: [
             IconButton(
-                onPressed: () {
-                  showFilterDialog();
-                },
-                icon: Icon(Icons.filter_alt))
+              onPressed: () {
+                showFilterDialog();
+              },
+              icon: Icon(UniconsLine.filter),
+            )
           ],
         ),
-        drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.70,
-          child: const DrawerAppBar(),
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: 15),
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Table(
-                  border: TableBorder(
+        body: RefreshIndicator(
+          onRefresh: getCheques,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: 15),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Table(
+                    border: TableBorder(
                       horizontalInside: BorderSide(
-                          width: 1, color: Color(0xFFDADADA), style: BorderStyle.solid)), // Allows to add a border decoration around your table
-                  children: [
-                    TableRow(children: [
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Статус', style: TextStyle(fontWeight: FontWeight.bold)),
+                        width: 0.7,
+                        color: tableBorderColor,
+                        style: BorderStyle.solid,
                       ),
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Итоговая сумма', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text('Дата', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ]),
-                    for (var i = 0; i < cheques.length; i++)
-                      TableRow(
-                        children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                '${i + 1}. ${getStatus(cheques[i]['returned'])}',
-                                style: TextStyle(
-                                  color: getColor(cheques[i]['returned']),
+                    ), // Allows to add a border decoration around your table
+                    children: [
+                      TableRow(children: [
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Статус',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Итоговая сумма',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Дата',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ]),
+                      for (var i = 0; i < cheques.length; i++)
+                        TableRow(
+                          children: [
+                            GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text(
+                                  '${i + 1}. ${getStatus(cheques[i]['returned'])}',
+                                  style: TextStyle(
+                                    color: getColor(cheques[i]['returned']),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                //cheques[i]['totalPrice']
-                                '${formatMoney(cheques[i]['totalPrice'])}',
-                                textAlign: TextAlign.center,
+                            GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text(
+                                  //cheques[i]['totalPrice']
+                                  '${formatMoney(cheques[i]['totalPrice'], decimalDigits: 0)} ${'sum'.tr}',
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
-                          ),
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                '${formatUnixTime(cheques[i]['chequeDate'])}',
-                                textAlign: TextAlign.center,
+                            GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text(
+                                  '${formatUnixTime(cheques[i]['chequeDate'])}',
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              )
-            ],
+                          ],
+                        ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

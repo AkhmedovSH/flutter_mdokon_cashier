@@ -446,7 +446,7 @@ class _OnCreditState extends State<OnCredit> {
                   children: [
                     Table(
                         border: TableBorder(
-                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                          horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                         ),
                         children: [
                           TableRow(children: const [

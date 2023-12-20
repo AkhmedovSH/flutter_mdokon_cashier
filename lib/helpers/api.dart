@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:kassa/helpers/globals.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
 
 import './controller.dart';
@@ -17,15 +18,14 @@ BaseOptions options = BaseOptions(
 var dio = Dio(options);
 
 final Controller controller = Get.put(Controller());
+GetStorage storage = GetStorage();
 
 Future get(String url, {payload, loading = true, setState}) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
   if (loading) {
     controller.showLoading;
   }
-
-  if (prefs.getString('access_token') != null) {
-    dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
+  if (storage.read('access_token') != null) {
+    dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
     dio.options.headers["Accept"] = "application/json";
   }
 
@@ -34,7 +34,7 @@ Future get(String url, {payload, loading = true, setState}) async {
       hostUrl + url,
       queryParameters: payload,
       options: Options(headers: {
-        "authorization": "Bearer ${prefs.getString('access_token')}",
+        "authorization": "Bearer ${storage.read('access_token')}",
       }),
     );
     if (loading) {
@@ -47,19 +47,18 @@ Future get(String url, {payload, loading = true, setState}) async {
 }
 
 Future post(String url, dynamic payload) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
   // print(payload);
   controller.showLoading;
   try {
-    if (prefs.getString('access_token') != null) {
-      dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
+    if (storage.read('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
     //print(hostUrl + url);
     final response = await dio.post(hostUrl + url,
         data: payload,
         options: Options(headers: {
-          "authorization": "Bearer ${prefs.getString('access_token')}",
+          "authorization": "Bearer ${storage.read('access_token')}",
         }));
     controller.hideLoading;
     return response.data;
@@ -69,19 +68,18 @@ Future post(String url, dynamic payload) async {
 }
 
 Future put(String url, dynamic payload) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
   // print(payload);
   controller.showLoading;
   try {
-    if (prefs.getString('access_token') != null) {
-      dio.options.headers["authorization"] = "Bearer ${prefs.getString('access_token')}";
+    if (storage.read('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
     //print(hostUrl + url);
     final response = await dio.put(hostUrl + url,
         data: payload,
         options: Options(headers: {
-          "authorization": "Bearer ${prefs.getString('access_token')}",
+          "authorization": "Bearer ${storage.read('access_token')}",
         }));
     controller.hideLoading;
     return response.data;
@@ -92,8 +90,7 @@ Future put(String url, dynamic payload) async {
 
 Future guestPost(String url, dynamic payload, {loading = true}) async {
   try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('access_token') != null) {
+    if (storage.read('access_token') != null) {
       dio.options.headers["authorization"] = "";
       dio.options.headers["Accept"] = "application/json";
     }
@@ -113,8 +110,7 @@ Future guestPost(String url, dynamic payload, {loading = true}) async {
 
 Future guestGet(String url, {payload}) async {
   try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('access_token') != null) {
+    if (storage.read('access_token') != null) {
       dio.options.headers["authorization"] = "";
       dio.options.headers["Accept"] = "application/json";
     }
@@ -137,7 +133,7 @@ statuscheker(e) async {
   }
   if (e.response?.statusCode == 403) {}
   if (e.response?.statusCode == 404) {
-    showErrorToast('Не найдено');
+    showErrorToast('Перезагрузка сервера');
   }
   if (e.response?.statusCode == 415) {
     showErrorToast('Ошибка');
@@ -150,8 +146,7 @@ statuscheker(e) async {
 Future lPost(String url, dynamic payload) async {
   controller.showLoading;
   try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('access_token') != null) {
+    if (storage.read('access_token') != null) {
       dio.options.headers["authorization"] = "";
       dio.options.headers["Accept"] = "application/json";
     }
@@ -167,13 +162,14 @@ Future lPost(String url, dynamic payload) async {
   }
 }
 
-showErrorToast(message) {
+showErrorToast(message, {duration = 1}) {
   return Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.TOP,
-      timeInSecForIosWeb: 1,
-      backgroundColor: red,
-      textColor: white,
-      fontSize: 16.0);
+    msg: message,
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.TOP,
+    timeInSecForIosWeb: duration,
+    backgroundColor: red,
+    textColor: white,
+    fontSize: 16.0,
+  );
 }

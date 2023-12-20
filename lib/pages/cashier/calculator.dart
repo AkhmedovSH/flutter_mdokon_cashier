@@ -146,12 +146,12 @@ class _CalculatorState extends State<Calculator> {
       child: Container(
           // margin: const EdgeInsets.symmetric(vertical: 1),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFDADADA)), bottom: BorderSide(color: Color(0xFFDADADA)))),
+          decoration: BoxDecoration(border: Border(top: BorderSide(color: tableBorderColor), bottom: BorderSide(color: tableBorderColor))),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
                 border: item['title'] == '.' || item['title'] == '0' || int.parse(item['title']) % 3 != 0
-                    ? const Border(right: BorderSide(color: Color(0xFFDADADA)))
+                    ? Border(right: BorderSide(color: tableBorderColor))
                     : const Border()),
             child: Text(
               item['title'],
@@ -194,7 +194,7 @@ class _CalculatorState extends State<Calculator> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 22),
-        color: item['active'] ? blue : const Color(0xFFDADADA),
+        color: item['active'] ? blue : tableBorderColor,
         child: Text(
           item['title'],
           style: TextStyle(color: white, fontWeight: FontWeight.bold, fontSize: 16),
@@ -343,8 +343,12 @@ class _CalculatorState extends State<Calculator> {
                               child: Container(
                                   margin: const EdgeInsets.symmetric(vertical: 1),
                                   padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: const BoxDecoration(
-                                      border: Border(top: BorderSide(color: Color(0xFFDADADA)), bottom: BorderSide(color: Color(0xFFDADADA)))),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(color: tableBorderColor),
+                                      bottom: BorderSide(color: tableBorderColor),
+                                    ),
+                                  ),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     child: const Icon(

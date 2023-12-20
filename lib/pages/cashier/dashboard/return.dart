@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:kassa/helpers/api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:flutter/services.dart';
 
 import 'package:kassa/helpers/globals.dart';
-
-import '../../../components/drawer_app_bar.dart';
+import 'package:unicons/unicons.dart';
 
 class Return extends StatefulWidget {
   const Return({Key? key}) : super(key: key);
@@ -19,6 +19,8 @@ class Return extends StatefulWidget {
 
 class _ReturnState extends State<Return> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  GetStorage storage = GetStorage();
+
   double height = 30;
   dynamic itemsList = [];
   dynamic returnedList = [];
@@ -144,9 +146,6 @@ class _ReturnState extends State<Return> {
       });
       return;
     }
-    print(item);
-    print(i);
-    print(value);
     if (value[value.length - 1] != '.') {
       if (double.parse(value) > double.parse(itemCopy['quantity'].toString())) {
         setState(() {
@@ -187,8 +186,6 @@ class _ReturnState extends State<Return> {
 
     for (var i = 0; i < sendData['itemsList'].length; i++) {
       if (sendData['itemsList'][i]['validateText'] != "" && sendData['itemsList'][i]['validateText'] != null) {
-        print(sendData['itemsList'][i]['validateText']);
-        print(sendData['itemsList'][i]);
         error = true;
         break;
       }
@@ -241,16 +238,15 @@ class _ReturnState extends State<Return> {
   }
 
   setInitState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
-      if (prefs.getString('shift') != null) {
-        shift = jsonDecode(prefs.getString('shift')!);
+      cashbox = jsonDecode(storage.read('cashbox')!);
+      if (storage.read('shift') != null) {
+        shift = jsonDecode(storage.read('shift')!);
       }
     });
     // dynamic shift = {};
-    if (prefs.getString('shift') != null) {
-      shift = jsonDecode(prefs.getString('shift')!);
+    if (storage.read('shift') != null) {
+      shift = jsonDecode(storage.read('shift')!);
     }
     final shiftId = cashbox['id'] ?? shift['id'];
     setState(() {
@@ -277,16 +273,15 @@ class _ReturnState extends State<Return> {
   }
 
   getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
-      if (prefs.getString('shift') != null) {
-        shift = jsonDecode(prefs.getString('shift')!);
+      cashbox = jsonDecode(storage.read('cashbox')!);
+      if (storage.read('shift') != null) {
+        shift = jsonDecode(storage.read('shift')!);
       }
     });
     // dynamic shift = {};
-    if (prefs.getString('shift') != null) {
-      shift = jsonDecode(prefs.getString('shift')!);
+    if (storage.read('shift') != null) {
+      shift = jsonDecode(storage.read('shift')!);
     }
     final shiftId = cashbox['id'] ?? shift['id'];
     setState(() {
@@ -295,7 +290,7 @@ class _ReturnState extends State<Return> {
       sendData['shiftId'] = shiftId;
     });
     if (Get.arguments != null) {
-      final id = Get.arguments;
+      final id = Get.arguments['id'];
       data['id'] = id.toString();
       searchCheque(id);
     }
@@ -324,16 +319,6 @@ class _ReturnState extends State<Return> {
         centerTitle: true,
         backgroundColor: blue,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
-          icon: Icon(Icons.menu, color: white),
-        ),
-      ),
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.70,
-        child: const DrawerAppBar(),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -341,11 +326,10 @@ class _ReturnState extends State<Return> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Stack(
                 children: [
                   Container(
-                    width: MediaQuery.of(context).size.width * 0.7,
+                    width: MediaQuery.of(context).size.width,
                     margin: EdgeInsets.only(bottom: 10),
                     height: 40,
                     child: TextField(
@@ -362,18 +346,8 @@ class _ReturnState extends State<Return> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.only(top: 5, left: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0xFFced4da),
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0xFFced4da),
-                            width: 2,
-                          ),
-                        ),
+                        enabledBorder: inputBorder,
+                        focusedBorder: inputFocusBorder,
                         hintText: 'Поиск',
                         filled: true,
                         fillColor: white,
@@ -381,17 +355,20 @@ class _ReturnState extends State<Return> {
                       ),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(bottom: 10),
-                    width: MediaQuery.of(context).size.width * 0.23,
-                    height: 40,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (search.length > 0) {
-                          searchCheque(null);
-                        }
-                      },
-                      child: Text('Поиск'),
+                  Positioned(
+                    right: 1,
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 10),
+                      width: 60,
+                      height: 40,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (search.length > 0) {
+                            searchCheque(null);
+                          } else {}
+                        },
+                        child: Icon(UniconsLine.search),
+                      ),
                     ),
                   )
                 ],
@@ -399,11 +376,6 @@ class _ReturnState extends State<Return> {
               Container(
                 height: MediaQuery.of(context).size.height * 0.3,
                 width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFFced4da), width: 5),
-                  ),
-                ),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,7 +384,11 @@ class _ReturnState extends State<Return> {
                         margin: EdgeInsets.only(bottom: 5),
                         child: Text(
                           'Кассовый чек №: ${data['chequeNumber']}',
-                          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: b8),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: grey,
+                          ),
                         ),
                       ),
                       Container(
@@ -421,22 +397,28 @@ class _ReturnState extends State<Return> {
                           children: [
                             Text(
                               'Дата: ',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: b8),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: grey,
+                              ),
                             ),
                             Container(
                               margin: EdgeInsets.only(right: 20),
                               child: Text(
                                 '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
-                                style: TextStyle(color: b8),
+                                style: TextStyle(color: black),
                               ),
                             ),
                             Text(
                               'Кассир: ',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: b8),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: grey,
+                              ),
                             ),
                             Text(
                               '${data['cashierName']}',
-                              style: TextStyle(color: b8),
+                              style: TextStyle(color: black),
                             )
                           ],
                         ),
@@ -449,7 +431,11 @@ class _ReturnState extends State<Return> {
                           3: FlexColumnWidth(3),
                         },
                         border: TableBorder(
-                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                          horizontalInside: BorderSide(
+                            width: 1,
+                            color: tableBorderColor,
+                            style: BorderStyle.solid,
+                          ),
                         ),
                         children: [
                           TableRow(
@@ -457,15 +443,15 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Наименование товара',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'Наименование',
+                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Цена со скидкой',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'Цена',
+                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -473,7 +459,7 @@ class _ReturnState extends State<Return> {
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
                                   'Кол-во',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -481,7 +467,7 @@ class _ReturnState extends State<Return> {
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
                                   'Сумма оплаты',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
@@ -490,7 +476,6 @@ class _ReturnState extends State<Return> {
                           for (var i = 0; i < itemsList.length; i++)
                             TableRow(
                               children: [
-                                // HERE IT IS...
                                 TableRowInkWell(
                                   onDoubleTap: () {
                                     addToReturnList(itemsList[i], i);
@@ -512,12 +497,16 @@ class _ReturnState extends State<Return> {
                                     child: (itemsList[i]['discount']) > 0
                                         ? Text(
                                             '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                            style: TextStyle(color: Color(0xFF495057)),
+                                            style: TextStyle(
+                                              color: Color(0xFF495057),
+                                            ),
                                             textAlign: TextAlign.center,
                                           )
                                         : Text(
                                             '${formatMoney(itemsList[i]['salePrice'])}',
-                                            style: TextStyle(color: Color(0xFF495057)),
+                                            style: TextStyle(
+                                              color: Color(0xFF495057),
+                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                   ),
@@ -530,7 +519,9 @@ class _ReturnState extends State<Return> {
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
                                       '${formatMoney(itemsList[i]['quantity'])} ${itemsList[i]['returnedQuantity'] > 0 ? formatMoney(itemsList[i]['returnedQuantity']) : ''}',
-                                      style: TextStyle(color: Color(0xFF495057)),
+                                      style: TextStyle(
+                                        color: Color(0xFF495057),
+                                      ),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -543,7 +534,9 @@ class _ReturnState extends State<Return> {
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
                                       '${formatMoney(itemsList[i]['totalPrice'])}',
-                                      style: TextStyle(color: Color(0xFF495057)),
+                                      style: TextStyle(
+                                        color: Color(0xFF495057),
+                                      ),
                                       textAlign: TextAlign.end,
                                     ),
                                   ),
@@ -561,7 +554,8 @@ class _ReturnState extends State<Return> {
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFced4da), width: 5),
+                    bottom: BorderSide(color: tableBorderColor, width: 1),
+                    top: BorderSide(color: tableBorderColor, width: 1),
                   ),
                 ),
                 child: SingleChildScrollView(
@@ -577,7 +571,7 @@ class _ReturnState extends State<Return> {
                           3: FlexColumnWidth(3),
                         },
                         border: TableBorder(
-                          horizontalInside: BorderSide(width: 1, color: Color(0xFFDADADa), style: BorderStyle.solid),
+                          horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                         ),
                         children: [
                           TableRow(
@@ -585,14 +579,14 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Наименование товара',
+                                  'Наименование',
                                   style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Цена со скидкой',
+                                  'Цена',
                                   style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
@@ -625,25 +619,26 @@ class _ReturnState extends State<Return> {
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   child: SizedBox(
                                     height: 30,
-                                    width: 50,
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
                                         Container(
                                           margin: EdgeInsets.only(left: 5),
                                           child: IconButton(
-                                              onPressed: () {
-                                                addToItemsList(sendData['itemsList'][i], i);
-                                              },
-                                              padding: EdgeInsets.zero,
-                                              constraints: BoxConstraints(),
-                                              icon: Icon(
-                                                Icons.arrow_back_ios,
-                                                size: 14,
-                                              )),
+                                            onPressed: () {
+                                              addToItemsList(sendData['itemsList'][i], i);
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: BoxConstraints(),
+                                            tooltip: 'Вернуть в список',
+                                            icon: Icon(
+                                              UniconsLine.angle_left_b,
+                                              size: 20,
+                                            ),
+                                          ),
                                         ),
                                         SizedBox(
-                                          width: MediaQuery.of(context).size.width * 0.25,
+                                          width: 100,
                                           child: Text(
                                             '${sendData['itemsList'][i]['productName']} ',
                                             style: TextStyle(color: Color(0xFF495057)),
@@ -699,15 +694,9 @@ class _ReturnState extends State<Return> {
                                             keyboardType: TextInputType.number,
                                             scrollPadding: EdgeInsets.only(bottom: 100),
                                             decoration: InputDecoration(
-                                              enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
-                                              ),
-                                              errorBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(color: Color.fromRGBO(0, 0, 0, 0.2)),
-                                              ),
+                                              enabledBorder: inputBorder,
+                                              focusedBorder: inputFocusBorder,
+                                              errorBorder: inputErrorBorder,
                                               contentPadding: EdgeInsets.only(
                                                 top: 5,
                                               ),
@@ -723,8 +712,8 @@ class _ReturnState extends State<Return> {
                                                 overflow: TextOverflow.fade,
                                                 maxLines: 1,
                                                 style: TextStyle(
-                                                  fontSize: 8,
-                                                  color: Color(0xFFf46a6a),
+                                                  fontSize: 10,
+                                                  color: danger,
                                                 ),
                                               )
                                             : Container()
@@ -766,44 +755,60 @@ class _ReturnState extends State<Return> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            SizedBox(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'К ВЫПЛАТЕ:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${formatMoney(sendData['totalAmount'])}',
-                        style: TextStyle(color: blue, fontSize: 32, fontWeight: FontWeight.bold),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'К ВЫПЛАТЕ:',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${formatMoney(sendData['totalAmount'])}',
+                      style: TextStyle(
+                        color: black,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        'сум',
-                        style: TextStyle(color: blue, fontWeight: FontWeight.w500, fontSize: 18),
-                      )
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    Text(
+                      'сум',
+                      style: TextStyle(
+                        color: black,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                      ),
+                    )
+                  ],
+                ),
+              ],
             ),
+            SizedBox(height: 5),
             SizedBox(
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
-                onPressed: () {
-                  returnCheque();
-                },
+                onPressed: sendData['itemsList'].length > 0
+                    ? () {
+                        returnCheque();
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: sendData['itemsList'].length > 0 ? Color(0xFFf46a6a) : Color(0xFFf46a6a).withOpacity(0.65),
-                    elevation: 0,
-                    padding: EdgeInsets.symmetric(vertical: 12)),
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: danger,
+                  disabledBackgroundColor: danger.withOpacity(0.65),
+                  disabledForegroundColor: white,
+                ),
                 child: Text(
                   'Осуществить возврат',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             )

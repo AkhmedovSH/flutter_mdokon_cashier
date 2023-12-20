@@ -1,14 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
-
-import '../../components/agent_drawer_app_bar.dart';
 
 class AgentIndex extends StatefulWidget {
   const AgentIndex({Key? key}) : super(key: key);
@@ -90,6 +87,7 @@ class _AgentIndexState extends State<AgentIndex> {
     "transactionsList": []
   };
   dynamic shortCutList = ["+", "-", "*", "/", "%", "%-"];
+
   bool isEdit = false;
 
   sendToCashbox() async {
@@ -100,7 +98,7 @@ class _AgentIndexState extends State<AgentIndex> {
     if (isEdit) {
       sendData['id'] = data['id'];
     }
-    var response;
+    Map? response;
     if (isEdit) {
       response = await put('/services/desktop/api/cheque-online', sendData);
     } else {
@@ -560,9 +558,8 @@ class _AgentIndexState extends State<AgentIndex> {
   }
 
   getCashbox() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      cashbox = jsonDecode(storage.read('cashbox')!);
     });
   }
 
@@ -579,6 +576,8 @@ class _AgentIndexState extends State<AgentIndex> {
     });
   }
 
+  
+
   @override
   void initState() {
     super.initState();
@@ -591,6 +590,8 @@ class _AgentIndexState extends State<AgentIndex> {
       });
     }
   }
+
+ 
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
     return Column(
@@ -671,10 +672,6 @@ class _AgentIndexState extends State<AgentIndex> {
                 )
               : SizedBox(),
         ],
-      ),
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.70,
-        child: const AgentDrawerAppBar(),
       ),
       body: data["itemsList"].length == 0
           ? Column(

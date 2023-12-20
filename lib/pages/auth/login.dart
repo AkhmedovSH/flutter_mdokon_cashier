@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:unicons/unicons.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
@@ -19,7 +22,14 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  dynamic payload = {'username': '', 'password': ''};
+  final storage = GetStorage();
+
+  Map payload = {'username': '', 'password': '', 'rememberMe': false};
+  Map data = {
+    'username': TextEditingController(),
+    'password': TextEditingController(),
+  };
+
   bool showPassword = false;
   bool loading = false;
   final Controller controller = Get.put(Controller());
@@ -33,13 +43,13 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       setState(() {});
       return;
     }
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('access_token', data['access_token']);
-    prefs.setString('username', payload['username'].toString().toLowerCase());
-    prefs.setString('password', payload['password']);
+    storage.write('access_token', data['access_token']);
+    storage.write('username', payload['username'].toString().toLowerCase());
+    storage.write('password', payload['password']);
+    storage.write('user', jsonEncode(payload));
 
     final account = await get('/services/uaa/api/account');
-    prefs.setString('account', jsonEncode(account));
+    storage.write('account', jsonEncode(account));
 
     var checker = '';
     for (var i = 0; i < account['authorities'].length; i++) {
@@ -51,11 +61,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       }
     }
     if (checker == 'ROLE_CASHIER') {
-      prefs.setString('user_roles', jsonEncode(account['authorities']));
-      getAccessPos();
+      storage.write('user_roles', jsonEncode(account['authorities']));
+      await getAccessPos();
     } else if (checker == 'ROLE_AGENT') {
-      prefs.setString('user_roles', jsonEncode(account['authorities']));
-      getAgentPosId();
+      storage.write('user_roles', jsonEncode(account['authorities']));
+      await getAgentPosId();
     } else {
       showErrorToast('Нет доступа');
     }
@@ -64,26 +74,43 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   }
 
   getAgentPosId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     final response = await get('/services/desktop/api/get-access-pos', loading: false);
-    prefs.setString('cashbox', jsonEncode(response));
+    storage.write('cashbox', jsonEncode(response));
     Get.offAllNamed('/agent');
     controller.hideLoading();
     setState(() {});
   }
 
   getAccessPos() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     final response = await get('/services/desktop/api/get-access-pos', loading: false);
     if (response['openShift']) {
-      prefs.remove('shift');
-      prefs.setString('cashbox', jsonEncode(response['shift']));
+      storage.remove('shift');
+      storage.write('cashbox', jsonEncode(response['shift']));
       Get.offAllNamed('/');
     } else {
       Get.offAllNamed('/cashboxes', arguments: response['posList']);
     }
     controller.hideLoading();
     setState(() {});
+  }
+
+  getData() async {
+    if (storage.read('user') != null) {
+      var user = jsonDecode(storage.read('user')!);
+      print(user);
+      if (user['rememberMe'] != null && user['rememberMe']) {
+        payload = user;
+        data['username'].text = user['username'];
+        data['password'].text = user['password'];
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
   }
 
   @override
@@ -100,147 +127,166 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           backgroundColor: Colors.transparent,
         ),
         extendBodyBehindAppBar: true,
-        body: SafeArea(
+        body: Padding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
           child: SingleChildScrollView(
-            child: Container(
-              margin: EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Image.asset(
-                      'images/login_bg.jpg',
-                      height: 250,
-                      width: 250,
-                    ),
+            child: Column(
+              children: [
+                Center(
+                  child: SvgPicture.asset(
+                    'images/icons/login_bg.svg',
+                    height: 270,
+                    width: MediaQuery.of(context).size.width,
                   ),
-                  Text(
-                    'Авторизация',
-                    style: TextStyle(
-                      color: black,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 2.0,
-                    ),
+                ),
+                Text(
+                  'Авторизация',
+                  style: TextStyle(
+                    color: black,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2.0,
                   ),
-                  Container(
-                    height: 4,
-                    width: 90,
-                    color: blue,
-                    margin: const EdgeInsets.only(bottom: 15),
-                  ),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Обязательное поле';
-                              }
-                              return null;
-                            },
-                            initialValue: payload['username'],
-                            onChanged: (value) {
-                              setState(() {
-                                payload['username'] = value;
-                              });
-                            },
-                            textInputAction: TextInputAction.next,
-                            scrollPadding: EdgeInsets.only(bottom: 200),
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                size: 30,
-                                color: blue,
-                              ),
-                              border: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: lightGrey,
-                                  width: 1,
+                ),
+                SizedBox(height: 2),
+                Container(
+                  height: 4,
+                  width: 130,
+                  color: mainColor,
+                  margin: const EdgeInsets.only(bottom: 15),
+                ),
+                Container(
+                  margin: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: TextFormField(
+                                controller: data['username'],
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Обязательное поле';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    payload['username'] = value;
+                                  });
+                                },
+                                textInputAction: TextInputAction.next,
+                                scrollPadding: EdgeInsets.only(bottom: 200),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  prefixIcon: Icon(
+                                    payload['username'].length > 0 ? UniconsLine.user_check : UniconsLine.user,
+                                    size: 24,
+                                    color: mainColor,
+                                  ),
+                                  border: inputBorder,
+                                  enabledBorder: inputBorder,
+                                  focusedBorder: inputFocusBorder,
+                                  errorBorder: inputErrorBorder,
+                                  focusedErrorBorder: inputErrorBorder,
+                                  hintText: 'Логин',
+                                  hintStyle: TextStyle(color: mainColor),
                                 ),
                               ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: blue),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: TextFormField(
+                                controller: data['password'],
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Обязательное поле';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    payload['password'] = value;
+                                  });
+                                },
+                                // onFieldSubmitted: (val) {
+                                //   if (_formKey.currentState!.validate()) {
+                                //     login();
+                                //   }
+                                // },
+                                obscureText: !showPassword,
+                                scrollPadding: EdgeInsets.only(bottom: 200),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
+                                  prefixIcon: Icon(
+                                    showPassword ? UniconsLine.unlock_alt : UniconsLine.lock_alt,
+                                    size: 30,
+                                    color: mainColor,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        showPassword = !showPassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      showPassword ? UniconsLine.eye : UniconsLine.eye_slash,
+                                      size: 24,
+                                      color: grey,
+                                    ),
+                                  ),
+                                  border: inputBorder,
+                                  enabledBorder: inputBorder,
+                                  focusedBorder: inputFocusBorder,
+                                  errorBorder: inputErrorBorder,
+                                  focusedErrorBorder: inputErrorBorder,
+                                  focusColor: mainColor,
+                                  hintText: 'Пароль',
+                                  hintStyle: TextStyle(color: mainColor),
+                                ),
                               ),
-                              focusColor: blue,
-                              labelText: 'Логин',
-                              labelStyle: TextStyle(color: blue),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Transform.scale(
+                            scale: 0.9,
+                            child: Checkbox(
+                              value: payload['rememberMe'],
+                              activeColor: mainColor,
+                              onChanged: (value) {
+                                setState(() {
+                                  payload['rememberMe'] = !payload['rememberMe'];
+                                });
+                              },
                             ),
                           ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Обязательное поле';
-                              }
-                              return null;
-                            },
-                            initialValue: payload['password'],
-                            onChanged: (value) {
+                          GestureDetector(
+                            onTap: () {
                               setState(() {
-                                payload['password'] = value;
+                                payload['rememberMe'] = !payload['rememberMe'];
                               });
                             },
-                            // onFieldSubmitted: (val) {
-                            //   if (_formKey.currentState!.validate()) {
-                            //     login();
-                            //   }
-                            // },
-                            obscureText: !showPassword,
-                            scrollPadding: EdgeInsets.only(bottom: 200),
-                            decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                                prefixIcon: Icon(
-                                  Icons.lock_outline,
-                                  size: 30,
-                                  color: blue,
-                                ),
-                                suffixIcon: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      showPassword = !showPassword;
-                                    });
-                                  },
-                                  icon: showPassword
-                                      ? Icon(
-                                          Icons.visibility_outlined,
-                                          size: 20,
-                                          color: grey,
-                                        )
-                                      : Icon(
-                                          Icons.visibility_off_outlined,
-                                          size: 20,
-                                          color: grey,
-                                        ),
-                                ),
-                                border: UnderlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: lightGrey,
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: blue),
-                                ),
-                                focusColor: blue,
-                                labelText: 'Пароль',
-                                labelStyle: TextStyle(color: blue)),
+                            child: Text(
+                              'Запомнить меня',
+                              style: TextStyle(fontSize: 18),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 100,
+                      ),
+                    ],
                   ),
-                  SizedBox(
-                    height: 200,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -250,7 +296,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               minimumSize: Size(150, 50),
-              backgroundColor: blue,
+              backgroundColor: mainColor,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),

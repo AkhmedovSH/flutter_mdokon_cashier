@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:kassa/helpers/globals.dart';
+import 'package:unicons/unicons.dart';
 
 class Payment extends StatefulWidget {
   const Payment({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
@@ -68,9 +69,18 @@ class _PaymentState extends State<Payment> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(margin: EdgeInsets.only(bottom: 5), child: Text('Наличные', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                   Container(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Наличные',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: grey,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 15),
                     child: TextFormField(
                       controller: cashController,
                       keyboardType: TextInputType.number,
@@ -85,34 +95,28 @@ class _PaymentState extends State<Payment> {
                       },
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        suffixIcon: Icon(
-                          Icons.payments_outlined,
-                          size: 30,
-                          color: Color(0xFF7b8190),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: blue,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: blue,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: borderColor,
-                        focusColor: blue,
+                        suffixIcon: Icon(UniconsLine.money_bill),
+                        enabledBorder: inputBorder,
+                        focusedBorder: inputFocusBorder,
+                        errorBorder: inputErrorBorder,
+                        focusedErrorBorder: inputErrorBorder,
                         hintText: '0.00 сум',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
                   ),
-                  Container(margin: EdgeInsets.only(bottom: 5), child: Text('Терминал', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
                   Container(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Терминал',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: grey,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 15),
                     child: TextFormField(
                       controller: terminalController,
                       keyboardType: TextInputType.number,
@@ -127,25 +131,11 @@ class _PaymentState extends State<Payment> {
                       },
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        suffixIcon: Icon(
-                          Icons.payment_outlined,
-                          size: 30,
-                          color: Color(0xFF7b8190),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: blue,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: blue,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: borderColor,
+                        suffixIcon: Icon(UniconsLine.credit_card),
+                        enabledBorder: inputBorder,
+                        focusedBorder: inputFocusBorder,
+                        errorBorder: inputErrorBorder,
+                        focusedErrorBorder: inputErrorBorder,
                         hintText: '0.00 сум',
                         hintStyle: TextStyle(color: a2),
                       ),
@@ -153,10 +143,22 @@ class _PaymentState extends State<Payment> {
                   ),
                 ],
               )),
-          Text('СДАЧА:', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            'СДАЧА:',
+            style: TextStyle(
+              color: darkGrey,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            
+            ),
+          ),
           Container(
-              margin: EdgeInsets.only(bottom: 10, top: 5),
-              child: Text('${formatMoney(data['change'])} Сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+            margin: EdgeInsets.only(bottom: 10, top: 5),
+            child: Text(
+              '${formatMoney(data['change'])} Сум',
+              style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );

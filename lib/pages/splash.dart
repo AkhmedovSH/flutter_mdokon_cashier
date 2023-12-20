@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
 import 'package:get/get.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../helpers/api.dart';
-import '../helpers/globals.dart' as globals;
+import '../helpers/globals.dart';
 
 class Splash extends StatefulWidget {
   const Splash({Key? key}) : super(key: key);
@@ -17,14 +19,16 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
-  dynamic vesrion = '';
-  dynamic url = 'https://play.google.com/store/apps/details?id=com.mdokon.cabinet';
+  String vesrion = '';
+  Uri url = Uri.parse('https://play.google.com/store/apps/details?id=com.mdokon.cabinet');
   bool isRequired = false;
 
   checkVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String localVersion = packageInfo.version;
 
+    vesrion = localVersion;
+    setState(() {});
     var playMarketVersion = await guestGet('/services/admin/api/get-version?name=com.mdokon.cabinet');
     if (playMarketVersion == null || playMarketVersion['version'] == null) {
       startTimer();
@@ -65,13 +69,44 @@ class _SplashState extends State<Splash> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: globals.white,
-      body: Center(
-        child: Image.asset(
-          'images/splash_logo.png',
-          height: 200,
-          width: 200,
-        ),
+      backgroundColor: white,
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Center(
+                child: Image.asset(
+                  'images/splash_logo.png',
+                  width: MediaQuery.of(context).size.width * 0.5,
+                ),
+              ),
+              SizedBox(height: 10),
+              Center(
+                child: SizedBox(
+                  child: SpinKitFadingCircle(
+                    color: black,
+                    size: 35.0,
+                    // controller: animationController,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Container(
+            alignment: Alignment.bottomCenter,
+            margin: EdgeInsets.only(bottom: 10),
+            child: Text(
+              vesrion,
+              style: TextStyle(
+                color: black,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -134,7 +169,7 @@ class _SplashState extends State<Splash> {
                                 ),
                           ElevatedButton(
                             onPressed: () {
-                              launch(url);
+                              launchUrl(url);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00865F),

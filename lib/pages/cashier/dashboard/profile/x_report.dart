@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
-import 'package:kassa/components/drawer_app_bar.dart';
+import 'package:intl/intl.dart';
+import 'package:unicons/unicons.dart';
+
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 
@@ -18,19 +20,20 @@ class XReport extends StatefulWidget {
 
 class _XReportState extends State<XReport> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  dynamic report = {};
-  dynamic reportList = [];
-  dynamic cashbox = {};
+  GetStorage storage = GetStorage();
+
+  Map report = {};
+  List reportList = [];
+  Map cashbox = {};
 
   getReport() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final prefsCashbox = jsonDecode(prefs.getString('cashbox')!);
+    final prefsCashbox = jsonDecode(storage.read('cashbox')!);
     int cashboxId = 0;
     if (prefsCashbox['id'] != null) {
       cashboxId = prefsCashbox['id'];
       cashbox = prefsCashbox;
     } else {
-      final shift = jsonDecode(prefs.getString('shift')!);
+      final shift = jsonDecode(storage.read('shift')!);
       cashboxId = shift['id'];
       cashbox = shift;
     }
@@ -109,17 +112,21 @@ class _XReportState extends State<XReport> {
           // centerTitle: true,
           leading: IconButton(
             onPressed: () {
-              _scaffoldKey.currentState!.openDrawer();
+              Get.back();
             },
             icon: Icon(
-              Icons.menu,
+              UniconsLine.arrow_left,
+              color: black,
+              size: 32,
+            ),
+          ),
+          title: Text(
+            'X отчет',
+            style: TextStyle(
               color: black,
             ),
           ),
-        ),
-        drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.70,
-          child: const DrawerAppBar(),
+          centerTitle: true,
         ),
         body: SafeArea(
           child: SingleChildScrollView(

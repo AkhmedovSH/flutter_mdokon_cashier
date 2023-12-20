@@ -5,13 +5,10 @@ import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:kassa/components/loading_layout.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/controller.dart';
-
-import '../../components/agent_drawer_app_bar.dart';
 
 class AgentHistory extends StatefulWidget {
   const AgentHistory({Key? key}) : super(key: key);
@@ -52,8 +49,8 @@ class _AgentHistoryState extends State<AgentHistory> {
     controller.showLoading();
     print(controller.loading);
     setState(() {});
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    dynamic cashbox = jsonDecode(prefs.getString('cashbox')!);
+
+    dynamic cashbox = jsonDecode(storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });
@@ -102,13 +99,6 @@ class _AgentHistoryState extends State<AgentHistory> {
           centerTitle: true,
           backgroundColor: blue,
           elevation: 0,
-          // centerTitle: true,
-          leading: IconButton(
-            onPressed: () {
-              _scaffoldKey.currentState!.openDrawer();
-            },
-            icon: Icon(Icons.menu, color: white),
-          ),
           actions: [
             IconButton(
                 onPressed: () {
@@ -116,10 +106,6 @@ class _AgentHistoryState extends State<AgentHistory> {
                 },
                 icon: Icon(Icons.filter_alt))
           ],
-        ),
-        drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.70,
-          child: const AgentDrawerAppBar(),
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -131,7 +117,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                   border: TableBorder(
                     horizontalInside: BorderSide(
                       width: 1,
-                      color: Color(0xFFDADADA),
+                      color: tableBorderColor,
                       style: BorderStyle.solid,
                     ),
                   ), // Allows to add a border decoration around your table

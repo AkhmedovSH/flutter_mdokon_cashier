@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kassa/helpers/globals.dart';
+import 'package:unicons/unicons.dart';
 
-import '../../components/drawer_app_bar.dart';
+import '/helpers/globals.dart';
 
 class ClientDebt extends StatefulWidget {
   const ClientDebt({Key? key}) : super(key: key);
@@ -19,24 +19,23 @@ class _ClientDebtState extends State<ClientDebt> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-            title: Text(
-              'Долг клиента',
-              style: TextStyle(color: black),
+          title: Text(
+            'Долг клиента',
+            style: TextStyle(color: black),
+          ),
+          backgroundColor: white,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: () {
+              Get.back();
+            },
+            icon: Icon(
+              UniconsLine.arrow_left,
+              color: black,
+              size: 32,
             ),
-            backgroundColor: white,
-            elevation: 0,
-            centerTitle: true,
-            leading: IconButton(
-                onPressed: () {
-                  _scaffoldKey.currentState!.openDrawer();
-                },
-                icon: Icon(
-                  Icons.menu,
-                  color: black,
-                ))),
-        drawer: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.85,
-          child: const DrawerAppBar(),
+          ),
         ),
         body: Container(
           margin: EdgeInsets.symmetric(horizontal: 48),

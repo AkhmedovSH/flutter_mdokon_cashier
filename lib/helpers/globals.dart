@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:simple_moment/simple_moment.dart';
 import 'package:get/get.dart';
 
+Color mainColor = const Color(0xFF5b73e8);
+
+Color bgColor = const Color(0xFFF3F8FE);
+
 Color blue = const Color(0xFF5b73e8);
 Color grey = const Color(0xFF838488);
 Color black = const Color(0xFF525355);
@@ -17,8 +21,37 @@ Color inputColor = const Color(0xFFF3F7FA);
 Color yellow = const Color(0xFFF3A919);
 Color borderColor = const Color(0xFFF8F8F8);
 
+Color tableBorderColor = const Color(0xFFDADADa);
+Color disabledColor = const Color(0xFFd3d3d3);
+
+Color success = const Color(0xFF34c38f);
+Color warning = const Color(0xFFf1b44c);
+Color danger = const Color(0xFFf46a6a);
+
 Color a2 = Color(0xFFA2A2A2);
 Color b8 = Color(0xFF7b8190);
+
+BoxShadow boxShadow = BoxShadow(
+  color: Colors.black.withOpacity(0.15),
+  spreadRadius: 0,
+  blurRadius: 3,
+  offset: const Offset(0, 0),
+);
+
+OutlineInputBorder inputBorder = OutlineInputBorder(
+  borderSide: BorderSide(color: Color(0xFFdddddd)),
+  borderRadius: BorderRadius.circular(16),
+);
+
+OutlineInputBorder inputFocusBorder = OutlineInputBorder(
+  borderSide: BorderSide(color: mainColor),
+  borderRadius: BorderRadius.circular(16),
+);
+
+OutlineInputBorder inputErrorBorder = OutlineInputBorder(
+  borderSide: BorderSide(color: danger),
+  borderRadius: BorderRadius.circular(16),
+);
 
 getUnixTime() {
   return DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -69,12 +102,12 @@ formatPhone(phone) {
   }
 }
 
-formatMoney(amount) {
+formatMoney(amount, {decimalDigits = 2}) {
   if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
-    return NumberFormat.currency(symbol: '', decimalDigits: 2, locale: 'UZ').format(amount);
+    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits, locale: 'UZ').format(amount);
   } else {
-    return NumberFormat.currency(symbol: '', decimalDigits: 2, locale: 'UZ').format(0);
+    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits, locale: 'UZ').format(0);
   }
 }
 

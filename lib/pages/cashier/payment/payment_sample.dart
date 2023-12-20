@@ -1,19 +1,23 @@
 import 'dart:convert';
 
+import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
-import 'package:kassa/pages/cashier/payment/payment.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
+
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:unicons/unicons.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
-import 'package:kassa/helpers/controller.dart';
+import '/helpers/api.dart';
+import '/helpers/cheque.dart';
+import '/helpers/globals.dart';
+import '/helpers/controller.dart';
 
-import 'package:kassa/components/loading_layout.dart';
+import '/components/loading_layout.dart';
 import './on_credit.dart';
 import './loyalty.dart';
+import './payment.dart';
 
 class PaymentSample extends StatefulWidget {
   const PaymentSample({Key? key}) : super(key: key);
@@ -24,6 +28,8 @@ class PaymentSample extends StatefulWidget {
 
 class _PaymentSampleState extends State<PaymentSample> {
   final Controller controller = Get.put(Controller());
+  GetStorage storage = GetStorage();
+
   int currentIndex = 0;
   bool loading = false;
   dynamic data = Get.arguments;
@@ -57,8 +63,13 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
+    controller.showLoading();
+    setState(() {});
     dynamic dataCopy = data;
     dataCopy['transactionsList'] = [];
+    for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+      dataCopy['itemsList'][i]['scrollKey'] = null;
+    }
 
     if (currentIndex == 2) {
       dataCopy['clientId'] = 0;
@@ -161,7 +172,22 @@ class _PaymentSampleState extends State<PaymentSample> {
       await lPost('/services/gocashapi/api/create-cheque', sendData);
     }
 
-    if (response['success']) {
+    var settings = jsonDecode(storage.read('settings'));
+    if (settings['printAfterSale']) {
+      var status = await BluetoothThermalPrinter.connectionStatus;
+      if (status == 'true') {
+        printCheque(dataCopy, dataCopy['itemsList']);
+      } else {
+        var result = await connectToPrinter();
+        if (result) {
+          printCheque(dataCopy, dataCopy['itemsList']);
+        } else {
+          showDangerToast('Не удалось подключиться к принтеру');
+        }
+      }
+    }
+
+    if (response != null && response['success']) {
       controller.hideLoading();
       setState(() {});
       Get.offAllNamed('/');
@@ -177,16 +203,14 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   getData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
     setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      cashbox = jsonDecode(storage.read('cashbox')!);
     });
-    var account = jsonDecode(prefs.getString('account')!);
-    final username = prefs.getString('username');
-    if (prefs.getString('shift') != null) {
-      final shift = jsonDecode(prefs.getString('shift')!);
+    final username = storage.read('username');
+    if (storage.read('shift') != null) {
+      final shift = jsonDecode(storage.read('shift')!);
       setState(() {
         data['shiftId'] = shift['id'];
       });
@@ -195,13 +219,11 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['shiftId'] = cashbox['id'];
       });
     }
-    print(account);
     final transactionId = generateTransactionId(cashbox['posId'].toString(), cashbox['cashboxId'].toString(),
-        prefs.getString('shift') != null ? jsonDecode(prefs.getString('shift')!)['id'] : cashbox['cashboxId'].toString());
+        storage.read('shift') != null ? jsonDecode(storage.read('shift')!)['id'] : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
-      data['cashierName'] = account['firstName'];
       data['cashboxId'] = cashbox['cashboxId'];
       data['cashboxVersion'] = version;
       data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -217,11 +239,11 @@ class _PaymentSampleState extends State<PaymentSample> {
 
   isDisabled() {
     if (currentIndex == 0) {
-      return data['change'] < 0 ? lightGrey : blue;
+      return data['change'] < 0 ? false : true;
     }
 
     if (currentIndex == 1) {
-      return data['clientId'] == 0 ? lightGrey : blue;
+      return data['clientId'] == 0 ? false : true;
     }
 
     if (currentIndex == 2) {
@@ -229,9 +251,9 @@ class _PaymentSampleState extends State<PaymentSample> {
           data['loyaltyClientAmount'] != null &&
           data['loyaltyBonus'] != null &&
           (data['totalPrice'] == data['paid'])) {
-        return blue;
+        return true;
       } else {
-        return lightGrey;
+        return false;
       }
     }
   }
@@ -257,80 +279,107 @@ class _PaymentSampleState extends State<PaymentSample> {
             style: TextStyle(color: black),
           ),
           leading: IconButton(
-              onPressed: () {
-                Get.back();
-              },
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: black,
-              )),
+            onPressed: () {
+              Get.back();
+            },
+            icon: Icon(
+              UniconsLine.arrow_left,
+              color: black,
+              size: 32,
+            ),
+          ),
           centerTitle: true,
           backgroundColor: white,
           elevation: 0,
         ),
         body: SingleChildScrollView(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DefaultTabController(
-              length: 3,
-              child: TabBar(
-                onTap: (index) {
-                  setState(() {
-                    currentIndex = index;
-                  });
-                  setInitState();
-                },
-                labelColor: black,
-                indicatorColor: blue,
-                indicatorWeight: 3,
-                labelStyle: TextStyle(fontSize: 14.0, color: black, fontWeight: FontWeight.w500),
-                unselectedLabelStyle: TextStyle(fontSize: 14.0, color: Color(0xFF9B9B9B)),
-                // controller: ,
-                tabs: const [
-                  Tab(
-                    text: 'Оплата',
-                  ),
-                  Tab(
-                    text: 'В долг',
-                  ),
-                  Tab(
-                    text: 'Лояльность',
-                  ),
-                ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              currentIndex = i;
+                            });
+                            setInitState();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: white,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: currentIndex == i ? blue : grey,
+                              ),
+                            ),
+                            child: Text(
+                              i == 0
+                                  ? 'Оплата'
+                                  : i == 1
+                                      ? 'В долг'
+                                      : 'Лояльность',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: currentIndex == i ? blue : black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            currentIndex == 0
-                ? Payment(setPayload: setPayload, data: data, setData: setData)
-                : currentIndex == 1
-                    ? OnCredit(setPayload: setPayload, data: data, setData: setData)
-                    : Loyalty(setPayload: setPayload, data: data, setLoyaltyData: setLoyaltyData),
-            Container(
-              margin: EdgeInsets.only(bottom: 70),
-            )
-          ],
-        )),
+              if (currentIndex == 0) Payment(setPayload: setPayload, data: data, setData: setData),
+              if (currentIndex == 1) OnCredit(setPayload: setPayload, data: data, setData: setData),
+              if (currentIndex == 2) Loyalty(setPayload: setPayload, data: data, setLoyaltyData: setLoyaltyData),
+              SizedBox(height: 70)
+            ],
+          ),
+        ),
         floatingActionButton: Container(
-          margin: EdgeInsets.only(left: 32),
+          margin: const EdgeInsets.only(left: 32),
           width: MediaQuery.of(context).size.width,
           child: ElevatedButton(
-            onPressed: () {
-              if (currentIndex == 0 && data['change'] >= 0) {
-                createCheque();
-              }
-              if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
-                createCheque();
-              }
-              if (currentIndex == 2 && (isDisabled() == blue)) {
-                createCheque();
-              }
-            },
+            onPressed: isDisabled()
+                ? () {
+                    if (currentIndex == 0 && data['change'] >= 0) {
+                      createCheque();
+                    }
+                    if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
+                      createCheque();
+                    }
+                    if (currentIndex == 2 && (isDisabled() == mainColor)) {
+                      createCheque();
+                    }
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
-              elevation: 0,
-              padding: EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: isDisabled(),
+              elevation: 1,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: mainColor,
+              disabledBackgroundColor: disabledColor,
+              disabledForegroundColor: black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-            child: Text('ПРИНЯТЬ'),
+            child: Text(
+              'Принять',
+              style: TextStyle(
+                color: white,
+                fontSize: 16,
+              ),
+            ),
           ),
         ),
       ),

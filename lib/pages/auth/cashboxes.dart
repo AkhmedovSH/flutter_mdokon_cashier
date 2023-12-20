@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
@@ -15,10 +15,11 @@ class CashBoxes extends StatefulWidget {
 }
 
 class _CashBoxesState extends State<CashBoxes> {
+  final storage = GetStorage();
+
   dynamic poses = Get.arguments;
 
   selectCashbox(pos, cashbox) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     final prepareprefs = {
       'defaultCurrency': pos['defaultCurrency'],
       'defaultCurrencyName': pos['defaultCurrencyName'],
@@ -32,13 +33,13 @@ class _CashBoxesState extends State<CashBoxes> {
       'cashboxId': cashbox['id'],
       'cashboxName': cashbox['name'],
     };
-    prefs.setString('cashbox', jsonEncode(prepareprefs));
+    storage.write('cashbox', jsonEncode(prepareprefs));
     final response = await post('/services/desktop/api/open-shift', {
       'posId': pos['posId'],
       'cashboxId': cashbox['id'],
       'offline': false,
     });
-    prefs.setString('shift', jsonEncode(response));
+    storage.write('shift', jsonEncode(response));
     if (response['success']) {
       Get.offAllNamed('/');
     }

@@ -1,12 +1,20 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:syncfusion_flutter_barcodes/barcodes.dart';
+//
+import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:unicons/unicons.dart';
+
+import '/helpers/api.dart';
+import '/helpers/globals.dart';
+import '/helpers/cheque.dart';
 
 class CheqDetail extends StatefulWidget {
   const CheqDetail({Key? key}) : super(key: key);
@@ -16,7 +24,18 @@ class CheqDetail extends StatefulWidget {
 }
 
 class _CheqDetailState extends State<CheqDetail> {
-  dynamic cheque = {
+  Timer? timer;
+  ScreenshotController screenshotController = ScreenshotController();
+  GetStorage storage = GetStorage();
+
+  bool bluetoothPermission = false;
+  bool connected = false;
+
+  List itemsList = [];
+  List transactionsList = [];
+  List availableBluetoothDevices = [];
+
+  Map cheque = {
     "id": 0,
     "cashierName": "",
     "chequeNumber": 0,
@@ -41,20 +60,96 @@ class _CheqDetailState extends State<CheqDetail> {
     "itemsList": [],
     "transactionsList": []
   };
-  dynamic itemsList = [];
-  dynamic transactionsList = [];
-  dynamic cashbox = {
+  Map cashbox = {
     "posName": "",
     "posPhone": "",
     "posAddress": "",
   };
 
+  dynamic tips;
+  dynamic device;
+
+  Future<void> getBluetooth() async {
+    final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
+    if (bluetooths != null) {
+      availableBluetoothDevices = bluetooths;
+      var status = await BluetoothThermalPrinter.connectionStatus;
+      if (status == 'true') {
+        connected = true;
+      } else {
+        connected = false;
+      }
+      if (availableBluetoothDevices.isNotEmpty) {
+        openBluetoothDevices();
+      } else {
+        showErrorToast('Нет активных устройств или отключен блютуз');
+      }
+      setState(() {});
+    }
+  }
+
+  Future<void> setConnect(String mac, newSetState) async {
+    if (timer != null) {
+      Get.closeCurrentSnackbar();
+      timer!.cancel();
+    }
+    Get.showSnackbar(
+      GetSnackBar(
+        messageText: Row(
+          children: [
+            Text(
+              'Подключение',
+              style: TextStyle(color: black),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 16,
+              width: 16,
+              child: CircularProgressIndicator(
+                color: black,
+                strokeWidth: 2,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: mainColor,
+      ),
+    );
+    try {
+      timer = Timer(const Duration(seconds: 5), () {
+        if (!connected) {
+          Get.closeAllSnackbars();
+          showErrorToast('Не удалось подключиться');
+          return;
+        }
+      });
+      final String? result = await BluetoothThermalPrinter.connect(mac);
+      Get.closeAllSnackbars();
+      if (result == "true") {
+        newSetState(() {
+          connected = true;
+        });
+      } else {
+        if (timer != null) {
+          timer!.cancel();
+        }
+        showErrorToast('Нет подключения');
+        newSetState(() {
+          connected = false;
+        });
+      }
+    } catch (e) {
+      Get.closeAllSnackbars();
+      print(e);
+      showErrorToast(e);
+    }
+  }
+
   getCheque() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     dynamic response = await get('/services/desktop/api/cheque-byId/${Get.arguments}');
     //print(response);
     setState(() {
-      cashbox = jsonDecode(prefs.getString('cashbox')!);
+      cashbox = jsonDecode(storage.read('cashbox')!);
       cheque = response;
       itemsList = response['itemsList'];
       transactionsList = response['transactionsList'];
@@ -75,10 +170,41 @@ class _CheqDetailState extends State<CheqDetail> {
     }
   }
 
+  checkStatus() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+    if (statuses[Permission.bluetooth] == PermissionStatus.permanentlyDenied || statuses[Permission.bluetooth] == PermissionStatus.denied) {
+      return;
+    }
+    if (statuses[Permission.bluetoothConnect] == PermissionStatus.permanentlyDenied ||
+        statuses[Permission.bluetoothConnect] == PermissionStatus.denied) {
+      return;
+    }
+    if (statuses[Permission.location] == PermissionStatus.permanentlyDenied || statuses[Permission.location] == PermissionStatus.denied) {
+      return;
+    }
+    setState(() {
+      bluetoothPermission = true;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getCheque();
+    checkStatus();
+  }
+
+  @override
+  dispose() {
+    super.dispose();
+    if (timer != null) {
+      timer!.cancel();
+    }
   }
 
   buildRow(text, text2, {fz = 16.0}) {
@@ -101,17 +227,20 @@ class _CheqDetailState extends State<CheqDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: white,
-          elevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-              onPressed: () {
-                Get.back();
-              },
-              icon: Icon(
-                Icons.arrow_back,
-                color: black,
-              ))),
+        backgroundColor: white,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Get.back();
+          },
+          icon: Icon(
+            UniconsLine.arrow_left,
+            color: black,
+            size: 32,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -320,39 +449,147 @@ class _CheqDetailState extends State<CheqDetail> {
                 ),
                 SizedBox(
                   height: 70,
-                )
+                ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            margin: EdgeInsets.only(left: 32),
-            width: MediaQuery.of(context).size.width * 0.43,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14)),
-              child: Text('ПЕЧАТЬ'),
-            ),
-          ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.43,
-            child: ElevatedButton(
-              onPressed: () {
-                Get.offAllNamed('/return', arguments: cheque['chequeNumber']);
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: Color(0xFFf46a6a),
+      bottomSheet: Padding(
+        padding: EdgeInsets.only(bottom: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  getBluetooth();
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(UniconsLine.print),
+                    SizedBox(width: 10),
+                    Text('ПЕЧАТЬ'),
+                  ],
+                ),
               ),
-              child: Text('ВОЗВРАТ'),
             ),
-          ),
-        ],
+            SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.offAllNamed('/', arguments: {'value': 2, 'id': cheque['chequeNumber']});
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: danger,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(UniconsLine.backward),
+                    SizedBox(width: 10),
+                    Text('ВОЗВРАТ'),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 10),
+          ],
+        ),
       ),
     );
+  }
+
+  openBluetoothDevices() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, newSetState) {
+          return Container(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 300,
+                        child: ListView.builder(
+                          itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              onTap: () {
+                                String select = availableBluetoothDevices[index];
+                                List list = select.split("#");
+                                String mac = list[1];
+                                setConnect(mac, newSetState);
+                              },
+                              title: Text('${availableBluetoothDevices[index]}'),
+                              subtitle: const Text("Нажмите чтобы подключиться"),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      if (connected)
+                        SizedBox(
+                          width: Get.width,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              printCheque(cheque, itemsList);
+                            },
+                            child: Text(
+                              'ПЕЧАТЬ',
+                              style: TextStyle(
+                                color: white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+      },
+    );
+    setState(() {
+      availableBluetoothDevices = [];
+    });
   }
 }
