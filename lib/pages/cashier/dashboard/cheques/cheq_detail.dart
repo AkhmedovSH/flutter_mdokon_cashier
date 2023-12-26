@@ -82,7 +82,7 @@ class _CheqDetailState extends State<CheqDetail> {
       if (availableBluetoothDevices.isNotEmpty) {
         openBluetoothDevices();
       } else {
-        showErrorToast('Нет активных устройств или отключен блютуз');
+        showErrorToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
       }
       setState(() {});
     }
@@ -98,7 +98,7 @@ class _CheqDetailState extends State<CheqDetail> {
         messageText: Row(
           children: [
             Text(
-              'Подключение',
+              'connection'.tr,
               style: TextStyle(color: black),
             ),
             const SizedBox(width: 10),
@@ -119,7 +119,7 @@ class _CheqDetailState extends State<CheqDetail> {
       timer = Timer(const Duration(seconds: 5), () {
         if (!connected) {
           Get.closeAllSnackbars();
-          showErrorToast('Не удалось подключиться');
+          showErrorToast('failed_to_connect'.tr);
           return;
         }
       });
@@ -133,7 +133,7 @@ class _CheqDetailState extends State<CheqDetail> {
         if (timer != null) {
           timer!.cancel();
         }
-        showErrorToast('Нет подключения');
+        showErrorToast('no_connection'.tr);
         newSetState(() {
           connected = false;
         });
@@ -213,11 +213,11 @@ class _CheqDetailState extends State<CheqDetail> {
       children: [
         Text(
           text,
-          style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
         ),
         Text(
           '$text2',
-          style: TextStyle(color: b8, fontSize: fz),
+          style: TextStyle(fontSize: fz),
         )
       ],
     );
@@ -227,7 +227,6 @@ class _CheqDetailState extends State<CheqDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -236,7 +235,6 @@ class _CheqDetailState extends State<CheqDetail> {
           },
           icon: Icon(
             UniconsLine.arrow_left,
-            color: black,
             size: 32,
           ),
         ),
@@ -248,17 +246,21 @@ class _CheqDetailState extends State<CheqDetail> {
             child: Column(
               children: [
                 Center(
-                    child: Image.asset(
-                  'images/logo.jpg',
-                  height: 64,
-                  width: 200,
-                )),
+                  child: Image.asset(
+                    'images/splash_logo.png',
+                    height: 64,
+                    width: 200,
+                  ),
+                ),
                 Container(
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'ДУБЛИКАТ',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 18),
+                    'DUPLICATE'.tr,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
                 Container(
@@ -266,33 +268,41 @@ class _CheqDetailState extends State<CheqDetail> {
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
                     '${cashbox['posName']}',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 Container(
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'Телефон: ${cashbox['posPhone'] ?? ''}',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                    '${'phone'.tr}: ${cashbox['posPhone'] ?? ''}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 Container(
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'Адресс: ${cashbox['posAddress'] ?? ''}',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
+                    '${'address'.tr}: ${cashbox['posAddress'] ?? ''}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                buildRow('Кассир', cheque['cashierName']),
-                buildRow('№ чека', cheque['chequeNumber']),
-                buildRow('Дата', cheque['chequeDate']),
+                buildRow('cashier'.tr, cheque['cashierName']),
+                buildRow('№ ${'cheque'.tr}', cheque['chequeNumber']),
+                buildRow('date'.tr, cheque['chequeDate']),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
                     '*****************************************************************************************',
-                    style: TextStyle(color: b8),
                     overflow: TextOverflow.clip,
                     maxLines: 1,
                     softWrap: false,
@@ -306,15 +316,31 @@ class _CheqDetailState extends State<CheqDetail> {
                   TableRow(children: [
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('№ Товар', style: TextStyle(fontWeight: FontWeight.bold, color: b8)),
+                      child: Text(
+                        '№ ${'product'.tr}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('Кол-во', style: TextStyle(fontWeight: FontWeight.bold, color: b8)),
+                      child: Text(
+                        'qty'.tr,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('Цена', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, color: b8)),
+                      child: Text(
+                        'price'.tr,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ]),
                   for (var i = 0; i < itemsList.length; i++)
@@ -324,7 +350,6 @@ class _CheqDetailState extends State<CheqDetail> {
                         child: Text(
                           '${i + 1} ${itemsList[i]['productName']}',
                           style: TextStyle(
-                            color: b8,
                             decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
                             decorationColor: getColor(itemsList[i]['returned']),
                           ),
@@ -338,9 +363,6 @@ class _CheqDetailState extends State<CheqDetail> {
                                   padding: EdgeInsets.symmetric(vertical: 4),
                                   child: Text(
                                     '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                                    style: TextStyle(
-                                      color: b8,
-                                    ),
                                   ),
                                 )
                               : Container(),
@@ -350,7 +372,6 @@ class _CheqDetailState extends State<CheqDetail> {
                                   child: Text(
                                     '${formatMoney(itemsList[i]['returnedQuantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
                                     style: TextStyle(
-                                      color: b8,
                                       decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
                                       decorationColor: getColor(itemsList[i]['returned']),
                                     ),
@@ -368,9 +389,6 @@ class _CheqDetailState extends State<CheqDetail> {
                                   child: Text(
                                     '${formatMoney(itemsList[i]['totalPrice'])}',
                                     textAlign: TextAlign.end,
-                                    style: TextStyle(
-                                      color: b8,
-                                    ),
                                   ),
                                 )
                               : Container(),
@@ -381,7 +399,6 @@ class _CheqDetailState extends State<CheqDetail> {
                                     '${formatMoney(itemsList[i]['returnedPrice'])}',
                                     textAlign: TextAlign.end,
                                     style: TextStyle(
-                                      color: b8,
                                       decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
                                       decorationColor: getColor(itemsList[i]['returned']),
                                     ),
@@ -396,17 +413,16 @@ class _CheqDetailState extends State<CheqDetail> {
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
                     '*****************************************************************************************',
-                    style: TextStyle(color: b8),
                     overflow: TextOverflow.clip,
                     maxLines: 1,
                     softWrap: false,
                   ),
                 ),
-                buildRow('Сумма продажи', formatMoney(cheque['totalPrice'])),
-                buildRow('Скидка', formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
-                buildRow('К оплате', formatMoney(cheque['to_pay']), fz: 20.0),
-                buildRow('Оплачено', formatMoney(cheque['paid'])),
-                buildRow('НДС %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
+                buildRow('sale_amount'.tr, formatMoney(cheque['totalPrice'])),
+                buildRow('discount'.tr, formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
+                buildRow('to_pay'.tr, formatMoney(cheque['to_pay']), fz: 20.0),
+                buildRow('paid'.tr, formatMoney(cheque['paid'])),
+                buildRow('${'VAT'.tr} %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
                 cheque['saleCurrencyId'] == 1 ? buildRow('Валюта', 'Сум ') : Container(),
                 cheque['saleCurrencyId'] == 2 ? buildRow('Валюта', 'USD ') : Container(),
                 for (var i = 0; i < transactionsList.length; i++)
@@ -415,11 +431,11 @@ class _CheqDetailState extends State<CheqDetail> {
                     children: [
                       Text(
                         '${transactionsList[i]['paymentTypeName']}',
-                        style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: 16),
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
                       Text(
                         '${formatMoney(transactionsList[i]['amountIn'])}',
-                        style: TextStyle(color: b8, fontSize: 16),
+                        style: TextStyle(fontSize: 16),
                       )
                     ],
                   ),
@@ -427,15 +443,14 @@ class _CheqDetailState extends State<CheqDetail> {
                 cheque['clientAmount'] > 0 ? buildRow('Должник', cheque['clientName'] + ' ') : Container(),
                 (cheque['clientAmount'] == 0 && cheque['clientName'] != null) ? buildRow('Клиент', cheque['clientName']) : Container(),
                 (cheque['loyaltyClientName'] != null) ? buildRow('Клиент', cheque['loyaltyClientName']) : Container(),
-                cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty Бонус', formatMoney(cheque['loyaltyBonus'])) : Container(),
-                buildRow('Сдача', formatMoney(cheque['change'])),
+                cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${'bonus'.tr}', formatMoney(cheque['loyaltyBonus'])) : Container(),
+                buildRow('change'.tr, formatMoney(cheque['change'])),
                 Container(
                     margin: EdgeInsets.only(top: 15, bottom: 10), height: 50, width: 200, child: SfBarcodeGenerator(value: '${cheque['barcode']}')),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
                     '*****************************************************************************************',
-                    style: TextStyle(color: b8),
                     overflow: TextOverflow.clip,
                     maxLines: 1,
                     softWrap: false,
@@ -443,8 +458,8 @@ class _CheqDetailState extends State<CheqDetail> {
                 ),
                 Center(
                   child: Text(
-                    'Спасибо за покупку!',
-                    style: TextStyle(color: b8, fontSize: 16),
+                    '${'thank_you_for_your_purchase'.tr}!',
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
                 SizedBox(
@@ -474,37 +489,39 @@ class _CheqDetailState extends State<CheqDetail> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Icon(UniconsLine.print),
                     SizedBox(width: 10),
-                    Text('ПЕЧАТЬ'),
+                    Text('PRINT'.tr),
                   ],
                 ),
               ),
             ),
-            SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Get.offAllNamed('/', arguments: {'value': 2, 'id': cheque['chequeNumber']});
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: danger,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            if (cheque['status'] != 2) ...[
+              SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.offAllNamed('/', arguments: {'value': 2, 'id': cheque['chequeNumber']});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: danger,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(UniconsLine.backward),
+                      SizedBox(width: 10),
+                      Text('RETURN'.tr),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(UniconsLine.backward),
-                    SizedBox(width: 10),
-                    Text('ВОЗВРАТ'),
-                  ],
-                ),
               ),
-            ),
+            ],
             SizedBox(width: 10),
           ],
         ),
@@ -529,7 +546,7 @@ class _CheqDetailState extends State<CheqDetail> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: white,
+                color: context.theme.cardColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -554,7 +571,7 @@ class _CheqDetailState extends State<CheqDetail> {
                                 setConnect(mac, newSetState);
                               },
                               title: Text('${availableBluetoothDevices[index]}'),
-                              subtitle: const Text("Нажмите чтобы подключиться"),
+                              subtitle: Text("click_to_connect".tr),
                             );
                           },
                         ),
@@ -569,7 +586,7 @@ class _CheqDetailState extends State<CheqDetail> {
                               printCheque(cheque, itemsList);
                             },
                             child: Text(
-                              'ПЕЧАТЬ',
+                              'PRINT'.tr,
                               style: TextStyle(
                                 color: white,
                               ),

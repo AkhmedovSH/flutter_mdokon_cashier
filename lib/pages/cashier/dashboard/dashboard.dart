@@ -74,11 +74,8 @@ class _DashboardState extends State<Dashboard> {
 
   getDashBoardItem(IconData icon, String text) {
     return BottomNavigationBarItem(
-      icon: Padding(
-        padding: const EdgeInsets.only(bottom: 5, top: 5),
-        child: Icon(icon),
-      ),
-      label: text,
+      icon: Icon(icon),
+      label: text.tr,
     );
   }
 
@@ -118,13 +115,13 @@ class _DashboardState extends State<Dashboard> {
               topRight: Radius.circular(20.0),
             ),
             child: BottomAppBar(
+              padding: EdgeInsets.all(5),
               elevation: 0,
               child: BottomNavigationBar(
                 onTap: (index) => setState(() {
                   currentIndex = index;
-                  // pageController!.jumpToPage(index);
                 }),
-                backgroundColor: Colors.white,
+                backgroundColor: Colors.transparent,
                 selectedItemColor: blue,
                 currentIndex: currentIndex,
                 type: BottomNavigationBarType.fixed,
@@ -141,10 +138,10 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 elevation: 0,
                 items: [
-                  getDashBoardItem(UniconsLine.monitor, 'Продажа'),
-                  getDashBoardItem(UniconsLine.receipt, 'Чеки'),
-                  getDashBoardItem(UniconsLine.backward, 'Возврат'),
-                  getDashBoardItem(UniconsLine.user, 'Профиль'),
+                  getDashBoardItem(UniconsLine.monitor, 'sale'),
+                  getDashBoardItem(UniconsLine.receipt, 'checks'),
+                  getDashBoardItem(UniconsLine.backward, 'return'),
+                  getDashBoardItem(UniconsLine.user, 'profile'),
                 ],
               ),
             ),
@@ -175,7 +172,7 @@ class _DashboardState extends State<Dashboard> {
                 margin: const EdgeInsets.only(bottom: 20),
                 child: Center(
                   child: Text(
-                    'Вы уверены что хотите выйти?',
+                    'are_you_sure_you_want_to_go_out'.tr,
                     style: TextStyle(
                       color: black,
                       fontSize: 20,
@@ -197,7 +194,7 @@ class _DashboardState extends State<Dashboard> {
                         backgroundColor: white,
                       ),
                       child: Text(
-                        'Отмена',
+                        'cancel'.tr,
                         style: TextStyle(color: black),
                       ),
                     ),
@@ -210,8 +207,8 @@ class _DashboardState extends State<Dashboard> {
                         closeApp();
                       },
                       child: Text(
-                        'Подтвердить',
-                        style: TextStyle(color: black),
+                        'confirm'.tr,
+                        style: TextStyle(color: white),
                       ),
                     ),
                   )

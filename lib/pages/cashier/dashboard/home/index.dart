@@ -107,17 +107,17 @@ class _IndexState extends State<Index> {
   };
   List itemList = [
     {
-      'label': 'Наличные',
+      'label': 'cash'.tr,
       'icon': Icons.payments,
       'fieldName': 'cash',
     },
     {
-      'label': 'Терминал',
+      'label': 'terminal'.tr,
       'icon': Icons.payment,
       'fieldName': 'terminal',
     },
     {
-      'label': 'Примечание',
+      'label': 'note'.tr,
       'fieldName': 'note',
     },
   ];
@@ -170,7 +170,7 @@ class _IndexState extends State<Index> {
 
   redirectToSearch() async {
     if (data['discount'] > 0) {
-      showDangerToast('Была применена скидка');
+      showDangerToast('discount_has_been_applied'.tr);
       return;
     }
     final products = await Get.toNamed('/search', arguments: {'activePrice': data['activePrice']});
@@ -208,7 +208,7 @@ class _IndexState extends State<Index> {
             existSameProduct = true;
 
             if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
-              showDangerToast('Превышен лимит');
+              showDangerToast('limit_exceeded'.tr);
               return;
             }
             addToList(product);
@@ -382,13 +382,13 @@ class _IndexState extends State<Index> {
         if (productsCopy[i]['selected']) {
           // Штучные товары нельзя вводить дробным числом
           if (isFloat && productsCopy[i]['uomId'] == 1) {
-            showDangerToast('Неверное количество');
+            showDangerToast('wrong_quantity'.tr);
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             return;
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) > productsCopy[i]['balance'])) {
-              showDangerToast('Превышен лимит');
+              showDangerToast('limit_exceeded'.tr);
               productsCopy[i]['quantity'] = productsCopy[i]['balance'];
               calculateTotalPrice(productsCopy);
               shortcutController.text = "";
@@ -412,7 +412,7 @@ class _IndexState extends State<Index> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (double.parse(inputData) < productsCopy[i]['price']) {
-            showDangerToast('Цена продажи не может быть ниже чем цена поступления');
+            showDangerToast('sale_price_cannot_be_lower_than_receipt_price'.tr);
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             break;
@@ -431,11 +431,11 @@ class _IndexState extends State<Index> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (productsCopy[i]['uomId'] == 1) {
-            showDangerToast('Неверное количество');
+            showDangerToast('wrong_quantity'.tr);
             shortcutController.text = "";
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) / productsCopy[i]['salePrice'] > productsCopy[i]['balance'])) {
-              showDangerToast('Превышен лимит');
+              showDangerToast('limit_exceeded'.tr);
             } else if (!cashbox['saleMinus'] && (productsCopy[i]['balance'] > (double.parse(inputData) / productsCopy[i]['salePrice']))) {
               productsCopy[i]['quantity'] = double.parse(inputData) / productsCopy[i]['salePrice'];
             } else {
@@ -558,8 +558,6 @@ class _IndexState extends State<Index> {
       dynamic percent = 100 - (dataCopy['totalPrice'] * 100 / dataCopy['totalPriceBeforeDiscount']);
       dataCopy['discount'] = percent;
     }
-
-    print(dataCopy['totalPriceBeforeDiscount']);
 
     if (key == "%-") {
       dynamic percent = 100 / (dataCopy['totalPrice'] / value);
@@ -697,7 +695,6 @@ class _IndexState extends State<Index> {
 
   @override
   dispose() {
-    subscription!.dispose();
     super.dispose();
   }
 
@@ -751,25 +748,25 @@ class _IndexState extends State<Index> {
         ),
         bottomOpacity: 0.0,
         title: Text(
-          'Продажа',
+          'sale'.tr,
           style: TextStyle(color: white, fontSize: 16),
         ),
         backgroundColor: mainColor,
         elevation: 0,
         actions: [
-          SizedBox(
-            child: IconButton(
-              onPressed: () {},
-              tooltip: 'Подключение к интернету',
-              icon: Icon(isDeviceConnected ? UniconsLine.wifi : UniconsLine.wifi_slash),
-            ),
-          ),
+          // SizedBox(
+          //   child: IconButton(
+          //     onPressed: () {},
+          //     tooltip: 'Подключение к интернету',
+          //     icon: Icon(isDeviceConnected ? UniconsLine.wifi : UniconsLine.wifi_slash),
+          //   ),
+          // ),
           SizedBox(
             child: IconButton(
               onPressed: () {
                 showModalDebtor();
               },
-              tooltip: 'Погашение долга',
+              tooltip: 'amortization'.tr,
               icon: Icon(UniconsLine.credit_card),
             ),
           ),
@@ -778,7 +775,7 @@ class _IndexState extends State<Index> {
               onPressed: () {
                 showModalExpense();
               },
-              tooltip: 'Расходы',
+              tooltip: 'expenses'.tr,
               icon: Icon(UniconsLine.usd_circle),
             ),
           ),
@@ -795,7 +792,7 @@ class _IndexState extends State<Index> {
             ),
           SizedBox(
             child: Tooltip(
-              message: 'Оптом цена',
+              message: 'wholesale_price'.tr,
               child: Checkbox(
                 activeColor: mainColor,
                 checkColor: white,
@@ -826,19 +823,26 @@ class _IndexState extends State<Index> {
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'images/icons/scanner.svg',
-                  height: 350,
-                ),
+                Get.isDarkMode
+                    ? SvgPicture.asset(
+                        'images/icons/scanner_dark.svg',
+                        height: 350,
+                      )
+                    : SvgPicture.asset(
+                        'images/icons/scanner.svg',
+                        height: 350,
+                      ),
                 Center(
-                  child: Text(
-                    'Отсканируйте штрихкод с упаковки товара \nили введите его вручную.',
-                    style: TextStyle(
-                      color: black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'scan_barcode_from_product_packaging_or_enter_it_manually'.tr,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
                 SizedBox(height: 100),
@@ -892,7 +896,7 @@ class _IndexState extends State<Index> {
                               border: inputBorder,
                               enabledBorder: inputBorder,
                               focusedBorder: inputFocusBorder,
-                              hintText: 'Введите значение',
+                              hintText: 'enter_value'.tr,
                               hintStyle: TextStyle(
                                 color: grey,
                                 fontSize: 14,
@@ -909,7 +913,7 @@ class _IndexState extends State<Index> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Итого', style: TextStyle(fontSize: 16)),
+                        Text('total'.tr, style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
                             ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
                             : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
@@ -923,7 +927,7 @@ class _IndexState extends State<Index> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Скидка',
+                          'discount'.tr,
                           style: TextStyle(fontSize: 16),
                         ),
                         Wrap(
@@ -940,13 +944,13 @@ class _IndexState extends State<Index> {
                             SizedBox(width: 10),
                             data['discount'] == 0
                                 ? Text(
-                                    '0,00 Сум',
+                                    '0,00 ${'sum'.tr}',
                                     style: TextStyle(fontSize: 16),
                                   )
                                 : Text(
                                     formatMoney(
                                             double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
-                                        'Сум',
+                                        'sum'.tr,
                                     style: TextStyle(fontSize: 16),
                                   ),
                           ],
@@ -960,7 +964,7 @@ class _IndexState extends State<Index> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('К оплате', style: TextStyle(fontSize: 16)),
+                        Text('to_pay'.tr, style: TextStyle(fontSize: 16)),
                         Text(
                           formatMoney(data['totalPrice']) + ' Сум',
                           style: TextStyle(
@@ -1085,7 +1089,7 @@ class _IndexState extends State<Index> {
                 disabledBackgroundColor: disabledColor,
                 disabledForegroundColor: black,
               ),
-              child: Text('Продать'),
+              child: Text('sell'.tr),
             ),
           ),
           FloatingActionButton(
@@ -1122,7 +1126,7 @@ class _IndexState extends State<Index> {
           child: Column(
             children: [
               Text(
-                'Вы уверены что хотите удалить все продукты?',
+                'are_you_sure_you_want_to_remove_all_products'.tr,
                 style: TextStyle(
                   color: black,
                   fontSize: 18,
@@ -1137,10 +1141,10 @@ class _IndexState extends State<Index> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: danger, 
+                        backgroundColor: danger,
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Отмена'),
+                      child: Text('cancel'.tr),
                     ),
                   ),
                   SizedBox(width: 10),
@@ -1153,7 +1157,7 @@ class _IndexState extends State<Index> {
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Продолжить'),
+                      child: Text('continue'.tr),
                     ),
                   )
                 ],

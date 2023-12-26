@@ -74,11 +74,11 @@ class _ChequesState extends State<Cheques> {
 
   getStatus(status) {
     if (status == 0) {
-      return 'Успешно'.tr;
+      return 'successful'.tr;
     } else if (status == 1) {
-      return 'Товар возвращен частично'.tr;
+      return 'item_returned_partially'.tr;
     } else if (status == 2) {
-      return 'Товар возвращен'.tr;
+      return 'item_returned'.tr;
     }
   }
 
@@ -116,7 +116,7 @@ class _ChequesState extends State<Cheques> {
           ),
           bottomOpacity: 0.0,
           title: Text(
-            'Чеки',
+            'checks'.tr,
             style: TextStyle(color: white),
           ),
           centerTitle: true,
@@ -152,7 +152,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'Статус',
+                            'status'.tr,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
@@ -161,7 +161,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'Итоговая сумма',
+                            'total_amount'.tr,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -171,7 +171,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'Дата',
+                            'date'.tr,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -377,7 +377,7 @@ class _ChequesState extends State<Cheques> {
                                     width: 1,
                                   ),
                                 ),
-                                hintText: 'Сумма от',
+                                hintText: 'amount_from'.tr,
                                 hintStyle: TextStyle(color: Color(0xFF495057)),
                               ),
                             ),
@@ -407,7 +407,7 @@ class _ChequesState extends State<Cheques> {
                                     width: 1,
                                   ),
                                 ),
-                                hintText: 'Сумма до',
+                                hintText: 'amount_to',
                                 hintStyle: TextStyle(color: Color(0xFF495057)),
                               ),
                             ),
@@ -441,7 +441,7 @@ class _ChequesState extends State<Cheques> {
                               width: 1,
                             ),
                           ),
-                          hintText: 'Поиск',
+                          hintText: 'search'.tr,
                           hintStyle: TextStyle(color: Color(0xFF495057)),
                         ),
                       ),
@@ -460,7 +460,7 @@ class _ChequesState extends State<Cheques> {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 16)),
-                    child: Text('Фильтр'),
+                    child: Text('filter'.tr),
                   ),
                 ),
               )

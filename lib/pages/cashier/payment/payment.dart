@@ -59,11 +59,24 @@ class _PaymentState extends State<Payment> {
         children: [
           Container(
             margin: EdgeInsets.only(top: 20),
-            child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+            child: Text(
+              'TO_PAY'.tr,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Container(
-              margin: EdgeInsets.only(bottom: 10),
-              child: Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+            margin: EdgeInsets.only(bottom: 10),
+            child: Text(
+              '${formatMoney(data['totalPrice'])} ${'sum'.tr}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Form(
               key: _formKey,
               child: Column(
@@ -72,10 +85,9 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'Наличные',
+                      'cash'.tr,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: grey,
                       ),
                     ),
                   ),
@@ -86,7 +98,7 @@ class _PaymentState extends State<Payment> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Обязательное поле';
+                          return 'required_field'.tr;
                         }
                         return null;
                       },
@@ -100,7 +112,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 сум',
+                        hintText: '0.00 ${'sum'.tr}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -108,10 +120,9 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'Терминал',
+                      'terminal'.tr,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: grey,
                       ),
                     ),
                   ),
@@ -122,7 +133,7 @@ class _PaymentState extends State<Payment> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Обязательное поле';
+                          return 'required_field'.tr;
                         }
                         return null;
                       },
@@ -136,7 +147,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 сум',
+                        hintText: '0.00 ${'sum'.tr}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -144,19 +155,20 @@ class _PaymentState extends State<Payment> {
                 ],
               )),
           Text(
-            'СДАЧА:',
+            '${'CHANGE'.tr}:',
             style: TextStyle(
-              color: darkGrey,
               fontSize: 16,
               fontWeight: FontWeight.bold,
-            
             ),
           ),
           Container(
             margin: EdgeInsets.only(bottom: 10, top: 5),
             child: Text(
-              '${formatMoney(data['change'])} Сум',
-              style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold),
+              '${formatMoney(data['change'])} ${'sum'.tr}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

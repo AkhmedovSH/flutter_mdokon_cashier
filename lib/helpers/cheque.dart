@@ -9,6 +9,7 @@ import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image/image.dart' as img;
+
 import 'package:screenshot/screenshot.dart';
 
 import '/helpers/globals.dart';
@@ -52,9 +53,11 @@ decodeImage(dynamicList) async {
 }
 
 printCheque(cheque, itemsList) async {
+  // final connectivityResult = await (Connectivity().checkConnectivity());
+  // if (connectivityResult == ConnectivityResult.bluetooth) {
   GetStorage storage = GetStorage();
   Map cashbox = jsonDecode(storage.read('cashbox')!);
-  Map settings = jsonDecode(storage.read('settings'));
+  Map settings = (storage.read('settings'));
   List<int> bytes = [];
 
   try {
@@ -124,7 +127,6 @@ printCheque(cheque, itemsList) async {
     );
     bytes += getChequeRow(generator, 'Tolangan', '${formatMoney(cheque['paid'])}');
     bytes += getChequeRow(generator, 'QQS %', '${formatMoney(cheque['totalVatAmount'])}');
-    bytes += getChequeRow(generator, 'Qaytim', '${formatMoney(cheque['change'])}');
     bytes += generator.hr(ch: '*', linesAfter: 1);
     if (settings['additionalInfo']) {
       bytes += generator.text(
@@ -143,6 +145,9 @@ printCheque(cheque, itemsList) async {
     print(e);
     showDangerToast(e.toString());
   }
+  // } else {
+  //   showDangerToast('Нет блютуз подключения');
+  // }
 }
 
 getProducts(List itemsList) async {
@@ -297,7 +302,12 @@ getProducts(List itemsList) async {
 Future connectToPrinter() async {
   GetStorage storage = GetStorage();
   print(storage.read('defaultPrinter'));
-  final String? result = await BluetoothThermalPrinter.connect(storage.read('defaultPrinter'));
-  print(result);
-  return result == 'true' ? true : false;
+  try {
+    final String? result = await BluetoothThermalPrinter.connect(storage.read('defaultPrinter'));
+    print(result);
+    return result == 'true' ? true : false;
+  } catch (e) {
+    // showErrorToast('Нет подключения к принтеру');
+    return false;
+  }
 }

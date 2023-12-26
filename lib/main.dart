@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:kassa/helpers/theme.dart';
 
-import 'helpers/globals.dart';
+import 'helpers/translations.dart';
 
 import 'pages/splash.dart';
 
@@ -19,7 +22,7 @@ import 'pages/cashier/dashboard/return.dart';
 import 'pages/cashier/dashboard/dashboard.dart';
 // import 'pages/cashier/dashboard/index.dart';
 import 'pages/cashier/dashboard/home/search.dart';
-import 'pages/cashier/payment/payment_sample.dart'; 
+import 'pages/cashier/payment/payment_sample.dart';
 import 'pages/cashier/dashboard/profile/x_report.dart';
 import 'pages/cashier/dashboard/profile/settings.dart';
 
@@ -35,40 +38,57 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final storage = GetStorage();
+  // ThemeController controller = Get.put(ThemeController());
+
+  Locale locale = const Locale('ru', '');
+  ThemeMode defaultThemeMode = ThemeMode.light;
+
+  getLocale() async {
+    if (storage.read('settings') != null) {
+      var settings = jsonDecode(storage.read('settings'));
+      if (settings['language']) {
+        Get.updateLocale(const Locale('uz-Latn-UZ', ''));
+        locale = const Locale('uz-Latn-UZ', '');
+      }
+      setState(() {});
+    }
+  }
+
+  getTheme() async {
+    if (storage.read('settings') != null) {
+      var settings = jsonDecode(storage.read('settings'));
+      if (settings['theme']) {
+        defaultThemeMode = ThemeMode.dark;
+      }
+      setState(() {});
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getLocale();
+    getTheme();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      translations: Messages(),
+      locale: locale,
+      fallbackLocale: const Locale('ru', ''),
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ThemeData().colorScheme.copyWith(
-              // backgroundColor: white,
-              // accentColor: mainColor.withOpacity(0.5),
-              background: white,
-              secondary: mainColor.withOpacity(0.5),
-              primary: mainColor,
-            ),
-        scaffoldBackgroundColor: const Color(0xFFFFFFFF),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: mainColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-        textSelectionTheme: TextSelectionThemeData(cursorColor: mainColor),
-        textTheme: Theme.of(context).textTheme.apply(
-              bodyColor: black,
-              displayColor: black,
-            ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.transparent,
-          ),
-        ),
-      ),
+      themeMode: defaultThemeMode,
+      theme: defaultThemeMode == ThemeMode.dark ? Themes.dark : Themes.light,
       initialRoute: '/splash',
       getPages: [
         // Auth

@@ -19,7 +19,7 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   GetStorage storage = GetStorage();
-  
+
   Map cashbox = {};
   Map account = {'firstName': "", 'lastName': ""};
 
@@ -28,8 +28,6 @@ class _ProfileState extends State<Profile> {
   }
 
   void getCashboxInfo() async {
-    
-
     cashbox = jsonDecode(storage.read('cashbox')!);
     account = jsonDecode(storage.read('account')!);
     setState(() {});
@@ -50,16 +48,16 @@ class _ProfileState extends State<Profile> {
         children: [
           GestureDetector(
             onTap: () {
-              if (title == 'X отчет') {
+              if (title == 'X_report') {
                 Get.toNamed('/x-report');
               }
-              if (title == 'Настройки') {
+              if (title == 'settings') {
                 Get.toNamed('/settings');
               }
-              if (title == 'Закрыть смену') {
+              if (title == 'close_shift') {
                 openModal();
               }
-              if (title == 'Служба поддержки') {
+              if (title == 'support') {
                 openPhoneCall();
               }
             },
@@ -82,9 +80,8 @@ class _ProfileState extends State<Profile> {
                   ),
                   SizedBox(width: 10),
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
-                      color: black,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -108,7 +105,7 @@ class _ProfileState extends State<Profile> {
         ),
         bottomOpacity: 0.0,
         title: Text(
-          'Профиль',
+          'profile'.tr,
           style: TextStyle(color: white),
         ),
         centerTitle: true,
@@ -149,7 +146,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Login: ${account['login']}',
+                      '${'login'.tr}: ${account['login']}',
                       style: TextStyle(
                         color: white,
                       ),
@@ -167,10 +164,10 @@ class _ProfileState extends State<Profile> {
             ),
           ),
           SizedBox(height: 15),
-          buildRow(UniconsLine.clipboard_alt, 'X отчет'),
-          buildRow(UniconsLine.cog, 'Настройки'),
-          buildRow(UniconsLine.sign_out_alt, 'Закрыть смену'),
-          buildRow(UniconsLine.calling, 'Служба поддержки'),
+          buildRow(UniconsLine.clipboard_alt, 'X_report'),
+          buildRow(UniconsLine.cog, 'settings'),
+          buildRow(UniconsLine.sign_out_alt, 'close_shift'),
+          buildRow(UniconsLine.calling, 'support'),
         ],
       ),
     );
@@ -225,9 +222,8 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: [
               Text(
-                'Вы уверены что хотите закрыть смену?',
+                'are_you_sure_you_want_to_close_your_shift'.tr,
                 style: TextStyle(
-                  color: black,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -243,7 +239,7 @@ class _ProfileState extends State<Profile> {
                         backgroundColor: danger,
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Отмена'),
+                      child: Text('cancel'.tr),
                     ),
                   ),
                   SizedBox(width: 10),
@@ -256,7 +252,7 @@ class _ProfileState extends State<Profile> {
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Продолжить'),
+                      child: Text('continue'.tr),
                     ),
                   )
                 ],

@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
+import 'package:unicons/unicons.dart';
 
 class Loyalty extends StatefulWidget {
   const Loyalty({Key? key, this.setPayload, this.data, this.setLoyaltyData}) : super(key: key);
@@ -30,13 +32,13 @@ class _LoyaltyState extends State<Loyalty> {
   dynamic awardController = TextEditingController();
   dynamic cashbox = {};
   dynamic list = [
-    {'label': 'Введите QR код или Номер телефона', 'icon': Icons.person_pin_rounded, 'enabled': true},
-    {'label': 'Клиент', 'icon': Icons.person, 'enabled': false},
-    {'label': 'Накопленные баллы', 'icon': Icons.add, 'enabled': false},
-    {'label': 'Баллы к списанию', 'icon': Icons.remove, 'enabled': true},
-    {'label': 'Сумма наличные', 'icon': Icons.payments, 'enabled': true},
-    {'label': 'Сумма терминал', 'icon': Icons.payment, 'enabled': true},
-    {'label': 'Баллы к начислению', 'icon': Icons.payments, 'enabled': false},
+    {'label': 'enter_QR_code_or_phone_number', 'icon': UniconsLine.chat_bubble_user, 'enabled': true},
+    {'label': 'client', 'icon': UniconsLine.user, 'enabled': false},
+    {'label': 'accumulated_points', 'icon': UniconsLine.money_withdraw, 'enabled': false},
+    {'label': 'points_to_be_written_off', 'icon': UniconsLine.money_insert, 'enabled': true},
+    {'label': 'cash_amount', 'icon': UniconsLine.money_bill, 'enabled': true},
+    {'label': 'terminal_amount', 'icon': UniconsLine.credit_card, 'enabled': true},
+    {'label': 'points_to_be_awarded', 'icon': UniconsLine.bill, 'enabled': false},
   ];
   dynamic search = '';
 
@@ -59,7 +61,7 @@ class _LoyaltyState extends State<Loyalty> {
             awardController.text = (data['totalPrice'] * (double.parse(data['award'].toString()) / 100)).toStringAsFixed(2);
           });
         } else {
-          showDangerToast('Не найден пользователь');
+          showDangerToast('user_not_found'.tr);
         }
       }
     });
@@ -128,15 +130,19 @@ class _LoyaltyState extends State<Loyalty> {
     widget.setLoyaltyData!(loyaltyData);
   }
 
-  buildTextField(label, icon, item, index, {scrollPadding, enabled}) {
+  buildTextField(String label, icon, item, index, {scrollPadding, enabled}) {
     //print(index);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+          label.tr,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        SizedBox(height: 5),
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
@@ -157,7 +163,7 @@ class _LoyaltyState extends State<Loyalty> {
             keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Обязательное поле';
+                return 'required_field'.tr;
               }
               return null;
             },
@@ -193,21 +199,12 @@ class _LoyaltyState extends State<Loyalty> {
             scrollPadding: EdgeInsets.only(bottom: 100),
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: blue,
-                  width: 2,
-                ),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: blue,
-                  width: 2,
-                ),
-              ),
+              border: inputBorder,
+              enabledBorder: inputBorder,
+              focusedBorder: inputFocusBorder,
+              errorBorder: inputErrorBorder,
+              focusedErrorBorder: inputErrorBorder,
               suffixIcon: Icon(icon),
-              filled: true,
-              fillColor: borderColor,
               focusColor: blue,
             ),
           ),
@@ -225,11 +222,24 @@ class _LoyaltyState extends State<Loyalty> {
         children: [
           Container(
             margin: EdgeInsets.only(top: 20),
-            child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+            child: Text(
+              'TO_PAY'.tr,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Container(
-              margin: EdgeInsets.only(bottom: 10),
-              child: Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+            margin: EdgeInsets.only(bottom: 10),
+            child: Text(
+              '${formatMoney(data['totalPrice'])} сум',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           for (var i = 0; i < list.length; i++) buildTextField(list[i]['label'], list[i]['icon'], list[i], i)
         ],
       ),

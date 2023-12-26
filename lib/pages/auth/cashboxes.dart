@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:unicons/unicons.dart';
 
 import '../../helpers/globals.dart';
 import '../../helpers/api.dart';
@@ -49,97 +51,122 @@ class _CashBoxesState extends State<CashBoxes> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        decoration: const BoxDecoration(
-            gradient:
-                LinearGradient(colors: [Color(0xFF5b73e8), Color(0xFF776bcc)])),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 5),
-              padding: const EdgeInsets.only(bottom: 2),
-              decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: white, width: 1))),
-              child: Text(
-                'Свободные кассы',
-                style: TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.w500, color: white),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                'Выберите кассу для входа',
-                style: TextStyle(
-                    color: white, fontSize: 18, fontWeight: FontWeight.w500),
-              ),
-            ),
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (var i = 0; i < poses.length; i++)
-                    Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            poses[i]['posName'],
-                            style: TextStyle(
-                                color: white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        for (var j = 0; j < poses[i]['cashboxList'].length; j++)
+            Stack(
+              children: [
+                SvgPicture.asset(
+                  'images/icons/cashbox.svg',
+                  width: MediaQuery.of(context).size.width,
+                ),
+                Positioned(
+                  top: 5,
+                  left: 10,
+                  child: IconButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    icon: Icon(
+                      UniconsLine.arrow_left,
+                      color: black,
+                      size: 32,
+                    ),
+                  ),
+                ),
+                Positioned(
+                    bottom: -10,
+                    child: Container(
+                      alignment: Alignment.center,
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        children: [
                           Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            width: MediaQuery.of(context).size.width * 0.6,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: blue,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14, horizontal: 20),
-                                side: const BorderSide(
-                                  color: Color.fromARGB(0, 0, 100, 1),
-                                ),
+                            margin: const EdgeInsets.only(bottom: 5),
+                            padding: const EdgeInsets.only(bottom: 2),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: white, width: 1),
                               ),
-                              onPressed: () {
-                                selectCashbox(
-                                    poses[i], poses[i]['cashboxList'][j]);
-                              },
-                              child: Text(
-                                poses[i]['cashboxList'][j]['name'],
-                                style: const TextStyle(fontSize: 16),
+                            ),
+                            child: Text(
+                              'Свободные кассы',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                color: black,
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                ],
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              'Выберите кассу для входа',
+                              style: TextStyle(
+                                color: black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ))
+              ],
+            ),
+            SizedBox(height: 10),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              width: MediaQuery.of(context).size.width,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (var i = 0; i < poses.length; i++) ...[
+                      Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              poses[i]['posName'],
+                              style: TextStyle(
+                                color: black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          for (var j = 0; j < poses[i]['cashboxList'].length; j++)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              width: MediaQuery.of(context).size.width * 0.6,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: blue,
+                                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                                  side: const BorderSide(
+                                    color: Color.fromARGB(0, 0, 100, 1),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  selectCashbox(poses[i], poses[i]['cashboxList'][j]);
+                                },
+                                child: Text(
+                                  poses[i]['cashboxList'][j]['name'],
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ]
+                  ],
+                ),
               ),
-            )
+            ),
           ],
-        ),
-      ),
-      floatingActionButton: Container(
-        margin: EdgeInsets.only(left: 32),
-        width: MediaQuery.of(context).size.width,
-        child: ElevatedButton(
-          onPressed: () {
-            Get.offAllNamed('/login');
-          },
-          style: ElevatedButton.styleFrom(
-              backgroundColor: white,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 12, horizontal: 30)),
-          child: Text(
-            'Выйти',
-            style: TextStyle(
-                color: blue, fontWeight: FontWeight.w500, fontSize: 18),
-          ),
         ),
       ),
     );

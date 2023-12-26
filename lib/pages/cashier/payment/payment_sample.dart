@@ -63,6 +63,10 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
+    var settings = jsonDecode(storage.read('settings'));
+    if (settings['selectUserAftersale']) {
+      await showSelectUserDialog();
+    }
     controller.showLoading();
     setState(() {});
     dynamic dataCopy = data;
@@ -172,7 +176,6 @@ class _PaymentSampleState extends State<PaymentSample> {
       await lPost('/services/gocashapi/api/create-cheque', sendData);
     }
 
-    var settings = jsonDecode(storage.read('settings'));
     if (settings['printAfterSale']) {
       var status = await BluetoothThermalPrinter.connectionStatus;
       if (status == 'true') {
@@ -182,7 +185,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         if (result) {
           printCheque(dataCopy, dataCopy['itemsList']);
         } else {
-          showDangerToast('Не удалось подключиться к принтеру');
+          showDangerToast('failed_to_connect'.tr);
         }
       }
     }
@@ -270,13 +273,8 @@ class _PaymentSampleState extends State<PaymentSample> {
     return LoadingLayout(
       body: Scaffold(
         appBar: AppBar(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarIconBrightness: Brightness.dark,
-            statusBarColor: white,
-          ),
           title: Text(
-            'Продажа',
-            style: TextStyle(color: black),
+            'sale'.tr,
           ),
           leading: IconButton(
             onPressed: () {
@@ -284,12 +282,10 @@ class _PaymentSampleState extends State<PaymentSample> {
             },
             icon: Icon(
               UniconsLine.arrow_left,
-              color: black,
               size: 32,
             ),
           ),
           centerTitle: true,
-          backgroundColor: white,
           elevation: 0,
         ),
         body: SingleChildScrollView(
@@ -312,7 +308,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            margin: EdgeInsets.symmetric(horizontal: 5),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: white,
@@ -323,15 +319,16 @@ class _PaymentSampleState extends State<PaymentSample> {
                             ),
                             child: Text(
                               i == 0
-                                  ? 'Оплата'
+                                  ? 'payment'.tr
                                   : i == 1
-                                      ? 'В долг'
-                                      : 'Лояльность',
+                                      ? 'on_credit'.tr
+                                      : 'loyalty'.tr,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: currentIndex == i ? blue : black,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),
@@ -374,9 +371,8 @@ class _PaymentSampleState extends State<PaymentSample> {
               ),
             ),
             child: Text(
-              'Принять',
+              'accept'.tr,
               style: TextStyle(
-                color: white,
                 fontSize: 16,
               ),
             ),
@@ -384,5 +380,140 @@ class _PaymentSampleState extends State<PaymentSample> {
         ),
       ),
     );
+  }
+
+  List clients = [];
+
+  getClients() async {
+    final response = await get('/services/desktop/api/clients-helper');
+    //print(response);
+    for (var i = 0; i < response.length; i++) {
+      response[i]['selected'] = false;
+    }
+    setState(() {
+      clients = response;
+    });
+  }
+
+  selectDebtorClient(Function setDebtorState, index) {
+    dynamic clientsCopy = clients;
+    for (var i = 0; i < clientsCopy.length; i++) {
+      clientsCopy[i]['selected'] = false;
+    }
+    clientsCopy[index]['selected'] = true;
+    setDebtorState(() {
+      clients = clientsCopy;
+    });
+  }
+
+  showSelectUserDialog() async {
+    await getClients();
+    final result = await showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.all(10),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: [
+                    Table(
+                      border: TableBorder(
+                        horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
+                      ),
+                      children: [
+                        TableRow(children: [
+                          Text(
+                            'contact'.tr,
+                          ),
+                          Text(
+                            'number'.tr,
+                          ),
+                          Text(
+                            'comment'.tr,
+                          ),
+                        ]),
+                        for (var i = 0; i < clients.length; i++)
+                          TableRow(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text(
+                                    '${clients[i]['name']}',
+                                    style: TextStyle(
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text('${clients[i]['phone1']}'),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  selectDebtorClient(setState, i);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                  child: Text("${clients[i]['comment'] ?? ''}"),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      for (var i = 0; i < clients.length; i++) {
+                        if (clients[i]['selected']) {
+                          Navigator.pop(context, clients);
+                        }
+                      }
+                    },
+                    child: Text('choose'.tr),
+                  ),
+                )
+              ],
+            );
+          });
+        });
+    if (result != null) {
+      for (var i = 0; i < result.length; i++) {
+        if (result[i]['selected'] == true) {
+          data['clientName'] = result[i]['name'].toString();
+          data['clientId'] = result[i]['id'];
+          data['clientComment'] = result[i]['comment'];
+          setState(() {});
+        }
+      }
+    }
   }
 }

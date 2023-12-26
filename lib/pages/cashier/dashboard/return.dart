@@ -141,7 +141,7 @@ class _ReturnState extends State<Return> {
     if (itemCopy['uomId'] == 1 && dotExist) {
       setState(() {
         sendData['itemsList'][i]['validate'] = true;
-        sendData['itemsList'][i]['validateText'] = 'Неверное кол.';
+        sendData['itemsList'][i]['validateText'] = 'wrong_count'.tr;
         height = 20;
       });
       return;
@@ -150,7 +150,7 @@ class _ReturnState extends State<Return> {
       if (double.parse(value) > double.parse(itemCopy['quantity'].toString())) {
         setState(() {
           sendData['itemsList'][i]['validate'] = true;
-          sendData['itemsList'][i]['validateText'] = 'Не больше ${itemCopy['quantity'] - itemCopy['returnedQuantity']}';
+          sendData['itemsList'][i]['validateText'] = 'not_more'.trParams({'quantity': itemCopy['quantity'] - itemCopy['returnedQuantity']});
           height = 20;
         });
         return;
@@ -200,7 +200,7 @@ class _ReturnState extends State<Return> {
 
   returnCheque() async {
     if (!isValid()) {
-      showDangerToast('Проверьте количество');
+      showDangerToast('check_quantity'.tr);
       return;
     }
     setState(() {
@@ -232,7 +232,7 @@ class _ReturnState extends State<Return> {
     });
     final response = await post('/services/desktop/api/cheque-returned', sendData);
     if (response['success']) {
-      showSuccessToast('Возврат выполнен успешно');
+      showSuccessToast('return_completed_successfully'.tr);
       setInitState();
     }
   }
@@ -313,7 +313,7 @@ class _ReturnState extends State<Return> {
         ),
         bottomOpacity: 0.0,
         title: Text(
-          'Возврат',
+          'return'.tr,
           style: TextStyle(color: white),
         ),
         centerTitle: true,
@@ -348,7 +348,7 @@ class _ReturnState extends State<Return> {
                         contentPadding: const EdgeInsets.only(top: 5, left: 10),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,
-                        hintText: 'Поиск',
+                        hintText: 'search'.tr,
                         filled: true,
                         fillColor: white,
                         focusColor: blue,
@@ -356,7 +356,7 @@ class _ReturnState extends State<Return> {
                     ),
                   ),
                   Positioned(
-                    right: 1,
+                    right: 0,
                     child: Container(
                       margin: EdgeInsets.only(bottom: 10),
                       width: 60,
@@ -367,13 +367,14 @@ class _ReturnState extends State<Return> {
                             searchCheque(null);
                           } else {}
                         },
+                        style: ElevatedButton.styleFrom(),
                         child: Icon(UniconsLine.search),
                       ),
                     ),
                   )
                 ],
               ),
-              Container(
+              SizedBox(
                 height: MediaQuery.of(context).size.height * 0.3,
                 width: MediaQuery.of(context).size.width,
                 child: SingleChildScrollView(
@@ -383,7 +384,7 @@ class _ReturnState extends State<Return> {
                       Container(
                         margin: EdgeInsets.only(bottom: 5),
                         child: Text(
-                          'Кассовый чек №: ${data['chequeNumber']}',
+                          '${'cash_receipt'.tr} №: ${data['chequeNumber']}',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
@@ -396,7 +397,7 @@ class _ReturnState extends State<Return> {
                         child: Row(
                           children: [
                             Text(
-                              'Дата: ',
+                              'date'.tr + ': ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: grey,
@@ -406,11 +407,10 @@ class _ReturnState extends State<Return> {
                               margin: EdgeInsets.only(right: 20),
                               child: Text(
                                 '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
-                                style: TextStyle(color: black),
                               ),
                             ),
                             Text(
-                              'Кассир: ',
+                              '${'cashier'.tr}: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: grey,
@@ -418,7 +418,6 @@ class _ReturnState extends State<Return> {
                             ),
                             Text(
                               '${data['cashierName']}',
-                              style: TextStyle(color: black),
                             )
                           ],
                         ),
@@ -443,31 +442,39 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Наименование',
-                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
+                                  'name'.tr,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Цена',
-                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
+                                  'price'.tr,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Кол-во',
-                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
+                                  'qty'.tr,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Сумма оплаты',
-                                  style: TextStyle(color: black, fontWeight: FontWeight.w500),
+                                  'payment_amount'.tr,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
@@ -484,7 +491,6 @@ class _ReturnState extends State<Return> {
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
                                       '${itemsList[i]['productName']} ',
-                                      style: TextStyle(color: Color(0xFF495057)),
                                     ),
                                   ),
                                 ),
@@ -497,16 +503,10 @@ class _ReturnState extends State<Return> {
                                     child: (itemsList[i]['discount']) > 0
                                         ? Text(
                                             '${itemsList[i]['salePrice'] - (int.parse(itemsList[i]['salePrice']) / 100 * int.parse(itemsList[i]['discount']))}',
-                                            style: TextStyle(
-                                              color: Color(0xFF495057),
-                                            ),
                                             textAlign: TextAlign.center,
                                           )
                                         : Text(
                                             '${formatMoney(itemsList[i]['salePrice'])}',
-                                            style: TextStyle(
-                                              color: Color(0xFF495057),
-                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                   ),
@@ -519,9 +519,6 @@ class _ReturnState extends State<Return> {
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
                                       '${formatMoney(itemsList[i]['quantity'])} ${itemsList[i]['returnedQuantity'] > 0 ? formatMoney(itemsList[i]['returnedQuantity']) : ''}',
-                                      style: TextStyle(
-                                        color: Color(0xFF495057),
-                                      ),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -534,9 +531,6 @@ class _ReturnState extends State<Return> {
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
                                       '${formatMoney(itemsList[i]['totalPrice'])}',
-                                      style: TextStyle(
-                                        color: Color(0xFF495057),
-                                      ),
                                       textAlign: TextAlign.end,
                                     ),
                                   ),
@@ -579,31 +573,31 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Наименование',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'name'.tr,
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Цена',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'price'.tr,
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Кол-во возврата',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'return_quantity'.tr,
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'Сумма оплаты',
-                                  style: TextStyle(color: Color(0xFF495057), fontWeight: FontWeight.w500),
+                                  'payment_amount'.tr,
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
@@ -630,7 +624,7 @@ class _ReturnState extends State<Return> {
                                             },
                                             padding: EdgeInsets.zero,
                                             constraints: BoxConstraints(),
-                                            tooltip: 'Вернуть в список',
+                                            tooltip: 'return_to_list'.tr,
                                             icon: Icon(
                                               UniconsLine.angle_left_b,
                                               size: 20,
@@ -760,7 +754,7 @@ class _ReturnState extends State<Return> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'К ВЫПЛАТЕ:',
+                  '${'TO_PAYOFF'.tr}:',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
                 ),
                 Row(
@@ -770,15 +764,13 @@ class _ReturnState extends State<Return> {
                     Text(
                       '${formatMoney(sendData['totalAmount'])}',
                       style: TextStyle(
-                        color: black,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'сум',
+                      'sum'.tr,
                       style: TextStyle(
-                        color: black,
                         fontWeight: FontWeight.w500,
                         fontSize: 18,
                       ),
@@ -804,7 +796,7 @@ class _ReturnState extends State<Return> {
                   disabledForegroundColor: white,
                 ),
                 child: Text(
-                  'Осуществить возврат',
+                  'make_return'.tr,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
+import 'package:unicons/unicons.dart';
 
 class OnCredit extends StatefulWidget {
   const OnCredit({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
@@ -16,16 +17,16 @@ class OnCredit extends StatefulWidget {
 class _OnCreditState extends State<OnCredit> {
   dynamic clients = [];
   dynamic data = Get.arguments;
-  dynamic client = {'name': 'КЛИЕНТ'};
+  dynamic client = {'name': 'CLIENT'.tr};
   final _formKey = GlobalKey<FormState>();
   final cashController = TextEditingController();
   final terminalController = TextEditingController();
   dynamic sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
   dynamic addList = [
-    {'name': 'Наименование контакта', 'value': '', 'icon': Icons.person, 'keyboardType': TextInputType.text},
-    {'name': 'Телефон', 'value': '', 'icon': Icons.phone, 'keyboardType': TextInputType.number},
-    {'name': 'Телефон', 'value': '', 'icon': Icons.phone, 'keyboardType': TextInputType.number},
-    {'name': 'Комментарий', 'value': '', 'icon': Icons.comment_outlined, 'keyboardType': TextInputType.text},
+    {'name': 'contact_name', 'value': '', 'icon': UniconsLine.user, 'keyboardType': TextInputType.text},
+    {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
+    {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
+    {'name': 'comment', 'value': '', 'icon': UniconsLine.comment_lines, 'keyboardType': TextInputType.text},
   ];
 
   createClient() async {
@@ -102,8 +103,8 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 20, bottom: 5),
             child: Text(
-              'КЛИЕНТ:',
-              style: TextStyle(fontSize: 16, color: darkGrey, fontWeight: FontWeight.bold),
+              '${'CLIENT'.tr}:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
@@ -111,7 +112,7 @@ class _OnCreditState extends State<OnCredit> {
             child: TextFormField(
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Обязательное поле';
+                  return 'required_field'.tr;
                 }
                 return null;
               },
@@ -120,20 +121,11 @@ class _OnCreditState extends State<OnCredit> {
               enableInteractiveSelection: false,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                border: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: blue,
-                    width: 2,
-                  ),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: blue,
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: borderColor,
+                border: inputBorder,
+                enabledBorder: inputBorder,
+                focusedBorder: inputFocusBorder,
+                errorBorder: inputErrorBorder,
+                focusedErrorBorder: inputErrorBorder,
                 focusColor: blue,
                 hintText: '${client['name']}',
                 hintStyle: TextStyle(color: a2),
@@ -143,125 +135,127 @@ class _OnCreditState extends State<OnCredit> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    showSelectUserDialog();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFf1b44c)),
-                  child: Text('Выбрать'),
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      showSelectUserDialog();
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFf1b44c)),
+                    child: Text('choose'.tr),
+                  ),
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                child: ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                        context: context,
-                        useSafeArea: true,
-                        builder: (BuildContext context) {
-                          return StatefulBuilder(builder: (context, setState) {
-                            return AlertDialog(
-                              title: Text(''),
-                              titlePadding: EdgeInsets.all(0),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                              insetPadding: EdgeInsets.all(10),
-                              actionsPadding: EdgeInsets.all(0),
-                              buttonPadding: EdgeInsets.all(0),
-                              scrollable: true,
-                              content: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (var i = 0; i < addList.length; i++)
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '${addList[i]['name']}',
-                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                                          ),
-                                          Container(
-                                            margin: const EdgeInsets.only(bottom: 10),
-                                            width: MediaQuery.of(context).size.width,
-                                            child: TextFormField(
-                                              validator: (value) {
-                                                if (value == null || value.isEmpty) {
-                                                  return 'Обязательное поле';
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                if (i == 0) {
-                                                  setState(() {
-                                                    sendData['name'] = value;
-                                                  });
-                                                }
-                                                if (i == 1) {
-                                                  setState(() {
-                                                    sendData['phone1'] = value;
-                                                  });
-                                                }
-                                                if (i == 2) {
-                                                  setState(() {
-                                                    sendData['phone2'] = value;
-                                                  });
-                                                }
-                                                if (i == 3) {
-                                                  setState(() {
-                                                    sendData['comment'] = value;
-                                                  });
-                                                }
-                                              },
-                                              keyboardType: addList[i]['keyboardType'],
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                                enabledBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: blue,
-                                                    width: 2,
-                                                  ),
+              SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          useSafeArea: true,
+                          builder: (BuildContext context) {
+                            return StatefulBuilder(builder: (context, setState) {
+                              return AlertDialog(
+                                title: Text(''),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(24.0),
+                                  ),
+                                ),
+                                titlePadding: EdgeInsets.all(0),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                                insetPadding: EdgeInsets.all(10),
+                                actionsPadding: EdgeInsets.all(0),
+                                buttonPadding: EdgeInsets.all(0),
+                                scrollable: true,
+                                content: SizedBox(
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      for (var i = 0; i < addList.length; i++)
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${addList[i]['name']}',
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                                            ),
+                                            SizedBox(height: 5),
+                                            Container(
+                                              margin: const EdgeInsets.only(bottom: 10),
+                                              width: MediaQuery.of(context).size.width,
+                                              child: TextFormField(
+                                                validator: (value) {
+                                                  if (value == null || value.isEmpty) {
+                                                    return 'required_field'.tr;
+                                                  }
+                                                  return null;
+                                                },
+                                                onChanged: (value) {
+                                                  if (i == 0) {
+                                                    setState(() {
+                                                      sendData['name'] = value;
+                                                    });
+                                                  }
+                                                  if (i == 1) {
+                                                    setState(() {
+                                                      sendData['phone1'] = value;
+                                                    });
+                                                  }
+                                                  if (i == 2) {
+                                                    setState(() {
+                                                      sendData['phone2'] = value;
+                                                    });
+                                                  }
+                                                  if (i == 3) {
+                                                    setState(() {
+                                                      sendData['comment'] = value;
+                                                    });
+                                                  }
+                                                },
+                                                keyboardType: addList[i]['keyboardType'],
+                                                decoration: InputDecoration(
+                                                  contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                                  enabledBorder: inputBorder,
+                                                  focusedBorder: inputFocusBorder,
+                                                  errorBorder: inputErrorBorder,
+                                                  focusedErrorBorder: inputErrorBorder,
+                                                  suffixIcon: Icon(addList[i]['icon']),
+                                                  focusColor: blue,
                                                 ),
-                                                focusedBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: blue,
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                                suffixIcon: Icon(addList[i]['icon']),
-                                                filled: true,
-                                                fillColor: borderColor,
-                                                focusColor: blue,
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
+                                      SizedBox(
+                                        height: 5,
                                       ),
-                                    SizedBox(
-                                      height: 5,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      createClient();
-                                    },
-                                    child: Text('Сохранить'),
+                                    ],
                                   ),
-                                )
-                              ],
-                            );
+                                ),
+                                actions: [
+                                  Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    margin: EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                    height: 45,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        createClient();
+                                      },
+                                      child: Text('save'.tr),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            });
                           });
-                        });
-                  },
-                  child: Text('Добавить'),
+                    },
+                    child: Text('add'.tr),
+                  ),
                 ),
               ),
             ],
@@ -269,8 +263,8 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 10, bottom: 5),
             child: Text(
-              'ПРИМЕЧАНИЕ',
-              style: TextStyle(fontSize: 16, color: a2, fontWeight: FontWeight.bold),
+              'NOTE'.tr,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
@@ -278,7 +272,7 @@ class _OnCreditState extends State<OnCredit> {
             child: TextFormField(
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Обязательное поле';
+                  return 'required_field'.tr;
                 }
                 return null;
               },
@@ -291,22 +285,12 @@ class _OnCreditState extends State<OnCredit> {
               enableInteractiveSelection: false,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: blue,
-                    width: 2,
-                  ),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: blue,
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: borderColor,
+                enabledBorder: inputBorder,
+                focusedBorder: inputFocusBorder,
+                errorBorder: inputErrorBorder,
+                focusedErrorBorder: inputErrorBorder,
                 focusColor: blue,
-                hintText: 'ПРИМЕЧАНИЕ',
+                hintText: 'NOTE'.tr,
                 hintStyle: TextStyle(color: a2),
               ),
             ),
@@ -316,19 +300,38 @@ class _OnCreditState extends State<OnCredit> {
             children: [
               Container(
                 margin: EdgeInsets.only(top: 20),
-                child: Text('К ОПЛАТЕ', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'TO_PAY'.tr,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  child:
-                      Text('${formatMoney(data['totalPrice'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+                margin: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '${formatMoney(data['totalPrice'])} ${'sum'.tr}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                          margin: EdgeInsets.only(bottom: 5), child: Text('Наличные', style: TextStyle(fontWeight: FontWeight.bold, color: grey))),
+                        margin: EdgeInsets.only(bottom: 5),
+                        child: Text(
+                          'cash'.tr,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: TextFormField(
@@ -336,7 +339,7 @@ class _OnCreditState extends State<OnCredit> {
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Обязательное поле';
+                              return 'required_field'.tr;
                             }
                             return null;
                           },
@@ -346,26 +349,16 @@ class _OnCreditState extends State<OnCredit> {
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                             suffixIcon: Icon(
-                              Icons.payments_outlined,
+                              UniconsLine.money_bill,
                               size: 30,
                               color: Color(0xFF7b8190),
                             ),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 2,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: borderColor,
+                            enabledBorder: inputBorder,
+                            focusedBorder: inputFocusBorder,
+                            errorBorder: inputErrorBorder,
+                            focusedErrorBorder: inputErrorBorder,
                             focusColor: blue,
-                            hintText: '0.00 сум',
+                            hintText: '0.00 ${'sum'.tr}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
@@ -379,7 +372,7 @@ class _OnCreditState extends State<OnCredit> {
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Обязательное поле';
+                              return 'required_field'.tr;
                             }
                             return null;
                           },
@@ -389,35 +382,38 @@ class _OnCreditState extends State<OnCredit> {
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                             suffixIcon: Icon(
-                              Icons.payment_outlined,
+                              UniconsLine.credit_card,
                               size: 30,
                               color: Color(0xFF7b8190),
                             ),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 2,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: borderColor,
-                            hintText: '0.00 сум',
+                            enabledBorder: inputBorder,
+                            focusedBorder: inputFocusBorder,
+                            errorBorder: inputErrorBorder,
+                            focusedErrorBorder: inputErrorBorder,
+                            hintText: '0.00 ${'sum'.tr}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
                       ),
                     ],
                   )),
-              Text('СУММА ДОЛГА:', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                '${'AMOUNT_OF_DEBT'.tr}:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               Container(
-                  margin: EdgeInsets.only(bottom: 10, top: 5),
-                  child: Text('${formatMoney(data['change'])} сум', style: TextStyle(color: darkGrey, fontSize: 16, fontWeight: FontWeight.bold))),
+                margin: EdgeInsets.only(bottom: 10, top: 5),
+                child: Text(
+                  '${formatMoney(data['change'])} сум',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -449,14 +445,14 @@ class _OnCreditState extends State<OnCredit> {
                           horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                         ),
                         children: [
-                          TableRow(children: const [
+                          TableRow(children: [
                             Text(
-                              'Контакт',
+                              'contact'.tr,
                             ),
                             Text(
-                              'Номер',
+                              'number'.tr,
                             ),
-                            Text('Комментарий'),
+                            Text('comment'.tr),
                           ]),
                           for (var i = 0; i < clients.length; i++)
                             TableRow(children: [
@@ -492,7 +488,7 @@ class _OnCreditState extends State<OnCredit> {
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
                                   color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                  child: Text("${clients[i]['comment'] == null ? '' : clients[i]['comment']}"),
+                                  child: Text(clients[i]['comment'] ?? ''),
                                 ),
                               ),
                             ]),
@@ -512,7 +508,7 @@ class _OnCreditState extends State<OnCredit> {
                         }
                       }
                     },
-                    child: Text('Выбрать'),
+                    child: Text('choose'.tr),
                   ),
                 )
               ],

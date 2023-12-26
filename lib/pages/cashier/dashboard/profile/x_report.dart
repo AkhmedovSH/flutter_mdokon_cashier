@@ -54,17 +54,17 @@ class _XReportState extends State<XReport> {
     getReport();
   }
 
-  buildRow(text, text2, {fz = 16.0}) {
+  buildRow(String text, text2, {fz = 16.0}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          text ?? '',
-          style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
+          text.tr,
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
         ),
         Text(
           '${text2 ?? ''}',
-          style: TextStyle(color: b8, fontSize: fz),
+          style: TextStyle(fontSize: fz),
         )
       ],
     );
@@ -80,14 +80,14 @@ class _XReportState extends State<XReport> {
                 flex: 6,
                 child: Text(
                   text,
-                  style: TextStyle(fontWeight: FontWeight.w600, color: b8, fontSize: fz),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
                 )),
             Expanded(
               flex: 3,
               child: Text(
                 '${formatMoney(text2)}',
                 textAlign: TextAlign.end,
-                style: TextStyle(color: b8, fontSize: fz),
+                style: TextStyle(fontSize: fz),
               ),
             )
           ],
@@ -102,12 +102,6 @@ class _XReportState extends State<XReport> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarIconBrightness: Brightness.dark,
-            statusBarColor: white, // Status bar
-          ),
-          bottomOpacity: 0.0,
-          backgroundColor: white,
           elevation: 0,
           // centerTitle: true,
           leading: IconButton(
@@ -116,15 +110,11 @@ class _XReportState extends State<XReport> {
             },
             icon: Icon(
               UniconsLine.arrow_left,
-              color: black,
               size: 32,
             ),
           ),
           title: Text(
-            'X отчет',
-            style: TextStyle(
-              color: black,
-            ),
+            'X_report'.tr,
           ),
           centerTitle: true,
         ),
@@ -136,7 +126,7 @@ class _XReportState extends State<XReport> {
                 children: [
                   Center(
                       child: Image.asset(
-                    'images/logo.jpg',
+                    'images/splash_logo.png',
                     height: 64,
                     width: 200,
                   )),
@@ -144,8 +134,11 @@ class _XReportState extends State<XReport> {
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'ДУБЛИКАТ',
-                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 18),
+                      'DUPLICATE'.tr,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                   Container(
@@ -153,39 +146,43 @@ class _XReportState extends State<XReport> {
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
                       '${report['posName']}',
-                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
-                    ),
-                  ),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'Телефон: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
-                      style: TextStyle(fontWeight: FontWeight.w700, color: b8, fontSize: 16),
-                    ),
-                  ),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'Адресс: ${cashbox['posAddress']}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: b8,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.center,
+                    margin: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      '${'phone'.tr}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.center,
+                    margin: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      '${'address'.tr}: ${cashbox['posAddress']}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  buildRow('Кассир', report['cashierName']),
-                  buildRow('Касса №', report['shiftNumber']),
+                  buildRow('cashier', report['cashierName']),
+                  buildRow('${'cashbox'.tr} №', report['shiftNumber']),
                   report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
-                  buildRow('Дата', report['shiftOpenDate']),
+                  buildRow('date', report['shiftOpenDate']),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     child: Text(
                       '*****************************************************************************************',
-                      style: TextStyle(color: b8),
                       overflow: TextOverflow.clip,
                       maxLines: 1,
                       softWrap: false,
@@ -203,36 +200,33 @@ class _XReportState extends State<XReport> {
                     margin: EdgeInsets.symmetric(vertical: 5),
                     child: Text(
                       '*****************************************************************************************',
-                      style: TextStyle(color: b8),
                       overflow: TextOverflow.clip,
                       maxLines: 1,
                       softWrap: false,
                     ),
                   ),
-                  buildRow('Продано в долг', report['debt']),
-                  buildRow('Сумма скидки', report['discountAmount']),
+                  buildRow('sold_on_credit', report['debt']),
+                  buildRow('discount_amount', report['discountAmount']),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     child: Text(
                       '*****************************************************************************************',
-                      style: TextStyle(color: b8),
                       overflow: TextOverflow.clip,
                       maxLines: 1,
                       softWrap: false,
                     ),
                   ),
-                  buildRow('Остаток в кассе', report['cashboxTotalAmount']),
+                  buildRow('cash_balance', report['cashboxTotalAmount']),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     child: Text(
                       '*****************************************************************************************',
-                      style: TextStyle(color: b8),
                       overflow: TextOverflow.clip,
                       maxLines: 1,
                       softWrap: false,
                     ),
                   ),
-                  buildRow('КОЛИЧЕСТВО Х ОТЧЕТОВ', report['countRequest']),
+                  buildRow('NUMBER_X_OF_REPORTS', report['countRequest']),
                   SizedBox(height: 20)
                 ],
               ),

@@ -76,7 +76,7 @@ class _SearchState extends State<Search> {
             ),
           ),
           content: Text(
-            products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' добавлен',
+            products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + 'added'.tr,
             style: TextStyle(
               color: white,
             ),
@@ -133,7 +133,7 @@ class _SearchState extends State<Search> {
     if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
       return;
     }
-    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", "Назад", false, ScanMode.BARCODE);
+    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", "back".tr, false, ScanMode.BARCODE);
     if (result != '-1') {
       setState(() {
         searchProducts(result);
@@ -178,30 +178,25 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        ScaffoldMessenger.of(context).clearSnackBars();
         Get.back(result: productsList);
         return true;
       },
       child: LoadingLayout(
         body: Scaffold(
           appBar: AppBar(
-            systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness: Brightness.dark,
-              statusBarColor: white,
-            ),
             title: Text(
-              'Каталог товаров',
-              style: TextStyle(color: black),
+              'catalog'.tr,
             ),
-            backgroundColor: white,
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
               onPressed: () {
+                ScaffoldMessenger.of(context).clearSnackBars();
                 Get.back(result: productsList);
               },
               icon: Icon(
                 UniconsLine.arrow_left,
-                color: black,
                 size: 32,
               ),
             ),
@@ -236,7 +231,7 @@ class _SearchState extends State<Search> {
                                   Radius.circular(24),
                                 ),
                               ),
-                              hintText: 'Поиск по названию, QR code ...',
+                              hintText: '${'search_by_name'.tr}, QR code ...',
                               hintStyle: TextStyle(
                                 color: lightGrey,
                                 fontSize: 14,
@@ -276,20 +271,18 @@ class _SearchState extends State<Search> {
                         height: 300,
                       ),
                       Text(
-                        'НЕ НАЙДЕНО',
+                        'NOT_FOUND'.tr,
                         style: TextStyle(
-                          color: Colors.black,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       SizedBox(height: 10),
                       Text(
-                        'По запросу ${textEditingController.text} ничего не найдено',
-                        style: TextStyle(
-                          color: black,
-                          fontSize: 16,
-                        ),
+                        'nothing_found_for'.trParams({
+                          'value': textEditingController.text,
+                        }),
+                        style: context.theme.textTheme.titleSmall,
                       ),
                     ],
                   ),
@@ -302,20 +295,16 @@ class _SearchState extends State<Search> {
                         height: 300,
                       ),
                       Text(
-                        'ПУСТОЙ СПИСОК',
+                        'EMPTY_LIST'.tr,
                         style: TextStyle(
-                          color: Colors.black,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       SizedBox(height: 10),
                       Text(
-                        'Введите название для поиска продуктов',
-                        style: TextStyle(
-                          color: black,
-                          fontSize: 16,
-                        ),
+                        'enter_name_to_search_for_products'.tr,
+                        style: context.theme.textTheme.titleSmall,
                       ),
                     ],
                   ),
@@ -329,7 +318,7 @@ class _SearchState extends State<Search> {
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
                       decoration: BoxDecoration(
-                        color: white,
+                        color: context.theme.cardColor,
                         border: Border.all(color: borderColor),
                         borderRadius: const BorderRadius.all(Radius.circular(16)),
                         boxShadow: [boxShadow],
@@ -341,7 +330,6 @@ class _SearchState extends State<Search> {
                           Text(
                             '${products[i]['productName']}',
                             style: TextStyle(
-                              color: black,
                               fontWeight: FontWeight.bold,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -362,14 +350,13 @@ class _SearchState extends State<Search> {
                                       '${formatMoney(arguments['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} So\'m',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black,
                                         fontSize: 16,
                                       ),
                                     ),
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    'Ostatok: ${formatMoney(products[i]['balance']) ?? 0}',
+                                    '${'balance'.tr}: ${formatMoney(products[i]['balance']) ?? 0}',
                                     style: TextStyle(color: grey),
                                   ),
                                 ],
@@ -398,8 +385,6 @@ class _SearchState extends State<Search> {
                                           decoration: InputDecoration(
                                             enabledBorder: inputBorder,
                                             focusedBorder: inputFocusBorder,
-                                            filled: true,
-                                            fillColor: borderColor,
                                             focusColor: mainColor,
                                           ),
                                           textAlign: TextAlign.center,

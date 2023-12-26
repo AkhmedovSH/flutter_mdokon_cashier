@@ -69,7 +69,6 @@ class _SplashState extends State<Splash> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: white,
       body: Stack(
         children: [
           Column(
@@ -86,7 +85,7 @@ class _SplashState extends State<Splash> {
               Center(
                 child: SizedBox(
                   child: SpinKitFadingCircle(
-                    color: black,
+                    color: Get.isDarkMode ? white : black,
                     size: 35.0,
                     // controller: animationController,
                   ),
@@ -100,7 +99,6 @@ class _SplashState extends State<Splash> {
             child: Text(
               vesrion,
               style: TextStyle(
-                color: black,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

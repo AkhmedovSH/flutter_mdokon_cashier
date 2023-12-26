@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:intl/intl.dart';
+
 import 'package:flutter/material.dart';
-import 'package:simple_moment/simple_moment.dart';
+import 'package:flutter/services.dart';
+
 import 'package:get/get.dart';
 
 Color mainColor = const Color(0xFF5b73e8);
@@ -30,6 +32,16 @@ Color danger = const Color(0xFFf46a6a);
 
 Color a2 = Color(0xFFA2A2A2);
 Color b8 = Color(0xFF7b8190);
+
+const systemOverlayStyleLight = SystemUiOverlayStyle(
+  statusBarIconBrightness: Brightness.light,
+  statusBarColor: Colors.transparent,
+);
+
+const systemOverlayStyleDark = SystemUiOverlayStyle(
+  statusBarIconBrightness: Brightness.dark,
+  statusBarColor: Colors.transparent,
+);
 
 BoxShadow boxShadow = BoxShadow(
   color: Colors.black.withOpacity(0.15),
@@ -67,18 +79,18 @@ generateTransactionId(posId, cashboxId, shiftId) {
 }
 
 formatDate(date) {
-  Moment rawDate = Moment.parse(date);
-  return rawDate.format("dd-MM-yyyy HH:mm");
+  DateTime rawDate = DateTime.parse(date);
+  return DateFormat("dd-MM-yyyy HH:mm").format(rawDate);
 }
 
 formatDateMonth(date, {format = "dd.MM.yyyy"}) {
-  Moment rawDate = Moment.parse(date);
-  return rawDate.format(format);
+  DateTime rawDate = DateTime.parse(date);
+  return DateFormat(format).format(rawDate);
 }
 
 formatDateHour(date) {
-  Moment rawDate = Moment.parse(date);
-  return rawDate.format("HH:mm");
+  DateTime rawDate = DateTime.parse(date);
+  return DateFormat("HH:mm").format(rawDate);
 }
 
 formatUnixTime(unixTime) {
@@ -113,7 +125,7 @@ formatMoney(amount, {decimalDigits = 2}) {
 
 showSuccessToast(message) {
   return Get.snackbar(
-    'Успешно',
+    'success'.tr,
     message,
     colorText: white,
     onTap: (_) => Get.back(),
@@ -126,7 +138,7 @@ showSuccessToast(message) {
 
 showDangerToast(message) {
   return Get.snackbar(
-    'Ошибка',
+    'error'.tr,
     message,
     colorText: white,
     onTap: (_) => Get.back(),

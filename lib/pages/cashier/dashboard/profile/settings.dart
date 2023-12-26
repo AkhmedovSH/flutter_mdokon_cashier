@@ -38,8 +38,21 @@ class _SettingsState extends State<Settings> {
   };
 
   save() {
+    if (settings['language']) {
+      Get.updateLocale(const Locale('uz-Latn-UZ', ''));
+    } else {
+      Get.updateLocale(const Locale('ru', ''));
+    }
+    print(settings['theme']);
+    if (settings['theme']) {
+      Get.changeTheme(ThemeData.dark());
+      setState(() {});
+    } else {
+      Get.changeTheme(ThemeData.light());
+    }
     storage.write('settings', jsonEncode(settings));
-    showSuccessToast('Настройки сохранены');
+    showSuccessToast('settings_saved'.tr);
+    setState(() {});
   }
 
   uploadImage() async {
@@ -52,7 +65,6 @@ class _SettingsState extends State<Settings> {
   }
 
   getData() {
-    print(storage.read('settings'));
     if (storage.read('settings') != null) {
       settings = {...settings, ...jsonDecode(storage.read('settings'))};
     }
@@ -97,6 +109,19 @@ class _SettingsState extends State<Settings> {
     checkStatus();
   }
 
+  buildTitle(String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      child: Text(
+        text.tr,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   buildCheckBoxRow(String title, String description, String value, {soon = false}) {
     return GestureDetector(
       onTap: () {
@@ -105,9 +130,10 @@ class _SettingsState extends State<Settings> {
         });
       },
       child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 12),
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: white,
+          color: context.theme.cardColor,
           boxShadow: [boxShadow],
           borderRadius: BorderRadius.circular(8),
         ),
@@ -118,23 +144,21 @@ class _SettingsState extends State<Settings> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.5,
+                  width: MediaQuery.of(context).size.width * 0.6,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        title.tr,
                         style: TextStyle(
-                          color: black,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       SizedBox(height: 5),
                       Text(
-                        description,
+                        description.tr,
                         style: TextStyle(
-                          color: black,
                           fontSize: 12,
                         ),
                       ),
@@ -144,10 +168,9 @@ class _SettingsState extends State<Settings> {
                 Checkbox(
                   value: settings[value],
                   activeColor: mainColor,
-                  onChanged: (value) {
-                    setState(() {
-                      settings[value] = !settings[value];
-                    });
+                  onChanged: (newValue) {
+                    settings[value] = !settings[value];
+                    setState(() {});
                   },
                 )
               ],
@@ -156,7 +179,7 @@ class _SettingsState extends State<Settings> {
               Positioned.fill(
                 top: 0,
                 child: Container(
-                  color: white.withOpacity(0.8),
+                  color: context.theme.cardColor.withOpacity(0.8),
                   width: MediaQuery.of(context).size.width,
                   alignment: Alignment.center,
                   height: double.infinity,
@@ -166,7 +189,7 @@ class _SettingsState extends State<Settings> {
                       Icon(UniconsLine.clock),
                       SizedBox(width: 10),
                       Text(
-                        'Скоро',
+                        'soon'.tr,
                         style: TextStyle(
                           color: grey,
                           fontSize: 18,
@@ -187,12 +210,7 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.dark,
-          statusBarColor: white, // Status bar
-        ),
         bottomOpacity: 0.0,
-        backgroundColor: white,
         elevation: 0,
         // centerTitle: true,
         leading: IconButton(
@@ -201,69 +219,46 @@ class _SettingsState extends State<Settings> {
           },
           icon: Icon(
             UniconsLine.arrow_left,
-            color: black,
             size: 32,
+            color: context.theme.iconTheme.color,
           ),
         ),
         title: Text(
-          'Настройки',
-          style: TextStyle(
-            color: black,
-          ),
+          'settings'.tr,
         ),
         centerTitle: true,
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 12),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Общее',
-                style: TextStyle(
-                  color: black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              buildTitle('general'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Тема', 'Меняет цветовую гамму', 'theme', soon: true),
+              buildCheckBoxRow('settings_title_1', 'settings_description_1', 'theme'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Язык', 'Меняет язык приложения', 'language', soon: true),
+              buildCheckBoxRow('settings_title_2', 'settings_description_2', 'language'),
               SizedBox(height: 15),
-              Text(
-                'Касса',
-                style: TextStyle(
-                  color: black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              buildTitle('cashbox'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Выбрать клиента при продаже товара', 'Выбрать клиента при продаже товара', 'selectUserAftersale'),
+              buildCheckBoxRow('settings_title_3', 'settings_description_3', 'selectUserAftersale'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Группировка товаров', 'Поиск по группировочным товарам', 'searchGroupProducts', soon: true),
+              buildCheckBoxRow('settings_title_4', 'settings_description_4', 'searchGroupProducts', soon: true),
               SizedBox(height: 15),
-              buildCheckBoxRow('Отложка оффлайн', 'Отложка оффлайн', 'offlineDeferment', soon: true),
+              buildCheckBoxRow('settings_title_5', 'settings_description_5', 'offlineDeferment', soon: true),
               SizedBox(height: 15),
-              Text(
-                'Печать',
-                style: TextStyle(
-                  color: black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              buildTitle('print'),
               SizedBox(height: 15),
               GestureDetector(
                 onTap: () {
                   uploadImage();
                 },
                 child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 12),
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: white,
+                    color: context.theme.cardColor,
                     boxShadow: [boxShadow],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -277,18 +272,16 @@ class _SettingsState extends State<Settings> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Загрузить изображение',
+                              'settings_title_6'.tr,
                               style: TextStyle(
-                                color: black,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             SizedBox(height: 5),
                             Text(
-                              'Изображение будет отображатся в чеках (черно-белый формат)',
+                              'settings_description_6'.tr,
                               style: TextStyle(
-                                color: black,
                                 fontSize: 12,
                               ),
                             ),
@@ -317,9 +310,10 @@ class _SettingsState extends State<Settings> {
                   getBluetooth();
                 },
                 child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 12),
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: white,
+                    color: context.theme.cardColor,
                     boxShadow: [boxShadow],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -333,18 +327,16 @@ class _SettingsState extends State<Settings> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Принтер по умолчанию',
+                              'settings_title_7'.tr,
                               style: TextStyle(
-                                color: black,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             SizedBox(height: 5),
                             Text(
-                              'Подключитесь к своему принтеру',
+                              'settings_description_7'.tr,
                               style: TextStyle(
-                                color: black,
                                 fontSize: 12,
                               ),
                             ),
@@ -367,11 +359,11 @@ class _SettingsState extends State<Settings> {
                 ),
               ),
               SizedBox(height: 15),
-              buildCheckBoxRow('Автоматическая печать', 'Печатать чек после оплаты', 'printAfterSale'),
+              buildCheckBoxRow('settings_title_8', 'settings_description_8', 'printAfterSale'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Продукты в чеках', 'Отображать продукты в чеках (влияет на скорость печати)', 'showChequeProducts'),
+              buildCheckBoxRow('settings_title_9', 'settings_description_9', 'showChequeProducts'),
               SizedBox(height: 15),
-              buildCheckBoxRow('Дополнительная информация в чеке', 'Дополнительная информация в чеке', 'additionalInfo'),
+              buildCheckBoxRow('settings_title_10', 'settings_description_10', 'additionalInfo'),
               SizedBox(height: 70),
             ],
           ),
@@ -386,7 +378,7 @@ class _SettingsState extends State<Settings> {
             onPressed: () {
               save();
             },
-            child: Text('Сохранить'),
+            child: Text('save'.tr),
           ),
         ),
       ),
@@ -427,7 +419,7 @@ class _SettingsState extends State<Settings> {
       if (availableBluetoothDevices.isNotEmpty) {
         openBluetoothDevices();
       } else {
-        showDangerToast('Нет активных устройств или отключен блютуз');
+        showDangerToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
       }
     }
   }
@@ -442,7 +434,7 @@ class _SettingsState extends State<Settings> {
         messageText: Row(
           children: [
             Text(
-              'Подключение',
+              'connection'.tr,
               style: TextStyle(color: white),
             ),
             const SizedBox(width: 10),
@@ -463,7 +455,7 @@ class _SettingsState extends State<Settings> {
       timer = Timer(const Duration(seconds: 5), () {
         if (!connected) {
           Get.closeAllSnackbars();
-          showDangerToast('Не удалось подключиться');
+          showDangerToast('failed_to_connect'.tr);
           newSetState(() {});
           return;
         }
@@ -478,7 +470,7 @@ class _SettingsState extends State<Settings> {
         if (timer != null) {
           timer!.cancel();
         }
-        showDangerToast('Нет подключения');
+        showDangerToast('no_connection'.tr);
 
         connected = false;
         newSetState(() {});
@@ -540,7 +532,7 @@ class _SettingsState extends State<Settings> {
                                   color: activeIndex == index ? mainColor : black,
                                 ),
                               ),
-                              subtitle: Text(activeIndex == index ? "Подключенное устройство" : "Нажмите чтобы подключиться"),
+                              subtitle: Text(activeIndex == index ? "connected_device".tr : "click_to_connect".tr),
                             );
                           },
                         ),

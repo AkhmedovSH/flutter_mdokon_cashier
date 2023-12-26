@@ -88,7 +88,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.write('cashbox', jsonEncode(response['shift']));
       Get.offAllNamed('/');
     } else {
-      Get.offAllNamed('/cashboxes', arguments: response['posList']);
+      Get.toNamed('/cashboxes', arguments: response['posList']);
     }
     controller.hideLoading();
     setState(() {});
@@ -105,6 +105,22 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         setState(() {});
       }
     }
+    print(storage.read('settings'));
+    if (storage.read('settings') == null) {
+      storage.write(
+        'settings',
+        jsonEncode({
+          'showChequeProducts': false,
+          'printAfterSale': false,
+          'searchGroupProducts': false,
+          'selectUserAftersale': false,
+          'offlineDeferment': false,
+          'additionalInfo': false,
+          'language': false,
+          'theme': false,
+        }),
+      );
+    }
   }
 
   @override
@@ -118,10 +134,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     return LoadingLayout(
       body: Scaffold(
         appBar: AppBar(
-          systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarIconBrightness: Brightness.dark,
-            statusBarColor: Colors.white, // Status bar
-          ),
           elevation: 0.0,
           bottomOpacity: 0.0,
           backgroundColor: Colors.transparent,
@@ -142,7 +154,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                 Text(
                   'Авторизация',
                   style: TextStyle(
-                    color: black,
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2.0,
@@ -170,7 +181,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                 controller: data['username'],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Обязательное поле';
+                                    return 'required_field'.tr;
                                   }
                                   return null;
                                 },
@@ -204,7 +215,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                 controller: data['password'],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Обязательное поле';
+                                    return 'required_field'.tr;
                                   }
                                   return null;
                                 },
