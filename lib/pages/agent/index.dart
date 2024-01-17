@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
+import 'package:unicons/unicons.dart';
 
 class AgentIndex extends StatefulWidget {
   const AgentIndex({Key? key}) : super(key: key);
@@ -109,6 +112,25 @@ class _AgentIndexState extends State<AgentIndex> {
     }
   }
 
+  getClients() async {
+    final cashbox = jsonDecode(storage.read('cashbox')!);
+    final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
+    //print(response);
+    for (var i = 0; i < response.length; i++) {
+      response[i]['selected'] = false;
+    }
+    setState(() {
+      clients = response;
+      debtIn['cashboxId'] = cashbox['cashboxId'];
+      debtIn['posId'] = cashbox['posId'];
+      if (storage.read('shift') != null) {
+        debtIn['shiftId'] = jsonDecode(storage.read('shift')!)['id'];
+      } else {
+        debtIn['shiftId'] = cashbox['id'];
+      }
+    });
+  }
+
   redirectToCalculator(i) async {
     final product = await Get.toNamed('/calculator', arguments: data["itemsList"][i]);
     //print('product${product}');
@@ -133,41 +155,54 @@ class _AgentIndexState extends State<AgentIndex> {
 
   redirectToSearch() async {
     if (data['discount'] > 0) {
-      showDangerToast('Была пременина скидка');
+      showDangerToast('discount_has_been_applied'.tr);
       return;
     }
-    final product = await Get.toNamed('/search');
-    if (product != null) {
-      product['discount'] = 0;
-      product['wholesale'] = false;
-      product['outType'] = false;
+    final products = await Get.toNamed('/search', arguments: {'activePrice': data['activePrice']});
+    print(products);
+    if (products == null) {
+      // showErrorToast('Ошибка при добавлении продуктов');
+      return;
+    }
+    for (var i = 0; i < products.length; i++) {
+      if (products[i] != null) {
+        var product = Map.from(products[i]);
+        product['discount'] = 0;
+        product['outType'] = false;
 
-      if (product['unitList'].length > 0) {
-        setState(() {
-          productWithParams = product;
-          productWithParams['quantity'] = "";
-          productWithParams['totalPrice'] = "";
-          productWithParams['selectedUnit'] = product['unitList'][0];
-        });
-        showProductsWithParams();
-        return;
-      }
-      var existSameProduct = false;
-      dynamic productsCopy = data["itemsList"];
-      for (var i = 0; i < productsCopy.length; i++) {
-        if (productsCopy[i]['productId'] == product['productId']) {
-          existSameProduct = true;
-
-          if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
-            showDangerToast('Превышен лимит');
-            return;
-          }
-          addToList(productsCopy[i]);
+        if (data['activePrice'] == 1) {
+          product['wholesale'] = true;
+        } else {
+          product['wholesale'] = false;
         }
-      }
 
-      if (!existSameProduct) {
-        addToList(product);
+        if (product['unitList'].length > 0) {
+          setState(() {
+            productWithParams = product;
+            productWithParams['quantity'] = "";
+            productWithParams['totalPrice'] = "";
+            productWithParams['selectedUnit'] = product['unitList'][0];
+          });
+          showProductsWithParams();
+          return;
+        }
+        var existSameProduct = false;
+        dynamic productsCopy = data["itemsList"];
+        for (var i = 0; i < productsCopy.length; i++) {
+          if (productsCopy[i]['productId'] == product['productId']) {
+            existSameProduct = true;
+
+            if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
+              showDangerToast('limit_exceeded'.tr);
+              return;
+            }
+            addToList(product);
+          }
+        }
+
+        if (!existSameProduct) {
+          addToList(product);
+        }
       }
     }
   }
@@ -178,7 +213,7 @@ class _AgentIndexState extends State<AgentIndex> {
     dynamic index = dataCopy['itemsList'].indexWhere((e) => e['balanceId'] == response['balanceId']);
     if (index == -1) {
       if (!response.containsKey('quantity')) {
-        response['quantity'] = 1;
+        // response['quantity'] = 1;
         if (weight != 0) {
           response['quantity'] = weight;
         }
@@ -194,7 +229,11 @@ class _AgentIndexState extends State<AgentIndex> {
 
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
         if (dataCopy['itemsList'][i]['wholesale'] == true) {
-          //
+          dataCopy['itemsList'][i]['salePrice'] = double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString());
+          dataCopy['totalPrice'] +=
+              double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+          dataCopy['itemsList'][i]['totalPrice'] =
+              double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
         } else {
           dataCopy['totalPrice'] +=
               double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
@@ -203,6 +242,7 @@ class _AgentIndexState extends State<AgentIndex> {
         }
       }
     } else {
+      print(response['quantity']);
       if (response['quantity'] != "") {
         // if scaleProduct
         if (weight > 0) {
@@ -212,12 +252,12 @@ class _AgentIndexState extends State<AgentIndex> {
           // not needed
           // dataCopy['itemsList'][index]['quantity'] = response['quantity']
         } else {
-          dataCopy['itemsList'][index]['quantity'] = double.parse(dataCopy['itemsList'][index]['quantity'].toString()) + 1;
+          dataCopy['itemsList'][index]['quantity'] = double.parse(response['quantity'].toString());
         }
       } else {
         dataCopy['itemsList'][index]['quantity'] = response['quantity'];
       }
-
+      dataCopy['itemsList'][index]['discount'] = 0;
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
         if (dataCopy['itemsList'][i]['wholesale'] == true) {
           dataCopy['itemsList'][i]['wholesale'] = true;
@@ -253,63 +293,71 @@ class _AgentIndexState extends State<AgentIndex> {
 
   deleteProduct(i) {
     if (data["itemsList"].length == 1) {
+      print(111);
       deleteAllProducts();
       return;
     }
     double totalPrice = 0;
+    double totalPriceBeforeDiscount = 0;
+
     dynamic productsCopy = data["itemsList"];
     productsCopy.removeAt(i);
 
     for (var i = 0; i < productsCopy.length; i++) {
       productsCopy[i]['totalPrice'] = productsCopy[i]['quantity'] * productsCopy[i]['salePrice'];
+      if (productsCopy[i]['totalPriceOriginal'] != null) {
+        totalPriceBeforeDiscount += double.parse(productsCopy[i]['totalPriceOriginal'].toString());
+      } else {
+        totalPriceBeforeDiscount += double.parse(productsCopy[i]['totalPrice'].toString());
+      }
       totalPrice += productsCopy[i]['totalPrice'];
     }
-
-    setState(() {
-      data["itemsList"] = productsCopy;
-      data['totalPrice'] = totalPrice;
-    });
+    data['discount'] = 100 - (totalPrice * 100 / totalPriceBeforeDiscount);
+    data["itemsList"] = productsCopy;
+    data['totalPriceBeforeDiscount'] = totalPriceBeforeDiscount;
+    data['totalPrice'] = totalPrice;
+    setState(() {});
   }
 
   deleteAllProducts({type = false}) {
-    setState(() {
-      data = {
-        "cashboxVersion": "",
-        "login": "",
-        "loyaltyBonus": 0,
-        "loyaltyClientAmount": 0,
-        "loyaltyClientName": "",
-        "cashboxId": "",
-        "change": 0,
-        "chequeDate": 0,
-        "chequeNumber": "",
-        "clientAmount": 0,
-        "clientComment": "",
-        "clientId": 0,
-        "currencyId": "",
-        "currencyRate": 0,
-        "discount": 0,
-        "note": "",
-        "offline": false,
-        "outType": false,
-        "paid": 0,
-        "posId": "",
-        "saleCurrencyId": "",
-        "shiftId": '',
-        "totalPriceBeforeDiscount": 0, // this is only for showing when sale
-        "totalPrice": 0,
-        "transactionId": "",
-        "itemsList": [],
-        "transactionsList": []
-      };
-    });
+    data = {
+      "cashboxVersion": "",
+      "login": "",
+      "loyaltyBonus": 0,
+      "loyaltyClientAmount": 0,
+      "loyaltyClientName": "",
+      "cashboxId": "",
+      "change": 0,
+      "chequeDate": 0,
+      "chequeNumber": "",
+      "clientAmount": 0,
+      "clientComment": "",
+      "clientId": 0,
+      "currencyId": "",
+      "currencyRate": 0,
+      "discount": 0,
+      "note": "",
+      "offline": false,
+      "outType": false,
+      "paid": 0,
+      "posId": "",
+      "saleCurrencyId": "",
+      "shiftId": '',
+      "totalPriceBeforeDiscount": 0, // this is only for showing when sale
+      "totalPrice": 0,
+      "transactionId": "",
+      "itemsList": [],
+      "transactionsList": [],
+      "activePrice": data['activePrice'],
+    };
+    setState(() {});
     if (type) {
       Navigator.pop(context);
     }
   }
 
   handleShortCut(type) {
-    if (shortcutController.text.length == 0 && type != "/") return;
+    if (shortcutController.text.isEmpty && type != "/") return;
     dynamic productsCopy = data["itemsList"];
     var inputData = shortcutController.text;
     var isFloat = '.'.allMatches(inputData).isEmpty ? false : true;
@@ -319,13 +367,13 @@ class _AgentIndexState extends State<AgentIndex> {
         if (productsCopy[i]['selected']) {
           // Штучные товары нельзя вводить дробным числом
           if (isFloat && productsCopy[i]['uomId'] == 1) {
-            showDangerToast('Неверное количество');
+            showDangerToast('wrong_quantity'.tr);
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             return;
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) > productsCopy[i]['balance'])) {
-              showDangerToast('Превышен лимит');
+              showDangerToast('limit_exceeded'.tr);
               productsCopy[i]['quantity'] = productsCopy[i]['balance'];
               calculateTotalPrice(productsCopy);
               shortcutController.text = "";
@@ -349,7 +397,7 @@ class _AgentIndexState extends State<AgentIndex> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (double.parse(inputData) < productsCopy[i]['price']) {
-            showDangerToast('Цена продажи не может быть ниже чем цена поступления');
+            showDangerToast('sale_price_cannot_be_lower_than_receipt_price'.tr);
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             break;
@@ -368,11 +416,11 @@ class _AgentIndexState extends State<AgentIndex> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (productsCopy[i]['uomId'] == 1) {
-            showDangerToast('Неверное количество');
+            showDangerToast('wrong_quantity'.tr);
             shortcutController.text = "";
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) / productsCopy[i]['salePrice'] > productsCopy[i]['balance'])) {
-              showDangerToast('Превышен лимит');
+              showDangerToast('limit_exceeded'.tr);
             } else if (!cashbox['saleMinus'] && (productsCopy[i]['balance'] > (double.parse(inputData) / productsCopy[i]['salePrice']))) {
               productsCopy[i]['quantity'] = double.parse(inputData) / productsCopy[i]['salePrice'];
             } else {
@@ -410,6 +458,13 @@ class _AgentIndexState extends State<AgentIndex> {
       return;
     }
 
+    if (type == "s") {
+      calculateDiscount("s", inputData);
+      shortcutController.text = "";
+      FocusManager.instance.primaryFocus?.unfocus();
+      return;
+    }
+
     if (type == "%-") {
       calculateDiscount("%-", inputData);
       shortcutController.text = "";
@@ -437,14 +492,16 @@ class _AgentIndexState extends State<AgentIndex> {
   calculateDiscount(key, value) {
     value = double.parse(value);
     dynamic dataCopy = data;
-    if (dataCopy['discount'] > 0) {
-      dataCopy['discount'] = 0;
-      dataCopy['totalPrice'] = double.parse(dataCopy['totalPriceBeforeDiscount'].toString());
-      dataCopy['totalPriceBeforeDiscount'] = 0;
-      for (var i = 0; i < dataCopy["itemsList"].length; i++) {
-        dataCopy["itemsList"][i]['discount'] = 0;
-        dataCopy["itemsList"][i]['totalPrice'] =
-            double.parse(dataCopy["itemsList"][i]['salePrice'].toString()) * double.parse(dataCopy["itemsList"][i]['quantity'].toString());
+    if (key != 's') {
+      if (dataCopy['discount'] > 0) {
+        dataCopy['discount'] = 0;
+        dataCopy['totalPrice'] = double.parse(dataCopy['totalPriceBeforeDiscount'].toString());
+        dataCopy['totalPriceBeforeDiscount'] = 0;
+        for (var i = 0; i < dataCopy["itemsList"].length; i++) {
+          dataCopy["itemsList"][i]['discount'] = 0;
+          dataCopy["itemsList"][i]['totalPrice'] =
+              double.parse(dataCopy["itemsList"][i]['salePrice'].toString()) * double.parse(dataCopy["itemsList"][i]['quantity'].toString());
+        }
       }
     }
 
@@ -460,6 +517,32 @@ class _AgentIndexState extends State<AgentIndex> {
       dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
       dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * value) / 100;
     }
+    if (key == "s") {
+      dataCopy['totalPrice'] = 0;
+      dataCopy['totalPriceBeforeDiscount'] = 0;
+      for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        if (dataCopy['itemsList'][i]['selected']) {
+          if (dataCopy['itemsList'][i]['discount'] == 0) {
+            dataCopy['itemsList'][i]['totalPriceOriginal'] = dataCopy['itemsList'][i]['totalPrice'];
+            dataCopy['itemsList'][i]['totalPrice'] = (dataCopy['itemsList'][i]['totalPrice'] - value);
+          } else {
+            dataCopy['itemsList'][i]['totalPrice'] = (dataCopy['itemsList'][i]['totalPriceOriginal'] - value);
+          }
+          dataCopy['itemsList'][i]['discount'] = (100 / (dataCopy['itemsList'][i]['totalPriceOriginal'] / value));
+        }
+
+        if (dataCopy['itemsList'][i]['totalPriceOriginal'] != null) {
+          dataCopy['totalPriceBeforeDiscount'] += double.parse(dataCopy['itemsList'][i]['totalPriceOriginal'].toString());
+        } else {
+          dataCopy['totalPriceBeforeDiscount'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
+        }
+        dataCopy['totalPrice'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
+
+        print(dataCopy['itemsList'][i]['totalPrice']);
+      }
+      dynamic percent = 100 - (dataCopy['totalPrice'] * 100 / dataCopy['totalPriceBeforeDiscount']);
+      dataCopy['discount'] = percent;
+    }
 
     if (key == "%-") {
       dynamic percent = 100 / (dataCopy['totalPrice'] / value);
@@ -472,10 +555,9 @@ class _AgentIndexState extends State<AgentIndex> {
         dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - ((dataCopy['itemsList'][i]['totalPrice'] * percent) / 100);
       }
     }
-    print(dataCopy['itemsList']);
-    setState(() {
-      data = dataCopy;
-    });
+
+    data = dataCopy;
+    setState(() {});
   }
 
   calculateProductWithParamsUnit(Function setDialogState) {
@@ -483,8 +565,8 @@ class _AgentIndexState extends State<AgentIndex> {
     dynamic quantity = 0;
     dynamic totalPrice = 0;
 
-    dynamic packaging = packagingController.text.length == 0 ? 0 : double.parse(packagingController.text);
-    dynamic piece = pieceController.text.length == 0 ? 0 : double.parse(pieceController.text);
+    dynamic packaging = packagingController.text.isEmpty ? 0 : double.parse(packagingController.text);
+    dynamic piece = pieceController.text.isEmpty ? 0 : double.parse(pieceController.text);
 
     dynamic salePrice = double.parse(productWithParams['salePrice'].toString());
     dynamic selectedUnitQuantity = double.parse(productWithParams['selectedUnit']['quantity'].toString());
@@ -573,10 +655,9 @@ class _AgentIndexState extends State<AgentIndex> {
       clients = clientsCopy;
       debtIn['clientId'] = clientsCopy[index]['clientId'];
       debtIn['currencyId'] = clientsCopy[index]['currencyId'];
+      debtIn['currencyName'] = clientsCopy[index]['currencyName'];
     });
   }
-
-  
 
   @override
   void initState() {
@@ -590,8 +671,6 @@ class _AgentIndexState extends State<AgentIndex> {
       });
     }
   }
-
- 
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
     return Column(
@@ -644,54 +723,90 @@ class _AgentIndexState extends State<AgentIndex> {
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarIconBrightness: Brightness.light,
-          statusBarColor: blue, // Status bar
+          statusBarColor: mainColor, // Status bar
         ),
         bottomOpacity: 0.0,
+        centerTitle: false,
         title: Text(
-          'Продажа',
+          'sale'.tr,
           style: TextStyle(color: white),
         ),
-        backgroundColor: blue,
+        backgroundColor: mainColor,
         elevation: 0,
-        // centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
-          icon: Icon(Icons.menu, color: white),
-        ),
         actions: [
-          data["itemsList"].length > 0
-              ? SizedBox(
-                  child: IconButton(
-                    onPressed: () {
-                      showDeleteDialog();
-                    },
-                    icon: Icon(Icons.delete),
-                  ),
-                )
-              : SizedBox(),
+          if (data['itemsList'].length > 0)
+            SizedBox(
+              child: IconButton(
+                onPressed: () {
+                  if (data["itemsList"].length > 0) {
+                    openConfirmModal();
+                  }
+                },
+                icon: Icon(UniconsLine.trash_alt),
+              ),
+            ),
+          SizedBox(
+            child: Tooltip(
+              message: 'wholesale_price'.tr,
+              child: Checkbox(
+                activeColor: mainColor,
+                checkColor: white,
+                focusColor: white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
+                side: MaterialStateBorderSide.resolveWith(
+                  (states) => BorderSide(width: 2.0, color: white),
+                ),
+                value: data['activePrice'] == 1,
+                onChanged: data['itemsList'].length == 0
+                    ? (value) {
+                        if (data['activePrice'] == 1) {
+                          data['activePrice'] = 0;
+                        } else {
+                          data['activePrice'] = 1;
+                        }
+                        setState(() {});
+                      }
+                    : null,
+              ),
+            ),
+          ),
         ],
       ),
       body: data["itemsList"].length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'images/barcode-scanner.png',
-                ),
-                SizedBox(height: 20),
+                Get.isDarkMode
+                    ? SvgPicture.asset(
+                        'images/icons/scanner_dark.svg',
+                        height: 350,
+                      )
+                    : SvgPicture.asset(
+                        'images/icons/scanner.svg',
+                        height: 350,
+                      ),
                 Center(
-                  child: Text(
-                    'Отсканируйте штрихкод с упаковки товара \nили введите его вручную.',
-                    textAlign: TextAlign.center,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'scan_barcode_from_product_packaging_or_enter_it_manually'.tr,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                )
+                ),
+                SizedBox(height: 100),
               ],
             )
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -702,16 +817,12 @@ class _AgentIndexState extends State<AgentIndex> {
                               handleShortCut(shortCutList[i]);
                             },
                             child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              margin: EdgeInsets.symmetric(horizontal: 3),
                               alignment: Alignment.center,
-                              width: 48,
-                              height: 48,
+                              height: 50,
                               decoration: BoxDecoration(
-                                color: blue,
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(10),
-                                  bottomRight: Radius.circular(10),
-                                ),
+                                color: mainColor,
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
                                 shortCutList[i],
@@ -737,13 +848,11 @@ class _AgentIndexState extends State<AgentIndex> {
                             decoration: InputDecoration(
                               contentPadding: const EdgeInsets.all(12),
                               isDense: true,
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: borderColor),
-                                borderRadius: const BorderRadius.all(Radius.circular(24)),
-                              ),
-                              hintText: 'Введите значение',
+                              border: inputBorder,
+                              enabledBorder: inputBorder,
+                              focusedBorder: inputFocusBorder,
+                              hintText: 'enter_value'.tr,
                               hintStyle: TextStyle(
-                                color: lightGrey,
                                 fontSize: 14,
                               ),
                             ),
@@ -758,7 +867,7 @@ class _AgentIndexState extends State<AgentIndex> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Итого', style: TextStyle(fontSize: 16)),
+                        Text('total'.tr, style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
                             ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
                             : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
@@ -771,97 +880,138 @@ class _AgentIndexState extends State<AgentIndex> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Скидка', style: TextStyle(fontSize: 16)),
+                        Text(
+                          'discount'.tr,
+                          style: TextStyle(fontSize: 16),
+                        ),
                         Wrap(
                           children: [
                             data['discount'] == 0
-                                ? Text('(0%)', style: TextStyle(fontSize: 16))
-                                : Text('(' + formatMoney(data['discount']) + '%)', style: TextStyle(fontSize: 16)),
+                                ? Text(
+                                    '(0%)',
+                                    style: TextStyle(fontSize: 16),
+                                  )
+                                : Text(
+                                    '(' + formatMoney(data['discount']) + '%)',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                             SizedBox(width: 10),
                             data['discount'] == 0
-                                ? Text('0,00 Сум', style: TextStyle(fontSize: 16))
+                                ? Text(
+                                    '0,00 ${'sum'.tr}',
+                                    style: TextStyle(fontSize: 16),
+                                  )
                                 : Text(
                                     formatMoney(
                                             double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
-                                        'Сум',
-                                    style: TextStyle(fontSize: 16)),
+                                        'sum'.tr,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                           ],
                         ),
                       ],
                     ),
                   ),
+                  SizedBox(height: 10),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            SizedBox(height: 10),
-                            Text('К оплате', style: TextStyle(fontSize: 16)),
-                            SizedBox(height: 5),
-                            Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16)),
-                          ],
-                        )
+                        Text('to_pay'.tr, style: TextStyle(fontSize: 16)),
+                        Text(
+                          formatMoney(data['totalPrice']) + ' Сум',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 20),
                   for (var i = data["itemsList"].length - 1; i >= 0; i--)
-                    Dismissible(
-                      key: ValueKey(data["itemsList"][i]['productName']),
-                      onDismissed: (DismissDirection direction) {
-                        deleteProduct(i);
+                    InkWell(
+                      onTap: () {
+                        selectProduct(i);
                       },
-                      background: Container(
-                        color: white,
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.only(right: 10),
-                        child: Icon(Icons.delete, color: red),
-                      ),
-                      direction: DismissDirection.endToStart,
-                      child: GestureDetector(
-                        onTap: () {
-                          selectProduct(i);
-                        },
+                      onLongPress: () {},
+                      // borderRadius: BorderRadius.circular(16),
+                      highlightColor: mainColor.withOpacity(0.1),
+                      splashColor: mainColor.withOpacity(0.5),
+                      child: Slidable(
+                        key: UniqueKey(),
+                        closeOnScroll: false,
+                        useTextDirection: false,
+                        endActionPane: ActionPane(
+                          motion: const StretchMotion(),
+                          dismissible: DismissiblePane(
+                            onDismissed: () {
+                              deleteProduct(i);
+                            },
+                          ),
+                          children: [
+                            SlidableAction(
+                              onPressed: (value) {
+                                deleteProduct(i);
+                              },
+                              // borderRadius: BorderRadius.circular(24),
+                              backgroundColor: const Color(0xFFFE4A49),
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                              padding: const EdgeInsets.all(12),
+                            ),
+                          ],
+                        ),
                         child: Container(
+                          // margin: const EdgeInsets.only(bottom: 10, right: 8, left: 8),
                           width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(bottom: 5),
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          padding: EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             border: Border(
-                              bottom: BorderSide(color: data["itemsList"][i]['selected'] ? Color(0xFF5b73e8) : Color(0xFFF5F3F5), width: 1),
+                              top: BorderSide(
+                                color: data["itemsList"][i]['selected'] ? mainColor : Color(0xFFF5F3F5),
+                              ),
+                              bottom: BorderSide(
+                                color: data["itemsList"][i]['selected'] ? mainColor : Color(0xFFF5F3F5),
+                              ),
                             ),
+                            // borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${(i + 1).toString() + '. ' + data["itemsList"][i]['productName']}',
+                                (i + 1).toString() + '. ' + data["itemsList"][i]['productName'],
                                 style: const TextStyle(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 softWrap: false,
                               ),
+                              SizedBox(height: 5),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        '${formatMoney(data["itemsList"][i]['salePrice'])}x ${formatMoney(data["itemsList"][i]['quantity'])}',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ],
+                                  RichText(
+                                    text: TextSpan(
+                                      text: '${formatMoney(data["itemsList"][i]['salePrice'])} x ${formatMoney(data["itemsList"][i]['quantity'])}',
+                                      style: TextStyle(fontSize: 16, color: Get.isDarkMode ? white : black),
+                                      children: <TextSpan>[
+                                        if (data["itemsList"][i]['discount'] > 0)
+                                          TextSpan(
+                                            text: '(${formatMoney(data["itemsList"][i]['discount'], decimalDigits: 0)}%)',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                   Text(
                                     '${formatMoney(data["itemsList"][i]['totalPrice'])}So\'m',
-                                    style: TextStyle(fontWeight: FontWeight.w600, color: blue, fontSize: 16),
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: mainColor, fontSize: 16),
                                   ),
                                 ],
                               ),
@@ -869,34 +1019,105 @@ class _AgentIndexState extends State<AgentIndex> {
                           ),
                         ),
                       ),
-                    )
+                    ),
+                  SizedBox(height: 80)
                 ],
               ),
             ),
+      resizeToAvoidBottomInset: false,
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
             margin: EdgeInsets.only(left: 32),
+            width: MediaQuery.of(context).size.width * 0.5,
             child: ElevatedButton(
-              onPressed: () {
-                sendToCashbox();
-              },
+              onPressed: data["itemsList"].length > 0
+                  ? () {
+                      sendToCashbox();
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                backgroundColor: data["itemsList"].length > 0 ? blue : lightGrey,
+                backgroundColor: mainColor,
+                disabledBackgroundColor: disabledColor,
+                disabledForegroundColor: black,
               ),
-              child: Text(isEdit ? 'Изменить на кассе' : 'Отправить на кассу'),
+              child: Text('send_to_cashbox'.tr),
             ),
           ),
           FloatingActionButton(
-            backgroundColor: data['discount'] == 0 ? blue : lightGrey,
+            backgroundColor: data['discount'] == 0 ? mainColor : lightGrey,
             onPressed: () {
               redirectToSearch();
             },
             child: const Icon(Icons.add, size: 28),
           )
         ],
+      ),
+    );
+  }
+
+  openConfirmModal() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(24.0),
+          ),
+        ),
+        title: const Text(''),
+        titlePadding: const EdgeInsets.all(0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        actionsPadding: const EdgeInsets.all(0),
+        buttonPadding: const EdgeInsets.all(0),
+        content: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.21,
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              Text(
+                'are_you_sure_you_want_to_remove_all_products'.tr,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: danger,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        deleteAllProducts();
+                        Get.back();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text('continue'.tr),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+        ),
       ),
     );
   }

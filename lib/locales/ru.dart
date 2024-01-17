@@ -155,4 +155,5 @@ final ru = {
   "loyalty": "Лояльность",
   "accept": "Принять",
   "CHANGE": "СДАЧА",
+  "send_to_cashbox": "Отправить на кассу",
 };

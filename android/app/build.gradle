@@ -52,7 +52,7 @@ android {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.mdokon.cabinet"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionName '1.0.12'
         versionCode 12
         versionCode flutterVersionCode.toInteger()

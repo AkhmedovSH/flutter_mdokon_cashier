@@ -32,6 +32,7 @@ class Themes {
     iconButtonTheme: IconButtonThemeData(
       style: ButtonStyle(
         iconColor: MaterialStateProperty.all<Color>(black),
+        
       ),
     ),
     scaffoldBackgroundColor: white,

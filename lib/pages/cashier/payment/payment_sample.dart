@@ -179,7 +179,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (settings['printAfterSale']) {
       var status = await BluetoothThermalPrinter.connectionStatus;
       if (status == 'true') {
-        printCheque(dataCopy, dataCopy['itemsList']);
+        await printCheque(dataCopy, dataCopy['itemsList']);
       } else {
         var result = await connectToPrinter();
         if (result) {

@@ -95,7 +95,7 @@ final uz = {
   "print": "Muhr",
   "settings_title_1": "Qorong'i mavzu",
   "settings_description_1": "Mavzuni o'zgartirganda, dasturni qayta ishga tushirish tavsiya etiladi",
-  "settings_title_2": "o'zbek tili",
+  "settings_title_2": "O'zbek tili",
   "settings_description_2": "Ilova tilini o'zgartiradi",
   "settings_title_3": "Mahsulotni sotishda xaridorni tanlang",
   "settings_description_3": "Mahsulotni sotishda xaridorni tanlang",
@@ -154,5 +154,6 @@ final uz = {
   "on_credit": "Kredit bo'yicha",
   "loyalty": "Sadoqat",
   "accept": "Qabul qiling",
-  "CHANGE": "O'ZGARISH"
+  "CHANGE": "O'ZGARISH",
+  "send_to_cashbox": "To'lovga yuboring",
 };

@@ -30,8 +30,7 @@ import 'pages/cashier/client_debt.dart';
 import 'pages/cashier/sales_on_credit.dart';
 import 'pages/cashier/calculator.dart';
 
-import 'pages/agent/index.dart';
-import 'pages/agent/cheques.dart';
+import 'package:kassa/pages/agent/dashboard.dart';
 
 void main() async {
   await GetStorage.init();
@@ -53,23 +52,31 @@ class _MyAppState extends State<MyApp> {
   ThemeMode defaultThemeMode = ThemeMode.light;
 
   getLocale() async {
-    if (storage.read('settings') != null) {
-      var settings = jsonDecode(storage.read('settings'));
-      if (settings['language']) {
-        Get.updateLocale(const Locale('uz-Latn-UZ', ''));
-        locale = const Locale('uz-Latn-UZ', '');
+    try {
+      if (storage.read('settings') != null) {
+        var settings = jsonDecode(storage.read('settings'));
+        if (settings['language']) {
+          Get.updateLocale(const Locale('uz-Latn-UZ', ''));
+          locale = const Locale('uz-Latn-UZ', '');
+        }
+        setState(() {});
       }
-      setState(() {});
+    } catch (e) {
+      storage.remove('settings');
     }
   }
 
-  getTheme() async {
-    if (storage.read('settings') != null) {
-      var settings = jsonDecode(storage.read('settings'));
-      if (settings['theme']) {
-        defaultThemeMode = ThemeMode.dark;
+  getData() async {
+    try {
+      if (storage.read('settings') != null) {
+        var settings = jsonDecode(storage.read('settings'));
+        if (settings['theme']) {
+          defaultThemeMode = ThemeMode.dark;
+        }
+        setState(() {});
       }
-      setState(() {});
+    } catch (e) {
+      storage.remove('settings');
     }
   }
 
@@ -77,7 +84,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     getLocale();
-    getTheme();
+    getData();
   }
 
   @override
@@ -115,8 +122,7 @@ class _MyAppState extends State<MyApp> {
         GetPage(name: '/calculator', page: () => const Calculator()),
 
         // Agent
-        GetPage(name: '/agent', page: () => const AgentIndex()),
-        GetPage(name: '/agent/history', page: () => const AgentHistory()),
+        GetPage(name: '/agent', page: () => const AgentDashboard()),
       ],
     );
   }

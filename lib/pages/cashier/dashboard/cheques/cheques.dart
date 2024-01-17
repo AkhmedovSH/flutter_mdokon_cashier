@@ -407,7 +407,7 @@ class _ChequesState extends State<Cheques> {
                                     width: 1,
                                   ),
                                 ),
-                                hintText: 'amount_to',
+                                hintText: 'amount_to'.tr,
                                 hintStyle: TextStyle(color: Color(0xFF495057)),
                               ),
                             ),
@@ -446,7 +446,7 @@ class _ChequesState extends State<Cheques> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 50)
+                    Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).viewInsets.bottom))
                   ],
                 ),
               ),

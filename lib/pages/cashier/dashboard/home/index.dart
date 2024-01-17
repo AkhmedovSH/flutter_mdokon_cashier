@@ -707,7 +707,6 @@ class _IndexState extends State<Index> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: black,
           ),
         ),
         SizedBox(height: 5),
@@ -747,9 +746,10 @@ class _IndexState extends State<Index> {
           statusBarColor: mainColor, // Status bar
         ),
         bottomOpacity: 0.0,
+        centerTitle: false,
         title: Text(
           'sale'.tr,
-          style: TextStyle(color: white, fontSize: 16),
+          style: TextStyle(color: white),
         ),
         backgroundColor: mainColor,
         elevation: 0,
@@ -898,7 +898,6 @@ class _IndexState extends State<Index> {
                               focusedBorder: inputFocusBorder,
                               hintText: 'enter_value'.tr,
                               hintStyle: TextStyle(
-                                color: grey,
                                 fontSize: 14,
                               ),
                             ),
@@ -1043,7 +1042,7 @@ class _IndexState extends State<Index> {
                                   RichText(
                                     text: TextSpan(
                                       text: '${formatMoney(data["itemsList"][i]['salePrice'])} x ${formatMoney(data["itemsList"][i]['quantity'])}',
-                                      style: TextStyle(fontSize: 16, color: black),
+                                      style: TextStyle(fontSize: 16, color: Get.isDarkMode ? white : black),
                                       children: <TextSpan>[
                                         if (data["itemsList"][i]['discount'] > 0)
                                           TextSpan(
@@ -1128,7 +1127,6 @@ class _IndexState extends State<Index> {
               Text(
                 'are_you_sure_you_want_to_remove_all_products'.tr,
                 style: TextStyle(
-                  color: black,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1253,7 +1251,6 @@ class _IndexState extends State<Index> {
                             iconSize: 24,
                             iconEnabledColor: mainColor,
                             elevation: 16,
-                            style: const TextStyle(color: Color(0xFF313131)),
                             underline: Container(
                               height: 2,
                               color: mainColor,
@@ -1278,7 +1275,6 @@ class _IndexState extends State<Index> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: black,
                       ),
                     ),
                     SizedBox(height: 5),
@@ -1301,7 +1297,6 @@ class _IndexState extends State<Index> {
                           suffixIcon: Icon(UniconsLine.credit_card),
                           focusColor: mainColor,
                           hintText: '0 сум',
-                          hintStyle: TextStyle(color: a2),
                         ),
                       ),
                     ),
@@ -1310,7 +1305,6 @@ class _IndexState extends State<Index> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: black,
                       ),
                     ),
                     SizedBox(height: 5),
@@ -1331,7 +1325,6 @@ class _IndexState extends State<Index> {
                           focusedErrorBorder: inputErrorBorder,
                           focusColor: mainColor,
                           hintText: 'Примечание',
-                          hintStyle: TextStyle(color: a2),
                         ),
                       ),
                     ),
@@ -1602,7 +1595,6 @@ class _IndexState extends State<Index> {
                         fillColor: borderColor,
                         focusColor: mainColor,
                         hintText: '0',
-                        hintStyle: TextStyle(color: a2),
                       ),
                     ),
                   ),
@@ -1638,7 +1630,6 @@ class _IndexState extends State<Index> {
                         fillColor: borderColor,
                         focusColor: mainColor,
                         hintText: '0',
-                        hintStyle: TextStyle(color: a2),
                       ),
                     ),
                   ),

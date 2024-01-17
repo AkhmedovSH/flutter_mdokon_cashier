@@ -47,8 +47,6 @@ class _SettingsState extends State<Settings> {
     if (settings['theme']) {
       Get.changeTheme(ThemeData.dark());
       setState(() {});
-    } else {
-      Get.changeTheme(ThemeData.light());
     }
     storage.write('settings', jsonEncode(settings));
     showSuccessToast('settings_saved'.tr);

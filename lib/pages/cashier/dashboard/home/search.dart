@@ -198,6 +198,7 @@ class _SearchState extends State<Search> {
               icon: Icon(
                 UniconsLine.arrow_left,
                 size: 32,
+                color: black,
               ),
             ),
           ),
