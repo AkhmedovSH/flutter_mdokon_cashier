@@ -75,6 +75,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   getAgentPosId() async {
     final response = await get('/services/desktop/api/get-access-pos', loading: false);
+    response['isAgent'] = true;
+    response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
     storage.write('cashbox', jsonEncode(response));
     Get.offAllNamed('/agent');
     controller.hideLoading();
@@ -85,6 +87,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     final response = await get('/services/desktop/api/get-access-pos', loading: false);
     if (response['openShift']) {
       storage.remove('shift');
+      response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
       storage.write('cashbox', jsonEncode(response['shift']));
       Get.offAllNamed('/');
     } else {

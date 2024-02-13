@@ -22,9 +22,11 @@ class _CashBoxesState extends State<CashBoxes> {
   dynamic poses = Get.arguments;
 
   selectCashbox(pos, cashbox) async {
+    print(cashbox);
+    print(cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m');
     final prepareprefs = {
-      'defaultCurrency': pos['defaultCurrency'],
-      'defaultCurrencyName': pos['defaultCurrencyName'],
+      'defaultCurrency': cashbox['defaultCurrency'],
+      'defaultCurrencyName': cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m',
       'hidePriceIn': pos['hidePriceIn'],
       'loyaltyApi': pos['loyaltyApi'],
       'saleMinus': pos['saleMinus'],

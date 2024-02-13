@@ -640,9 +640,10 @@ class _AgentIndexState extends State<AgentIndex> {
   }
 
   getCashbox() async {
-    setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
-    });
+    cashbox = jsonDecode(storage.read('cashbox')!);
+    data['defaultCurrency'] = cashbox['defaultCurrency'];
+    data['defaultCurrencyName'] = cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
+    setState(() {});
   }
 
   selectDebtorClient(Function setDebtorState, index) {

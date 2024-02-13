@@ -348,7 +348,7 @@ class _SearchState extends State<Search> {
                                   SizedBox(
                                     width: MediaQuery.of(context).size.width * 0.5,
                                     child: Text(
-                                      '${formatMoney(arguments['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} So\'m',
+                                      '${formatMoney(arguments['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} ${cashbox['defaultCurrencyName']}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 16,

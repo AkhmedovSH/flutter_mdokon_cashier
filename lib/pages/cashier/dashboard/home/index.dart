@@ -126,6 +126,26 @@ class _IndexState extends State<Index> {
   dynamic subscription;
 
   bool isDeviceConnected = false;
+  bool isEdit = false;
+
+  sendToCashbox() async {
+    var sendData = {
+      'posId': cashbox['posId'],
+      'cheque': jsonEncode(data),
+    };
+    if (isEdit) {
+      sendData['id'] = data['id'];
+    }
+    Map? response;
+    if (isEdit) {
+      response = await put('/services/desktop/api/cheque-online', sendData);
+    } else {
+      response = await post('/services/desktop/api/cheque-online', sendData);
+    }
+    if (response != null && response['success']) {
+      deleteAllProducts();
+    }
+  }
 
   getClients() async {
     final cashbox = jsonDecode(storage.read('cashbox')!);
@@ -655,9 +675,11 @@ class _IndexState extends State<Index> {
   }
 
   getCashbox() async {
-    setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
-    });
+    print(jsonDecode(storage.read('cashbox')!));
+
+    cashbox = jsonDecode(storage.read('cashbox')!);
+    data['currencyId'] = cashbox['defaultCurrency'];
+    setState(() {});
   }
 
   selectDebtorClient(Function setDebtorState, index) {
@@ -690,12 +712,14 @@ class _IndexState extends State<Index> {
   void initState() {
     super.initState();
     getCashbox();
+    if (Get.arguments != null && Get.arguments['cheque'] != null) {
+      setState(() {
+        isEdit = true;
+        data = jsonDecode(Get.arguments['cheque']);
+        data['id'] = Get.arguments['id'];
+      });
+    }
     checkConnection();
-  }
-
-  @override
-  dispose() {
-    super.dispose();
   }
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
@@ -914,8 +938,9 @@ class _IndexState extends State<Index> {
                       children: [
                         Text('total'.tr, style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
-                            ? Text(formatMoney(data['totalPrice']) + ' Сум', style: TextStyle(fontSize: 16))
-                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' Сум', style: TextStyle(fontSize: 16)),
+                            ? Text(formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}', style: TextStyle(fontSize: 16))
+                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' ${cashbox['defaultCurrencyName']}',
+                                style: TextStyle(fontSize: 16)),
                       ],
                     ),
                   ),
@@ -965,7 +990,7 @@ class _IndexState extends State<Index> {
                       children: [
                         Text('to_pay'.tr, style: TextStyle(fontSize: 16)),
                         Text(
-                          formatMoney(data['totalPrice']) + ' Сум',
+                          formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1055,7 +1080,7 @@ class _IndexState extends State<Index> {
                                     ),
                                   ),
                                   Text(
-                                    '${formatMoney(data["itemsList"][i]['totalPrice'])}So\'m',
+                                    '${formatMoney(data["itemsList"][i]['totalPrice'])} ${cashbox['defaultCurrencyName']}',
                                     style: TextStyle(fontWeight: FontWeight.w600, color: mainColor, fontSize: 16),
                                   ),
                                 ],
@@ -1073,24 +1098,43 @@ class _IndexState extends State<Index> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            margin: EdgeInsets.only(left: 32),
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: ElevatedButton(
-              onPressed: data["itemsList"].length > 0
-                  ? () {
-                      Get.toNamed('/payment', arguments: data);
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                backgroundColor: mainColor,
-                disabledBackgroundColor: disabledColor,
-                disabledForegroundColor: black,
-              ),
-              child: Text('sell'.tr),
-            ),
-          ),
+          cashbox['isAgent']
+              ? Container(
+                  margin: EdgeInsets.only(left: 32),
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  child: ElevatedButton(
+                    onPressed: data["itemsList"].length > 0
+                        ? () {
+                            sendToCashbox();
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                      backgroundColor: mainColor,
+                      disabledBackgroundColor: disabledColor,
+                      disabledForegroundColor: black,
+                    ),
+                    child: Text('send_to_cashbox'.tr),
+                  ),
+                )
+              : Container(
+                  margin: EdgeInsets.only(left: 32),
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  child: ElevatedButton(
+                    onPressed: data["itemsList"].length > 0
+                        ? () {
+                            Get.toNamed('/payment', arguments: data);
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                      backgroundColor: mainColor,
+                      disabledBackgroundColor: disabledColor,
+                      disabledForegroundColor: black,
+                    ),
+                    child: Text('sell'.tr),
+                  ),
+                ),
           FloatingActionButton(
             backgroundColor: data['discount'] == 0 ? mainColor : lightGrey,
             onPressed: () {

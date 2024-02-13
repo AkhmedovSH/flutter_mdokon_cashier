@@ -5,7 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:unicons/unicons.dart';
 import 'package:get/get.dart';
 
-import 'index.dart';
+import '../cashier/dashboard/home/index.dart';
 import 'cheques.dart';
 
 import '../../../helpers/globals.dart';
@@ -94,7 +94,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
             //   setState(() => currentIndex = index);
             // },
             children: [
-              currentIndex == 0 ? AgentIndex() : Container(),
+              currentIndex == 0 ? Index() : Container(),
               currentIndex == 1 ? AgentHistory() : Container(),
             ],
           ),
