@@ -24,6 +24,8 @@ import 'pages/cashier/dashboard/dashboard.dart';
 import 'pages/cashier/dashboard/home/search.dart';
 import 'pages/cashier/payment/payment_sample.dart';
 import 'pages/cashier/dashboard/profile/x_report.dart';
+import 'pages/cashier/dashboard/profile/balance.dart';
+import 'pages/cashier/dashboard/profile/info.dart';
 import 'pages/cashier/dashboard/profile/settings.dart';
 
 import 'pages/cashier/client_debt.dart';
@@ -106,6 +108,8 @@ class _MyAppState extends State<MyApp> {
         // Cashier
         GetPage(name: '/', page: () => const Dashboard()),
         GetPage(name: '/x-report', page: () => const XReport()),
+        GetPage(name: '/balance', page: () => const Balance()),
+        GetPage(name: '/info', page: () => const Info()),
         GetPage(name: '/settings', page: () => const Settings()),
 
         // Cheques

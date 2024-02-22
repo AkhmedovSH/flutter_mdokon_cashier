@@ -51,10 +51,16 @@ class _ProfileState extends State<Profile> {
               if (title == 'X_report') {
                 Get.toNamed('/x-report');
               }
+              if (title == 'balance') {
+                Get.toNamed('/balance');
+              }
+              if (title == 'info') {
+                Get.toNamed('/info');
+              }
               if (title == 'settings') {
                 Get.toNamed('/settings');
               }
-              if (title == 'close_shift') {
+              if (title == 'close_shift' || title == 'logout') {
                 openModal();
               }
               if (title == 'support') {
@@ -164,9 +170,11 @@ class _ProfileState extends State<Profile> {
             ),
           ),
           SizedBox(height: 15),
-          buildRow(UniconsLine.clipboard_alt, 'X_report'),
-          buildRow(UniconsLine.cog, 'settings'),
-          buildRow(UniconsLine.sign_out_alt, 'close_shift'),
+          if (cashbox['isAgent'] != true) buildRow(UniconsLine.clipboard_alt, 'X_report'),
+          buildRow(UniconsLine.box, 'balance'),
+          if (cashbox['isAgent'] != true) buildRow(UniconsLine.question_circle, 'info'),
+          if (cashbox['isAgent'] != true) buildRow(UniconsLine.cog, 'settings'),
+          if (cashbox['isAgent'] == true) buildRow(UniconsLine.sign_out_alt, 'logout') else buildRow(UniconsLine.sign_out_alt, 'close_shift'),
           buildRow(UniconsLine.calling, 'support'),
         ],
       ),
@@ -176,21 +184,25 @@ class _ProfileState extends State<Profile> {
   void closeShift() async {
     int id = 0;
     dynamic shift = {'id': null};
-    final cashbox = jsonDecode(storage.read('cashbox')!);
-    if (storage.read('shift') != null) {
-      shift = jsonDecode(storage.read('shift')!);
+    Map response = {
+      'success': true,
+    };
+    if (cashbox['isAgent'] != true) {
+      if (storage.read('shift') != null) {
+        shift = jsonDecode(storage.read('shift')!);
+      }
+      if (shift['id'] != null) {
+        id = shift['id'];
+      } else {
+        id = cashbox['id'];
+      }
+      response = await post('/services/desktop/api/close-shift', {
+        'cashboxId': cashbox['cashboxId'],
+        'posId': cashbox['posId'],
+        'offline': false,
+        'id': id,
+      });
     }
-    if (shift['id'] != null) {
-      id = shift['id'];
-    } else {
-      id = cashbox['id'];
-    }
-    final response = await post('/services/desktop/api/close-shift', {
-      'cashboxId': cashbox['cashboxId'],
-      'posId': cashbox['posId'],
-      'offline': false,
-      'id': id,
-    });
 
     storage.remove('user');
     storage.remove('access_token');

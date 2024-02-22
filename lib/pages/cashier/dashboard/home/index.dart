@@ -676,7 +676,6 @@ class _IndexState extends State<Index> {
 
   getCashbox() async {
     print(jsonDecode(storage.read('cashbox')!));
-
     cashbox = jsonDecode(storage.read('cashbox')!);
     data['currencyId'] = cashbox['defaultCurrency'];
     setState(() {});
@@ -785,24 +784,26 @@ class _IndexState extends State<Index> {
           //     icon: Icon(isDeviceConnected ? UniconsLine.wifi : UniconsLine.wifi_slash),
           //   ),
           // ),
-          SizedBox(
-            child: IconButton(
-              onPressed: () {
-                showModalDebtor();
-              },
-              tooltip: 'amortization'.tr,
-              icon: Icon(UniconsLine.credit_card),
+          if (cashbox['isAgent'] != true)
+            SizedBox(
+              child: IconButton(
+                onPressed: () {
+                  showModalDebtor();
+                },
+                tooltip: 'amortization'.tr,
+                icon: Icon(UniconsLine.credit_card),
+              ),
             ),
-          ),
-          SizedBox(
-            child: IconButton(
-              onPressed: () {
-                showModalExpense();
-              },
-              tooltip: 'expenses'.tr,
-              icon: Icon(UniconsLine.usd_circle),
+          if (cashbox['isAgent'] != true)
+            SizedBox(
+              child: IconButton(
+                onPressed: () {
+                  showModalExpense();
+                },
+                tooltip: 'expenses'.tr,
+                icon: Icon(UniconsLine.usd_circle),
+              ),
             ),
-          ),
           if (data['itemsList'].length > 0)
             SizedBox(
               child: IconButton(
@@ -1098,7 +1099,7 @@ class _IndexState extends State<Index> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          cashbox['isAgent']
+          cashbox['isAgent'] == true
               ? Container(
                   margin: EdgeInsets.only(left: 32),
                   width: MediaQuery.of(context).size.width * 0.6,

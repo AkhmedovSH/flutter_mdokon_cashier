@@ -156,4 +156,8 @@ final uz = {
   "accept": "Qabul qiling",
   "CHANGE": "O'ZGARISH",
   "send_to_cashbox": "To'lovga yuboring",
+  "info": "Transkripsiyalar",
+  "no_account": "Hisobingiz yo'qmi",
+  "contact_us": "Biz bilan bog'laning",
+  "logout": "Chiqish",
 };

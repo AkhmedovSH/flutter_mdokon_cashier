@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 import '../cashier/dashboard/home/index.dart';
 import 'cheques.dart';
+import 'package:kassa/pages/cashier/dashboard/profile/profile.dart';
 
 import '../../../helpers/globals.dart';
 
@@ -96,6 +97,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
             children: [
               currentIndex == 0 ? Index() : Container(),
               currentIndex == 1 ? AgentHistory() : Container(),
+              Profile(),
             ],
           ),
         ),
@@ -136,6 +138,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
                 items: [
                   getDashBoardItem(UniconsLine.monitor, 'sale'),
                   getDashBoardItem(UniconsLine.receipt, 'checks'),
+                  getDashBoardItem(UniconsLine.user, 'profile'),
                 ],
               ),
             ),

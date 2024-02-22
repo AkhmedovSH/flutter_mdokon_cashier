@@ -111,6 +111,7 @@ class _XReportState extends State<XReport> {
             icon: Icon(
               UniconsLine.arrow_left,
               size: 32,
+              color: context.theme.iconTheme.color,
             ),
           ),
           title: Text(

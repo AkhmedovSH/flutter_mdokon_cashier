@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:unicons/unicons.dart';
 
 import '../../helpers/globals.dart';
@@ -71,6 +72,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     }
     controller.hideLoading();
     setState(() {});
+  }
+
+  void openPhoneCall() async {
+    if (!await launchUrl(Uri.parse("tel://+998555000089"))) throw 'Could not launch';
   }
 
   getAgentPosId() async {
@@ -305,26 +310,60 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           ),
         ),
         floatingActionButton: Container(
-          width: MediaQuery.of(context).size.width,
-          margin: EdgeInsets.only(left: 32),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(150, 50),
-              backgroundColor: mainColor,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          color: context.theme.cardColor,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${'no_account'.tr}?',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(width: 5),
+                  GestureDetector(
+                    onTap: () {
+                      openPhoneCall();
+                    },
+                    child: Text(
+                      'contact_us'.tr,
+                      style: TextStyle(
+                        color: mainColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                login();
-              }
-            },
-            child: Text(
-              'ВОЙТИ',
-              style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
-            ),
+              SizedBox(height: 10),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(left: 32),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(150, 50),
+                    backgroundColor: mainColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      login();
+                    }
+                  },
+                  child: Text(
+                    'ВОЙТИ',
+                    style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
