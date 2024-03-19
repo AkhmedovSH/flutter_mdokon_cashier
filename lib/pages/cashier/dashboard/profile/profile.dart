@@ -172,7 +172,7 @@ class _ProfileState extends State<Profile> {
           SizedBox(height: 15),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.clipboard_alt, 'X_report'),
           buildRow(UniconsLine.box, 'balance'),
-          if (cashbox['isAgent'] != true) buildRow(UniconsLine.question_circle, 'info'),
+          buildRow(UniconsLine.question_circle, 'info'),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.cog, 'settings'),
           if (cashbox['isAgent'] == true) buildRow(UniconsLine.sign_out_alt, 'logout') else buildRow(UniconsLine.sign_out_alt, 'close_shift'),
           buildRow(UniconsLine.calling, 'support'),

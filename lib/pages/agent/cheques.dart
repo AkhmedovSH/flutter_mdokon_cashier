@@ -9,6 +9,7 @@ import 'package:kassa/components/loading_layout.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
 import 'package:kassa/helpers/controller.dart';
+import 'package:unicons/unicons.dart';
 
 class AgentHistory extends StatefulWidget {
   const AgentHistory({Key? key}) : super(key: key);
@@ -101,10 +102,11 @@ class _AgentHistoryState extends State<AgentHistory> {
           elevation: 0,
           actions: [
             IconButton(
-                onPressed: () {
-                  showFilterDialog();
-                },
-                icon: Icon(Icons.filter_alt))
+              onPressed: () {
+                showFilterDialog();
+              },
+              icon: Icon(UniconsLine.filter),
+            ),
           ],
         ),
         body: SingleChildScrollView(

@@ -26,6 +26,7 @@ class _OnCreditState extends State<OnCredit> {
     {'name': 'contact_name', 'value': '', 'icon': UniconsLine.user, 'keyboardType': TextInputType.text},
     {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
     {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
+    {'name': 'address', 'value': '', 'icon': UniconsLine.map, 'keyboardType': TextInputType.text},
     {'name': 'comment', 'value': '', 'icon': UniconsLine.comment_lines, 'keyboardType': TextInputType.text},
   ];
 
@@ -180,9 +181,12 @@ class _OnCreditState extends State<OnCredit> {
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(
-                                              '${addList[i]['name']}',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 5),
+                                              child: Text(
+                                                '${addList[i]['name']}'.tr,
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                                              ),
                                             ),
                                             SizedBox(height: 5),
                                             Container(
@@ -212,6 +216,11 @@ class _OnCreditState extends State<OnCredit> {
                                                     });
                                                   }
                                                   if (i == 3) {
+                                                    setState(() {
+                                                      sendData['address'] = value;
+                                                    });
+                                                  }
+                                                  if (i == 4) {
                                                     setState(() {
                                                       sendData['comment'] = value;
                                                     });
@@ -438,62 +447,70 @@ class _OnCreditState extends State<OnCredit> {
               scrollable: true,
               content: SizedBox(
                 width: MediaQuery.of(context).size.width,
-                child: Column(
-                  children: [
-                    Table(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Table(
                         border: TableBorder(
                           horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                         ),
                         children: [
-                          TableRow(children: [
-                            Text(
-                              'contact'.tr,
-                            ),
-                            Text(
-                              'number'.tr,
-                            ),
-                            Text('comment'.tr),
-                          ]),
+                          TableRow(
+                            children: [
+                              Text(
+                                'contact'.tr,
+                              ),
+                              Text(
+                                'number'.tr,
+                              ),
+                              Text('comment'.tr),
+                            ],
+                          ),
                           for (var i = 0; i < clients.length; i++)
-                            TableRow(children: [
-                              GestureDetector(
-                                onTap: () {
-                                  selectDebtorClient(setState, i);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                  child: Text(
-                                    '${clients[i]['name']}',
-                                    style: TextStyle(
-                                      overflow: TextOverflow.ellipsis,
+                            TableRow(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text(
+                                      '${clients[i]['name']}',
+                                      style: TextStyle(
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  selectDebtorClient(setState, i);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                  child: Text('${clients[i]['phone1']}'),
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text('${clients[i]['phone1']}'),
+                                  ),
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  selectDebtorClient(setState, i);
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                  child: Text(clients[i]['comment'] ?? ''),
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text(clients[i]['comment'] ?? ''),
+                                  ),
                                 ),
-                              ),
-                            ]),
-                        ])
-                  ],
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [

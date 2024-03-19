@@ -160,4 +160,5 @@ final uz = {
   "no_account": "Hisobingiz yo'qmi",
   "contact_us": "Biz bilan bog'laning",
   "logout": "Chiqish",
+  'barcode': 'Shtrix-kod',
 };

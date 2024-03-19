@@ -804,6 +804,16 @@ class _IndexState extends State<Index> {
                 icon: Icon(UniconsLine.usd_circle),
               ),
             ),
+          if (cashbox['isAgent'] == true)
+            SizedBox(
+              child: IconButton(
+                onPressed: () {
+                  showCreateUserModal();
+                },
+                tooltip: 'expenses'.tr,
+                icon: Icon(UniconsLine.user_plus),
+              ),
+            ),
           if (data['itemsList'].length > 0)
             SizedBox(
               child: IconButton(
@@ -1102,7 +1112,7 @@ class _IndexState extends State<Index> {
           cashbox['isAgent'] == true
               ? Container(
                   margin: EdgeInsets.only(left: 32),
-                  width: MediaQuery.of(context).size.width * 0.6,
+                  width: MediaQuery.of(context).size.width * 0.65,
                   child: ElevatedButton(
                     onPressed: data["itemsList"].length > 0
                         ? () {
@@ -1718,6 +1728,261 @@ class _IndexState extends State<Index> {
           "totalPrice": "",
         };
       });
+    }
+  }
+
+  Map sendData = {
+    'comment': '',
+    'name': '',
+    'phone1': '',
+    'phone2': '',
+  };
+
+  List addList = [
+    {'name': 'contact_name', 'value': '', 'icon': UniconsLine.user, 'keyboardType': TextInputType.text},
+    {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
+    {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
+    {'name': 'address', 'value': '', 'icon': UniconsLine.map, 'keyboardType': TextInputType.text},
+    {'name': 'comment', 'value': '', 'icon': UniconsLine.comment_lines, 'keyboardType': TextInputType.text},
+  ];
+
+  createClient() async {
+    final response = await post('/services/desktop/api/clients', sendData);
+    if (response != null && response['success']) {
+      Get.back();
+      showSelectUserDialog();
+    }
+  }
+
+  showCreateUserModal() {
+    showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(24.0),
+                ),
+              ),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.all(10),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < addList.length; i++)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 5),
+                            child: Text(
+                              '${addList[i]['name']}'.tr,
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            width: MediaQuery.of(context).size.width,
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'required_field'.tr;
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                if (i == 0) {
+                                  setState(() {
+                                    sendData['name'] = value;
+                                  });
+                                }
+                                if (i == 1) {
+                                  setState(() {
+                                    sendData['phone1'] = value;
+                                  });
+                                }
+                                if (i == 2) {
+                                  setState(() {
+                                    sendData['phone2'] = value;
+                                  });
+                                }
+                                if (i == 3) {
+                                  setState(() {
+                                    sendData['address'] = value;
+                                  });
+                                }
+                                if (i == 4) {
+                                  setState(() {
+                                    sendData['comment'] = value;
+                                  });
+                                }
+                              },
+                              keyboardType: addList[i]['keyboardType'],
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                enabledBorder: inputBorder,
+                                focusedBorder: inputFocusBorder,
+                                errorBorder: inputErrorBorder,
+                                focusedErrorBorder: inputErrorBorder,
+                                suffixIcon: Icon(addList[i]['icon']),
+                                focusColor: blue,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  height: 45,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      createClient();
+                    },
+                    child: Text('save'.tr),
+                  ),
+                ),
+              ],
+            );
+          });
+        });
+  }
+
+  showSelectUserDialog() async {
+    final response = await get('/services/desktop/api/clients-helper');
+    //print(response);
+    for (var i = 0; i < response.length; i++) {
+      response[i]['selected'] = false;
+    }
+    setState(() {
+      clients = response;
+    });
+    final result = await showDialog(
+        context: context,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.all(10),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Table(
+                        border: TableBorder(
+                          horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
+                        ),
+                        children: [
+                          TableRow(
+                            children: [
+                              Text(
+                                'contact'.tr,
+                              ),
+                              Text(
+                                'number'.tr,
+                              ),
+                              Text('comment'.tr),
+                            ],
+                          ),
+                          for (var i = 0; i < clients.length; i++)
+                            TableRow(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text(
+                                      '${clients[i]['name']}',
+                                      style: TextStyle(
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text('${clients[i]['phone1']}'),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    selectDebtorClient(setState, i);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                    child: Text(clients[i]['comment'] ?? ''),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      for (var i = 0; i < clients.length; i++) {
+                        if (clients[i]['selected']) {
+                          Navigator.pop(context, clients);
+                        }
+                      }
+                    },
+                    child: Text('choose'.tr),
+                  ),
+                )
+              ],
+            );
+          });
+        });
+    if (result != null) {
+      for (var i = 0; i < result.length; i++) {
+        if (result[i]['selected'] == true) {
+          data['clientName'] = result[i]['name'].toString();
+          data['clientId'] = result[i]['id'].toString();
+          data['clientComment'] = result[i]['comment'].toString();
+          data['clientAddress'] = result[i]['address'].toString();
+        }
+      }
     }
   }
 }
