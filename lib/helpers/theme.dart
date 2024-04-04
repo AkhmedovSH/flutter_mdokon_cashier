@@ -4,6 +4,7 @@ import './globals.dart';
 
 class Themes {
   static final light = ThemeData(
+    useMaterial3: false,
     brightness: Brightness.light,
     cardColor: white,
     colorScheme: ColorScheme.fromSwatch(
@@ -32,7 +33,6 @@ class Themes {
     iconButtonTheme: IconButtonThemeData(
       style: ButtonStyle(
         iconColor: MaterialStateProperty.all<Color>(black),
-        
       ),
     ),
     scaffoldBackgroundColor: white,
@@ -54,6 +54,7 @@ class Themes {
     ),
   );
   static final dark = ThemeData(
+    useMaterial3: false,
     colorScheme: ColorScheme.fromSwatch(
       backgroundColor: mainColor,
       accentColor: mainColor.withOpacity(0.5),
