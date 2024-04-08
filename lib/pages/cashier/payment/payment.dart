@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -5,7 +7,8 @@ import 'package:kassa/helpers/globals.dart';
 import 'package:unicons/unicons.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
+  const Payment({Key? key, this.setPayload, this.data, this.setData})
+      : super(key: key);
   final Function? setPayload;
   final Function? setData;
   final dynamic data;
@@ -34,7 +37,6 @@ class _PaymentState extends State<Payment> {
       paid += double.parse(terminalController.text);
     }
     change = (paid - double.parse(data['totalPrice'].toString()));
-
     setState(() {
       data['change'] = change;
       data['paid'] = paid;
@@ -44,9 +46,10 @@ class _PaymentState extends State<Payment> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      data = widget.data;
-      cashController.text = double.parse(data['text']).toStringAsFixed(0);
+    data = widget.data;
+    cashController.text = double.parse(data['text']).toStringAsFixed(0);
+    Timer(Duration(milliseconds: 300), () {
+      calculateChange();
     });
   }
 
@@ -106,7 +109,8 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding:
+                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(UniconsLine.money_bill),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,
@@ -141,7 +145,8 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding:
+                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(UniconsLine.credit_card),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,

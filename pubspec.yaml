@@ -38,8 +38,7 @@ dependencies:
   flutter_easyloading: ^3.0.3
   syncfusion_flutter_barcodes: ^19.4.47
   lottie: ^1.2.1
-  in_app_update: ^3.0.0
-  fluttertoast: ^8.0.9
+  fluttertoast: ^8.2.4
   permission_handler: ^10.2.0
   flutter_barcode_scanner: ^2.0.0
   simple_moment: ^1.1.1
