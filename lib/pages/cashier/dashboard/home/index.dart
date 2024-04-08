@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/globals.dart';
@@ -85,6 +87,7 @@ class _IndexState extends State<Index> {
 
   Map cashbox = {};
   List clients = [];
+  List expenses = [];
   Map expenseOut = {
     "cashboxId": '',
     "posId": '',
@@ -707,10 +710,20 @@ class _IndexState extends State<Index> {
     });
   }
 
+  getExpenses() async {
+    final response = await get('/services/desktop/api/expense-helper');
+    if (response != null) {
+      setState(() {
+        expenses = response;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     getCashbox();
+    getExpenses();
     if (Get.arguments != null && Get.arguments['cheque'] != null) {
       setState(() {
         isEdit = true;
@@ -808,9 +821,22 @@ class _IndexState extends State<Index> {
             SizedBox(
               child: IconButton(
                 onPressed: () {
+                  showSelectUserDialog();
+                },
+                tooltip: 'Выбрать клиента'.tr,
+                icon: Icon(
+                  UniconsLine.user,
+                  size: 22,
+                ),
+              ),
+            ),
+          if (cashbox['isAgent'] == true)
+            SizedBox(
+              child: IconButton(
+                onPressed: () {
                   showCreateUserModal();
                 },
-                tooltip: 'expenses'.tr,
+                tooltip: 'Создать клиента'.tr,
                 icon: Icon(UniconsLine.user_plus),
               ),
             ),
@@ -1254,15 +1280,6 @@ class _IndexState extends State<Index> {
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
-          List filter = [
-            {"id": 1, "name": "Продажа"},
-            {"id": 3, "name": "Возврат товаров"},
-            {"id": 4, "name": "Долг"},
-            {"id": 5, "name": "Погашение задолженности "},
-            {"id": 6, "name": "Для собственных нужд"},
-            {"id": 7, "name": "Для нужд торговой точки"},
-            {"id": 8, "name": "Прочие"},
-          ];
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
@@ -1285,37 +1302,32 @@ class _IndexState extends State<Index> {
                     Container(
                       margin: EdgeInsets.only(bottom: 15),
                       width: double.infinity,
-                      decoration: ShapeDecoration(
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                            width: 1.0,
-                            style: BorderStyle.solid,
-                            color: Color(0xFFECECEC),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                        ),
-                      ),
+                      decoration: border,
                       child: DropdownButtonHideUnderline(
                         child: ButtonTheme(
-                          alignedDropdown: true,
-                          child: DropdownButton(
-                            value: expenseOut['paymentPurposeId'],
+                          alignedDropdown: false,
+                          child: DropdownButton2(
+                            value: expenseOut['expenseId'],
+                            dropdownStyleData: DropdownStyleData(
+                              decoration: BoxDecoration(
+                                color: context.theme.cardColor,
+                              ),
+                              maxHeight: 400,
+                            ),
+                            underline: Container(),
                             isExpanded: true,
-                            hint: Text('${filter[0]['name']}'),
-                            icon: const Icon(UniconsLine.angle_down),
-                            iconSize: 24,
-                            iconEnabledColor: mainColor,
-                            elevation: 16,
-                            underline: Container(
-                              height: 2,
-                              color: mainColor,
+                            hint: Text('${expenses[0]['name']}'),
+                            iconStyleData: IconStyleData(
+                              icon: const Icon(UniconsLine.angle_down),
+                              iconSize: 24,
+                              iconEnabledColor: mainColor,
                             ),
                             onChanged: (newValue) {
                               setState(() {
-                                expenseOut['paymentPurposeId'] = newValue;
+                                expenseOut['expenseId'] = newValue;
                               });
                             },
-                            items: filter.map((item) {
+                            items: expenses.map((item) {
                               return DropdownMenuItem<String>(
                                 value: '${item['id']}',
                                 child: Text(item['name']),
@@ -1865,6 +1877,23 @@ class _IndexState extends State<Index> {
         });
   }
 
+  Timer? debounce;
+
+  searchUsers(value, setState) {
+    if (debounce?.isActive ?? false) debounce!.cancel();
+    debounce = Timer(const Duration(milliseconds: 500), () async {
+      final response = await get('/services/desktop/api/clients-helper?search=$value');
+      if (response != null) {
+        for (var i = 0; i < response.length; i++) {
+          response[i]['selected'] = false;
+        }
+        setState(() {
+          clients = response;
+        });
+      }
+    });
+  }
+
   showSelectUserDialog() async {
     final response = await get('/services/desktop/api/clients-helper');
     //print(response);
@@ -1893,6 +1922,34 @@ class _IndexState extends State<Index> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      SizedBox(
+                        height: 45,
+                        child: TextField(
+                          onChanged: (value) {
+                            searchUsers(value, setState);
+                          },
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.all(2),
+                            isDense: true,
+                            prefixIcon: Icon(
+                              UniconsLine.search,
+                              size: 18,
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: borderColor),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(24),
+                              ),
+                            ),
+                            hintText: 'search'.tr,
+                            hintStyle: TextStyle(
+                              color: lightGrey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
                       Table(
                         border: TableBorder(
                           horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
@@ -1906,7 +1963,9 @@ class _IndexState extends State<Index> {
                               Text(
                                 'number'.tr,
                               ),
-                              Text('comment'.tr),
+                              Text(
+                                'comment'.tr,
+                              ),
                             ],
                           ),
                           for (var i = 0; i < clients.length; i++)
@@ -1981,6 +2040,8 @@ class _IndexState extends State<Index> {
           data['clientId'] = result[i]['id'].toString();
           data['clientComment'] = result[i]['comment'].toString();
           data['clientAddress'] = result[i]['address'].toString();
+          data['clientPhone1'] = result[i]['phone1'].toString();
+          data['clientPhone2'] = result[i]['phone2'].toString();
         }
       }
     }

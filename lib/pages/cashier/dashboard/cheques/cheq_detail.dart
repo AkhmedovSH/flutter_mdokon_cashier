@@ -236,6 +236,7 @@ class _CheqDetailState extends State<CheqDetail> {
           icon: Icon(
             UniconsLine.arrow_left,
             size: 32,
+            color: context.theme.iconTheme.color,
           ),
         ),
       ),

@@ -219,9 +219,9 @@ class _ReturnState extends State<Return> {
         cashbox['cashboxId'],
         shift['id'] ?? cashbox['id'],
       );
-      sendData['transactionsList'] = [
-        {'amountIn': 0, 'amountOut': sendData['totalAmount'], 'paymentTypeId': 1, 'paymentPurposeId': 3}
-      ];
+      // sendData['transactionsList'] = [
+      //   {'amountIn': 0, 'amountOut': sendData['totalAmount'], 'paymentTypeId': 1, 'paymentPurposeId': 3}
+      // ];
       for (var i = 0; i < sendData['itemsList'].length; i++) {
         setState(() {
           sendData['itemsList'][i]['controller'] = null;

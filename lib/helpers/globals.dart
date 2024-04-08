@@ -50,6 +50,13 @@ BoxShadow boxShadow = BoxShadow(
   offset: const Offset(0, 0),
 );
 
+BoxDecoration border = BoxDecoration(
+  border: Border.all(
+    color: const Color.fromARGB(255, 209, 209, 209),
+  ),
+  borderRadius: BorderRadius.circular(16),
+);
+
 OutlineInputBorder inputBorder = OutlineInputBorder(
   borderSide: BorderSide(color: Color(0xFFdddddd)),
   borderRadius: BorderRadius.circular(16),
