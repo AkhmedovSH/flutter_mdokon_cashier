@@ -168,7 +168,7 @@ class _XReportState extends State<XReport> {
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      '${'address'.tr}: ${cashbox['posAddress']}',
+                      '${'address'.tr}: ${cashbox['posAddress'] ?? ''}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,

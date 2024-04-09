@@ -94,7 +94,7 @@ class _IndexState extends State<Index> {
     "shiftId": '',
     'note': '',
     'amountOut': '',
-    'paymentPurposeId': '1',
+    'expenseId': '',
   };
   Map debtIn = {
     "amountIn": 0,
@@ -715,6 +715,7 @@ class _IndexState extends State<Index> {
     if (response != null) {
       setState(() {
         expenses = response;
+        expenseOut['expenseId'] = response[0]['id'].toString();
       });
     }
   }

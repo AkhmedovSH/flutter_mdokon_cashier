@@ -241,7 +241,7 @@ class _ReturnState extends State<Return> {
     setState(() {
       cashbox = jsonDecode(storage.read('cashbox')!);
       if (storage.read('shift') != null) {
-        shift = jsonDecode(storage.read('shift')!);
+          shift = jsonDecode(storage.read('shift')!);
       }
     });
     // dynamic shift = {};
