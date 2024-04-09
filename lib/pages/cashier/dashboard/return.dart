@@ -219,9 +219,9 @@ class _ReturnState extends State<Return> {
         cashbox['cashboxId'],
         shift['id'] ?? cashbox['id'],
       );
-      // sendData['transactionsList'] = [
-      //   {'amountIn': 0, 'amountOut': sendData['totalAmount'], 'paymentTypeId': 1, 'paymentPurposeId': 3}
-      // ];
+      sendData['transactionsList'] = [
+        {'amountIn': 0, 'amountOut': sendData['totalAmount'], 'paymentTypeId': 1, 'paymentPurposeId': 3}
+      ];
       for (var i = 0; i < sendData['itemsList'].length; i++) {
         setState(() {
           sendData['itemsList'][i]['controller'] = null;
@@ -241,7 +241,7 @@ class _ReturnState extends State<Return> {
     setState(() {
       cashbox = jsonDecode(storage.read('cashbox')!);
       if (storage.read('shift') != null) {
-          shift = jsonDecode(storage.read('shift')!);
+        shift = jsonDecode(storage.read('shift')!);
       }
     });
     // dynamic shift = {};
