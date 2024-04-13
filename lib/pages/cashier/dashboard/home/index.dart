@@ -544,16 +544,17 @@ class _IndexState extends State<Index> {
     }
 
     if (key == "%") {
-      dataCopy['discount'] = value;
+      dataCopy['discountAmount'] = value;
       dataCopy['totalPrice'] = 0;
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
         dataCopy['totalPrice'] +=
             double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
-        dataCopy['itemsList'][i]['discount'] = value;
-        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - (dataCopy['itemsList'][i]['totalPrice'] * value) / 100;
+        dataCopy['itemsList'][i]['discountAmount'] = value;
+        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - value;
       }
       dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
-      dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * value) / 100;
+      dataCopy['discount'] = double.parse(value.toString()) * 100 / dataCopy['totalPriceBeforeDiscount'];
+      dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * dataCopy['discount']) / 100;
     }
     if (key == "s") {
       dataCopy['totalPrice'] = 0;
@@ -580,6 +581,7 @@ class _IndexState extends State<Index> {
       }
       dynamic percent = 100 - (dataCopy['totalPrice'] * 100 / dataCopy['totalPriceBeforeDiscount']);
       dataCopy['discount'] = percent;
+      dataCopy['discountAmount'] = double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString());
     }
 
     if (key == "%-") {
