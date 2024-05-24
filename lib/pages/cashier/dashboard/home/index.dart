@@ -132,13 +132,18 @@ class _IndexState extends State<Index> {
   bool isEdit = false;
 
   sendToCashbox() async {
+    var dataCopy = {...data};
+    if (dataCopy['currencyId'] == "") {
+      dataCopy['currencyId'] = cashbox['defaultCurrency'];
+    }
     var sendData = {
       'posId': cashbox['posId'],
-      'cheque': jsonEncode(data),
+      'cheque': jsonEncode(dataCopy),
     };
     if (isEdit) {
-      sendData['id'] = data['id'];
+      sendData['id'] = dataCopy['id'];
     }
+
     Map? response;
     if (isEdit) {
       response = await put('/services/desktop/api/cheque-online', sendData);
@@ -371,7 +376,7 @@ class _IndexState extends State<Index> {
       "clientAmount": 0,
       "clientComment": "",
       "clientId": 0,
-      "currencyId": "",
+      "currencyId": cashbox['defaultCurrency'],
       "currencyRate": 0,
       "discount": 0,
       "note": "",
