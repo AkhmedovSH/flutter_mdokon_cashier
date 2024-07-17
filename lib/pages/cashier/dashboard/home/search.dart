@@ -96,7 +96,7 @@ class _SearchState extends State<Search> {
         setState(() {});
         var arr = [];
         var response =
-            await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${cashbox['defaultCurrency']}?search=$value');
+            await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${arguments['currencyId']}?search=$value');
         if (response != null && response.length > 0) {
           if (response.length > 50) {
             response = response.sublist(0, 50);
@@ -147,7 +147,7 @@ class _SearchState extends State<Search> {
     setState(() {});
 
     final cashbox = jsonDecode(storage.read('cashbox')!);
-    final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${cashbox['defaultCurrency']}');
+    final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${arguments['currencyId']}');
     controller.hideLoading();
     if (response != null && response.length > 0) {
       setState(() {
@@ -172,6 +172,7 @@ class _SearchState extends State<Search> {
     //getProducts();
     getCashbox();
     arguments = Get.arguments ?? {};
+    print(arguments);
   }
 
   @override
@@ -348,7 +349,7 @@ class _SearchState extends State<Search> {
                                   SizedBox(
                                     width: MediaQuery.of(context).size.width * 0.5,
                                     child: Text(
-                                      '${formatMoney(arguments['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} ${cashbox['defaultCurrencyName']}',
+                                      '${formatMoney(arguments['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} ${arguments['currencyName']}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 16,

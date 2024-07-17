@@ -30,6 +30,7 @@ Future get(String url, {payload, loading = true, setState}) async {
   }
 
   try {
+    print(hostUrl + url);
     final response = await dio.get(
       hostUrl + url,
       queryParameters: payload,

@@ -55,6 +55,7 @@ class _IndexState extends State<Index> {
     "clientComment": "",
     "clientId": 0,
     "currencyId": "",
+    "currencyName": "So'm",
     "currencyRate": 0,
     "discount": 0,
     "note": "",
@@ -201,7 +202,11 @@ class _IndexState extends State<Index> {
       showDangerToast('discount_has_been_applied'.tr);
       return;
     }
-    final products = await Get.toNamed('/search', arguments: {'activePrice': data['activePrice']});
+    final products = await Get.toNamed('/search', arguments: {
+      'activePrice': data['activePrice'],
+      'currencyId': data['currencyId'],
+      'currencyName': data['currencyName'],
+    });
     print(products);
     if (products == null) {
       // showErrorToast('Ошибка при добавлении продуктов');
@@ -219,7 +224,7 @@ class _IndexState extends State<Index> {
           product['wholesale'] = false;
         }
 
-        if (product['unitList'].length > 0) {
+        if (product['unitList'] != null && product['unitList'].length > 0) {
           setState(() {
             productWithParams = product;
             productWithParams['quantity'] = "";
@@ -263,6 +268,7 @@ class _IndexState extends State<Index> {
       }
       response['selected'] = false;
       response['totalPrice'] = 0;
+      response['originalSalePrice'] = response['salePrice'];
       dataCopy['itemsList'].add(response);
 
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
@@ -377,6 +383,7 @@ class _IndexState extends State<Index> {
       "clientComment": "",
       "clientId": 0,
       "currencyId": cashbox['defaultCurrency'],
+      "currencyName": cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD',
       "currencyRate": 0,
       "discount": 0,
       "note": "",
@@ -590,6 +597,7 @@ class _IndexState extends State<Index> {
     }
 
     if (key == "%-") {
+      dataCopy['discountAmount'] = value;
       dynamic percent = 100 / (dataCopy['totalPrice'] / value);
       dataCopy['discount'] = percent;
       dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
@@ -688,6 +696,7 @@ class _IndexState extends State<Index> {
     print(jsonDecode(storage.read('cashbox')!));
     cashbox = jsonDecode(storage.read('cashbox')!);
     data['currencyId'] = cashbox['defaultCurrency'];
+    data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
     setState(() {});
   }
 
@@ -791,9 +800,43 @@ class _IndexState extends State<Index> {
         ),
         bottomOpacity: 0.0,
         centerTitle: false,
-        title: Text(
-          'sale'.tr,
-          style: TextStyle(color: white),
+        title: Row(
+          children: [
+            Text(
+              'sale'.tr,
+              style: TextStyle(color: white),
+            ),
+            SizedBox(width: 10),
+            SizedBox(
+              width: 60,
+              height: 32,
+              child: ElevatedButton(
+                onPressed: data['itemsList'].length == 0
+                    ? () {
+                        if (data['currencyId'] == 1) {
+                          data['currencyId'] = 2;
+                          data['currencyName'] = 'USD';
+                        } else {
+                          data['currencyId'] = 1;
+                          data['currencyName'] = 'So\'m';
+                        }
+                        setState(() {});
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  backgroundColor: white,
+                  foregroundColor: mainColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  '${data['currencyName']}',
+                ),
+              ),
+            ),
+          ],
         ),
         backgroundColor: mainColor,
         elevation: 0,
