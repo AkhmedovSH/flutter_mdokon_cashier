@@ -60,8 +60,11 @@ class _ProfileState extends State<Profile> {
               if (title == 'settings') {
                 Get.toNamed('/settings');
               }
-              if (title == 'close_shift' || title == 'logout') {
-                openModal();
+              if (title == 'close_shift') {
+                openModal('close_shift');
+              }
+              if (title == 'logout') {
+                openModal('logout');
               }
               if (title == 'support') {
                 openPhoneCall();
@@ -213,7 +216,14 @@ class _ProfileState extends State<Profile> {
     //print(response);
   }
 
-  openModal() {
+  void logout() async {
+    storage.remove('user');
+    storage.remove('access_token');
+    Get.offAllNamed('/login');
+    //print(response);
+  }
+
+  openModal(type) {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -235,7 +245,7 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: [
               Text(
-                'are_you_sure_you_want_to_close_your_shift'.tr,
+                type == 'logout' ? 'are_you_sure_you_want_to_go_out'.tr : 'are_you_sure_you_want_to_close_your_shift'.tr,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -259,8 +269,12 @@ class _ProfileState extends State<Profile> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        closeShift();
                         Get.back();
+                        if (type == 'logout') {
+                          logout();
+                        } else {
+                          closeShift();
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),

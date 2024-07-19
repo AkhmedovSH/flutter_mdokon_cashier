@@ -808,7 +808,7 @@ class _IndexState extends State<Index> {
             ),
             SizedBox(width: 10),
             SizedBox(
-              width: 60,
+              width: 55,
               height: 32,
               child: ElevatedButton(
                 onPressed: data['itemsList'].length == 0
