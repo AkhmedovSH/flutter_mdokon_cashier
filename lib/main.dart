@@ -1,42 +1,69 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter/scheduler.dart';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:kassa/helpers/theme.dart';
+import 'package:toastification/toastification.dart';
+import 'package:provider/provider.dart';
 
-import 'helpers/translations.dart';
+import 'models/locale_model.dart';
+import 'models/theme_model.dart';
+import 'models/loading_model.dart';
+import 'models/settings_model.dart';
+import 'models/user_model.dart';
+import 'models/data_model.dart';
+import 'models/filter_model.dart';
 
-import 'pages/splash.dart';
-
-// auth
-import 'pages/auth/login.dart';
-import 'pages/auth/cashboxes.dart';
-
-// cheques
-import 'pages/cashier/dashboard/cheques/cheques.dart';
-import 'pages/cashier/dashboard/cheques/cheq_detail.dart';
-
-import 'pages/cashier/dashboard/return.dart';
-
-import 'pages/cashier/dashboard/dashboard.dart';
-// import 'pages/cashier/dashboard/index.dart';
-import 'pages/cashier/dashboard/home/search.dart';
-import 'pages/cashier/payment/payment_sample.dart';
-import 'pages/cashier/dashboard/profile/x_report.dart';
-import 'pages/cashier/dashboard/profile/balance.dart';
-import 'pages/cashier/dashboard/profile/info.dart';
-import 'pages/cashier/dashboard/profile/settings.dart';
-
-import 'pages/cashier/client_debt.dart';
-import 'pages/cashier/sales_on_credit.dart';
-import 'pages/cashier/calculator.dart';
-
-import 'package:kassa/pages/agent/dashboard.dart';
+import 'helpers/routes/index.dart';
+import 'helpers/themes.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await GetStorage.init();
-  runApp(const MyApp());
+  await EasyLocalization.ensureInitialized();
+
+  const locales = [
+    Locale('ru', ''),
+    Locale('uz', 'Latn'),
+    Locale('uz', 'Cyrl'),
+  ];
+
+  final storage = GetStorage();
+
+  var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+  final theme = isDarkTheme ? darkTheme : lightTheme;
+
+  String savedLocaleId = storage.read('locale_id') ?? '1';
+
+  Locale locale = const Locale('ru', '');
+  if (savedLocaleId == '2') {
+    locale = const Locale('uz', 'Cyrl');
+  } else if (savedLocaleId == '3') {
+    locale = const Locale('uz', 'Latn');
+  }
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: locales,
+      path: 'assets/i18n',
+      fallbackLocale: const Locale('ru', ''),
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeModel(theme)),
+          ChangeNotifierProvider(create: (_) => LocaleModel(locale, savedLocaleId)),
+          ChangeNotifierProvider(create: (_) => LoaderModel()),
+          ChangeNotifierProvider(create: (_) => SettingsModel()),
+          ChangeNotifierProvider(create: (_) => UserModel(storage.read('user') ?? {})),
+          ChangeNotifierProvider(create: (_) => DataModel()),
+          ChangeNotifierProvider(create: (_) => FilterModel()),
+        ],
+        child: const MyApp(),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -47,87 +74,28 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final storage = GetStorage();
-  // ThemeController controller = Get.put(ThemeController());
-
-  Locale locale = const Locale('ru', '');
-  ThemeMode defaultThemeMode = ThemeMode.light;
-
-  getLocale() async {
-    try {
-      if (storage.read('settings') != null) {
-        var settings = jsonDecode(storage.read('settings'));
-        if (settings['language']) {
-          Get.updateLocale(const Locale('uz-Latn-UZ', ''));
-          locale = const Locale('uz-Latn-UZ', '');
-        }
-        setState(() {});
-      }
-    } catch (e) {
-      storage.remove('settings');
-    }
-  }
-
-  getData() async {
-    try {
-      if (storage.read('settings') != null) {
-        var settings = jsonDecode(storage.read('settings'));
-        if (settings['theme']) {
-          defaultThemeMode = ThemeMode.dark;
-        }
-        setState(() {});
-      }
-    } catch (e) {
-      storage.remove('settings');
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    getLocale();
-    getData();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      translations: Messages(),
-      locale: locale,
-      fallbackLocale: const Locale('ru', ''),
-      debugShowCheckedModeBanner: false,
-      themeMode: defaultThemeMode,
-      theme: defaultThemeMode == ThemeMode.dark ? Themes.dark : Themes.light,
-      initialRoute: '/splash',
-      getPages: [
-        // Auth
-        GetPage(name: '/login', page: () => const Login()),
-        GetPage(name: '/cashboxes', page: () => const CashBoxes()),
-        // Welcome
-        GetPage(name: '/splash', page: () => const Splash()),
-        // Cashier
-        GetPage(name: '/', page: () => const Dashboard()),
-        GetPage(name: '/x-report', page: () => const XReport()),
-        GetPage(name: '/balance', page: () => const Balance()),
-        GetPage(name: '/info', page: () => const Info()),
-        GetPage(name: '/settings', page: () => const Settings()),
-
-        // Cheques
-        GetPage(name: '/cheques', page: () => const Cheques()),
-        GetPage(name: '/cheq-detail', page: () => const CheqDetail()),
-
-        GetPage(name: '/return', page: () => const Return()),
-
-        GetPage(name: '/search', page: () => const Search()),
-        GetPage(name: '/payment', page: () => const PaymentSample()),
-
-        GetPage(name: '/client-debt', page: () => const ClientDebt()),
-        GetPage(name: '/sales-on-credit', page: () => const SalesOnCredit()),
-        GetPage(name: '/calculator', page: () => const Calculator()),
-
-        // Agent
-        GetPage(name: '/agent', page: () => const AgentDashboard()),
-      ],
+    return ToastificationWrapper(
+      child: Consumer2<ThemeModel, LocaleModel>(
+        builder: (context, themeModel, localeModel, child) {
+          context.setLocale(localeModel.locale);
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: localeModel.locale,
+            themeMode: ThemeMode.system,
+            theme: themeModel.themeData,
+            routerConfig: globalRouter,
+          );
+        },
+      ),
     );
   }
 }

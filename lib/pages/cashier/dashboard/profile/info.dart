@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:kassa/helpers/globals.dart';
+
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class Info extends StatelessWidget {

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -11,10 +11,10 @@ import 'package:unicons/unicons.dart';
 
 import '/helpers/api.dart';
 import '/helpers/cheque.dart';
-import '/helpers/globals.dart';
+import '../../../helpers/helper.dart';
 import '/helpers/controller.dart';
 
-import '/components/loading_layout.dart';
+import '../../../widgets/loading_layout.dart';
 import './on_credit.dart';
 import './loyalty.dart';
 import './payment.dart';
@@ -126,15 +126,11 @@ class _PaymentSampleState extends State<PaymentSample> {
       if (cashController.text.length > 0) {
         if (terminalController.text.length > 0) {
           setState(() {
-            dataCopy['paid'] = double.parse(cashController.text) +
-                double.parse(terminalController.text);
-            dataCopy['clientAmount'] = dataCopy['totalPrice'] -
-                (double.parse(cashController.text) +
-                    double.parse(terminalController.text));
+            dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
+            dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
           });
         } else {
-          dataCopy['clientAmount'] =
-              dataCopy['totalPrice'] - double.parse(cashController.text);
+          dataCopy['clientAmount'] = dataCopy['totalPrice'] - double.parse(cashController.text);
           dataCopy['paid'] = double.parse(cashController.text);
         }
       } else {
@@ -231,12 +227,8 @@ class _PaymentSampleState extends State<PaymentSample> {
         data['shiftId'] = cashbox['id'];
       });
     }
-    final transactionId = generateTransactionId(
-        cashbox['posId'].toString(),
-        cashbox['cashboxId'].toString(),
-        storage.read('shift') != null
-            ? jsonDecode(storage.read('shift')!)['id']
-            : cashbox['cashboxId'].toString());
+    final transactionId = generateTransactionId(cashbox['posId'].toString(), cashbox['cashboxId'].toString(),
+        storage.read('shift') != null ? jsonDecode(storage.read('shift')!)['id'] : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
@@ -349,15 +341,9 @@ class _PaymentSampleState extends State<PaymentSample> {
                   ],
                 ),
               ),
-              if (currentIndex == 0)
-                Payment(setPayload: setPayload, data: data, setData: setData),
-              if (currentIndex == 1)
-                OnCredit(setPayload: setPayload, data: data, setData: setData),
-              if (currentIndex == 2)
-                Loyalty(
-                    setPayload: setPayload,
-                    data: data,
-                    setLoyaltyData: setLoyaltyData),
+              if (currentIndex == 0) Payment(setPayload: setPayload, data: data, setData: setData),
+              if (currentIndex == 1) OnCredit(setPayload: setPayload, data: data, setData: setData),
+              if (currentIndex == 2) Loyalty(setPayload: setPayload, data: data, setLoyaltyData: setLoyaltyData),
               SizedBox(height: 70)
             ],
           ),
@@ -371,9 +357,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                     if (currentIndex == 0 && data['change'] >= 0) {
                       createCheque();
                     }
-                    if (currentIndex == 1 &&
-                        data['change'] < 0 &&
-                        data['clientId'] != 0) {
+                    if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
                       createCheque();
                     }
                     if (currentIndex == 2 && (isDisabled() == mainColor)) {
@@ -448,10 +432,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                   children: [
                     Table(
                       border: TableBorder(
-                        horizontalInside: BorderSide(
-                            width: 1,
-                            color: tableBorderColor,
-                            style: BorderStyle.solid),
+                        horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                       ),
                       children: [
                         TableRow(children: [
@@ -474,9 +455,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected']
-                                      ? Color(0xFF91a0e7)
-                                      : Colors.transparent,
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                   child: Text(
                                     '${clients[i]['name']}',
                                     style: TextStyle(
@@ -491,9 +470,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected']
-                                      ? Color(0xFF91a0e7)
-                                      : Colors.transparent,
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                   child: Text('${clients[i]['phone1']}'),
                                 ),
                               ),
@@ -503,9 +480,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(vertical: 8),
-                                  color: clients[i]['selected']
-                                      ? Color(0xFF91a0e7)
-                                      : Colors.transparent,
+                                  color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                   child: Text("${clients[i]['comment'] ?? ''}"),
                                 ),
                               ),

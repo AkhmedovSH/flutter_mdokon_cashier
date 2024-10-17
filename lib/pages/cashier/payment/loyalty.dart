@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:get_storage/get_storage.dart';
 
 import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class Loyalty extends StatefulWidget {

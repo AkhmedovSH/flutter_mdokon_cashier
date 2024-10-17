@@ -1,14 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
-import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.setPayload, this.data, this.setData})
-      : super(key: key);
+  const Payment({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
   final Function? setPayload;
   final Function? setData;
   final dynamic data;
@@ -109,8 +107,7 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(UniconsLine.money_bill),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,
@@ -145,8 +142,7 @@ class _PaymentState extends State<Payment> {
                         calculateChange();
                       },
                       decoration: InputDecoration(
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
                         suffixIcon: Icon(UniconsLine.credit_card),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,

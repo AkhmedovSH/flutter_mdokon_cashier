@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
+
 import 'package:unicons/unicons.dart';
 
-import '/helpers/globals.dart';
+import '../../helpers/helper.dart';
 
 class ClientDebt extends StatefulWidget {
   const ClientDebt({Key? key}) : super(key: key);
@@ -18,24 +20,9 @@ class _ClientDebtState extends State<ClientDebt> {
   Widget build(BuildContext context) {
     return Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(
-          title: Text(
-            'Долг клиента',
-            style: TextStyle(color: black),
-          ),
-          backgroundColor: white,
-          elevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-            onPressed: () {
-              Get.back();
-            },
-            icon: Icon(
-              UniconsLine.arrow_left,
-              color: black,
-              size: 32,
-            ),
-          ),
+        appBar: CustomAppBar(
+          title: 'Долг клиента',
+          leading: true,
         ),
         body: Container(
           margin: EdgeInsets.symmetric(horizontal: 48),
@@ -151,7 +138,7 @@ class _ClientDebtState extends State<ClientDebt> {
                       ),
                     ),
                     onPressed: () {
-                      Get.offAllNamed('/');
+                      context.go('/cashier');
                     },
                     child: Text(
                       'ПРИНИМАТЬ ДЕНЬГИ',

@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../helpers/api.dart';
-import '../helpers/globals.dart';
+import '../helpers/helper.dart';
 
 class Splash extends StatefulWidget {
   const Splash({Key? key}) : super(key: key);
@@ -29,7 +29,7 @@ class _SplashState extends State<Splash> {
 
     vesrion = localVersion;
     setState(() {});
-    var playMarketVersion = await guestGet('/services/admin/api/get-version?name=com.mdokon.cabinet');
+    var playMarketVersion = await get('/services/admin/api/get-version?name=com.mdokon.cabinet');
     if (playMarketVersion == null || playMarketVersion['version'] == null) {
       startTimer();
       return;
@@ -57,7 +57,7 @@ class _SplashState extends State<Splash> {
   }
 
   navigate() async {
-    Get.offAllNamed('/login');
+    context.go('/login');
   }
 
   @override
@@ -82,15 +82,6 @@ class _SplashState extends State<Splash> {
                 ),
               ),
               SizedBox(height: 10),
-              Center(
-                child: SizedBox(
-                  child: SpinKitFadingCircle(
-                    color: Get.isDarkMode ? white : black,
-                    size: 35.0,
-                    // controller: animationController,
-                  ),
-                ),
-              ),
             ],
           ),
           Container(
@@ -156,7 +147,7 @@ class _SplashState extends State<Splash> {
                                   margin: const EdgeInsets.only(right: 10),
                                   child: TextButton(
                                     onPressed: () {
-                                      Get.back();
+                                      context.pop();
                                     },
                                     style: TextButton.styleFrom(backgroundColor: const Color(0xFF00865F)),
                                     child: Text(

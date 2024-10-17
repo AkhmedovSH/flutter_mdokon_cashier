@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
@@ -6,19 +7,20 @@ import 'package:kassa/pages/cashier/dashboard/return.dart';
 
 import 'package:unicons/unicons.dart';
 
-import 'home/index.dart';
-import 'cheques/cheques.dart';
+import '../../helpers/helper.dart';
 
-import '../../../helpers/helper.dart';
-
-class CashierDashboard extends StatefulWidget {
-  const CashierDashboard({Key? key}) : super(key: key);
+class DirectorDashboard extends StatefulWidget {
+  final int initialPage;
+  const DirectorDashboard({
+    Key? key,
+    this.initialPage = 0,
+  }) : super(key: key);
 
   @override
-  State<CashierDashboard> createState() => _DashboardState();
+  State<DirectorDashboard> createState() => _DirectorDashboardState();
 }
 
-class _DashboardState extends State<CashierDashboard> {
+class _DirectorDashboardState extends State<DirectorDashboard> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   GetStorage storage = GetStorage();
 
@@ -51,18 +53,7 @@ class _DashboardState extends State<CashierDashboard> {
   @override
   void initState() {
     super.initState();
-    try {
-      setState(() {
-        if (Get.arguments != null && Get.arguments['value'] != null) {
-          currentIndex = Get.arguments['value'];
-          pageController = PageController(initialPage: Get.arguments['value']);
-        } else {
-          pageController = PageController();
-        }
-      });
-    } catch (e) {
-      print(e);
-    }
+    pageController = PageController(initialPage: widget.initialPage);
   }
 
   @override
@@ -74,7 +65,7 @@ class _DashboardState extends State<CashierDashboard> {
   getDashBoardItem(IconData icon, String text) {
     return BottomNavigationBarItem(
       icon: Icon(icon),
-      label: text.tr,
+      label: context.tr('text'),
     );
   }
 
@@ -95,8 +86,6 @@ class _DashboardState extends State<CashierDashboard> {
             //   setState(() => currentIndex = index);
             // },
             children: const [
-              Index(),
-              Cheques(),
               Return(),
               Profile(),
             ],
@@ -171,7 +160,7 @@ class _DashboardState extends State<CashierDashboard> {
                 margin: const EdgeInsets.only(bottom: 20),
                 child: Center(
                   child: Text(
-                    'are_you_sure_you_want_to_go_out'.tr,
+                    context.tr('are_you_sure_you_want_to_go_out'),
                     style: TextStyle(
                       color: black,
                       fontSize: 20,
@@ -193,7 +182,7 @@ class _DashboardState extends State<CashierDashboard> {
                         backgroundColor: white,
                       ),
                       child: Text(
-                        'cancel'.tr,
+                        context.tr('cancel'),
                         style: TextStyle(color: black),
                       ),
                     ),
@@ -206,7 +195,7 @@ class _DashboardState extends State<CashierDashboard> {
                         closeApp();
                       },
                       child: Text(
-                        'confirm'.tr,
+                        context.tr('confirm'),
                         style: TextStyle(color: white),
                       ),
                     ),

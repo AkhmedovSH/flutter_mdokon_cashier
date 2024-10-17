@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+
 import 'package:get_storage/get_storage.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/helpers/api.dart';
-import '/helpers/globals.dart';
+import '../../../../helpers/helper.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);

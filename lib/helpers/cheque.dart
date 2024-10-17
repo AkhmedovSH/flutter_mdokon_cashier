@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:get/get.dart';
 //
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
@@ -12,7 +11,7 @@ import 'package:image/image.dart' as img;
 
 import 'package:screenshot/screenshot.dart';
 
-import '/helpers/globals.dart';
+import 'helper.dart';
 
 getChequeRow(generator, text1, text2, {heightSize = PosTextSize.size1, widthSize = PosTextSize.size1, bold = false}) {
   return generator.row(

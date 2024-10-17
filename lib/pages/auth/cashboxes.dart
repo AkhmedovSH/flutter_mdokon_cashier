@@ -2,15 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:unicons/unicons.dart';
 
-import '../../helpers/globals.dart';
+import '../../helpers/helper.dart';
 import '../../helpers/api.dart';
 
 class CashBoxes extends StatefulWidget {
-  const CashBoxes({Key? key}) : super(key: key);
+  final List poses;
+  const CashBoxes({
+    Key? key,
+    required this.poses,
+  }) : super(key: key);
 
   @override
   _CashBoxesState createState() => _CashBoxesState();
@@ -19,7 +24,7 @@ class CashBoxes extends StatefulWidget {
 class _CashBoxesState extends State<CashBoxes> {
   final storage = GetStorage();
 
-  dynamic poses = Get.arguments;
+  List poses = [];
 
   selectCashbox(pos, cashbox) async {
     print(cashbox);
@@ -45,8 +50,14 @@ class _CashBoxesState extends State<CashBoxes> {
     });
     storage.write('shift', jsonEncode(response));
     if (response['success']) {
-      Get.offAllNamed('/');
+      context.go('/cashier');
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    poses = widget.poses;
   }
 
   @override
@@ -70,7 +81,7 @@ class _CashBoxesState extends State<CashBoxes> {
                   left: 10,
                   child: IconButton(
                     onPressed: () {
-                      Get.back();
+                      context.pop();
                     },
                     icon: Icon(
                       UniconsLine.arrow_left,

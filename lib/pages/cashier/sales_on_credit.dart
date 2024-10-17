@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 
-import '/helpers/globals.dart';
-import 'package:unicons/unicons.dart';
+import '../../helpers/helper.dart';
 
 class SalesOnCredit extends StatefulWidget {
   const SalesOnCredit({Key? key}) : super(key: key);
@@ -18,24 +17,9 @@ class _SalesOnCreditState extends State<SalesOnCredit> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text(
-          'Продажи в долг',
-          style: TextStyle(color: black),
-        ),
-        backgroundColor: white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(
-            UniconsLine.arrow_left,
-            color: black,
-            size: 32,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'Продажи в долг',
+        leading: true,
       ),
       body: Container(
           margin: EdgeInsets.symmetric(horizontal: 20),

@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class Index extends StatefulWidget {
@@ -58,6 +58,7 @@ class _IndexState extends State<Index> {
     "currencyName": "So'm",
     "currencyRate": 0,
     "discount": 0,
+    "discountAmount": 0,
     "note": "",
     "offline": false,
     "outType": false,
@@ -111,17 +112,17 @@ class _IndexState extends State<Index> {
   };
   List itemList = [
     {
-      'label': 'cash'.tr,
+      'label': 'cash',
       'icon': Icons.payments,
       'fieldName': 'cash',
     },
     {
-      'label': 'terminal'.tr,
+      'label': 'terminal',
       'icon': Icons.payment,
       'fieldName': 'terminal',
     },
     {
-      'label': 'note'.tr,
+      'label': 'note',
       'fieldName': 'note',
     },
   ];
@@ -175,40 +176,18 @@ class _IndexState extends State<Index> {
     });
   }
 
-  redirectToCalculator(i) async {
-    final product = await Get.toNamed('/calculator', arguments: data["itemsList"][i]);
-    //print('product${product}');
-    if (product != null) {
-      var arr = data["itemsList"];
-      double totalPrice = 0;
-
-      for (var i = 0; i < arr.length; i++) {
-        if (arr[i]['productId'] == product['productId']) {
-          arr[i]['totalPrice'] = double.parse(arr[i]['quantity'].toString()) * double.parse(arr[i]['salePrice'].toString());
-          arr[i] = product;
-        }
-        totalPrice += double.parse(arr[i]['quantity'].toString()) * double.parse(arr[i]['salePrice'].toString());
-      }
-
-      setState(() {
-        data["itemsList"] = arr;
-        data["totalPrice"] = totalPrice;
-      });
-    }
-  }
-
   redirectToSearch() async {
     if (data['discount'] > 0) {
       showDangerToast('discount_has_been_applied'.tr);
       return;
     }
-    final products = await Get.toNamed('/search', arguments: {
+    context.go('/search', extra: {
       'activePrice': data['activePrice'],
       'currencyId': data['currencyId'],
       'currencyName': data['currencyName'],
     });
-    print(products);
-    if (products == null) {
+    List products = [];
+    if (products.isNotEmpty) {
       // showErrorToast('Ошибка при добавлении продуктов');
       return;
     }
@@ -714,18 +693,6 @@ class _IndexState extends State<Index> {
     });
   }
 
-  checkConnection() async {
-    subscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
-      if (result != ConnectivityResult.none) {
-        isDeviceConnected = await InternetConnectionChecker().hasConnection;
-        setState(() {});
-      } else {
-        isDeviceConnected = false;
-        setState(() {});
-      }
-    });
-  }
-
   getExpenses() async {
     final response = await get('/services/desktop/api/expense-helper');
     if (response != null) {
@@ -748,7 +715,6 @@ class _IndexState extends State<Index> {
         data['id'] = Get.arguments['id'];
       });
     }
-    checkConnection();
   }
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
@@ -1609,7 +1575,7 @@ class _IndexState extends State<Index> {
                     ),
                     for (var i = 0; i < itemList.length; i++)
                       buildTextField(
-                        itemList[i]['label'],
+                        context.tr(itemList[i]['label']),
                         itemList[i]['icon'],
                         itemList[i],
                         i,

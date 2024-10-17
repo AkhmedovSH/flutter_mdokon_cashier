@@ -3,7 +3,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
 
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
@@ -11,9 +10,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/helpers/controller.dart';
-import 'package:kassa/components/loading_layout.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 import 'package:unicons/unicons.dart';
 
 class Search extends StatefulWidget {

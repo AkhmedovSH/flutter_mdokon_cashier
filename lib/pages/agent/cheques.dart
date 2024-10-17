@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:kassa/components/loading_layout.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 
 import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
-import 'package:kassa/helpers/controller.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class AgentHistory extends StatefulWidget {
@@ -19,7 +19,6 @@ class AgentHistory extends StatefulWidget {
 }
 
 class _AgentHistoryState extends State<AgentHistory> {
-  final Controller controller = Get.put(Controller());
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime selectedDate = DateTime.now();
   dynamic cheques = [];
@@ -47,8 +46,6 @@ class _AgentHistoryState extends State<AgentHistory> {
   };
 
   getCheques() async {
-    controller.showLoading();
-    print(controller.loading);
     setState(() {});
 
     dynamic cashbox = jsonDecode(storage.read('cashbox')!);
@@ -56,7 +53,6 @@ class _AgentHistoryState extends State<AgentHistory> {
       sendData['posId'] = cashbox['posId'];
     });
     final response = await get('/services/desktop/api/cheque-online-list/${cashbox['posId']}');
-    controller.hideLoading();
     if (response != null) {
       setState(() {
         cheques = response;
@@ -163,7 +159,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.offAllNamed('/agent', arguments: cheques[i]);
+                              context.go('/agent', extra: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),
@@ -175,7 +171,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.offAllNamed('/agent', arguments: cheques[i]);
+                              context.go('/agent', extra: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),
@@ -189,7 +185,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
-                              Get.offAllNamed('/agent', arguments: cheques[i]);
+                              context.go('/agent', extra: cheques[i]);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),

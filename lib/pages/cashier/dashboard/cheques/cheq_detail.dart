@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 //
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
@@ -13,11 +15,15 @@ import 'package:screenshot/screenshot.dart';
 import 'package:unicons/unicons.dart';
 
 import '/helpers/api.dart';
-import '/helpers/globals.dart';
+import '../../../../helpers/helper.dart';
 import '/helpers/cheque.dart';
 
 class CheqDetail extends StatefulWidget {
-  const CheqDetail({Key? key}) : super(key: key);
+  final int id;
+  const CheqDetail({
+    Key? key,
+    required this.id,
+  }) : super(key: key);
 
   @override
   _CheqDetailState createState() => _CheqDetailState();
@@ -80,73 +86,73 @@ class _CheqDetailState extends State<CheqDetail> {
         connected = false;
       }
       if (availableBluetoothDevices.isNotEmpty) {
-        openBluetoothDevices();
+        // openBluetoothDevices();
       } else {
-        showErrorToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
+        showDangerToast(context.tr('there_are_no_active_devices_bluetooth_is_disabled'));
       }
       setState(() {});
     }
   }
 
-  Future<void> setConnect(String mac, newSetState) async {
-    if (timer != null) {
-      Get.closeCurrentSnackbar();
-      timer!.cancel();
-    }
-    Get.showSnackbar(
-      GetSnackBar(
-        messageText: Row(
-          children: [
-            Text(
-              'connection'.tr,
-              style: TextStyle(color: black),
-            ),
-            const SizedBox(width: 10),
-            SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(
-                color: black,
-                strokeWidth: 2,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: mainColor,
-      ),
-    );
-    try {
-      timer = Timer(const Duration(seconds: 5), () {
-        if (!connected) {
-          Get.closeAllSnackbars();
-          showErrorToast('failed_to_connect'.tr);
-          return;
-        }
-      });
-      final String? result = await BluetoothThermalPrinter.connect(mac);
-      Get.closeAllSnackbars();
-      if (result == "true") {
-        newSetState(() {
-          connected = true;
-        });
-      } else {
-        if (timer != null) {
-          timer!.cancel();
-        }
-        showErrorToast('no_connection'.tr);
-        newSetState(() {
-          connected = false;
-        });
-      }
-    } catch (e) {
-      Get.closeAllSnackbars();
-      print(e);
-      showErrorToast(e);
-    }
-  }
+  // Future<void> setConnect(String mac, newSetState) async {
+  //   if (timer != null) {
+  //     Get.closeCurrentSnackbar();
+  //     timer!.cancel();
+  //   }
+  //   Get.showSnackbar(
+  //     GetSnackBar(
+  //       messageText: Row(
+  //         children: [
+  //           Text(
+  //             'connection'.tr,
+  //             style: TextStyle(color: black),
+  //           ),
+  //           const SizedBox(width: 10),
+  //           SizedBox(
+  //             height: 16,
+  //             width: 16,
+  //             child: CircularProgressIndicator(
+  //               color: black,
+  //               strokeWidth: 2,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       backgroundColor: mainColor,
+  //     ),
+  //   );
+  //   try {
+  //     timer = Timer(const Duration(seconds: 5), () {
+  //       if (!connected) {
+  //         Get.closeAllSnackbars();
+  //         showErrorToast('failed_to_connect'.tr);
+  //         return;
+  //       }
+  //     });
+  //     final String? result = await BluetoothThermalPrinter.connect(mac);
+  //     Get.closeAllSnackbars();
+  //     if (result == "true") {
+  //       newSetState(() {
+  //         connected = true;
+  //       });
+  //     } else {
+  //       if (timer != null) {
+  //         timer!.cancel();
+  //       }
+  //       showErrorToast('no_connection'.tr);
+  //       newSetState(() {
+  //         connected = false;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     Get.closeAllSnackbars();
+  //     print(e);
+  //     showErrorToast(e);
+  //   }
+  // }
 
   getCheque() async {
-    dynamic response = await get('/services/desktop/api/cheque-byId/${Get.arguments}');
+    dynamic response = await get('/services/desktop/api/cheque-byId/${widget.id}');
     //print(response);
     setState(() {
       cashbox = jsonDecode(storage.read('cashbox')!);
@@ -226,19 +232,9 @@ class _CheqDetailState extends State<CheqDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(
-            UniconsLine.arrow_left,
-            size: 32,
-            color: context.theme.iconTheme.color,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: '',
+        leading: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -257,7 +253,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'DUPLICATE'.tr,
+                    context.tr('DUPLICATE'),
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
@@ -279,7 +275,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    '${'phone'.tr}: ${cashbox['posPhone'] ?? ''}',
+                    '${context.tr('phone')}: ${cashbox['posPhone'] ?? ''}',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
@@ -290,16 +286,16 @@ class _CheqDetailState extends State<CheqDetail> {
                   alignment: Alignment.center,
                   margin: EdgeInsets.only(bottom: 10),
                   child: Text(
-                    '${'address'.tr}: ${cashbox['posAddress'] ?? ''}',
+                    '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                     ),
                   ),
                 ),
-                buildRow('cashier'.tr, cheque['cashierName']),
-                buildRow('№ ${'cheque'.tr}', cheque['chequeNumber']),
-                buildRow('date'.tr, cheque['chequeDate']),
+                buildRow(context.tr('cashier'), cheque['cashierName']),
+                buildRow('№ ${context.tr('cheque')}', cheque['chequeNumber']),
+                buildRow(context.tr('date'), cheque['chequeDate']),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
@@ -318,7 +314,7 @@ class _CheqDetailState extends State<CheqDetail> {
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '№ ${'product'.tr}',
+                        '№ ${context.tr('product')}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -327,7 +323,7 @@ class _CheqDetailState extends State<CheqDetail> {
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
                       child: Text(
-                        'qty'.tr,
+                        context.tr('qty'),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -336,7 +332,7 @@ class _CheqDetailState extends State<CheqDetail> {
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
                       child: Text(
-                        'price'.tr,
+                        context.tr('price'),
                         textAlign: TextAlign.end,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -419,11 +415,11 @@ class _CheqDetailState extends State<CheqDetail> {
                     softWrap: false,
                   ),
                 ),
-                buildRow('sale_amount'.tr, formatMoney(cheque['totalPrice'])),
-                buildRow('discount'.tr, formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
-                buildRow('to_pay'.tr, formatMoney(cheque['to_pay']), fz: 20.0),
-                buildRow('paid'.tr, formatMoney(cheque['paid'])),
-                buildRow('${'VAT'.tr} %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
+                buildRow(context.tr('sale_amount'), formatMoney(cheque['totalPrice'])),
+                buildRow(context.tr('discount'), formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
+                buildRow(context.tr('to_pay'), formatMoney(cheque['to_pay']), fz: 20.0),
+                buildRow(context.tr('paid'), formatMoney(cheque['paid'])),
+                buildRow('${context.tr('VAT')} %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
                 cheque['saleCurrencyId'] == 1 ? buildRow('Валюта', 'Сум ') : Container(),
                 cheque['saleCurrencyId'] == 2 ? buildRow('Валюта', 'USD ') : Container(),
                 for (var i = 0; i < transactionsList.length; i++)
@@ -444,8 +440,8 @@ class _CheqDetailState extends State<CheqDetail> {
                 cheque['clientAmount'] > 0 ? buildRow('Должник', cheque['clientName'] + ' ') : Container(),
                 (cheque['clientAmount'] == 0 && cheque['clientName'] != null) ? buildRow('Клиент', cheque['clientName']) : Container(),
                 (cheque['loyaltyClientName'] != null) ? buildRow('Клиент', cheque['loyaltyClientName']) : Container(),
-                cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${'bonus'.tr}', formatMoney(cheque['loyaltyBonus'])) : Container(),
-                buildRow('change'.tr, formatMoney(cheque['change'])),
+                cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${context.tr('bonus')}', formatMoney(cheque['loyaltyBonus'])) : Container(),
+                buildRow(context.tr('change'), formatMoney(cheque['change'])),
                 Container(
                     margin: EdgeInsets.only(top: 15, bottom: 10), height: 50, width: 200, child: SfBarcodeGenerator(value: '${cheque['barcode']}')),
                 Container(
@@ -459,7 +455,7 @@ class _CheqDetailState extends State<CheqDetail> {
                 ),
                 Center(
                   child: Text(
-                    '${'thank_you_for_your_purchase'.tr}!',
+                    '${context.tr('thank_you_for_your_purchase')}!',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
@@ -493,7 +489,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   children: [
                     Icon(UniconsLine.print),
                     SizedBox(width: 10),
-                    Text('PRINT'.tr),
+                    Text(context.tr('PRINT')),
                   ],
                 ),
               ),
@@ -503,7 +499,7 @@ class _CheqDetailState extends State<CheqDetail> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.offAllNamed('/', arguments: {'value': 2, 'id': cheque['chequeNumber']});
+                    context.go('/cashier', extra: {'value': 2, 'id': cheque['chequeNumber']});
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14),
@@ -517,7 +513,7 @@ class _CheqDetailState extends State<CheqDetail> {
                     children: [
                       Icon(UniconsLine.backward),
                       SizedBox(width: 10),
-                      Text('RETURN'.tr),
+                      Text(context.tr('RETURN')),
                     ],
                   ),
                 ),
@@ -530,84 +526,84 @@ class _CheqDetailState extends State<CheqDetail> {
     );
   }
 
-  openBluetoothDevices() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, newSetState) {
-          return Container(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: context.theme.cardColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: 300,
-                        child: ListView.builder(
-                          itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              onTap: () {
-                                String select = availableBluetoothDevices[index];
-                                List list = select.split("#");
-                                String mac = list[1];
-                                setConnect(mac, newSetState);
-                              },
-                              title: Text('${availableBluetoothDevices[index]}'),
-                              subtitle: Text("click_to_connect".tr),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      if (connected)
-                        SizedBox(
-                          width: Get.width,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              printCheque(cheque, itemsList);
-                            },
-                            child: Text(
-                              'PRINT'.tr,
-                              style: TextStyle(
-                                color: white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        });
-      },
-    );
-    setState(() {
-      availableBluetoothDevices = [];
-    });
-  }
+  // openBluetoothDevices() async {
+  //   await showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.only(
+  //         topLeft: Radius.circular(24),
+  //         topRight: Radius.circular(24),
+  //       ),
+  //     ),
+  //     builder: (BuildContext context) {
+  //       return StatefulBuilder(builder: (context, newSetState) {
+  //         return Container(
+  //           color: Colors.transparent,
+  //           child: Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 16),
+  //             decoration: BoxDecoration(
+  //               color: context.theme.cardColor,
+  //               borderRadius: const BorderRadius.only(
+  //                 topLeft: Radius.circular(24),
+  //                 topRight: Radius.circular(24),
+  //               ),
+  //             ),
+  //             child: SingleChildScrollView(
+  //               child: Container(
+  //                 padding: const EdgeInsets.symmetric(vertical: 16),
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     SizedBox(
+  //                       height: 300,
+  //                       child: ListView.builder(
+  //                         itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
+  //                         itemBuilder: (context, index) {
+  //                           return ListTile(
+  //                             onTap: () {
+  //                               String select = availableBluetoothDevices[index];
+  //                               List list = select.split("#");
+  //                               String mac = list[1];
+  //                               setConnect(mac, newSetState);
+  //                             },
+  //                             title: Text('${availableBluetoothDevices[index]}'),
+  //                             subtitle: Text("click_to_connect".tr),
+  //                           );
+  //                         },
+  //                       ),
+  //                     ),
+  //                     const SizedBox(height: 15),
+  //                     if (connected)
+  //                       SizedBox(
+  //                         width: Get.width,
+  //                         height: 48,
+  //                         child: ElevatedButton(
+  //                           onPressed: () {
+  //                             printCheque(cheque, itemsList);
+  //                           },
+  //                           child: Text(
+  //                             'PRINT'.tr,
+  //                             style: TextStyle(
+  //                               color: white,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     Padding(
+  //                       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         );
+  //       });
+  //     },
+  //   );
+  //   setState(() {
+  //     availableBluetoothDevices = [];
+  //   });
+  // }
 }

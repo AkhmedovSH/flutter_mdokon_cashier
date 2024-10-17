@@ -1,18 +1,18 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:unicons/unicons.dart';
 
-import '../../helpers/globals.dart';
+import '../../helpers/helper.dart';
 import '../../helpers/api.dart';
-import '../../helpers/controller.dart';
-import '../../components/loading_layout.dart';
+import '../../widgets/loading_layout.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -33,15 +33,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   bool showPassword = false;
   bool loading = false;
-  final Controller controller = Get.put(Controller());
 
   login() async {
-    controller.showLoading();
     setState(() {});
-    final data = await guestPost('/auth/login', payload, loading: false);
+    final data = await post('/auth/login', payload);
     if (data == null) {
-      controller.hideLoading();
-      setState(() {});
       return;
     }
     storage.write('access_token', data['access_token']);
@@ -60,17 +56,22 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       if (account['authorities'][i] == "ROLE_AGENT") {
         checker = 'ROLE_AGENT';
       }
+      if (account['authorities'][i] == "ROLE_OWNER") {
+        checker = 'ROLE_OWNER';
+      }
     }
+    storage.write('user_roles', jsonEncode(account['authorities']));
     if (checker == 'ROLE_CASHIER') {
       storage.write('user_roles', jsonEncode(account['authorities']));
       await getAccessPos();
     } else if (checker == 'ROLE_AGENT') {
       storage.write('user_roles', jsonEncode(account['authorities']));
       await getAgentPosId();
+    } else if (checker == 'ROLE_OWNER') {
+      await getAgentPosId();
     } else {
-      showErrorToast('Нет доступа');
+      showDangerToast('error', description: 'Нет доступа');
     }
-    controller.hideLoading();
     setState(() {});
   }
 
@@ -79,26 +80,24 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   }
 
   getAgentPosId() async {
-    final response = await get('/services/desktop/api/get-access-pos', loading: false);
+    final response = await get('/services/desktop/api/get-access-pos');
     response['isAgent'] = true;
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
     storage.write('cashbox', jsonEncode(response));
-    Get.offAllNamed('/agent');
-    controller.hideLoading();
+    context.go('/agent');
     setState(() {});
   }
 
   getAccessPos() async {
-    final response = await get('/services/desktop/api/get-access-pos', loading: false);
+    final response = await get('/services/desktop/api/get-access-pos');
     if (response['openShift']) {
       storage.remove('shift');
       response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
       storage.write('cashbox', jsonEncode(response['shift']));
-      Get.offAllNamed('/');
+      context.go('/cashier');
     } else {
-      Get.toNamed('/cashboxes', arguments: response['posList']);
+      context.go('/cashier/cashboxes', extra: response['posList']);
     }
-    controller.hideLoading();
     setState(() {});
   }
 
@@ -189,7 +188,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                 controller: data['username'],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'required_field'.tr;
+                                    return context.tr('required_field');
                                   }
                                   return null;
                                 },
@@ -223,7 +222,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                 controller: data['password'],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'required_field'.tr;
+                                    return context.tr('required_field');
                                   }
                                   return null;
                                 },
@@ -310,7 +309,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           ),
         ),
         floatingActionButton: Container(
-          color: context.theme.cardColor,
+          color: CustomTheme.of(context).cardColor,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -329,7 +328,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                       openPhoneCall();
                     },
                     child: Text(
-                      'contact_us'.tr,
+                      context.tr('contact_us'),
                       style: TextStyle(
                         color: mainColor,
                         fontWeight: FontWeight.w500,

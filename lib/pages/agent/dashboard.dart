@@ -1,18 +1,22 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'package:unicons/unicons.dart';
-import 'package:get/get.dart';
 
 import '../cashier/dashboard/home/index.dart';
 import 'cheques.dart';
 import 'package:kassa/pages/cashier/dashboard/profile/profile.dart';
 
-import '../../../helpers/globals.dart';
+import '../../helpers/helper.dart';
 
 class AgentDashboard extends StatefulWidget {
-  const AgentDashboard({Key? key}) : super(key: key);
+  final int initialPage;
+  const AgentDashboard({
+    Key? key,
+    this.initialPage = 0,
+  }) : super(key: key);
 
   @override
   State<AgentDashboard> createState() => _AgentDashboardState();
@@ -51,18 +55,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
   @override
   void initState() {
     super.initState();
-    try {
-      setState(() {
-        if (Get.arguments != null && Get.arguments['value'] != null) {
-          currentIndex = Get.arguments['value'];
-          pageController = PageController(initialPage: Get.arguments['value']);
-        } else {
-          pageController = PageController();
-        }
-      });
-    } catch (e) {
-      print(e);
-    }
+    pageController = PageController(initialPage: widget.initialPage);
   }
 
   @override
@@ -74,7 +67,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
   getDashBoardItem(IconData icon, String text) {
     return BottomNavigationBarItem(
       icon: Icon(icon),
-      label: text.tr,
+      label: context.tr(text),
     );
   }
 
@@ -169,7 +162,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
                 margin: const EdgeInsets.only(bottom: 20),
                 child: Center(
                   child: Text(
-                    'are_you_sure_you_want_to_go_out'.tr,
+                    context.tr('are_you_sure_you_want_to_go_out'),
                     style: TextStyle(
                       color: black,
                       fontSize: 20,
@@ -191,7 +184,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
                         backgroundColor: white,
                       ),
                       child: Text(
-                        'cancel'.tr,
+                        context.tr('cancel'),
                         style: TextStyle(color: black),
                       ),
                     ),
@@ -204,7 +197,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
                         closeApp();
                       },
                       child: Text(
-                        'confirm'.tr,
+                        context.tr('confirm'),
                         style: TextStyle(color: white),
                       ),
                     ),

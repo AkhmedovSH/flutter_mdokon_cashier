@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+
 import 'package:get_storage/get_storage.dart';
 
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +11,7 @@ import 'package:unicons/unicons.dart';
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '/helpers/globals.dart';
+import '../../../../helpers/helper.dart';
 
 class Settings extends StatefulWidget {
   const Settings({Key? key}) : super(key: key);

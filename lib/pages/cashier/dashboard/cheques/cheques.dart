@@ -1,15 +1,16 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:kassa/components/loading_layout.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 
 import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/globals.dart';
-import 'package:kassa/helpers/controller.dart';
+import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
 
 class Cheques extends StatefulWidget {
@@ -20,7 +21,6 @@ class Cheques extends StatefulWidget {
 }
 
 class _ChequesState extends State<Cheques> {
-  final Controller controller = Get.put(Controller());
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   GetStorage storage = GetStorage();
 
@@ -50,15 +50,11 @@ class _ChequesState extends State<Cheques> {
   };
 
   Future<void> getCheques() async {
-    controller.showLoading();
-    print(controller.loading);
-    setState(() {});
     dynamic cashbox = jsonDecode(storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });
     final response = await get('/services/desktop/api/cashier-cheque-pageList', payload: sendData);
-    controller.hideLoading();
     if (response != null) {
       setState(() {
         cheques = response;
@@ -74,11 +70,11 @@ class _ChequesState extends State<Cheques> {
 
   getStatus(status) {
     if (status == 0) {
-      return 'successful'.tr;
+      return context.tr('successful');
     } else if (status == 1) {
-      return 'item_returned_partially'.tr;
+      return context.tr('item_returned_partially');
     } else if (status == 2) {
-      return 'item_returned'.tr;
+      return context.tr('item_returned');
     }
   }
 
@@ -116,7 +112,7 @@ class _ChequesState extends State<Cheques> {
           ),
           bottomOpacity: 0.0,
           title: Text(
-            'checks'.tr,
+            context.tr('checks'),
             style: TextStyle(color: white),
           ),
           centerTitle: true,
@@ -152,7 +148,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'status'.tr,
+                            context.tr('status'),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
@@ -161,7 +157,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'total_amount'.tr,
+                            context.tr('total_amount'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -171,7 +167,7 @@ class _ChequesState extends State<Cheques> {
                         Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Text(
-                            'date'.tr,
+                            context.tr('date'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -185,7 +181,7 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
@@ -200,7 +196,7 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
@@ -214,7 +210,7 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                Get.toNamed('/cheq-detail', arguments: cheques[i]['id']);
+                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
@@ -377,7 +373,7 @@ class _ChequesState extends State<Cheques> {
                                     width: 1,
                                   ),
                                 ),
-                                hintText: 'amount_from'.tr,
+                                hintText: context.tr('amount_from'),
                                 hintStyle: TextStyle(color: Color(0xFF495057)),
                               ),
                             ),
@@ -407,7 +403,7 @@ class _ChequesState extends State<Cheques> {
                                     width: 1,
                                   ),
                                 ),
-                                hintText: 'amount_to'.tr,
+                                hintText: context.tr('amount_to'),
                                 hintStyle: TextStyle(color: Color(0xFF495057)),
                               ),
                             ),
@@ -441,7 +437,7 @@ class _ChequesState extends State<Cheques> {
                               width: 1,
                             ),
                           ),
-                          hintText: 'search'.tr,
+                          hintText: context.tr('search'),
                           hintStyle: TextStyle(color: Color(0xFF495057)),
                         ),
                       ),
@@ -460,7 +456,7 @@ class _ChequesState extends State<Cheques> {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 16)),
-                    child: Text('filter'.tr),
+                    child: Text(context.tr('filter')),
                   ),
                 ),
               )
