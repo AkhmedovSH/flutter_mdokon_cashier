@@ -56,4 +56,5 @@ flutter:
   assets:
     - images/
     - images/icons/
-    - images/lottie/
+    - assets/lottie/
+    - assets/i18n/

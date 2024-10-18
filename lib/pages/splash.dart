@@ -57,7 +57,7 @@ class _SplashState extends State<Splash> {
   }
 
   navigate() async {
-    context.go('/login');
+    context.go('/auth');
   }
 
   @override

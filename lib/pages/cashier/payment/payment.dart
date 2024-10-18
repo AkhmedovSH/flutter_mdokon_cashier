@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kassa/helpers/helper.dart';
@@ -20,7 +21,6 @@ class _PaymentState extends State<Payment> {
   final _formKey = GlobalKey<FormState>();
   final cashController = TextEditingController();
   final terminalController = TextEditingController();
-  dynamic products = Get.arguments;
   dynamic sendData = {};
   dynamic data = {};
 
@@ -61,7 +61,7 @@ class _PaymentState extends State<Payment> {
           Container(
             margin: EdgeInsets.only(top: 20),
             child: Text(
-              'TO_PAY'.tr,
+              context.tr('TO_PAY'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class _PaymentState extends State<Payment> {
           Container(
             margin: EdgeInsets.only(bottom: 10),
             child: Text(
-              '${formatMoney(data['totalPrice'])} ${'sum'.tr}',
+              '${formatMoney(data['totalPrice'])} ${context.tr('sum')}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -86,7 +86,7 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'cash'.tr,
+                      context.tr('cash'),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
@@ -99,7 +99,7 @@ class _PaymentState extends State<Payment> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'required_field'.tr;
+                          return context.tr('required_field');
                         }
                         return null;
                       },
@@ -113,7 +113,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${'sum'.tr}',
+                        hintText: '0.00 ${context.tr('sum')}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -121,7 +121,7 @@ class _PaymentState extends State<Payment> {
                   Container(
                     margin: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'terminal'.tr,
+                      context.tr('terminal'),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
@@ -134,7 +134,7 @@ class _PaymentState extends State<Payment> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'required_field'.tr;
+                          return context.tr('required_field');
                         }
                         return null;
                       },

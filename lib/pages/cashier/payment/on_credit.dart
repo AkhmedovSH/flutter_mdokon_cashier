@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
@@ -15,14 +17,15 @@ class OnCredit extends StatefulWidget {
 }
 
 class _OnCreditState extends State<OnCredit> {
-  dynamic clients = [];
-  dynamic data = Get.arguments;
-  dynamic client = {'name': 'CLIENT'.tr};
+  List clients = [];
+  // Get.arguments
+  Map data = {};
+  Map client = {'name': 'CLIENT'};
   final _formKey = GlobalKey<FormState>();
   final cashController = TextEditingController();
   final terminalController = TextEditingController();
-  dynamic sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
-  dynamic addList = [
+  Map sendData = {'comment': '', 'name': '', 'phone1': '', 'phone2': ''};
+  List addList = [
     {'name': 'contact_name', 'value': '', 'icon': UniconsLine.user, 'keyboardType': TextInputType.text},
     {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
     {'name': 'phone', 'value': '', 'icon': UniconsLine.phone, 'keyboardType': TextInputType.number},
@@ -33,7 +36,7 @@ class _OnCreditState extends State<OnCredit> {
   createClient() async {
     final response = await post('/services/desktop/api/clients', sendData);
     if (response != null && response['success']) {
-      Get.back();
+      context.pop();
       showSelectUserDialog();
     }
   }
@@ -104,7 +107,7 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 20, bottom: 5),
             child: Text(
-              '${'CLIENT'.tr}:',
+              '${context.tr('CLIENT')}:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -113,7 +116,7 @@ class _OnCreditState extends State<OnCredit> {
             child: TextFormField(
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'required_field'.tr;
+                  return context.tr('required_field');
                 }
                 return null;
               },
@@ -144,7 +147,7 @@ class _OnCreditState extends State<OnCredit> {
                       showSelectUserDialog();
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFf1b44c)),
-                    child: Text('choose'.tr),
+                    child: Text(context.tr('choose')),
                   ),
                 ),
               ),
@@ -184,7 +187,7 @@ class _OnCreditState extends State<OnCredit> {
                                             Padding(
                                               padding: EdgeInsets.only(left: 5),
                                               child: Text(
-                                                '${addList[i]['name']}'.tr,
+                                                context.tr(addList[i]['name']),
                                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
                                               ),
                                             ),
@@ -195,7 +198,7 @@ class _OnCreditState extends State<OnCredit> {
                                               child: TextFormField(
                                                 validator: (value) {
                                                   if (value == null || value.isEmpty) {
-                                                    return 'required_field'.tr;
+                                                    return context.tr('required_field');
                                                   }
                                                   return null;
                                                 },
@@ -255,7 +258,7 @@ class _OnCreditState extends State<OnCredit> {
                                       onPressed: () {
                                         createClient();
                                       },
-                                      child: Text('save'.tr),
+                                      child: Text(context.tr('save')),
                                     ),
                                   ),
                                 ],
@@ -263,7 +266,7 @@ class _OnCreditState extends State<OnCredit> {
                             });
                           });
                     },
-                    child: Text('add'.tr),
+                    child: Text(context.tr('add')),
                   ),
                 ),
               ),
@@ -272,7 +275,7 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 10, bottom: 5),
             child: Text(
-              'NOTE'.tr,
+              context.tr('NOTE'),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -281,7 +284,7 @@ class _OnCreditState extends State<OnCredit> {
             child: TextFormField(
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'required_field'.tr;
+                  return context.tr('required_field');
                 }
                 return null;
               },
@@ -299,7 +302,7 @@ class _OnCreditState extends State<OnCredit> {
                 errorBorder: inputErrorBorder,
                 focusedErrorBorder: inputErrorBorder,
                 focusColor: blue,
-                hintText: 'NOTE'.tr,
+                hintText: context.tr('NOTE'),
                 hintStyle: TextStyle(color: a2),
               ),
             ),
@@ -310,7 +313,7 @@ class _OnCreditState extends State<OnCredit> {
               Container(
                 margin: EdgeInsets.only(top: 20),
                 child: Text(
-                  'TO_PAY'.tr,
+                  context.tr('TO_PAY'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -320,7 +323,7 @@ class _OnCreditState extends State<OnCredit> {
               Container(
                 margin: EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '${formatMoney(data['totalPrice'])} ${'sum'.tr}',
+                  '${formatMoney(data['totalPrice'])} ${context.tr('sum')}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -335,7 +338,7 @@ class _OnCreditState extends State<OnCredit> {
                       Container(
                         margin: EdgeInsets.only(bottom: 5),
                         child: Text(
-                          'cash'.tr,
+                          context.tr('cash'),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -348,7 +351,7 @@ class _OnCreditState extends State<OnCredit> {
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'required_field'.tr;
+                              return context.tr('required_field');
                             }
                             return null;
                           },
@@ -367,7 +370,7 @@ class _OnCreditState extends State<OnCredit> {
                             errorBorder: inputErrorBorder,
                             focusedErrorBorder: inputErrorBorder,
                             focusColor: blue,
-                            hintText: '0.00 ${'sum'.tr}',
+                            hintText: '0.00 ${context.tr('sum')}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
@@ -381,7 +384,7 @@ class _OnCreditState extends State<OnCredit> {
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'required_field'.tr;
+                              return context.tr('required_field');
                             }
                             return null;
                           },
@@ -399,7 +402,7 @@ class _OnCreditState extends State<OnCredit> {
                             focusedBorder: inputFocusBorder,
                             errorBorder: inputErrorBorder,
                             focusedErrorBorder: inputErrorBorder,
-                            hintText: '0.00 ${'sum'.tr}',
+                            hintText: '0.00 ${context.tr('sum')}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
@@ -407,7 +410,7 @@ class _OnCreditState extends State<OnCredit> {
                     ],
                   )),
               Text(
-                '${'AMOUNT_OF_DEBT'.tr}:',
+                '${context.tr('AMOUNT_OF_DEBT')}:',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -416,7 +419,7 @@ class _OnCreditState extends State<OnCredit> {
               Container(
                 margin: EdgeInsets.only(bottom: 10, top: 5),
                 child: Text(
-                  '${formatMoney(data['change'])} сум',
+                  '${formatMoney(data['change'])} ${context.tr('sum')}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -458,13 +461,9 @@ class _OnCreditState extends State<OnCredit> {
                         children: [
                           TableRow(
                             children: [
-                              Text(
-                                'contact'.tr,
-                              ),
-                              Text(
-                                'number'.tr,
-                              ),
-                              Text('comment'.tr),
+                              Text(context.tr('contact')),
+                              Text(context.tr('number')),
+                              Text(context.tr('comment')),
                             ],
                           ),
                           for (var i = 0; i < clients.length; i++)
@@ -525,7 +524,7 @@ class _OnCreditState extends State<OnCredit> {
                         }
                       }
                     },
-                    child: Text('choose'.tr),
+                    child: Text(context.tr('choose')),
                   ),
                 )
               ],

@@ -20,8 +20,8 @@ var dio = Dio(options);
 
 Future get(String url, {payload}) async {
   try {
-    if (storage.read('token') != null) {
-      dio.options.headers["authorization"] = "Bearer ${storage.read('token')}";
+    if (storage.read('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
     print(hostUrl + url);
@@ -40,8 +40,8 @@ Future post(String url, dynamic payload) async {
   // print(payload);
   // controller.showLoading;
   try {
-    if (storage.read('token') != null) {
-      dio.options.headers["authorization"] = "Bearer ${storage.read('token')}";
+    if (storage.read('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
     final response = await dio.post(
@@ -59,8 +59,8 @@ Future put(String url, dynamic payload) async {
   // print(payload);
   // controller.showLoading;
   try {
-    if (storage.read('token') != null) {
-      dio.options.headers["authorization"] = "Bearer ${storage.read('token')}";
+    if (storage.read('access_token') != null) {
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
     final response = await dio.put(

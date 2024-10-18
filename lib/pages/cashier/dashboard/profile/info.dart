@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
 
 class Info extends StatelessWidget {
@@ -67,24 +68,7 @@ class Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        // centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(
-            UniconsLine.arrow_left,
-            size: 32,
-            color: context.theme.iconTheme.color,
-          ),
-        ),
-        title: Text(
-          'info'.tr,
-        ),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(title: 'info'),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: SingleChildScrollView(

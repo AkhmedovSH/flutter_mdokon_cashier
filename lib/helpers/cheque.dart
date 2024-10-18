@@ -139,7 +139,6 @@ printCheque(cheque, itemsList) async {
       );
     }
     bytes += generator.cut();
-    Get.back();
     await BluetoothThermalPrinter.writeBytes(bytes);
   } catch (e) {
     print(e);

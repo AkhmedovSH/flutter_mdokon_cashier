@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
+import 'package:kassa/helpers/themes.dart';
+import 'package:kassa/models/theme_model.dart';
 
-import 'package:image_picker/image_picker.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -39,28 +43,27 @@ class _SettingsState extends State<Settings> {
 
   save() {
     if (settings['language']) {
-      Get.updateLocale(const Locale('uz-Latn-UZ', ''));
+      context.setLocale(const Locale('uz', 'Latn'));
     } else {
-      Get.updateLocale(const Locale('ru', ''));
+      context.setLocale(const Locale('ru  ', ''));
     }
     print(settings['theme']);
     if (settings['theme']) {
-      Get.changeTheme(ThemeData.dark());
-      setState(() {});
+      Provider.of<ThemeModel>(context).setTheme(darkTheme);
     }
     storage.write('settings', jsonEncode(settings));
-    showSuccessToast('settings_saved'.tr);
+    showSuccessToast(context.tr('settings_saved'));
     setState(() {});
   }
 
-  uploadImage() async {
-    XFile? img = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (img == null) return;
-    var imageBytes = (await img.readAsBytes());
-    print(imageBytes);
-    storage.write("printImage", imageBytes);
-    getData();
-  }
+  // uploadImage() async {
+  //   XFile? img = await ImagePicker().pickImage(source: ImageSource.gallery);
+  //   if (img == null) return;
+  //   var imageBytes = (await img.readAsBytes());
+  //   print(imageBytes);
+  //   storage.write("printImage", imageBytes);
+  //   getData();
+  // }
 
   getData() {
     if (storage.read('settings') != null) {
@@ -111,7 +114,7 @@ class _SettingsState extends State<Settings> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12),
       child: Text(
-        text.tr,
+        context.tr(text),
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -131,7 +134,7 @@ class _SettingsState extends State<Settings> {
         margin: EdgeInsets.symmetric(horizontal: 12),
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: context.theme.cardColor,
+          color: CustomTheme.of(context).cardColor,
           boxShadow: [boxShadow],
           borderRadius: BorderRadius.circular(8),
         ),
@@ -147,7 +150,7 @@ class _SettingsState extends State<Settings> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title.tr,
+                        context.tr(title),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -155,7 +158,7 @@ class _SettingsState extends State<Settings> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        description.tr,
+                        context.tr(description),
                         style: TextStyle(
                           fontSize: 12,
                         ),
@@ -177,7 +180,7 @@ class _SettingsState extends State<Settings> {
               Positioned.fill(
                 top: 0,
                 child: Container(
-                  color: context.theme.cardColor.withOpacity(0.8),
+                  color: CustomTheme.of(context).cardColor.withOpacity(0.8),
                   width: MediaQuery.of(context).size.width,
                   alignment: Alignment.center,
                   height: double.infinity,
@@ -187,7 +190,7 @@ class _SettingsState extends State<Settings> {
                       Icon(UniconsLine.clock),
                       SizedBox(width: 10),
                       Text(
-                        'soon'.tr,
+                        context.tr('soon'),
                         style: TextStyle(
                           color: grey,
                           fontSize: 18,
@@ -207,24 +210,8 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        bottomOpacity: 0.0,
-        elevation: 0,
-        // centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(
-            UniconsLine.arrow_left,
-            size: 32,
-            color: context.theme.iconTheme.color,
-          ),
-        ),
-        title: Text(
-          'settings'.tr,
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'settings',
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
@@ -249,14 +236,12 @@ class _SettingsState extends State<Settings> {
               buildTitle('print'),
               SizedBox(height: 15),
               GestureDetector(
-                onTap: () {
-                  uploadImage();
-                },
+                onTap: () {},
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 12),
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: context.theme.cardColor,
+                    color: CustomTheme.of(context).cardColor,
                     boxShadow: [boxShadow],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -270,7 +255,7 @@ class _SettingsState extends State<Settings> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'settings_title_6'.tr,
+                              context.tr('settings_title_6'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
@@ -278,7 +263,7 @@ class _SettingsState extends State<Settings> {
                             ),
                             SizedBox(height: 5),
                             Text(
-                              'settings_description_6'.tr,
+                              context.tr('settings_description_6'),
                               style: TextStyle(
                                 fontSize: 12,
                               ),
@@ -311,7 +296,7 @@ class _SettingsState extends State<Settings> {
                   margin: EdgeInsets.symmetric(horizontal: 12),
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: context.theme.cardColor,
+                    color: CustomTheme.of(context).cardColor,
                     boxShadow: [boxShadow],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -325,7 +310,7 @@ class _SettingsState extends State<Settings> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'settings_title_7'.tr,
+                              context.tr('settings_title_7'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
@@ -333,7 +318,7 @@ class _SettingsState extends State<Settings> {
                             ),
                             SizedBox(height: 5),
                             Text(
-                              'settings_description_7'.tr,
+                              context.tr('settings_description_7'),
                               style: TextStyle(
                                 fontSize: 12,
                               ),
@@ -376,7 +361,7 @@ class _SettingsState extends State<Settings> {
             onPressed: () {
               save();
             },
-            child: Text('save'.tr),
+            child: Text(context.tr('save')),
           ),
         ),
       ),
@@ -422,63 +407,63 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  Future<void> setConnect(String mac, newSetState) async {
-    if (timer != null) {
-      Get.closeCurrentSnackbar();
-      timer!.cancel();
-    }
-    Get.showSnackbar(
-      GetSnackBar(
-        messageText: Row(
-          children: [
-            Text(
-              'connection'.tr,
-              style: TextStyle(color: white),
-            ),
-            const SizedBox(width: 10),
-            SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(
-                color: white,
-                strokeWidth: 2,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: mainColor,
-      ),
-    );
-    try {
-      timer = Timer(const Duration(seconds: 5), () {
-        if (!connected) {
-          Get.closeAllSnackbars();
-          showDangerToast('failed_to_connect'.tr);
-          newSetState(() {});
-          return;
-        }
-      });
-      final String? result = await BluetoothThermalPrinter.connect(mac);
-      print(mac);
-      storage.write('defaultPrinter', mac);
-      Get.closeAllSnackbars();
-      if (result == "true") {
-        Get.back();
-      } else {
-        if (timer != null) {
-          timer!.cancel();
-        }
-        showDangerToast('no_connection'.tr);
+  // Future<void> setConnect(String mac, newSetState) async {
+  //   if (timer != null) {
+  //     Get.closeCurrentSnackbar();
+  //     timer!.cancel();
+  //   }
+  //   Get.showSnackbar(
+  //     GetSnackBar(
+  //       messageText: Row(
+  //         children: [
+  //           Text(
+  //             'connection'.tr,
+  //             style: TextStyle(color: white),
+  //           ),
+  //           const SizedBox(width: 10),
+  //           SizedBox(
+  //             height: 16,
+  //             width: 16,
+  //             child: CircularProgressIndicator(
+  //               color: white,
+  //               strokeWidth: 2,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       backgroundColor: mainColor,
+  //     ),
+  //   );
+  //   try {
+  //     timer = Timer(const Duration(seconds: 5), () {
+  //       if (!connected) {
+  //         Get.closeAllSnackbars();
+  //         showDangerToast('failed_to_connect'.tr);
+  //         newSetState(() {});
+  //         return;
+  //       }
+  //     });
+  //     final String? result = await BluetoothThermalPrinter.connect(mac);
+  //     print(mac);
+  //     storage.write('defaultPrinter', mac);
+  //     Get.closeAllSnackbars();
+  //     if (result == "true") {
+  //       Get.back();
+  //     } else {
+  //       if (timer != null) {
+  //         timer!.cancel();
+  //       }
+  //       showDangerToast('no_connection'.tr);
 
-        connected = false;
-        newSetState(() {});
-      }
-    } catch (e) {
-      Get.closeAllSnackbars();
-      print(e);
-      showDangerToast(e);
-    }
-  }
+  //       connected = false;
+  //       newSetState(() {});
+  //     }
+  //   } catch (e) {
+  //     Get.closeAllSnackbars();
+  //     print(e);
+  //     showDangerToast(e);
+  //   }
+  // }
 
   saveDefaultPrinter() {}
 
@@ -518,11 +503,11 @@ class _SettingsState extends State<Settings> {
                           itemBuilder: (context, index) {
                             return ListTile(
                               onTap: () {
-                                String select = availableBluetoothDevices[index];
-                                List list = select.split("#");
-                                String mac = list[1];
+                                // String select = availableBluetoothDevices[index];
+                                // List list = select.split("#");
+                                // String mac = list[1];
 
-                                setConnect(mac, newSetState);
+                                // setConnect(mac, newSetState);
                               },
                               title: Text(
                                 '${availableBluetoothDevices[index]}',
@@ -530,7 +515,7 @@ class _SettingsState extends State<Settings> {
                                   color: activeIndex == index ? mainColor : black,
                                 ),
                               ),
-                              subtitle: Text(activeIndex == index ? "connected_device".tr : "click_to_connect".tr),
+                              subtitle: Text(activeIndex == index ? context.tr("connected_device") : context.tr("click_to_connect")),
                             );
                           },
                         ),

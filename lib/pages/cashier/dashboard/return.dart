@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
@@ -8,6 +9,7 @@ import 'package:kassa/helpers/api.dart';
 import 'package:flutter/services.dart';
 
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
 
 class Return extends StatefulWidget {
@@ -141,7 +143,7 @@ class _ReturnState extends State<Return> {
     if (itemCopy['uomId'] == 1 && dotExist) {
       setState(() {
         sendData['itemsList'][i]['validate'] = true;
-        sendData['itemsList'][i]['validateText'] = 'wrong_count'.tr;
+        sendData['itemsList'][i]['validateText'] = context.tr('wrong_count');
         height = 20;
       });
       return;
@@ -150,7 +152,7 @@ class _ReturnState extends State<Return> {
       if (double.parse(value) > double.parse(itemCopy['quantity'].toString())) {
         setState(() {
           sendData['itemsList'][i]['validate'] = true;
-          sendData['itemsList'][i]['validateText'] = 'not_more'.trParams({'quantity': itemCopy['quantity'] - itemCopy['returnedQuantity']});
+          sendData['itemsList'][i]['validateText'] = context.tr('not_more', args: ['${itemCopy['quantity'] - itemCopy['returnedQuantity']}']);
           height = 20;
         });
         return;
@@ -289,11 +291,11 @@ class _ReturnState extends State<Return> {
       sendData['posId'] = cashbox['posId'];
       sendData['shiftId'] = shiftId;
     });
-    if (Get.arguments != null) {
-      final id = Get.arguments['id'];
-      data['id'] = id.toString();
-      searchCheque(id);
-    }
+    // if (Get.arguments != null) {
+    //   final id = Get.arguments['id'];
+    //   data['id'] = id.toString();
+    //   searchCheque(id);
+    // }
   }
 
   @override
@@ -306,19 +308,8 @@ class _ReturnState extends State<Return> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.light,
-          statusBarColor: blue, // Status bar
-        ),
-        bottomOpacity: 0.0,
-        title: Text(
-          'return'.tr,
-          style: TextStyle(color: white),
-        ),
-        centerTitle: true,
-        backgroundColor: blue,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'return',
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -348,7 +339,7 @@ class _ReturnState extends State<Return> {
                         contentPadding: const EdgeInsets.only(top: 5, left: 10),
                         enabledBorder: inputBorder,
                         focusedBorder: inputFocusBorder,
-                        hintText: 'search'.tr,
+                        hintText: context.tr('search'),
                         filled: true,
                         fillColor: white,
                         focusColor: blue,
@@ -384,7 +375,7 @@ class _ReturnState extends State<Return> {
                       Container(
                         margin: EdgeInsets.only(bottom: 5),
                         child: Text(
-                          '${'cash_receipt'.tr} №: ${data['chequeNumber']}',
+                          '${context.tr('cash_receipt')} №: ${data['chequeNumber']}',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
@@ -397,7 +388,7 @@ class _ReturnState extends State<Return> {
                         child: Row(
                           children: [
                             Text(
-                              'date'.tr + ': ',
+                              context.tr('date') + ': ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: grey,
@@ -410,7 +401,7 @@ class _ReturnState extends State<Return> {
                               ),
                             ),
                             Text(
-                              '${'cashier'.tr}: ',
+                              '${context.tr('cashier')}: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: grey,
@@ -442,7 +433,7 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'name'.tr,
+                                  context.tr('name'),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -451,17 +442,7 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'price'.tr,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'qty'.tr,
+                                  context.tr('price'),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -471,7 +452,17 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'payment_amount'.tr,
+                                  context.tr('qty'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  context.tr('payment_amount'),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -573,22 +564,14 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'name'.tr,
+                                  context.tr('name'),
                                   style: TextStyle(fontWeight: FontWeight.w500),
                                 ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'price'.tr,
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'return_quantity'.tr,
+                                  context.tr('price'),
                                   style: TextStyle(fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.center,
                                 ),
@@ -596,7 +579,15 @@ class _ReturnState extends State<Return> {
                               Container(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(
-                                  'payment_amount'.tr,
+                                  context.tr('return_quantity'),
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  context.tr('payment_amount'),
                                   style: TextStyle(fontWeight: FontWeight.w500),
                                   textAlign: TextAlign.end,
                                 ),
@@ -624,7 +615,7 @@ class _ReturnState extends State<Return> {
                                             },
                                             padding: EdgeInsets.zero,
                                             constraints: BoxConstraints(),
-                                            tooltip: 'return_to_list'.tr,
+                                            tooltip: context.tr('return_to_list'),
                                             icon: Icon(
                                               UniconsLine.angle_left_b,
                                               size: 20,
@@ -754,7 +745,7 @@ class _ReturnState extends State<Return> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${'TO_PAYOFF'.tr}:',
+                  '${context.tr('TO_PAYOFF')}:',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
                 ),
                 Row(
@@ -769,7 +760,7 @@ class _ReturnState extends State<Return> {
                       ),
                     ),
                     Text(
-                      'sum'.tr,
+                      context.tr('sum'),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 18,
@@ -796,7 +787,7 @@ class _ReturnState extends State<Return> {
                   disabledForegroundColor: white,
                 ),
                 child: Text(
-                  'make_return'.tr,
+                  context.tr('make_return'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,

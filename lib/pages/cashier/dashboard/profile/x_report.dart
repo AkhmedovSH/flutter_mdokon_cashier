@@ -1,12 +1,11 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 
-import 'package:intl/intl.dart';
-import 'package:unicons/unicons.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
@@ -59,7 +58,7 @@ class _XReportState extends State<XReport> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          text.tr,
+          context.tr(text),
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
         ),
         Text(
@@ -101,23 +100,8 @@ class _XReportState extends State<XReport> {
   Widget build(BuildContext context) {
     return Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(
-          elevation: 0,
-          // centerTitle: true,
-          leading: IconButton(
-            onPressed: () {
-              Get.back();
-            },
-            icon: Icon(
-              UniconsLine.arrow_left,
-              size: 32,
-              color: context.theme.iconTheme.color,
-            ),
-          ),
-          title: Text(
-            'X_report'.tr,
-          ),
-          centerTitle: true,
+        appBar: CustomAppBar(
+          title: 'X_report',
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -135,7 +119,7 @@ class _XReportState extends State<XReport> {
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'DUPLICATE'.tr,
+                      context.tr('DUPLICATE'),
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
@@ -157,7 +141,7 @@ class _XReportState extends State<XReport> {
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      '${'phone'.tr}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
+                      '${context.tr('phone')}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -168,7 +152,7 @@ class _XReportState extends State<XReport> {
                     alignment: Alignment.center,
                     margin: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      '${'address'.tr}: ${cashbox['posAddress'] ?? ''}',
+                      '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -177,7 +161,7 @@ class _XReportState extends State<XReport> {
                     ),
                   ),
                   buildRow('cashier', report['cashierName']),
-                  buildRow('${'cashbox'.tr} №', report['shiftNumber']),
+                  buildRow('${context.tr('cashbox')} №', report['shiftNumber']),
                   report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
                   buildRow('date', report['shiftOpenDate']),
                   Container(

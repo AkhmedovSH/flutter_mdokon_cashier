@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
@@ -61,7 +62,7 @@ class _LoyaltyState extends State<Loyalty> {
             awardController.text = (data['totalPrice'] * (double.parse(data['award'].toString()) / 100)).toStringAsFixed(2);
           });
         } else {
-          showDangerToast('user_not_found'.tr);
+          showDangerToast(context.tr('user_not_found'));
         }
       }
     });
@@ -136,7 +137,7 @@ class _LoyaltyState extends State<Loyalty> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.tr,
+          context.tr(label),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -163,7 +164,7 @@ class _LoyaltyState extends State<Loyalty> {
             keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'required_field'.tr;
+                return context.tr('required_field');
               }
               return null;
             },
@@ -223,7 +224,7 @@ class _LoyaltyState extends State<Loyalty> {
           Container(
             margin: EdgeInsets.only(top: 20),
             child: Text(
-              'TO_PAY'.tr,
+              context.tr('TO_PAY'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

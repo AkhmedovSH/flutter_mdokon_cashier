@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -708,13 +709,13 @@ class _IndexState extends State<Index> {
     super.initState();
     getCashbox();
     getExpenses();
-    if (Get.arguments != null && Get.arguments['cheque'] != null) {
-      setState(() {
-        isEdit = true;
-        data = jsonDecode(Get.arguments['cheque']);
-        data['id'] = Get.arguments['id'];
-      });
-    }
+    // if (Get.arguments != null && Get.arguments['cheque'] != null) {
+    //   setState(() {
+    //     isEdit = true;
+    //     data = jsonDecode(Get.arguments['cheque']);
+    //     data['id'] = Get.arguments['id'];
+    //   });
+    // }
   }
 
   buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
@@ -769,7 +770,7 @@ class _IndexState extends State<Index> {
         title: Row(
           children: [
             Text(
-              'sale'.tr,
+              context.tr('sale'),
               style: TextStyle(color: white),
             ),
             SizedBox(width: 10),
@@ -820,8 +821,11 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showModalDebtor();
                 },
-                tooltip: 'amortization'.tr,
-                icon: Icon(UniconsLine.credit_card),
+                tooltip: context.tr('amortization'),
+                icon: Icon(
+                  UniconsLine.credit_card,
+                  color: white,
+                ),
               ),
             ),
           if (cashbox['isAgent'] != true)
@@ -830,8 +834,11 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showModalExpense();
                 },
-                tooltip: 'expenses'.tr,
-                icon: Icon(UniconsLine.usd_circle),
+                tooltip: context.tr('expenses'),
+                icon: Icon(
+                  UniconsLine.usd_circle,
+                  color: white,
+                ),
               ),
             ),
           if (cashbox['isAgent'] == true)
@@ -840,7 +847,7 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showSelectUserDialog();
                 },
-                tooltip: 'Выбрать клиента'.tr,
+                tooltip: context.tr('Выбрать клиента'),
                 icon: Icon(
                   UniconsLine.user,
                   size: 22,
@@ -853,7 +860,7 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showCreateUserModal();
                 },
-                tooltip: 'Создать клиента'.tr,
+                tooltip: context.tr('Создать клиента'),
                 icon: Icon(UniconsLine.user_plus),
               ),
             ),
@@ -870,17 +877,17 @@ class _IndexState extends State<Index> {
             ),
           SizedBox(
             child: Tooltip(
-              message: 'wholesale_price'.tr,
-              child: Checkbox(
+              message: context.tr('wholesale_price'),
+              child: CupertinoCheckbox(
                 activeColor: mainColor,
                 checkColor: white,
                 focusColor: white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5.0),
                 ),
-                side: MaterialStateBorderSide.resolveWith(
-                  (states) => BorderSide(width: 2.0, color: white),
-                ),
+                // side: MaterialStateBorderSide.resolveWith(
+                //   (states) => BorderSide(width: 2.0, color: white),
+                // ),
                 value: data['activePrice'] == 1,
                 onChanged: data['itemsList'].length == 0
                     ? (value) {
@@ -901,20 +908,15 @@ class _IndexState extends State<Index> {
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Get.isDarkMode
-                    ? SvgPicture.asset(
-                        'images/icons/scanner_dark.svg',
-                        height: 350,
-                      )
-                    : SvgPicture.asset(
-                        'images/icons/scanner.svg',
-                        height: 350,
-                      ),
+                SvgPicture.asset(
+                  'images/icons/scanner_dark.svg',
+                  height: 350,
+                ),
                 Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      'scan_barcode_from_product_packaging_or_enter_it_manually'.tr,
+                      context.tr('scan_barcode_from_product_packaging_or_enter_it_manually'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -974,7 +976,7 @@ class _IndexState extends State<Index> {
                               border: inputBorder,
                               enabledBorder: inputBorder,
                               focusedBorder: inputFocusBorder,
-                              hintText: 'enter_value'.tr,
+                              hintText: context.tr('enter_value'),
                               hintStyle: TextStyle(
                                 fontSize: 14,
                               ),
@@ -990,7 +992,7 @@ class _IndexState extends State<Index> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('total'.tr, style: TextStyle(fontSize: 16)),
+                        Text(context.tr('total'), style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
                             ? Text(formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}', style: TextStyle(fontSize: 16))
                             : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' ${cashbox['defaultCurrencyName']}',
@@ -1005,7 +1007,7 @@ class _IndexState extends State<Index> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'discount'.tr,
+                          context.tr('discount'),
                           style: TextStyle(fontSize: 16),
                         ),
                         Wrap(
@@ -1042,7 +1044,10 @@ class _IndexState extends State<Index> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('to_pay'.tr, style: TextStyle(fontSize: 16)),
+                        Text(
+                          context.tr('to_pay'),
+                          style: TextStyle(fontSize: 16),
+                        ),
                         Text(
                           formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}',
                           style: TextStyle(
@@ -1121,7 +1126,10 @@ class _IndexState extends State<Index> {
                                   RichText(
                                     text: TextSpan(
                                       text: '${formatMoney(data["itemsList"][i]['salePrice'])} x ${formatMoney(data["itemsList"][i]['quantity'])}',
-                                      style: TextStyle(fontSize: 16, color: Get.isDarkMode ? white : black),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: CustomTheme.of(context).textColor,
+                                      ),
                                       children: <TextSpan>[
                                         if (data["itemsList"][i]['discount'] > 0)
                                           TextSpan(
@@ -1168,7 +1176,7 @@ class _IndexState extends State<Index> {
                       disabledBackgroundColor: disabledColor,
                       disabledForegroundColor: black,
                     ),
-                    child: Text('send_to_cashbox'.tr),
+                    child: Text(context.tr('send_to_cashbox')),
                   ),
                 )
               : Container(
@@ -1177,7 +1185,7 @@ class _IndexState extends State<Index> {
                   child: ElevatedButton(
                     onPressed: data["itemsList"].length > 0
                         ? () {
-                            Get.toNamed('/payment', arguments: data);
+                            context.go('/payment', extra: data);
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -1186,7 +1194,7 @@ class _IndexState extends State<Index> {
                       disabledBackgroundColor: disabledColor,
                       disabledForegroundColor: black,
                     ),
-                    child: Text('sell'.tr),
+                    child: Text(context.tr('sell')),
                   ),
                 ),
           FloatingActionButton(
@@ -1223,7 +1231,7 @@ class _IndexState extends State<Index> {
           child: Column(
             children: [
               Text(
-                'are_you_sure_you_want_to_remove_all_products'.tr,
+                context.tr('are_you_sure_you_want_to_remove_all_products'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -1240,7 +1248,7 @@ class _IndexState extends State<Index> {
                         backgroundColor: danger,
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text('cancel'.tr),
+                      child: Text(context.tr('cancel')),
                     ),
                   ),
                   SizedBox(width: 10),
@@ -1248,12 +1256,12 @@ class _IndexState extends State<Index> {
                     child: ElevatedButton(
                       onPressed: () {
                         deleteAllProducts();
-                        Get.back();
+                        context.pop();
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text('continue'.tr),
+                      child: Text(context.tr('continue')),
                     ),
                   )
                 ],
@@ -1327,7 +1335,7 @@ class _IndexState extends State<Index> {
                             value: expenseOut['expenseId'],
                             dropdownStyleData: DropdownStyleData(
                               decoration: BoxDecoration(
-                                color: context.theme.cardColor,
+                                color: CustomTheme.of(context).cardColor,
                               ),
                               maxHeight: 400,
                             ),
@@ -1778,7 +1786,7 @@ class _IndexState extends State<Index> {
   createClient() async {
     final response = await post('/services/desktop/api/clients', sendData);
     if (response != null && response['success']) {
-      Get.back();
+      context.pop();
       showSelectUserDialog();
     }
   }
@@ -1814,7 +1822,7 @@ class _IndexState extends State<Index> {
                           Padding(
                             padding: EdgeInsets.only(left: 5),
                             child: Text(
-                              '${addList[i]['name']}'.tr,
+                              context.tr(addList[i]['name']),
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
                             ),
                           ),
@@ -1825,7 +1833,7 @@ class _IndexState extends State<Index> {
                             child: TextFormField(
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'required_field'.tr;
+                                  return context.tr('required_field');
                                 }
                                 return null;
                               },
@@ -1885,7 +1893,7 @@ class _IndexState extends State<Index> {
                     onPressed: () {
                       createClient();
                     },
-                    child: Text('save'.tr),
+                    child: Text(context.tr('save')),
                   ),
                 ),
               ],
@@ -1958,7 +1966,7 @@ class _IndexState extends State<Index> {
                                 Radius.circular(24),
                               ),
                             ),
-                            hintText: 'search'.tr,
+                            hintText: context.tr('search'),
                             hintStyle: TextStyle(
                               color: lightGrey,
                               fontSize: 14,
@@ -1975,13 +1983,13 @@ class _IndexState extends State<Index> {
                           TableRow(
                             children: [
                               Text(
-                                'contact'.tr,
+                                context.tr('contact'),
                               ),
                               Text(
-                                'number'.tr,
+                                context.tr('number'),
                               ),
                               Text(
-                                'comment'.tr,
+                                context.tr('comment'),
                               ),
                             ],
                           ),
@@ -2043,7 +2051,7 @@ class _IndexState extends State<Index> {
                         }
                       }
                     },
-                    child: Text('choose'.tr),
+                    child: Text(context.tr('choose')),
                   ),
                 )
               ],

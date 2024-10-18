@@ -96,7 +96,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.write('cashbox', jsonEncode(response['shift']));
       context.go('/cashier');
     } else {
-      context.go('/cashier/cashboxes', extra: response['posList']);
+      context.go('/auth/cashboxes', extra: {'posList': response['posList']});
     }
     setState(() {});
   }
@@ -309,7 +309,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           ),
         ),
         floatingActionButton: Container(
-          color: CustomTheme.of(context).cardColor,
+          color: CustomTheme.of(context).bgColor,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -319,7 +319,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${'no_account'.tr}?',
+                    '${context.tr('no_account')}?',
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(width: 5),

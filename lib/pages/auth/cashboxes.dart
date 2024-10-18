@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:unicons/unicons.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 
 import '../../helpers/helper.dart';
 import '../../helpers/api.dart';
@@ -57,12 +57,17 @@ class _CashBoxesState extends State<CashBoxes> {
   @override
   void initState() {
     super.initState();
+    print(widget.poses);
     poses = widget.poses;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Свободные кассы',
+        leading: true,
+      ),
       body: Container(
         padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
         height: MediaQuery.of(context).size.height,
@@ -77,63 +82,45 @@ class _CashBoxesState extends State<CashBoxes> {
                   width: MediaQuery.of(context).size.width,
                 ),
                 Positioned(
-                  top: 5,
-                  left: 10,
-                  child: IconButton(
-                    onPressed: () {
-                      context.pop();
-                    },
-                    icon: Icon(
-                      UniconsLine.arrow_left,
-                      color: black,
-                      size: 32,
+                  bottom: -10,
+                  child: Container(
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 5),
+                          padding: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: white, width: 1),
+                            ),
+                          ),
+                          child: Text(
+                            '',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            'Выберите кассу для входа',
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Positioned(
-                    bottom: -10,
-                    child: Container(
-                      alignment: Alignment.center,
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 5),
-                            padding: const EdgeInsets.only(bottom: 2),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(color: white, width: 1),
-                              ),
-                            ),
-                            child: Text(
-                              'Свободные кассы',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                                color: black,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              'Выберите кассу для входа',
-                              style: TextStyle(
-                                color: black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ))
+                )
               ],
             ),
             SizedBox(height: 10),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4,
-              width: MediaQuery.of(context).size.width,
+            Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   children: [

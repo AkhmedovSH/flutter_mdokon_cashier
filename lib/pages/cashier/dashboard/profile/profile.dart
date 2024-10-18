@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -49,16 +51,16 @@ class _ProfileState extends State<Profile> {
           GestureDetector(
             onTap: () {
               if (title == 'X_report') {
-                Get.toNamed('/x-report');
+                context.go('/cashier/x-report');
               }
               if (title == 'balance') {
-                Get.toNamed('/balance');
+                context.go('/cashier/balance');
               }
               if (title == 'info') {
-                Get.toNamed('/info');
+                context.go('/cashier/info');
               }
               if (title == 'settings') {
-                Get.toNamed('/settings');
+                context.go('/cashier/settings');
               }
               if (title == 'close_shift') {
                 openModal('close_shift');
@@ -89,7 +91,7 @@ class _ProfileState extends State<Profile> {
                   ),
                   SizedBox(width: 10),
                   Text(
-                    title.tr,
+                    context.tr(title),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -114,7 +116,7 @@ class _ProfileState extends State<Profile> {
         ),
         bottomOpacity: 0.0,
         title: Text(
-          'profile'.tr,
+          context.tr('profile'),
           style: TextStyle(color: white),
         ),
         centerTitle: true,
@@ -211,7 +213,7 @@ class _ProfileState extends State<Profile> {
     storage.remove('user');
     storage.remove('access_token');
     if (response['success']) {
-      Get.offAllNamed('/login');
+      context.go('/auth/login');
     }
     //print(response);
   }
@@ -219,7 +221,7 @@ class _ProfileState extends State<Profile> {
   void logout() async {
     storage.remove('user');
     storage.remove('access_token');
-    Get.offAllNamed('/login');
+    context.go('/auth/login');
     //print(response);
   }
 
@@ -245,7 +247,7 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: [
               Text(
-                type == 'logout' ? 'are_you_sure_you_want_to_go_out'.tr : 'are_you_sure_you_want_to_close_your_shift'.tr,
+                type == 'logout' ? context.tr('are_you_sure_you_want_to_go_out') : context.tr('are_you_sure_you_want_to_close_your_shift'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -262,14 +264,14 @@ class _ProfileState extends State<Profile> {
                         backgroundColor: danger,
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text('cancel'.tr),
+                      child: Text(context.tr('cancel')),
                     ),
                   ),
                   SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.back();
+                        context.pop();
                         if (type == 'logout') {
                           logout();
                         } else {
@@ -279,7 +281,7 @@ class _ProfileState extends State<Profile> {
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text('continue'.tr),
+                      child: Text(context.tr('continue')),
                     ),
                   )
                 ],

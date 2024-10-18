@@ -1,18 +1,18 @@
 import 'dart:convert';
 
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:unicons/unicons.dart';
 
 import '/helpers/api.dart';
 import '/helpers/cheque.dart';
 import '../../../helpers/helper.dart';
-import '/helpers/controller.dart';
 
 import '../../../widgets/loading_layout.dart';
 import './on_credit.dart';
@@ -27,16 +27,15 @@ class PaymentSample extends StatefulWidget {
 }
 
 class _PaymentSampleState extends State<PaymentSample> {
-  final Controller controller = Get.put(Controller());
   GetStorage storage = GetStorage();
 
   int currentIndex = 0;
   bool loading = false;
-  dynamic data = Get.arguments;
-  dynamic cashController = TextEditingController();
-  dynamic terminalController = TextEditingController();
-  dynamic loyaltyController = TextEditingController();
-  dynamic cashbox = {};
+  Map data = {};
+  TextEditingController cashController = TextEditingController();
+  TextEditingController terminalController = TextEditingController();
+  TextEditingController loyaltyController = TextEditingController();
+  Map cashbox = {};
 
   setData(payload, payload2) {
     setState(() {
@@ -67,7 +66,6 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (settings['selectUserAftersale']) {
       await showSelectUserDialog();
     }
-    controller.showLoading();
     setState(() {});
     dynamic dataCopy = data;
     dataCopy['transactionsList'] = [];
@@ -190,15 +188,14 @@ class _PaymentSampleState extends State<PaymentSample> {
         if (result) {
           printCheque(dataCopy, dataCopy['itemsList']);
         } else {
-          showDangerToast('failed_to_connect'.tr);
+          showDangerToast(context.tr('failed_to_connect'));
         }
       }
     }
 
     if (response != null && response['success']) {
-      controller.hideLoading();
       setState(() {});
-      Get.offAllNamed('/');
+      context.go('/');
     }
   }
 
@@ -277,21 +274,8 @@ class _PaymentSampleState extends State<PaymentSample> {
   Widget build(BuildContext context) {
     return LoadingLayout(
       body: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'sale'.tr,
-          ),
-          leading: IconButton(
-            onPressed: () {
-              Get.back();
-            },
-            icon: Icon(
-              UniconsLine.arrow_left,
-              size: 32,
-            ),
-          ),
-          centerTitle: true,
-          elevation: 0,
+        appBar: CustomAppBar(
+          title: 'sale',
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -324,10 +308,10 @@ class _PaymentSampleState extends State<PaymentSample> {
                             ),
                             child: Text(
                               i == 0
-                                  ? 'payment'.tr
+                                  ? context.tr('payment')
                                   : i == 1
-                                      ? 'on_credit'.tr
-                                      : 'loyalty'.tr,
+                                      ? context.tr('on_credit')
+                                      : context.tr('loyalty'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -376,7 +360,7 @@ class _PaymentSampleState extends State<PaymentSample> {
               ),
             ),
             child: Text(
-              'accept'.tr,
+              context.tr('accept'),
               style: TextStyle(
                 fontSize: 16,
               ),
@@ -437,13 +421,13 @@ class _PaymentSampleState extends State<PaymentSample> {
                       children: [
                         TableRow(children: [
                           Text(
-                            'contact'.tr,
+                            context.tr('contact'),
                           ),
                           Text(
-                            'number'.tr,
+                            context.tr('number'),
                           ),
                           Text(
-                            'comment'.tr,
+                            context.tr('comment'),
                           ),
                         ]),
                         for (var i = 0; i < clients.length; i++)
@@ -503,7 +487,7 @@ class _PaymentSampleState extends State<PaymentSample> {
                         }
                       }
                     },
-                    child: Text('choose'.tr),
+                    child: Text(context.tr('choose')),
                   ),
                 )
               ],

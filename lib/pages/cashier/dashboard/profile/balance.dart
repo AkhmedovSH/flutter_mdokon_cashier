@@ -1,8 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kassa/helpers/api.dart';
-
-import 'package:unicons/unicons.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 
 class Balance extends StatefulWidget {
   const Balance({Key? key}) : super(key: key);
@@ -32,23 +32,8 @@ class _BalanceState extends State<Balance> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        // centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(
-            UniconsLine.arrow_left,
-            size: 32,
-            color: context.theme.iconTheme.color,
-          ),
-        ),
-        title: Text(
-          'balance'.tr,
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'balance',
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
@@ -59,19 +44,19 @@ class _BalanceState extends State<Balance> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Text('name'.tr),
+                    child: Text(context.tr('name')),
                   ),
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'barcode'.tr,
+                      context.tr('barcode'),
                       textAlign: TextAlign.end,
                     ),
                   ),
                   Expanded(
                     flex: 1,
                     child: Text(
-                      'balance'.tr,
+                      context.tr('balance'),
                       textAlign: TextAlign.end,
                     ),
                   ),

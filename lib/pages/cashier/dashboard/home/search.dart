@@ -1,17 +1,18 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/helpers/controller.dart';
 import 'package:kassa/widgets/loading_layout.dart';
 import 'package:unicons/unicons.dart';
 
@@ -23,7 +24,6 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
-  final Controller controller = Get.put(Controller());
   GetStorage storage = GetStorage();
 
   TextEditingController textEditingController = TextEditingController();
@@ -42,7 +42,7 @@ class _SearchState extends State<Search> {
     }
     if (double.parse(products[i]['quantity'].toString()) > double.parse(products[i]['balance'].toString())) {
       if (cashbox['saleMinus'] == null || !cashbox['saleMinus']) {
-        showErrorToast('${products[i]['productName']} превышает остаток');
+        showDangerToast('${products[i]['productName']} превышает остаток');
         return;
       }
     }
@@ -65,7 +65,7 @@ class _SearchState extends State<Search> {
       //     backgroundColor: mainColor,
       //   ),
       // );
-      ScaffoldMessenger.of(Get.context!).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: const Duration(milliseconds: 1200),
           shape: const RoundedRectangleBorder(
@@ -75,7 +75,7 @@ class _SearchState extends State<Search> {
             ),
           ),
           content: Text(
-            products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + 'added'.tr,
+            context.tr(products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + 'added'),
             style: TextStyle(
               color: white,
             ),
@@ -91,7 +91,6 @@ class _SearchState extends State<Search> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (value.length >= 1) {
-        controller.showLoading();
         setState(() {});
         var arr = [];
         var response =
@@ -114,7 +113,6 @@ class _SearchState extends State<Search> {
         } else if (response != null && response.length == 0) {
           products = [];
         }
-        controller.hideLoading();
         setState(() {});
       } else {
         setState(() {
@@ -132,7 +130,7 @@ class _SearchState extends State<Search> {
     if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
       return;
     }
-    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", "back".tr, false, ScanMode.BARCODE);
+    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", context.tr("back"), false, ScanMode.BARCODE);
     if (result != '-1') {
       setState(() {
         searchProducts(result);
@@ -142,12 +140,10 @@ class _SearchState extends State<Search> {
   }
 
   getProducts() async {
-    controller.showLoading();
     setState(() {});
 
     final cashbox = jsonDecode(storage.read('cashbox')!);
     final response = await get('/services/desktop/api/get-balance-product-list/${cashbox['posId']}/${arguments['currencyId']}');
-    controller.hideLoading();
     if (response != null && response.length > 0) {
       setState(() {
         products = response;
@@ -170,8 +166,6 @@ class _SearchState extends State<Search> {
     super.initState();
     //getProducts();
     getCashbox();
-    arguments = Get.arguments ?? {};
-    print(arguments);
   }
 
   @override
@@ -179,21 +173,21 @@ class _SearchState extends State<Search> {
     return WillPopScope(
       onWillPop: () async {
         ScaffoldMessenger.of(context).clearSnackBars();
-        Get.back(result: productsList);
+        context.pop();
         return true;
       },
       child: LoadingLayout(
         body: Scaffold(
           appBar: AppBar(
             title: Text(
-              'catalog'.tr,
+              context.tr('catalog'),
             ),
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).clearSnackBars();
-                Get.back(result: productsList);
+                context.pop();
               },
               icon: Icon(
                 UniconsLine.arrow_left,
@@ -232,7 +226,7 @@ class _SearchState extends State<Search> {
                                   Radius.circular(24),
                                 ),
                               ),
-                              hintText: '${'search_by_name'.tr}, QR code ...',
+                              hintText: '${context.tr('search_by_name')}, QR code ...',
                               hintStyle: TextStyle(
                                 color: lightGrey,
                                 fontSize: 14,
@@ -263,7 +257,7 @@ class _SearchState extends State<Search> {
                     ],
                   ),
                 ),
-                if (products.isEmpty && textEditingController.text != '' && !controller.loading.value)
+                if (products.isEmpty && textEditingController.text != '')
                   Column(
                     children: [
                       SizedBox(height: 30),
@@ -272,7 +266,7 @@ class _SearchState extends State<Search> {
                         height: 300,
                       ),
                       Text(
-                        'NOT_FOUND'.tr,
+                        context.tr('NOT_FOUND'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -280,10 +274,7 @@ class _SearchState extends State<Search> {
                       ),
                       SizedBox(height: 10),
                       Text(
-                        'nothing_found_for'.trParams({
-                          'value': textEditingController.text,
-                        }),
-                        style: context.theme.textTheme.titleSmall,
+                        context.tr('nothing_found_for', args: [textEditingController.text]),
                       ),
                     ],
                   ),
@@ -296,7 +287,7 @@ class _SearchState extends State<Search> {
                         height: 300,
                       ),
                       Text(
-                        'EMPTY_LIST'.tr,
+                        context.tr('EMPTY_LIST'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -304,8 +295,7 @@ class _SearchState extends State<Search> {
                       ),
                       SizedBox(height: 10),
                       Text(
-                        'enter_name_to_search_for_products'.tr,
-                        style: context.theme.textTheme.titleSmall,
+                        context.tr('enter_name_to_search_for_products'),
                       ),
                     ],
                   ),
@@ -319,7 +309,7 @@ class _SearchState extends State<Search> {
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
                       decoration: BoxDecoration(
-                        color: context.theme.cardColor,
+                        color: CustomTheme.of(context).cardColor,
                         border: Border.all(color: borderColor),
                         borderRadius: const BorderRadius.all(Radius.circular(16)),
                         boxShadow: [boxShadow],

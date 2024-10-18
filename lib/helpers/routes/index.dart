@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/pages/page_not_found.dart';
 
 import '/pages/splash.dart';
 
@@ -9,6 +10,7 @@ import '/pages/auth/login.dart';
 import '/pages/auth/cashboxes.dart';
 
 import '/pages/cashier/dashboard/dashboard.dart';
+import 'package:kassa/pages/director/index.dart';
 import '/pages/agent/dashboard.dart';
 
 import 'cashier.dart';
@@ -27,11 +29,33 @@ Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widge
 }
 
 final globalRouter = GoRouter(
-  initialLocation: storage.read('token') != null ? '/dashboard' : '/login',
+  initialLocation: '/splash',
+  errorBuilder: (context, state) => PageNotFound(),
   routes: [
     GoRoute(
-      path: '/login',
+      path: '/auth',
       pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Login()),
+      routes: [
+        GoRoute(
+          path: '/cashboxes',
+          pageBuilder: (context, state) {
+            final extraData = state.extra as Map<String, dynamic>?;
+            print(extraData?['posList']);
+            return cupertinoPageBuilder(
+              context,
+              state,
+              CashBoxes(
+                poses: extraData?['posList'] ?? [],
+              ),
+            );
+          },
+          routes: cashiers,
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/splash',
+      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Splash()),
     ),
     GoRoute(
       path: '/cashier',
@@ -40,8 +64,17 @@ final globalRouter = GoRouter(
     ),
     GoRoute(
       path: '/director',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Index()),
-      routes: [],
+      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const DirectorDashboard()),
+      routes: directors,
     ),
+    GoRoute(
+      path: '/agent',
+      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const AgentDashboard()),
+      routes: cashiers,
+    ),
+    // GoRoute(
+    //   path: '/',
+    //   pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const PageNotFound()),
+    // ),
   ],
 );
