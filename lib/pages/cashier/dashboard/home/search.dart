@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
@@ -178,23 +179,9 @@ class _SearchState extends State<Search> {
       },
       child: LoadingLayout(
         body: Scaffold(
-          appBar: AppBar(
-            title: Text(
-              context.tr('catalog'),
-            ),
-            elevation: 0,
-            centerTitle: true,
-            leading: IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).clearSnackBars();
-                context.pop();
-              },
-              icon: Icon(
-                UniconsLine.arrow_left,
-                size: 32,
-                color: black,
-              ),
-            ),
+          appBar: CustomAppBar(
+            title: 'catalog',
+            leading: true,
           ),
           body: SingleChildScrollView(
             child: Column(

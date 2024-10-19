@@ -182,7 +182,7 @@ class _IndexState extends State<Index> {
       showDangerToast('discount_has_been_applied'.tr);
       return;
     }
-    context.go('/search', extra: {
+    context.go('/cashier/search', extra: {
       'activePrice': data['activePrice'],
       'currencyId': data['currencyId'],
       'currencyName': data['currencyName'],
@@ -1202,7 +1202,11 @@ class _IndexState extends State<Index> {
             onPressed: () {
               redirectToSearch();
             },
-            child: const Icon(Icons.add, size: 28),
+            child: Icon(
+              Icons.add,
+              size: 28,
+              color: white,
+            ),
           )
         ],
       ),

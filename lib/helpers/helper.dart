@@ -238,7 +238,7 @@ showDangerToast(message, {String description = ""}) {
   );
 }
 
-showGlobalModal(BuildContext context, {required List<Widget> children}) async {
+showFilterModal(BuildContext context, {required List<Widget> children}) async {
   return await showGeneralDialog(
     context: context,
     barrierDismissible: true,

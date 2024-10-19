@@ -50,6 +50,14 @@ final ThemeData lightTheme = ThemeData(
       side: BorderSide(color: Colors.red),
     ),
   ),
+  // iconTheme: IconThemeData(
+  //   color: white,
+  // ),
+  // iconButtonTheme: IconButtonThemeData(
+  //   style: ButtonStyle(
+  //     iconColor: WidgetStateProperty.all(Colors.white),
+  //   ),
+  // ),
 );
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

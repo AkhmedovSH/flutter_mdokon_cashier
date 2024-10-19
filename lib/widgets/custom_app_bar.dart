@@ -29,9 +29,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        '${context.tr(title)} ${titleCount > 0 ? '[$titleCount]' : ''}',
-        style: titleStyle,
+      title: Container(
+        margin: EdgeInsets.only(left: leading ? 0 : 12),
+        child: Text(
+          '${context.tr(title)} ${titleCount > 0 ? '[$titleCount]' : ''}',
+          style: titleStyle,
+        ),
       ),
       leading: leading
           ? IconButton(

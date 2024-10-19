@@ -157,7 +157,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${'login'.tr}: ${account['login']}',
+                      '${context.tr('login')}: ${account['login']}',
                       style: TextStyle(
                         color: white,
                       ),

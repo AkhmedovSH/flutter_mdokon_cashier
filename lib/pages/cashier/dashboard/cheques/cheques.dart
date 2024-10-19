@@ -123,7 +123,10 @@ class _ChequesState extends State<Cheques> {
               onPressed: () {
                 showFilterDialog();
               },
-              icon: Icon(UniconsLine.filter),
+              icon: Icon(
+                UniconsLine.filter,
+                color: white,
+              ),
             )
           ],
         ),
@@ -181,7 +184,7 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
+                                context.go('/cashier/cheque/detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
@@ -196,13 +199,13 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
+                                context.go('/cashier/cheque/detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text(
                                   //cheques[i]['totalPrice']
-                                  '${formatMoney(cheques[i]['totalPrice'], decimalDigits: 0)} ${'sum'.tr}',
+                                  '${formatMoney(cheques[i]['totalPrice'], decimalDigits: 0)} ${context.tr('sum')}',
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -210,7 +213,7 @@ class _ChequesState extends State<Cheques> {
                             GestureDetector(
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
-                                context.go('/cashier/cheq-detail/${cheques[i]['id']}');
+                                context.go('/cashier/cheque/detail/${cheques[i]['id']}');
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),

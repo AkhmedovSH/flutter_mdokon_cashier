@@ -18,7 +18,7 @@ import '/helpers/api.dart';
 import '../../../../helpers/helper.dart';
 
 class CheqDetail extends StatefulWidget {
-  final int id;
+  final String id;
   const CheqDetail({
     Key? key,
     required this.id,
