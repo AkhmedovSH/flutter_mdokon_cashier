@@ -6,10 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../helpers/api.dart';
-import '../helpers/helper.dart';
 
 class Splash extends StatefulWidget {
   const Splash({Key? key}) : super(key: key);
@@ -29,7 +27,7 @@ class _SplashState extends State<Splash> {
 
     vesrion = localVersion;
     setState(() {});
-    var playMarketVersion = await get('/services/admin/api/get-version?name=com.mdokon.cabinet');
+    var playMarketVersion = await get('/services/admin/api/get-version?name=com.mdokon.cabinet', isGuest: true);
     if (playMarketVersion == null || playMarketVersion['version'] == null) {
       startTimer();
       return;

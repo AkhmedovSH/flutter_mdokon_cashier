@@ -113,6 +113,12 @@ generateTransactionId(posId, cashboxId, shiftId) {
   return posId.toString() + cashboxId.toString() + shiftId.toString() + getUnixTime().toString() + (random.nextInt(999999).floor().toString());
 }
 
+int daysBetween(from, DateTime to) {
+  from = DateTime(from['year'], from['month'], from['day']);
+  to = DateTime(to.year, to.month, to.day);
+  return (to.difference(from).inHours / 24).round();
+}
+
 formatDate(date) {
   if (date == null) {
     return '';

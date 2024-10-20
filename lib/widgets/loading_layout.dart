@@ -1,48 +1,46 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:provider/provider.dart';
 
-// import '../helpers/helper.dart';
+import '/models/loading_model.dart';
 
-class LoadingLayout extends StatefulWidget {
-  const LoadingLayout({Key? key, this.body}) : super(key: key);
-  final Widget? body;
+import '/helpers/helper.dart';
 
-  @override
-  State<LoadingLayout> createState() => _LoadingLayoutState();
-}
-
-class _LoadingLayoutState extends State<LoadingLayout> with TickerProviderStateMixin {
-  AnimationController? animationController;
-
-  @override
-  void initState() {
-    super.initState();
-    setState(() {
-      animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-    });
-  }
-
-  @override
-  dispose() {
-    animationController!.dispose();
-    super.dispose();
-  }
+class LoadingLayout extends StatelessWidget {
+  final Widget body;
+  const LoadingLayout({super.key, required this.body});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        widget.body!,
-        // Container(
-        //   width: MediaQuery.of(context).size.width,
-        //   height: MediaQuery.of(context).size.height,
-        //   color: Colors.black.withOpacity(0.4),
-        //   child: SpinKitThreeBounce(
-        //     color: blue,
-        //     size: 35.0,
-        //     controller: animationController,
-        //   ),
-        // ),
+        body,
+        Consumer<LoadingModel>(
+          builder: (context, loaderModel, child) {
+            if (loaderModel.currentLoading == 1) {
+              return Positioned.fill(
+                child: Container(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(
+                    color: mainColor,
+                  ),
+                ),
+              );
+            }
+            if (loaderModel.currentLoading == 2) {
+              return Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                color: Colors.black.withOpacity(0.4),
+                child: SpinKitThreeBounce(
+                  color: blue,
+                  size: 35.0,
+                ),
+              );
+            }
+            return const SizedBox();
+          },
+        )
       ],
     );
   }

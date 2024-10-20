@@ -34,6 +34,7 @@ class _BalanceState extends State<Balance> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'balance',
+        leading: true,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),

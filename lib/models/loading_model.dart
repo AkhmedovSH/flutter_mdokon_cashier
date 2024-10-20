@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class LoaderModel extends ChangeNotifier {
+class LoadingModel extends ChangeNotifier {
   int loading = 0;
 
   int get currentLoading => loading;

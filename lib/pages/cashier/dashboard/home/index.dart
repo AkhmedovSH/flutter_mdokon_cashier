@@ -179,10 +179,10 @@ class _IndexState extends State<Index> {
 
   redirectToSearch() async {
     if (data['discount'] > 0) {
-      showDangerToast('discount_has_been_applied'.tr);
+      showDangerToast(context.tr('discount_has_been_applied'));
       return;
     }
-    context.go('/cashier/search', extra: {
+    await context.push('/cashier/search', extra: {
       'activePrice': data['activePrice'],
       'currencyId': data['currencyId'],
       'currencyName': data['currencyName'],

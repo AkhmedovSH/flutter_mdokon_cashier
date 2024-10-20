@@ -43,13 +43,22 @@ class _SettingsState extends State<Settings> {
 
   save() {
     if (settings['language']) {
-      context.setLocale(const Locale('uz', 'Latn'));
+      if (!context.supportedLocales.contains(const Locale('uz', 'Latn'))) {
+        context.setLocale(const Locale('uz', 'Latn'));
+      }
     } else {
-      context.setLocale(const Locale('ru  ', ''));
+      if (!context.supportedLocales.contains(const Locale('ru', ''))) {
+        context.setLocale(const Locale('ru  ', ''));
+      }
     }
+
     print(settings['theme']);
     if (settings['theme']) {
-      Provider.of<ThemeModel>(context).setTheme(darkTheme);
+      if (storage.read('isDarkTheme') ?? false) {
+        Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
+      } else {
+        Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
+      }
     }
     storage.write('settings', jsonEncode(settings));
     showSuccessToast(context.tr('settings_saved'));
@@ -212,6 +221,7 @@ class _SettingsState extends State<Settings> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'settings',
+        leading: true,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(vertical: 12),

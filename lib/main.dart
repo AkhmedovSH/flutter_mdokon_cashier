@@ -23,25 +23,22 @@ void main() async {
   await GetStorage.init();
   await EasyLocalization.ensureInitialized();
 
-  const locales = [
-    Locale('ru', ''),
-    Locale('uz', 'Latn'),
-    Locale('uz', 'Cyrl'),
-  ];
-
   final storage = GetStorage();
 
   var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
   final theme = isDarkTheme ? darkTheme : lightTheme;
 
-  String savedLocaleId = storage.read('locale_id') ?? '1';
+  bool savedLocaleId = storage.read('language') ?? false;
 
   Locale locale = const Locale('ru', '');
-  if (savedLocaleId == '2') {
-    locale = const Locale('uz', 'Cyrl');
-  } else if (savedLocaleId == '3') {
+  if (savedLocaleId) {
     locale = const Locale('uz', 'Latn');
   }
+
+  const locales = [
+    Locale('ru', ''),
+    Locale('uz', 'Latn'),
+  ];
 
   runApp(
     EasyLocalization(
@@ -51,8 +48,8 @@ void main() async {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeModel(theme)),
-          ChangeNotifierProvider(create: (_) => LocaleModel(locale, savedLocaleId)),
-          ChangeNotifierProvider(create: (_) => LoaderModel()),
+          ChangeNotifierProvider(create: (_) => LocaleModel(locale)),
+          ChangeNotifierProvider(create: (_) => LoadingModel()),
           ChangeNotifierProvider(create: (_) => SettingsModel()),
           ChangeNotifierProvider(create: (_) => UserModel(storage.read('user') ?? {})),
           ChangeNotifierProvider(create: (_) => DataModel()),

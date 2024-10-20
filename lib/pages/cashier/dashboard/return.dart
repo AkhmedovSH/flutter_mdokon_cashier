@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:kassa/helpers/api.dart';
 
-import 'package:flutter/services.dart';
-
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
@@ -348,8 +346,7 @@ class _ReturnState extends State<Return> {
                   ),
                   Positioned(
                     right: 0,
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 10),
+                    child: SizedBox(
                       width: 60,
                       height: 40,
                       child: ElevatedButton(
@@ -358,8 +355,10 @@ class _ReturnState extends State<Return> {
                             searchCheque(null);
                           } else {}
                         },
-                        style: ElevatedButton.styleFrom(),
-                        child: Icon(UniconsLine.search),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: Center(child: Icon(UniconsLine.search)),
                       ),
                     ),
                   )

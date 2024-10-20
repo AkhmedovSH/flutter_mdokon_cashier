@@ -14,8 +14,8 @@ import '/pages/cashier/dashboard/profile/balance.dart';
 import '/pages/cashier/dashboard/profile/info.dart';
 import '/pages/cashier/dashboard/profile/settings.dart';
 
-import '/pages/cashier/client_debt.dart';
-import '/pages/cashier/sales_on_credit.dart';
+// import '/pages/cashier/client_debt.dart';
+// import '/pages/cashier/sales_on_credit.dart';
 
 // Функция для создания страниц с Cupertino анимацией
 Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widget child) {
@@ -30,7 +30,11 @@ Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widge
 List<RouteBase> cashiers = [
   GoRoute(
     path: '/search',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Search()),
+    pageBuilder: (context, state) {
+      final extraData = state.extra as Map<String, dynamic>?;
+      print(extraData);
+      return cupertinoPageBuilder(context, state, Search(arguments: extraData));
+    },
   ),
   GoRoute(
     path: '/cheque/detail/:id',
@@ -38,5 +42,29 @@ List<RouteBase> cashiers = [
       final String id = state.pathParameters['id']!;
       return cupertinoPageBuilder(context, state, CheqDetail(id: id));
     },
+  ),
+  GoRoute(
+    path: '/payment',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, PaymentSample()),
+  ),
+  GoRoute(
+    path: '/profile/x-report',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, XReport()),
+  ),
+  GoRoute(
+    path: '/profile/balance',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Balance()),
+  ),
+  GoRoute(
+    path: '/profile/info',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Info()),
+  ),
+  GoRoute(
+    path: '/profile/settings',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Settings()),
+  ),
+  GoRoute(
+    path: '/return',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Return()),
   ),
 ];

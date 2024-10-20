@@ -102,6 +102,7 @@ class _XReportState extends State<XReport> {
         key: _scaffoldKey,
         appBar: CustomAppBar(
           title: 'X_report',
+          leading: true,
         ),
         body: SafeArea(
           child: SingleChildScrollView(

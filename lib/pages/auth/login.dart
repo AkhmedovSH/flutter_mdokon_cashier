@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/loading_model.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
@@ -35,15 +37,25 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   bool loading = false;
 
   login() async {
-    setState(() {});
-    final data = await post('/auth/login', payload);
+    FocusScope.of(context).unfocus();
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+    final data = await post('/auth/login', payload, isGuest: true);
     if (data == null) {
+      Provider.of<LoadingModel>(context, listen: false).hideLoader();
       return;
     }
     storage.write('access_token', data['access_token']);
     storage.write('username', payload['username'].toString().toLowerCase());
     storage.write('password', payload['password']);
     storage.write('user', jsonEncode(payload));
+    var lastLogin = {
+      'year': DateTime.now().year,
+      'month': DateTime.now().month,
+      'day': DateTime.now().day,
+      'hour': DateTime.now().hour,
+      'minute': DateTime.now().minute,
+    };
+    storage.write('lastLogin', jsonEncode(lastLogin));
 
     final account = await get('/services/uaa/api/account');
     storage.write('account', jsonEncode(account));
@@ -68,11 +80,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.write('user_roles', jsonEncode(account['authorities']));
       await getAgentPosId();
     } else if (checker == 'ROLE_OWNER') {
-      await getAgentPosId();
     } else {
       showDangerToast('error', description: 'Нет доступа');
     }
-    setState(() {});
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   void openPhoneCall() async {
@@ -85,7 +96,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
     storage.write('cashbox', jsonEncode(response));
     context.go('/agent');
-    setState(() {});
   }
 
   getAccessPos() async {
@@ -98,7 +108,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     } else {
       context.go('/auth/cashboxes', extra: {'posList': response['posList']});
     }
-    setState(() {});
   }
 
   getData() async {
@@ -112,7 +121,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         setState(() {});
       }
     }
-    print(storage.read('settings'));
     if (storage.read('settings') == null) {
       storage.write(
         'settings',
@@ -140,12 +148,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return LoadingLayout(
       body: Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          bottomOpacity: 0.0,
-          backgroundColor: Colors.transparent,
-        ),
-        extendBodyBehindAppBar: true,
         body: Padding(
           padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
           child: SingleChildScrollView(

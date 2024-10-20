@@ -51,16 +51,16 @@ class _ProfileState extends State<Profile> {
           GestureDetector(
             onTap: () {
               if (title == 'X_report') {
-                context.go('/cashier/x-report');
+                context.go('/cashier/profile/x-report');
               }
               if (title == 'balance') {
-                context.go('/cashier/balance');
+                context.go('/cashier/profile/balance');
               }
               if (title == 'info') {
-                context.go('/cashier/info');
+                context.go('/cashier/profile/info');
               }
               if (title == 'settings') {
-                context.go('/cashier/settings');
+                context.go('/cashier/profile/settings');
               }
               if (title == 'close_shift') {
                 openModal('close_shift');

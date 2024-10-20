@@ -18,9 +18,29 @@ BaseOptions options = BaseOptions(
 );
 var dio = Dio(options);
 
-Future get(String url, {payload}) async {
+checkToken() async {
+  if (storage.read('lastLogin') != null) {
+    var lastLogin = jsonDecode(storage.read('lastLogin'));
+    if (daysBetween(lastLogin, DateTime.now()) >= 1) {
+      final response = await post('/auth/login', jsonDecode(storage.read('user')), isGuest: true);
+      if (response != null) {
+        var lastLogin = {
+          'year': DateTime.now().year,
+          'month': DateTime.now().month,
+          'day': DateTime.now().day,
+        };
+        storage.write('access_token', response['access_token'].toString());
+        storage.write('lastLogin', jsonEncode(lastLogin));
+        return true;
+      }
+    }
+  }
+}
+
+Future get(String url, {payload, isGuest = false}) async {
+  await checkToken();
   try {
-    if (storage.read('access_token') != null) {
+    if (storage.read('access_token') != null && !isGuest) {
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
@@ -36,11 +56,10 @@ Future get(String url, {payload}) async {
   return false;
 }
 
-Future post(String url, dynamic payload) async {
-  // print(payload);
-  // controller.showLoading;
+Future post(String url, dynamic payload, {isGuest = false}) async {
+  await checkToken();
   try {
-    if (storage.read('access_token') != null) {
+    if (storage.read('access_token') != null && !isGuest) {
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }

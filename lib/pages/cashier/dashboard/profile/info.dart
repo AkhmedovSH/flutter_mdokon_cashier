@@ -68,7 +68,10 @@ class Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'info'),
+      appBar: CustomAppBar(
+        title: 'info',
+        leading: true,
+      ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: SingleChildScrollView(
@@ -102,27 +105,10 @@ class Info extends StatelessWidget {
                                 color: Colors.white,
                               ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              child: Text(
-                                shortCutList[i]['title'],
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            // SizedBox(height: 5),
-                            // Padding(
-                            //   padding: EdgeInsets.only(left: 5),
-                            //   child: Text(
-                            //     shortCutList[i]['description'],
-                            //     style: TextStyle(fontSize: 16),
-                            //   ),
-                            // ),
-                          ],
+                      Expanded(
+                        child: Text(
+                          shortCutList[i]['title'],
+                          style: TextStyle(fontSize: 18),
                         ),
                       ),
                     ],

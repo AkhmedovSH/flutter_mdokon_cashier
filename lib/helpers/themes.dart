@@ -9,16 +9,13 @@ final ThemeData lightTheme = ThemeData(
   scaffoldBackgroundColor: Colors.white,
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: Colors.grey[100],
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
-      borderSide: BorderSide.none,
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
-      borderSide: const BorderSide(color: Colors.blue),
-    ),
+    fillColor: white,
+    border: inputBorder,
+    enabledBorder: inputBorder,
+    focusedErrorBorder: inputErrorBorder,
+    focusedBorder: inputFocusBorder,
   ),
+
   datePickerTheme: DatePickerThemeData(
     backgroundColor: Colors.white,
     headerBackgroundColor: mainColor,
@@ -50,6 +47,7 @@ final ThemeData lightTheme = ThemeData(
       side: BorderSide(color: Colors.red),
     ),
   ),
+
   // iconTheme: IconThemeData(
   //   color: white,
   // ),
