@@ -213,7 +213,7 @@ class _ProfileState extends State<Profile> {
     storage.remove('user');
     storage.remove('access_token');
     if (response['success']) {
-      context.go('/auth/login');
+      context.go('/auth');
     }
     //print(response);
   }
@@ -221,7 +221,7 @@ class _ProfileState extends State<Profile> {
   void logout() async {
     storage.remove('user');
     storage.remove('access_token');
-    context.go('/auth/login');
+    context.go('/auth');
     //print(response);
   }
 
@@ -240,11 +240,12 @@ class _ProfileState extends State<Profile> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         actionsPadding: const EdgeInsets.all(0),
         buttonPadding: const EdgeInsets.all(0),
+        backgroundColor: CustomTheme.of(context).bgColor,
         content: Container(
           width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.21,
           padding: const EdgeInsets.all(10),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 type == 'logout' ? context.tr('are_you_sure_you_want_to_go_out') : context.tr('are_you_sure_you_want_to_close_your_shift'),
@@ -285,7 +286,8 @@ class _ProfileState extends State<Profile> {
                     ),
                   )
                 ],
-              )
+              ),
+              SizedBox(height: 20),
             ],
           ),
         ),

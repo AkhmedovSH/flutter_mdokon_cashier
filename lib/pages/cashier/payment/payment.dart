@@ -63,7 +63,7 @@ class _PaymentState extends State<Payment> {
             child: Text(
               context.tr('TO_PAY'),
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -73,7 +73,7 @@ class _PaymentState extends State<Payment> {
             child: Text(
               '${formatMoney(data['totalPrice'])} ${context.tr('sum')}',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -148,7 +148,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${'sum'.tr}',
+                        hintText: '0.00 ${context.tr('sum')}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -156,7 +156,7 @@ class _PaymentState extends State<Payment> {
                 ],
               )),
           Text(
-            '${'CHANGE'.tr}:',
+            '${context.tr('CHANGE')}:',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -165,7 +165,7 @@ class _PaymentState extends State<Payment> {
           Container(
             margin: EdgeInsets.only(bottom: 10, top: 5),
             child: Text(
-              '${formatMoney(data['change'])} ${'sum'.tr}',
+              '${formatMoney(data['change'])} ${context.tr('sum')}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

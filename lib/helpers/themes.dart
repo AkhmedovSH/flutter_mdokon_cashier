@@ -47,6 +47,17 @@ final ThemeData lightTheme = ThemeData(
       side: BorderSide(color: Colors.red),
     ),
   ),
+  dataTableTheme: DataTableThemeData(
+    headingRowColor: WidgetStateProperty.all(Colors.blueGrey), // Цвет заголовков
+    headingTextStyle: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    ), // Стиль текста заголовков
+    dataRowColor: WidgetStateProperty.all(Colors.grey.shade200), // Цвет строк данных
+    dataTextStyle: TextStyle(
+      color: Colors.black87,
+    ), // Стиль текста в строках
+  ),
 
   // iconTheme: IconThemeData(
   //   color: white,

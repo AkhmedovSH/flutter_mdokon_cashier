@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -14,6 +13,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/models/data_model.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Index extends StatefulWidget {
@@ -42,7 +43,7 @@ class _IndexState extends State<Index> {
   TextEditingController packagingController = TextEditingController();
   TextEditingController pieceController = TextEditingController();
 
-  Map data = {
+  Map<String, dynamic> data = {
     "cashboxVersion": "",
     "login": "",
     "loyaltyBonus": 0,
@@ -187,50 +188,49 @@ class _IndexState extends State<Index> {
       'currencyId': data['currencyId'],
       'currencyName': data['currencyName'],
     });
-    List products = [];
-    if (products.isNotEmpty) {
+    List<Map<String, dynamic>> products = Provider.of<DataModel>(context, listen: false).currentProductList;
+    if (products.isEmpty) {
       // showErrorToast('Ошибка при добавлении продуктов');
       return;
     }
     for (var i = 0; i < products.length; i++) {
-      if (products[i] != null) {
-        var product = Map.from(products[i]);
-        product['discount'] = 0;
-        product['outType'] = false;
+      var product = Map.from(products[i]);
+      print(product);
+      product['discount'] = 0;
+      product['outType'] = false;
 
-        if (data['activePrice'] == 1) {
-          product['wholesale'] = true;
-        } else {
-          product['wholesale'] = false;
-        }
+      if (data['activePrice'] == 1) {
+        product['wholesale'] = true;
+      } else {
+        product['wholesale'] = false;
+      }
 
-        if (product['unitList'] != null && product['unitList'].length > 0) {
-          setState(() {
-            productWithParams = product;
-            productWithParams['quantity'] = "";
-            productWithParams['totalPrice'] = "";
-            productWithParams['selectedUnit'] = product['unitList'][0];
-          });
-          showProductsWithParams();
-          return;
-        }
-        var existSameProduct = false;
-        dynamic productsCopy = data["itemsList"];
-        for (var i = 0; i < productsCopy.length; i++) {
-          if (productsCopy[i]['productId'] == product['productId']) {
-            existSameProduct = true;
+      if (product['unitList'] != null && product['unitList'].length > 0) {
+        setState(() {
+          productWithParams = product;
+          productWithParams['quantity'] = "";
+          productWithParams['totalPrice'] = "";
+          productWithParams['selectedUnit'] = product['unitList'][0];
+        });
+        showProductsWithParams();
+        return;
+      }
+      var existSameProduct = false;
+      dynamic productsCopy = data["itemsList"];
+      for (var i = 0; i < productsCopy.length; i++) {
+        if (productsCopy[i]['productId'] == product['productId']) {
+          existSameProduct = true;
 
-            if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
-              showDangerToast('limit_exceeded'.tr);
-              return;
-            }
-            addToList(product);
+          if (productsCopy[i]['quantity'] >= productsCopy[i]['balance'] && !cashbox['saleMinus']) {
+            showDangerToast(context.tr('limit_exceeded'));
+            return;
           }
-        }
-
-        if (!existSameProduct) {
           addToList(product);
         }
+      }
+
+      if (!existSameProduct) {
+        addToList(product);
       }
     }
   }
@@ -397,13 +397,13 @@ class _IndexState extends State<Index> {
         if (productsCopy[i]['selected']) {
           // Штучные товары нельзя вводить дробным числом
           if (isFloat && productsCopy[i]['uomId'] == 1) {
-            showDangerToast('wrong_quantity'.tr);
+            showDangerToast(context.tr('wrong_quantity'));
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             return;
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) > productsCopy[i]['balance'])) {
-              showDangerToast('limit_exceeded'.tr);
+              showDangerToast(context.tr('limit_exceeded'));
               productsCopy[i]['quantity'] = productsCopy[i]['balance'];
               calculateTotalPrice(productsCopy);
               shortcutController.text = "";
@@ -427,7 +427,7 @@ class _IndexState extends State<Index> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (double.parse(inputData) < productsCopy[i]['price']) {
-            showDangerToast('sale_price_cannot_be_lower_than_receipt_price'.tr);
+            showDangerToast(context.tr('sale_price_cannot_be_lower_than_receipt_price'));
             shortcutController.text = "";
             FocusManager.instance.primaryFocus?.unfocus();
             break;
@@ -446,11 +446,11 @@ class _IndexState extends State<Index> {
       for (var i = 0; i < productsCopy.length; i++) {
         if (productsCopy[i]['selected']) {
           if (productsCopy[i]['uomId'] == 1) {
-            showDangerToast('wrong_quantity'.tr);
+            showDangerToast(context.tr('wrong_quantity'));
             shortcutController.text = "";
           } else {
             if (!cashbox['saleMinus'] && (double.parse(inputData) / productsCopy[i]['salePrice'] > productsCopy[i]['balance'])) {
-              showDangerToast('limit_exceeded'.tr);
+              showDangerToast(context.tr('limit_exceeded'));
             } else if (!cashbox['saleMinus'] && (productsCopy[i]['balance'] > (double.parse(inputData) / productsCopy[i]['salePrice']))) {
               productsCopy[i]['quantity'] = double.parse(inputData) / productsCopy[i]['salePrice'];
             } else {
@@ -861,7 +861,10 @@ class _IndexState extends State<Index> {
                   showCreateUserModal();
                 },
                 tooltip: context.tr('Создать клиента'),
-                icon: Icon(UniconsLine.user_plus),
+                icon: Icon(
+                  UniconsLine.user_plus,
+                  color: white,
+                ),
               ),
             ),
           if (data['itemsList'].length > 0)
@@ -872,13 +875,16 @@ class _IndexState extends State<Index> {
                     openConfirmModal();
                   }
                 },
-                icon: Icon(UniconsLine.trash_alt),
+                icon: Icon(
+                  UniconsLine.trash_alt,
+                  color: white,
+                ),
               ),
             ),
           SizedBox(
             child: Tooltip(
               message: context.tr('wholesale_price'),
-              child: CupertinoCheckbox(
+              child: Checkbox(
                 activeColor: mainColor,
                 checkColor: white,
                 focusColor: white,
@@ -1024,13 +1030,13 @@ class _IndexState extends State<Index> {
                             SizedBox(width: 10),
                             data['discount'] == 0
                                 ? Text(
-                                    '0,00 ${'sum'.tr}',
+                                    '0,00 ${context.tr('sum')}',
                                     style: TextStyle(fontSize: 16),
                                   )
                                 : Text(
                                     formatMoney(
                                             double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
-                                        'sum'.tr,
+                                        context.tr('sum'),
                                     style: TextStyle(fontSize: 16),
                                   ),
                           ],
@@ -1087,7 +1093,7 @@ class _IndexState extends State<Index> {
                               // borderRadius: BorderRadius.circular(24),
                               backgroundColor: const Color(0xFFFE4A49),
                               foregroundColor: Colors.white,
-                              icon: Icons.delete,
+                              icon: UniconsLine.trash_alt,
                               padding: const EdgeInsets.all(12),
                             ),
                           ],
@@ -1185,7 +1191,7 @@ class _IndexState extends State<Index> {
                   child: ElevatedButton(
                     onPressed: data["itemsList"].length > 0
                         ? () {
-                            context.go('/payment', extra: data);
+                            context.go('/cashier/payment', extra: data);
                           }
                         : null,
                     style: ElevatedButton.styleFrom(

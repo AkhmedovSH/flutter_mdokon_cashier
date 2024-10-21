@@ -2,12 +2,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:kassa/pages/cashier/dashboard/profile/profile.dart';
-import 'package:kassa/pages/cashier/dashboard/return.dart';
-
 import 'package:unicons/unicons.dart';
 
-import '../../helpers/helper.dart';
+import './home/index.dart';
+import './reports/index.dart';
+import './settings.dart';
+
+import '../../../helpers/helper.dart';
 
 class DirectorDashboard extends StatefulWidget {
   final int initialPage;
@@ -17,15 +18,14 @@ class DirectorDashboard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<DirectorDashboard> createState() => _DirectorDashboardState();
+  State<DirectorDashboard> createState() => _DashboardState();
 }
 
-class _DirectorDashboardState extends State<DirectorDashboard> {
+class _DashboardState extends State<DirectorDashboard> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   GetStorage storage = GetStorage();
 
   late Animation<double> animation;
-  PageController? pageController;
 
   int currentIndex = 0;
   bool expanded = true;
@@ -53,20 +53,12 @@ class _DirectorDashboardState extends State<DirectorDashboard> {
   @override
   void initState() {
     super.initState();
-    pageController = PageController(initialPage: widget.initialPage);
+    currentIndex = widget.initialPage;
   }
 
   @override
   void dispose() {
-    pageController!.dispose();
     super.dispose();
-  }
-
-  getDashBoardItem(IconData icon, String text) {
-    return BottomNavigationBarItem(
-      icon: Icon(icon),
-      label: context.tr('text'),
-    );
   }
 
   @override
@@ -86,50 +78,60 @@ class _DirectorDashboardState extends State<DirectorDashboard> {
             //   setState(() => currentIndex = index);
             // },
             children: const [
-              Return(),
-              Profile(),
+              Home(),
+              Report(),
+              Settings(),
             ],
           ),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFFEFEFE),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [boxShadow],
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20.0),
-              topRight: Radius.circular(20.0),
+            border: Border(
+              top: BorderSide(
+                color: black.withOpacity(0.3),
+                width: 0.33,
+              ),
             ),
-            child: BottomAppBar(
-              padding: EdgeInsets.all(5),
-              elevation: 0,
+          ),
+          child: BottomAppBar(
+            padding: const EdgeInsets.all(0),
+            elevation: 0,
+            color: Colors.transparent,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                splashFactory: NoSplash.splashFactory,
+              ),
               child: BottomNavigationBar(
                 onTap: (index) => setState(() {
                   currentIndex = index;
                 }),
                 backgroundColor: Colors.transparent,
-                selectedItemColor: blue,
+                selectedItemColor: mainColor,
                 currentIndex: currentIndex,
                 type: BottomNavigationBarType.fixed,
-                selectedFontSize: 10,
-                unselectedFontSize: 10,
-                selectedLabelStyle: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: blue,
-                  fontSize: 14,
+                selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  color: black,
-                  fontWeight: FontWeight.w400,
+                  color: grey,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
                 elevation: 0,
                 items: [
-                  getDashBoardItem(UniconsLine.monitor, 'sale'),
-                  getDashBoardItem(UniconsLine.receipt, 'checks'),
-                  getDashBoardItem(UniconsLine.backward, 'return'),
-                  getDashBoardItem(UniconsLine.user, 'profile'),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.estate),
+                    label: context.tr('home'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.chart_pie_alt),
+                    label: context.tr('report'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.cog),
+                    label: context.tr('settings'),
+                  ),
                 ],
               ),
             ),

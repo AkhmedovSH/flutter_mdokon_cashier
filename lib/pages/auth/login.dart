@@ -73,13 +73,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       }
     }
     storage.write('user_roles', jsonEncode(account['authorities']));
+    storage.write('role', jsonEncode(checker));
+
     if (checker == 'ROLE_CASHIER') {
-      storage.write('user_roles', jsonEncode(account['authorities']));
-      await getAccessPos();
+      context.pushReplacement('/director');
     } else if (checker == 'ROLE_AGENT') {
-      storage.write('user_roles', jsonEncode(account['authorities']));
       await getAgentPosId();
     } else if (checker == 'ROLE_OWNER') {
+      context.pushReplacement('/director');
     } else {
       showDangerToast('error', description: 'Нет доступа');
     }
@@ -199,6 +200,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                     payload['username'] = value;
                                   });
                                 },
+                                cursorColor: mainColor,
                                 textInputAction: TextInputAction.next,
                                 scrollPadding: EdgeInsets.only(bottom: 200),
                                 decoration: InputDecoration(
@@ -238,6 +240,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                 //     login();
                                 //   }
                                 // },
+                                cursorColor: mainColor,
                                 obscureText: !showPassword,
                                 scrollPadding: EdgeInsets.only(bottom: 200),
                                 decoration: InputDecoration(

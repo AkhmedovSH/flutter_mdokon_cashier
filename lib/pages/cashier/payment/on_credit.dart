@@ -86,11 +86,11 @@ class _OnCreditState extends State<OnCredit> {
     //print(data['itemsList']);
     super.initState();
     dynamic totalAmount = 0;
-    for (var i = 0; i < data['itemsList'].length; i++) {
-      totalAmount += data['itemsList'][i]['totalPrice'];
+    for (var i = 0; i < widget.data['itemsList'].length; i++) {
+      totalAmount += widget.data['itemsList'][i]['totalPrice'];
     }
     setState(() {
-      data = widget.data!;
+      data = widget.data;
       data['totalPrice'] = double.parse(totalAmount.toString());
       data['change'] = -double.parse(totalAmount.toString());
       data['paid'] = 0;

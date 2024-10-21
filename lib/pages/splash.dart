@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/helpers/helper.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,7 +57,28 @@ class _SplashState extends State<Splash> {
   }
 
   navigate() async {
-    context.go('/auth');
+    if (storage.read('lastLogin') != null && storage.read('user') != null) {
+      var lastLogin = jsonDecode(storage.read('lastLogin'));
+      if (daysBetween(lastLogin, DateTime.now()) == 0) {
+        switch (storage.read('role')) {
+          case 'ROLE_CASHIER':
+            context.pushReplacement('/cashier');
+            break;
+          case 'ROLE_OWNER':
+            context.pushReplacement('/director');
+            break;
+          case 'ROLE_AGENT':
+            context.pushReplacement('/agent');
+            break;
+          default:
+            context.pushReplacement('/auth');
+        }
+      } else {
+        context.pushReplacement('/auth');
+      }
+    } else {
+      context.pushReplacement('/auth');
+    }
   }
 
   @override

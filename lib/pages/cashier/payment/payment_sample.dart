@@ -20,7 +20,11 @@ import './loyalty.dart';
 import './payment.dart';
 
 class PaymentSample extends StatefulWidget {
-  const PaymentSample({Key? key}) : super(key: key);
+  final Map data;
+  const PaymentSample({
+    Key? key,
+    required this.data,
+  }) : super(key: key);
 
   @override
   _PaymentSampleState createState() => _PaymentSampleState();
@@ -85,7 +89,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       dataCopy.remove('loyaltyClientName');
     }
 
-    if (cashController.text.length > 0) {
+    if (cashController.text.isNotEmpty) {
       dataCopy['transactionsList'].add({
         'amountIn': cashController.text,
         'amountOut': 0,
@@ -94,7 +98,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       });
     }
 
-    if (terminalController.text.length > 0) {
+    if (terminalController.text.isNotEmpty) {
       dataCopy['transactionsList'].add({
         'amountIn': terminalController.text,
         'amountOut': 0,
@@ -121,8 +125,8 @@ class _PaymentSampleState extends State<PaymentSample> {
     }
 
     if (currentIndex == 1) {
-      if (cashController.text.length > 0) {
-        if (terminalController.text.length > 0) {
+      if (cashController.text.isNotEmpty) {
+        if (terminalController.text.isNotEmpty) {
           setState(() {
             dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
             dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
@@ -139,7 +143,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     print(dataCopy['paid']);
     print(currentIndex);
     if (currentIndex == 2) {
-      if (loyaltyController.text.length > 0) {
+      if (loyaltyController.text.isNotEmpty) {
         dataCopy['transactionsList'].add({
           'amountIn': loyaltyController.text,
           'amountOut': 0,
@@ -195,12 +199,13 @@ class _PaymentSampleState extends State<PaymentSample> {
 
     if (response != null && response['success']) {
       setState(() {});
-      context.go('/');
+      context.go('/cashier');
     }
   }
 
   setInitState() {
     setState(() {
+      data = widget.data;
       data['change'] = 0;
       data['text'] = data['totalPrice'].toString();
     });
@@ -276,6 +281,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       body: Scaffold(
         appBar: CustomAppBar(
           title: 'sale',
+          leading: true,
         ),
         body: SingleChildScrollView(
           child: Column(

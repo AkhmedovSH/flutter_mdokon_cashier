@@ -34,7 +34,7 @@ final globalRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/auth',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Login()),
+      builder: (context, start) => Login(),
       routes: [
         GoRoute(
           path: '/cashboxes',
