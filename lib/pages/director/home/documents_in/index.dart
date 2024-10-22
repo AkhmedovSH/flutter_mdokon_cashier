@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
-import 'package:material_table_view/material_table_view.dart';
 
 class DocumentsIn extends StatefulWidget {
   const DocumentsIn({super.key});
@@ -10,26 +8,21 @@ class DocumentsIn extends StatefulWidget {
 }
 
 class _DocumentsInState extends State<DocumentsIn> {
-  // Данные для таблицы
-  final List<User> _users = [
-    User('John', 'Smith', 28),
-    User('Jane', 'Doe', 24),
-    User('Sam', 'Johnson', 32),
-  ];
+  int totalCount = 0;
+  List data = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'documents-in',
-        leading: true,
+      appBar: AppBar(
+        title: Text('Documents In'),
       ),
-      body: SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: FittedBox(
+      body: Column(
+        children: [
+          // Фиксированные заголовки колонок
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             child: DataTable(
-              columnSpacing: 5,
               columns: [
                 DataColumn(
                   label: SizedBox(
@@ -45,39 +38,76 @@ class _DocumentsInState extends State<DocumentsIn> {
                 ),
                 DataColumn(
                   label: SizedBox(
+                    width: 200,
+                    child: Text('Name'),
+                  ),
+                ),
+                DataColumn(
+                  label: SizedBox(
                     width: 80,
                     child: Text('Age'),
                   ),
                   numeric: true,
                 ),
               ],
-              rows: [
-                for (var i = 1; i < 100; i++)
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text('${i + 1}'),
-                        ),
-                      ),
-                      DataCell(Text('Doe')),
-                      DataCell(Text('25')),
-                    ],
-                  ),
-              ],
+              rows: [], // Здесь пусто, так как строки будут в другой части
             ),
           ),
-        ),
+          // Прокручиваемые строки данных
+          Expanded(
+            child: SingleChildScrollView(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  children: [
+                    DataTable(
+                      
+                      columns: [
+                        DataColumn(
+                          label: SizedBox(
+                            width: 40,
+                          ), // Пустые заголовки для выравнивания
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 200,
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 200,
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 80,
+                          ),
+                        ),
+                      ],
+                      rows: [
+                        for (var i = 1; i < 100; i++)
+                          DataRow(
+                            cells: [
+                              DataCell(
+                                SizedBox(
+                                  width: 40,
+                                  child: Text('${i + 1}'),
+                                ),
+                              ),
+                              DataCell(Text('Doe')),
+                              DataCell(Text('John')),
+                              DataCell(Text('25')),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
-
-class User {
-  final String firstName;
-  final String lastName;
-  final int age;
-
-  User(this.firstName, this.lastName, this.age);
 }

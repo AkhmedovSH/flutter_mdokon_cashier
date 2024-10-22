@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kassa/models/loading_model.dart';
+import 'package:kassa/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -44,10 +45,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       Provider.of<LoadingModel>(context, listen: false).hideLoader();
       return;
     }
+    print(data);
+    print(data['access_token']);
     storage.write('access_token', data['access_token']);
-    storage.write('username', payload['username'].toString().toLowerCase());
-    storage.write('password', payload['password']);
-    storage.write('user', jsonEncode(payload));
+
     var lastLogin = {
       'year': DateTime.now().year,
       'month': DateTime.now().month,
@@ -57,8 +58,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     };
     storage.write('lastLogin', jsonEncode(lastLogin));
 
-    final account = await get('/services/uaa/api/account');
-    storage.write('account', jsonEncode(account));
+    final Map account = await get('/services/uaa/api/account');
+    Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
 
     var checker = '';
     for (var i = 0; i < account['authorities'].length; i++) {
@@ -76,6 +77,17 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     storage.write('role', jsonEncode(checker));
 
     if (checker == 'ROLE_CASHIER') {
+      // await getAccessPos();
+      final userSettings = await get("/services/web/api/user-settings");
+      final posBalance = await get("/services/web/api/pos-balance");
+      print(posBalance);
+      if (userSettings != null && userSettings['settings'] != null) {
+        Provider.of<UserModel>(context, listen: false).setUser({
+          ...storage.read('user'),
+          'posId': jsonDecode(userSettings['settings'])['posId'],
+          'posBalance': posBalance,
+        });
+      }
       context.pushReplacement('/director');
     } else if (checker == 'ROLE_AGENT') {
       await getAgentPosId();
@@ -113,10 +125,12 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   getData() async {
     if (storage.read('user') != null) {
-      var user = jsonDecode(storage.read('user')!);
+      var user = storage.read('user');
       print(user);
       if (user['rememberMe'] != null && user['rememberMe']) {
-        payload = user;
+        payload['username'] = user['username'];
+        payload['password'] = user['password'];
+        payload['rememberMe'] = user['rememberMe'];
         data['username'].text = user['username'];
         data['password'].text = user['password'];
         setState(() {});

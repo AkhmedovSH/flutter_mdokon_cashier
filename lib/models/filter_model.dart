@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 
 class FilterModel extends ChangeNotifier {
+  GetStorage storage = GetStorage();
   Map<String, dynamic> filterDataCopy = {};
   Map<String, dynamic> filterData = {};
 
   Map<String, dynamic> get currentFilterData => filterData;
+  int get posId => storage.read('user')['posId'];
 
   void initFilterData(Map<String, dynamic> payload) {
     filterData = payload;

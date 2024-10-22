@@ -51,7 +51,12 @@ void main() async {
           ChangeNotifierProvider(create: (_) => LocaleModel(locale)),
           ChangeNotifierProvider(create: (_) => LoadingModel()),
           ChangeNotifierProvider(create: (_) => SettingsModel()),
-          ChangeNotifierProvider(create: (_) => UserModel(storage.read('user') ?? {})),
+          ChangeNotifierProvider(
+            create: (_) => UserModel(
+              storage.read('user') ?? {},
+              storage.read('cashbox') ?? {},
+            ),
+          ),
           ChangeNotifierProvider(create: (_) => DataModel()),
           ChangeNotifierProvider(create: (_) => FilterModel()),
         ],

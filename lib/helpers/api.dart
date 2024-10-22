@@ -38,9 +38,9 @@ checkToken() async {
 }
 
 Future get(String url, {payload, isGuest = false}) async {
-  await checkToken();
   try {
     if (storage.read('access_token') != null && !isGuest) {
+      await checkToken();
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }
@@ -56,10 +56,32 @@ Future get(String url, {payload, isGuest = false}) async {
   return false;
 }
 
-Future post(String url, dynamic payload, {isGuest = false}) async {
-  await checkToken();
+Future pget(String url, {payload, isGuest = false}) async {
   try {
     if (storage.read('access_token') != null && !isGuest) {
+      await checkToken();
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
+      dio.options.headers["Accept"] = "application/json";
+    }
+    print(hostUrl + url);
+    final response = await dio.get(
+      hostUrl + url,
+      queryParameters: payload,
+    );
+    return {
+      'data': response.data,
+      'total': response.headers.value('x-total-count'),
+    };
+  } catch (e) {
+    statuscheker(e);
+  }
+  return false;
+}
+
+Future post(String url, dynamic payload, {isGuest = false}) async {
+  try {
+    if (storage.read('access_token') != null && !isGuest) {
+      await checkToken();
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
     }

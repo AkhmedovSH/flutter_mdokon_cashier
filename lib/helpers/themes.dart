@@ -48,15 +48,16 @@ final ThemeData lightTheme = ThemeData(
     ),
   ),
   dataTableTheme: DataTableThemeData(
-    headingRowColor: WidgetStateProperty.all(Colors.blueGrey), // Цвет заголовков
+    columnSpacing: 10,
+    headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 233, 233, 233)),
     headingTextStyle: TextStyle(
-      color: Colors.white,
+      color: black,
       fontWeight: FontWeight.bold,
-    ), // Стиль текста заголовков
-    dataRowColor: WidgetStateProperty.all(Colors.grey.shade200), // Цвет строк данных
+    ),
+    dataRowColor: WidgetStateProperty.all(white),
     dataTextStyle: TextStyle(
-      color: Colors.black87,
-    ), // Стиль текста в строках
+      color: black,
+    ),
   ),
 
   // iconTheme: IconThemeData(
