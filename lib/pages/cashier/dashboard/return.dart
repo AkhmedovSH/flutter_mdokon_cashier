@@ -239,7 +239,7 @@ class _ReturnState extends State<Return> {
 
   setInitState() async {
     setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
+      cashbox = (storage.read('cashbox')!);
       if (storage.read('shift') != null) {
         shift = jsonDecode(storage.read('shift')!);
       }
@@ -274,7 +274,7 @@ class _ReturnState extends State<Return> {
 
   getData() async {
     setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
+      cashbox = (storage.read('cashbox')!);
       if (storage.read('shift') != null) {
         shift = jsonDecode(storage.read('shift')!);
       }

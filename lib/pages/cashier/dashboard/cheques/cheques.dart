@@ -50,12 +50,12 @@ class _ChequesState extends State<Cheques> {
   };
 
   Future<void> getCheques() async {
-    dynamic cashbox = jsonDecode(storage.read('cashbox')!);
+    dynamic cashbox = (storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });
     final response = await get('/services/desktop/api/cashier-cheque-pageList', payload: sendData);
-    if (response != null) {
+    if (httpOk(response)) {
       setState(() {
         cheques = response;
       });

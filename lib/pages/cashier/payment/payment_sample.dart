@@ -216,7 +216,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
     setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
+      cashbox = (storage.read('cashbox')!);
     });
     final username = storage.read('username');
     if (storage.read('shift') != null) {

@@ -59,6 +59,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     storage.write('lastLogin', jsonEncode(lastLogin));
 
     final Map account = await get('/services/uaa/api/account');
+    print(account);
     Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
 
     var checker = '';
@@ -74,21 +75,21 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       }
     }
     storage.write('user_roles', jsonEncode(account['authorities']));
-    storage.write('role', jsonEncode(checker));
+    storage.write('role', checker);
 
     if (checker == 'ROLE_CASHIER') {
-      // await getAccessPos();
-      final userSettings = await get("/services/web/api/user-settings");
-      final posBalance = await get("/services/web/api/pos-balance");
-      print(posBalance);
-      if (userSettings != null && userSettings['settings'] != null) {
-        Provider.of<UserModel>(context, listen: false).setUser({
-          ...storage.read('user'),
-          'posId': jsonDecode(userSettings['settings'])['posId'],
-          'posBalance': posBalance,
-        });
-      }
-      context.pushReplacement('/director');
+      await getAccessPos();
+      // final userSettings = await get("/services/web/api/user-settings");
+      // final posBalance = await get("/services/web/api/pos-balance");
+      // print(posBalance);
+      // if (userSettings != null && userSettings['settings'] != null) {
+      //   Provider.of<UserModel>(context, listen: false).setUser({
+      //     ...storage.read('user'),
+      //     'posId': jsonDecode(userSettings['settings'])['posId'],
+      //     'posBalance': posBalance,
+      //   });
+      // }
+      // context.pushReplacement('/director');
     } else if (checker == 'ROLE_AGENT') {
       await getAgentPosId();
     } else if (checker == 'ROLE_OWNER') {
@@ -107,7 +108,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     final response = await get('/services/desktop/api/get-access-pos');
     response['isAgent'] = true;
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-    storage.write('cashbox', jsonEncode(response));
+    Provider.of<UserModel>(context, listen: false).setCashbox(response);
     context.go('/agent');
   }
 
@@ -116,7 +117,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     if (response['openShift']) {
       storage.remove('shift');
       response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-      storage.write('cashbox', jsonEncode(response['shift']));
+      Provider.of<UserModel>(context, listen: false).setCashbox(response['shift']);
       context.go('/cashier');
     } else {
       context.go('/auth/cashboxes', extra: {'posList': response['posList']});

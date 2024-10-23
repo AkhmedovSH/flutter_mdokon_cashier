@@ -69,7 +69,7 @@ class _LoyaltyState extends State<Loyalty> {
   }
 
   getData() async {
-    cashbox = jsonDecode(storage.read('cashbox')!);
+    cashbox = (storage.read('cashbox')!);
   }
 
   @override

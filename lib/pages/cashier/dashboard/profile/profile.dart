@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/user_model.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -30,8 +32,8 @@ class _ProfileState extends State<Profile> {
   }
 
   void getCashboxInfo() async {
-    cashbox = jsonDecode(storage.read('cashbox')!);
-    account = jsonDecode(storage.read('account')!);
+    cashbox = (storage.read('cashbox') ?? {});
+    account = (storage.read('user') ?? {});
     setState(() {});
     print(account);
   }
@@ -144,32 +146,36 @@ class _ProfileState extends State<Profile> {
                   height: 64,
                   width: 64,
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      account['firstName'] + ' ' + account['lastName'],
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${context.tr('login')}: ${account['login']}',
-                      style: TextStyle(
-                        color: white,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'ID: ${cashbox['posId']} (${cashbox['posName']})',
-                      style: TextStyle(
-                        color: white,
-                      ),
-                    )
-                  ],
+                Consumer<UserModel>(
+                  builder: (context, userModel, child) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${userModel.user['lastName']} ${userModel.user['firstName']}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${context.tr('login')}: ${userModel.user['login']}',
+                          style: TextStyle(
+                            color: white,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          'ID: ${cashbox['posId']} (${cashbox['posName']})',
+                          style: TextStyle(
+                            color: white,
+                          ),
+                        )
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -221,6 +227,7 @@ class _ProfileState extends State<Profile> {
   void logout() async {
     storage.remove('user');
     storage.remove('access_token');
+    storage.remove('lastLogin');
     context.go('/auth');
     //print(response);
   }

@@ -2,15 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:kassa/helpers/themes.dart';
+import 'package:kassa/models/settings_model.dart';
 import 'package:kassa/models/theme_model.dart';
 
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:unicons/unicons.dart';
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,7 +45,9 @@ class _SettingsState extends State<Settings> {
   };
 
   save() {
-    if (settings['language']) {
+    SettingsModel settingsModel = Provider.of<SettingsModel>(context, listen: false);
+
+    if (settingsModel.language) {
       if (!context.supportedLocales.contains(const Locale('uz', 'Latn'))) {
         context.setLocale(const Locale('uz', 'Latn'));
       }
@@ -52,13 +57,10 @@ class _SettingsState extends State<Settings> {
       }
     }
 
-    print(settings['theme']);
-    if (settings['theme']) {
-      if (storage.read('isDarkTheme') ?? false) {
-        Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
-      } else {
-        Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
-      }
+    if (settingsModel.theme) {
+      Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
+    } else {
+      Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
     }
     storage.write('settings', jsonEncode(settings));
     showSuccessToast(context.tr('settings_saved'));
@@ -79,11 +81,9 @@ class _SettingsState extends State<Settings> {
       settings = {...settings, ...jsonDecode(storage.read('settings'))};
     }
     if (storage.read('printImage') != null) {
-      // print(storage.read('printImage'));
       List<int> intList = storage.read('printImage').cast<int>().toList();
       image = Uint8List.fromList(intList);
     }
-    print(storage.read('defaultPrinter'));
     if (storage.read('defaultPrinter') != null) {
       printer = storage.read('defaultPrinter');
     }
@@ -119,105 +119,10 @@ class _SettingsState extends State<Settings> {
     checkStatus();
   }
 
-  buildTitle(String text) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12),
-      child: Text(
-        context.tr(text),
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  buildCheckBoxRow(String title, String description, String value, {soon = false}) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          settings[value] = !settings[value];
-        });
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 12),
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          color: CustomTheme.of(context).cardColor,
-          boxShadow: [boxShadow],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Stack(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr(title),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        context.tr(description),
-                        style: TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Checkbox(
-                  value: settings[value],
-                  activeColor: mainColor,
-                  onChanged: (newValue) {
-                    settings[value] = !settings[value];
-                    setState(() {});
-                  },
-                )
-              ],
-            ),
-            if (soon)
-              Positioned.fill(
-                top: 0,
-                child: Container(
-                  color: CustomTheme.of(context).cardColor.withOpacity(0.8),
-                  width: MediaQuery.of(context).size.width,
-                  alignment: Alignment.center,
-                  height: double.infinity,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(UniconsLine.clock),
-                      SizedBox(width: 10),
-                      Text(
-                        context.tr('soon'),
-                        style: TextStyle(
-                          color: grey,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final settingsModel = Provider.of<SettingsModel>(context);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'settings',
@@ -229,21 +134,102 @@ class _SettingsState extends State<Settings> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildTitle('general'),
+              Title(title: 'general'),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_1', 'settings_description_1', 'theme'),
+              CardItem(
+                title: 'settings_title_1',
+                description: 'settings_description_1',
+                value: settingsModel.theme,
+                onChanged: (value) {
+                  settingsModel.updateSetting('theme', value);
+                },
+              ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_2', 'settings_description_2', 'language'),
+              CardItem(
+                title: 'settings_title_2',
+                description: 'settings_description_2',
+                value: settingsModel.language,
+                onChanged: (value) {
+                  settingsModel.updateSetting('language', value);
+                },
+              ),
               SizedBox(height: 15),
-              buildTitle('cashbox'),
+              Title(title: 'cashbox'),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_3', 'settings_description_3', 'selectUserAftersale'),
+              CardItem(
+                title: 'settings_title_3',
+                description: 'settings_description_3',
+                value: settingsModel.selectUserAftersale,
+                onChanged: (value) {
+                  settingsModel.updateSetting('selectUserAftersale', value);
+                },
+              ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_4', 'settings_description_4', 'searchGroupProducts', soon: true),
+              CardItem(
+                title: 'settings_title_4',
+                description: 'settings_description_4',
+                value: settingsModel.searchGroupProducts,
+                onChanged: (value) {
+                  settingsModel.updateSetting('searchGroupProducts', value);
+                },
+                soon: true,
+              ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_5', 'settings_description_5', 'offlineDeferment', soon: true),
+              CardItem(
+                title: 'settings_title_5',
+                description: 'settings_description_5',
+                value: settingsModel.offlineDeferment,
+                onChanged: (value) {
+                  settingsModel.updateSetting('offlineDeferment', value);
+                },
+                soon: true,
+              ),
               SizedBox(height: 15),
-              buildTitle('print'),
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: CustomTheme.of(context).cardColor,
+                  boxShadow: [boxShadow],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('settings_title_11'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      context.tr('settings_description_11'),
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    SfSlider(
+                      min: 0,
+                      max: 5,
+                      value: settingsModel.decimalDigits,
+                      interval: 20,
+                      showTicks: true,
+                      showLabels: true,
+                      enableTooltip: true,
+                      minorTicksPerInterval: 1,
+                      stepSize: 1,
+                      onChanged: (dynamic value) {
+                        print(value);
+                        settingsModel.updateSetting('decimalDigits', value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 15),
+              Title(title: 'print'),
               SizedBox(height: 15),
               GestureDetector(
                 onTap: () {},
@@ -352,11 +338,32 @@ class _SettingsState extends State<Settings> {
                 ),
               ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_8', 'settings_description_8', 'printAfterSale'),
+              CardItem(
+                title: 'settings_title_8',
+                description: 'settings_description_8',
+                value: settingsModel.printAfterSale,
+                onChanged: (value) {
+                  settingsModel.updateSetting('printAfterSale', value);
+                },
+              ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_9', 'settings_description_9', 'showChequeProducts'),
+              CardItem(
+                title: 'settings_title_9',
+                description: 'settings_description_9',
+                value: settingsModel.showChequeProducts,
+                onChanged: (value) {
+                  settingsModel.updateSetting('showChequeProducts', value);
+                },
+              ),
               SizedBox(height: 15),
-              buildCheckBoxRow('settings_title_10', 'settings_description_10', 'additionalInfo'),
+              CardItem(
+                title: 'settings_title_10',
+                description: 'settings_description_10',
+                value: settingsModel.additionalInfo,
+                onChanged: (value) {
+                  settingsModel.updateSetting('additionalInfo', value);
+                },
+              ),
               SizedBox(height: 70),
             ],
           ),
@@ -393,9 +400,6 @@ class _SettingsState extends State<Settings> {
     if (bluetooths != null) {
       for (var i = 0; i < bluetooths.length; i++) {
         var item = bluetooths[i].split("#")[1];
-        print(storage.read('defaultPrinter'));
-        print(item);
-        print(storage.read('defaultPrinter') == item);
         if (storage.read('defaultPrinter') == item) {
           activeIndex = i;
         }
@@ -546,5 +550,125 @@ class _SettingsState extends State<Settings> {
     setState(() {
       availableBluetoothDevices = [];
     });
+  }
+}
+
+class Title extends StatelessWidget {
+  final String title;
+
+  const Title({
+    super.key,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      child: Text(
+        context.tr(title),
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class CardItem extends StatelessWidget {
+  final String title;
+  final String description;
+  final bool value;
+  final bool soon;
+  final ValueChanged<bool> onChanged;
+
+  const CardItem({
+    super.key,
+    required this.title,
+    this.description = '',
+    required this.value,
+    this.soon = false,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        onChanged(!value);
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: CustomTheme.of(context).cardColor,
+          boxShadow: [boxShadow],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr(title),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        context.tr(description),
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                CupertinoSwitch(
+                  value: value,
+                  activeColor: mainColor,
+                  onChanged: onChanged,
+                )
+              ],
+            ),
+            if (soon)
+              Positioned.fill(
+                top: 0,
+                child: Container(
+                  color: CustomTheme.of(context).cardColor.withOpacity(0.8),
+                  width: MediaQuery.of(context).size.width,
+                  alignment: Alignment.center,
+                  height: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(UniconsLine.clock),
+                      SizedBox(width: 10),
+                      Text(
+                        context.tr('soon'),
+                        style: TextStyle(
+                          color: grey,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

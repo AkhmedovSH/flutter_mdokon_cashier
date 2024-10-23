@@ -160,7 +160,7 @@ class _IndexState extends State<Index> {
   }
 
   getClients() async {
-    final cashbox = jsonDecode(storage.read('cashbox')!);
+    final cashbox = (storage.read('cashbox')!);
     final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
     //print(response);
     for (var i = 0; i < response.length; i++) {
@@ -189,6 +189,7 @@ class _IndexState extends State<Index> {
       'currencyName': data['currencyName'],
     });
     List<Map<String, dynamic>> products = Provider.of<DataModel>(context, listen: false).currentProductList;
+    Provider.of<DataModel>(context, listen: false).setProductList([]);
     if (products.isEmpty) {
       // showErrorToast('Ошибка при добавлении продуктов');
       return;
@@ -362,8 +363,8 @@ class _IndexState extends State<Index> {
       "clientAmount": 0,
       "clientComment": "",
       "clientId": 0,
-      "currencyId": cashbox['defaultCurrency'],
-      "currencyName": cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD',
+      "currencyId": data['currencyId'],
+      "currencyName": data['currencyName'] == 1 ? 'So\'m' : 'USD',
       "currencyRate": 0,
       "discount": 0,
       "note": "",
@@ -673,10 +674,10 @@ class _IndexState extends State<Index> {
   }
 
   getCashbox() async {
-    print(jsonDecode(storage.read('cashbox')!));
-    cashbox = jsonDecode(storage.read('cashbox')!);
+    cashbox = storage.read('cashbox');
     data['currencyId'] = cashbox['defaultCurrency'];
     data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
+    print(data);
     setState(() {});
   }
 
@@ -1000,9 +1001,8 @@ class _IndexState extends State<Index> {
                       children: [
                         Text(context.tr('total'), style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
-                            ? Text(formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}', style: TextStyle(fontSize: 16))
-                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' ${cashbox['defaultCurrencyName']}',
-                                style: TextStyle(fontSize: 16)),
+                            ? Text(formatMoney(data['totalPrice']) + ' ${data['currencyName']}', style: TextStyle(fontSize: 16))
+                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' ${data['currencyName']}', style: TextStyle(fontSize: 16)),
                       ],
                     ),
                   ),
@@ -1055,7 +1055,7 @@ class _IndexState extends State<Index> {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          formatMoney(data['totalPrice']) + ' ${cashbox['defaultCurrencyName']}',
+                          formatMoney(data['totalPrice']) + ' ${data['currencyName']}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1148,7 +1148,7 @@ class _IndexState extends State<Index> {
                                     ),
                                   ),
                                   Text(
-                                    '${formatMoney(data["itemsList"][i]['totalPrice'])} ${cashbox['defaultCurrencyName']}',
+                                    '${formatMoney(data["itemsList"][i]['totalPrice'])} ${data['currencyName']}',
                                     style: TextStyle(fontWeight: FontWeight.w600, color: mainColor, fontSize: 16),
                                   ),
                                 ],
@@ -1190,8 +1190,10 @@ class _IndexState extends State<Index> {
                   width: MediaQuery.of(context).size.width * 0.4,
                   child: ElevatedButton(
                     onPressed: data["itemsList"].length > 0
-                        ? () {
-                            context.go('/cashier/payment', extra: data);
+                        ? () async {
+                            dynamic result = await context.push('/cashier/payment', extra: data);
+                            print(result);
+                            deleteAllProducts();
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -1290,7 +1292,7 @@ class _IndexState extends State<Index> {
       loading = true;
     });
 
-    final cashbox = jsonDecode(storage.read('cashbox')!);
+    final cashbox = (storage.read('cashbox')!);
     setState(() {
       expenseOut['cashboxId'] = cashbox['cashboxId'].toString();
       expenseOut['posId'] = cashbox['posId'].toString();

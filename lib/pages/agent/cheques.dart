@@ -48,7 +48,7 @@ class _AgentHistoryState extends State<AgentHistory> {
   getCheques() async {
     setState(() {});
 
-    dynamic cashbox = jsonDecode(storage.read('cashbox')!);
+    dynamic cashbox = (storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
     });

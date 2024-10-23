@@ -26,7 +26,7 @@ class _XReportState extends State<XReport> {
   Map cashbox = {};
 
   getReport() async {
-    final prefsCashbox = jsonDecode(storage.read('cashbox')!);
+    final prefsCashbox = (storage.read('cashbox')!);
     int cashboxId = 0;
     if (prefsCashbox['id'] != null) {
       cashboxId = prefsCashbox['id'];

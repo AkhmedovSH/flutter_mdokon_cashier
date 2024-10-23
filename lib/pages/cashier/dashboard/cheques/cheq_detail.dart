@@ -154,7 +154,7 @@ class _CheqDetailState extends State<CheqDetail> {
     dynamic response = await get('/services/desktop/api/cheque-byId/${widget.id}');
     //print(response);
     setState(() {
-      cashbox = jsonDecode(storage.read('cashbox')!);
+      cashbox = (storage.read('cashbox')!);
       cheque = response;
       itemsList = response['itemsList'];
       transactionsList = response['transactionsList'];

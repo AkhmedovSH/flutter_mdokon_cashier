@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/user_model.dart';
 import 'package:provider/provider.dart';
@@ -134,26 +136,36 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 60,
-      decoration: BoxDecoration(
-        color: CustomTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(21),
-      ),
-      child: Row(
-        children: [
-          Icon(icon),
-          SizedBox(width: 10),
-          Text(
-            context.tr(title),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    GetStorage storage = GetStorage();
+    return GestureDetector(
+      onTap: () {
+        storage.remove('user');
+        storage.remove('access_token');
+        storage.remove('lastLogin');
+        context.pushReplacement('/auth');
+        //print(response);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: 60,
+        decoration: BoxDecoration(
+          color: CustomTheme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(21),
+        ),
+        child: Row(
+          children: [
+            Icon(icon),
+            SizedBox(width: 10),
+            Text(
+              context.tr(title),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

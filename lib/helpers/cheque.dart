@@ -55,7 +55,7 @@ printCheque(cheque, itemsList) async {
   // final connectivityResult = await (Connectivity().checkConnectivity());
   // if (connectivityResult == ConnectivityResult.bluetooth) {
   GetStorage storage = GetStorage();
-  Map cashbox = jsonDecode(storage.read('cashbox')!);
+  Map cashbox = (storage.read('cashbox')!);
   Map settings = jsonDecode(storage.read('settings'));
   List<int> bytes = [];
   print(111);

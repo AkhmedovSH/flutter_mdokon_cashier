@@ -145,7 +145,7 @@ class _SearchState extends State<Search> {
   @override
   void initState() {
     super.initState();
-    cashbox = jsonDecode(storage.read('cashbox')!);
+    cashbox = (storage.read('cashbox')!);
   }
 
   @override
@@ -292,7 +292,7 @@ class _SearchState extends State<Search> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${products[i]['productName']}',
+                                '${item['productName']}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -313,7 +313,7 @@ class _SearchState extends State<Search> {
                                         SizedBox(
                                           width: MediaQuery.of(context).size.width * 0.5,
                                           child: Text(
-                                            '${formatMoney(widget.arguments!['activePrice'] == 1 ? products[i]['wholesalePrice'] : products[i]['salePrice']) ?? 0} ${widget.arguments!['currencyName']}',
+                                            '${formatMoney(widget.arguments!['activePrice'] == 1 ? item['wholesalePrice'] : item['salePrice']) ?? 0} ${widget.arguments!['currencyName']}',
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
@@ -322,7 +322,7 @@ class _SearchState extends State<Search> {
                                         ),
                                         const SizedBox(height: 5),
                                         Text(
-                                          '${context.tr('balance')}: ${formatMoney(products[i]['balance']) ?? 0}',
+                                          '${context.tr('balance')}: ${formatMoney(item['balance']) ?? 0}',
                                           style: TextStyle(color: grey),
                                         ),
                                       ],
@@ -346,7 +346,7 @@ class _SearchState extends State<Search> {
                                                 // initialValue: (products[i]['balance'] ?? 0).round().toString(),
                                                 onChanged: (value) {
                                                   if (value != '') {
-                                                    products[i]['quantity'] = value;
+                                                    item['quantity'] = value;
                                                   }
                                                 },
                                                 cursorColor: mainColor,

@@ -61,18 +61,15 @@ class _SplashState extends State<Splash> {
       var lastLogin = jsonDecode(storage.read('lastLogin'));
       print(daysBetween(lastLogin, DateTime.now()));
       if (daysBetween(lastLogin, DateTime.now()) == 0) {
-        print(storage.read('role'));
-        print(storage.read('role') == "ROLE_CASHIER");
-        print(storage.read('role') == '"ROLE_CASHIER"');
         switch (storage.read('role')) {
-          case '"ROLE_CASHIER"':
-            context.pushReplacement('/director');
-            // context.pushReplacement('/cashier');
+          case "ROLE_CASHIER":
+            // context.pushReplacement('/director');
+            context.pushReplacement('/cashier');
             break;
-          case '"ROLE_OWNER"':
+          case "ROLE_OWNER":
             context.pushReplacement('/director');
             break;
-          case '"ROLE_AGENT"':
+          case "ROLE_AGENT":
             context.pushReplacement('/agent');
             break;
           default:
@@ -80,7 +77,7 @@ class _SplashState extends State<Splash> {
             break;
         }
       } else {
-        context.pushReplacement('/auth');
+      context.pushReplacement('/auth');
       }
     } else {
       context.pushReplacement('/auth');
