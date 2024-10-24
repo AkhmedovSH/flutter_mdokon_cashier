@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -168,11 +169,16 @@ formatPhone(phone) {
 }
 
 formatMoney(amount, {decimalDigits = 0}) {
+  GetStorage storage = GetStorage();
+
+  if (decimalDigits == 0) {
+    decimalDigits = storage.read('decimalDigits').round();
+  }
   if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
-    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits, locale: 'UZ').format(amount);
+    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits).format(amount);
   } else {
-    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits, locale: 'UZ').format(0);
+    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits).format(0);
   }
 }
 

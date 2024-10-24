@@ -93,7 +93,7 @@ class Settings extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 18,
-                                color: userModel.user['posBalance'] > 0 ? success : danger,
+                                color: userModel.user['posBalance'] >= 0 ? success : danger,
                               ),
                             ),
                           ],

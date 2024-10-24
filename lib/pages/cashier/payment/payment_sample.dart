@@ -5,7 +5,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
@@ -199,7 +198,7 @@ class _PaymentSampleState extends State<PaymentSample> {
 
     if (response != null && response['success']) {
       setState(() {});
-      context.go('/cashier');
+      Navigator.of(context).pop(true);
     }
   }
 
@@ -207,6 +206,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     setState(() {
       data = widget.data;
       data['change'] = 0;
+      print(data['totalPrice']);
       data['text'] = data['totalPrice'].toString();
     });
     cashController.text = '';

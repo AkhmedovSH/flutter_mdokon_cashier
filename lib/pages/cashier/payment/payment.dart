@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 
 import 'package:kassa/helpers/helper.dart';
 import 'package:unicons/unicons.dart';
@@ -17,6 +18,7 @@ class Payment extends StatefulWidget {
 }
 
 class _PaymentState extends State<Payment> {
+  GetStorage storage = GetStorage();
   int currentIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final cashController = TextEditingController();
@@ -45,7 +47,8 @@ class _PaymentState extends State<Payment> {
   void initState() {
     super.initState();
     data = widget.data;
-    cashController.text = double.parse(data['text']).toStringAsFixed(0);
+    // cashController.text = double.parse(data['text']).toStringAsFixed(storage.read('decimalDigits').round());
+    cashController.text = double.parse(data['text']).toString();
     Timer(Duration(milliseconds: 300), () {
       calculateChange();
     });
@@ -71,7 +74,7 @@ class _PaymentState extends State<Payment> {
           Container(
             margin: EdgeInsets.only(bottom: 10),
             child: Text(
-              '${formatMoney(data['totalPrice'])} ${context.tr('sum')}',
+              '${formatMoney(data['totalPrice'])} ${data['currencyName']}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -113,7 +116,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${context.tr('sum')}',
+                        hintText: '0.00 ${data['currencyName']}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -148,7 +151,7 @@ class _PaymentState extends State<Payment> {
                         focusedBorder: inputFocusBorder,
                         errorBorder: inputErrorBorder,
                         focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${context.tr('sum')}',
+                        hintText: '0.00 ${data['currencyName']}',
                         hintStyle: TextStyle(color: a2),
                       ),
                     ),
@@ -165,7 +168,7 @@ class _PaymentState extends State<Payment> {
           Container(
             margin: EdgeInsets.only(bottom: 10, top: 5),
             child: Text(
-              '${formatMoney(data['change'])} ${context.tr('sum')}',
+              '${formatMoney(data['change'])} ${data['currencyName']}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

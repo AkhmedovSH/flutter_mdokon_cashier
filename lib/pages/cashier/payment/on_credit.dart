@@ -323,7 +323,7 @@ class _OnCreditState extends State<OnCredit> {
               Container(
                 margin: EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '${formatMoney(data['totalPrice'])} ${context.tr('sum')}',
+                  '${formatMoney(data['totalPrice'])} ${data['currencyName']}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -370,7 +370,7 @@ class _OnCreditState extends State<OnCredit> {
                             errorBorder: inputErrorBorder,
                             focusedErrorBorder: inputErrorBorder,
                             focusColor: blue,
-                            hintText: '0.00 ${context.tr('sum')}',
+                            hintText: '0.00 ${data['currencyName']}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
@@ -402,7 +402,7 @@ class _OnCreditState extends State<OnCredit> {
                             focusedBorder: inputFocusBorder,
                             errorBorder: inputErrorBorder,
                             focusedErrorBorder: inputErrorBorder,
-                            hintText: '0.00 ${context.tr('sum')}',
+                            hintText: '0.00 ${data['currencyName']}',
                             hintStyle: TextStyle(color: a2),
                           ),
                         ),
@@ -419,7 +419,7 @@ class _OnCreditState extends State<OnCredit> {
               Container(
                 margin: EdgeInsets.only(bottom: 10, top: 5),
                 child: Text(
-                  '${formatMoney(data['change'])} ${context.tr('sum')}',
+                  '${formatMoney(data['change'])} ${data['currencyName']}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

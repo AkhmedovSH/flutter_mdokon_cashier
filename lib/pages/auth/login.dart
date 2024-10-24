@@ -79,20 +79,19 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
     if (checker == 'ROLE_CASHIER') {
       await getAccessPos();
-      // final userSettings = await get("/services/web/api/user-settings");
-      // final posBalance = await get("/services/web/api/pos-balance");
-      // print(posBalance);
-      // if (userSettings != null && userSettings['settings'] != null) {
-      //   Provider.of<UserModel>(context, listen: false).setUser({
-      //     ...storage.read('user'),
-      //     'posId': jsonDecode(userSettings['settings'])['posId'],
-      //     'posBalance': posBalance,
-      //   });
-      // }
-      // context.pushReplacement('/director');
     } else if (checker == 'ROLE_AGENT') {
       await getAgentPosId();
     } else if (checker == 'ROLE_OWNER') {
+      final userSettings = await get("/services/web/api/user-settings");
+      final posBalance = await get("/services/web/api/pos-balance");
+      print(posBalance);
+      if (userSettings != null && userSettings['settings'] != null) {
+        Provider.of<UserModel>(context, listen: false).setUser({
+          ...storage.read('user'),
+          'posId': jsonDecode(userSettings['settings'])['posId'],
+          'posBalance': posBalance,
+        });
+      }
       context.pushReplacement('/director');
     } else {
       showDangerToast('error', description: 'Нет доступа');

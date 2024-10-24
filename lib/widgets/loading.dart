@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '/helpers/helper.dart';
-
 class LoadingWidget extends StatelessWidget {
   const LoadingWidget({super.key});
 
@@ -9,9 +7,7 @@ class LoadingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      child: CircularProgressIndicator(
-        color: mainColor,
-      ),
+      child: CircularProgressIndicator.adaptive(),
     );
   }
 }

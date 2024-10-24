@@ -205,7 +205,7 @@ class _SettingsState extends State<Settings> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      context.tr('settings_description_11'),
+                      context.tr('settings_description_11', args: ['${formatMoney(500.99999)}']),
                       style: TextStyle(
                         fontSize: 12,
                       ),
@@ -214,14 +214,16 @@ class _SettingsState extends State<Settings> {
                       min: 0,
                       max: 5,
                       value: settingsModel.decimalDigits,
-                      interval: 20,
+                      interval: 1,
                       showTicks: true,
                       showLabels: true,
-                      enableTooltip: true,
-                      minorTicksPerInterval: 1,
+                      enableTooltip: false,
+                      showDividers: true,
+                      minorTicksPerInterval: 0,
                       stepSize: 1,
+                      activeColor: mainColor,
+                      inactiveColor: Colors.grey.shade200,
                       onChanged: (dynamic value) {
-                        print(value);
                         settingsModel.updateSetting('decimalDigits', value);
                       },
                     ),

@@ -1192,8 +1192,9 @@ class _IndexState extends State<Index> {
                     onPressed: data["itemsList"].length > 0
                         ? () async {
                             dynamic result = await context.push('/cashier/payment', extra: data);
-                            print(result);
-                            deleteAllProducts();
+                            if (result == true) {
+                              deleteAllProducts();
+                            }
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
