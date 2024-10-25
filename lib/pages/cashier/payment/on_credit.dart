@@ -437,7 +437,6 @@ class _OnCreditState extends State<OnCredit> {
     await getClients();
     final result = await showDialog(
         context: context,
-        useSafeArea: true,
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
@@ -448,69 +447,70 @@ class _OnCreditState extends State<OnCredit> {
               actionsPadding: EdgeInsets.all(0),
               buttonPadding: EdgeInsets.all(0),
               scrollable: true,
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.6,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Table(
-                        border: TableBorder(
-                          horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
-                        ),
-                        children: [
-                          TableRow(
-                            children: [
-                              Text(context.tr('contact')),
-                              Text(context.tr('number')),
-                              Text(context.tr('comment')),
-                            ],
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Table(
+                          border: TableBorder(
+                            horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                           ),
-                          for (var i = 0; i < clients.length; i++)
+                          children: [
                             TableRow(
                               children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    selectDebtorClient(setState, i);
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                    child: Text(
-                                      '${clients[i]['name']}',
-                                      style: TextStyle(
-                                        overflow: TextOverflow.ellipsis,
+                                Text(context.tr('contact')),
+                                Text(context.tr('number')),
+                                Text(context.tr('comment')),
+                              ],
+                            ),
+                            for (var i = 0; i < clients.length; i++)
+                              TableRow(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      selectDebtorClient(setState, i);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                      child: Text(
+                                        '${clients[i]['name']}',
+                                        style: TextStyle(
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    selectDebtorClient(setState, i);
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                    child: Text('${clients[i]['phone1']}'),
+                                  GestureDetector(
+                                    onTap: () {
+                                      selectDebtorClient(setState, i);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                      child: Text('${clients[i]['phone1']}'),
+                                    ),
                                   ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    selectDebtorClient(setState, i);
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                    child: Text(clients[i]['comment'] ?? ''),
+                                  GestureDetector(
+                                    onTap: () {
+                                      selectDebtorClient(setState, i);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                      child: Text(clients[i]['comment'] ?? ''),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ],
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
               actions: [
                 Container(

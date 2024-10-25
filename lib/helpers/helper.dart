@@ -171,7 +171,7 @@ formatPhone(phone) {
 formatMoney(amount, {decimalDigits = 0}) {
   GetStorage storage = GetStorage();
 
-  if (decimalDigits == 0) {
+  if (decimalDigits == 0 && storage.read('decimalDigits') != null) {
     decimalDigits = storage.read('decimalDigits').round();
   }
   if (amount != null && amount != "") {

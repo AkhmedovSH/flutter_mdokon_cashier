@@ -3,79 +3,79 @@ import 'helper.dart';
 
 // Light Theme
 final ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    primaryColor: mainColor,
-    primaryColorLight: mainColor,
-    scaffoldBackgroundColor: Colors.white,
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: mainColor,
-      selectionHandleColor: mainColor,
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: white,
-      border: inputBorder,
-      enabledBorder: inputBorder,
-      focusedErrorBorder: inputErrorBorder,
-      focusedBorder: inputFocusBorder,
-    ),
-    datePickerTheme: DatePickerThemeData(
-      backgroundColor: Colors.white,
-      headerBackgroundColor: mainColor,
-      headerForegroundColor: Colors.white,
-      rangePickerBackgroundColor: Colors.grey[200],
-      rangePickerHeaderBackgroundColor: mainColor,
-      rangePickerHeaderForegroundColor: Colors.white,
-    ),
+  useMaterial3: true,
+  brightness: Brightness.light,
+  primaryColor: mainColor,
+  primaryColorLight: mainColor,
+  scaffoldBackgroundColor: Colors.white,
+  textSelectionTheme: TextSelectionThemeData(
+    cursorColor: mainColor,
+    selectionHandleColor: mainColor,
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: white,
+    border: inputBorder,
+    enabledBorder: inputBorder,
+    focusedErrorBorder: inputErrorBorder,
+    focusedBorder: inputFocusBorder,
+  ),
+  datePickerTheme: DatePickerThemeData(
+    backgroundColor: Colors.white,
+    headerBackgroundColor: mainColor,
+    headerForegroundColor: Colors.white,
+    rangePickerBackgroundColor: Colors.grey[200],
+    rangePickerHeaderBackgroundColor: mainColor,
+    rangePickerHeaderForegroundColor: Colors.white,
+  ),
 
-    // Цвета для кнопок
-    buttonTheme: const ButtonThemeData(
-      buttonColor: Colors.blue, // цвет кнопок
-      textTheme: ButtonTextTheme.primary, // стиль текста кнопок
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: mainColor,
-        foregroundColor: white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    ),
-    dialogTheme: const DialogTheme(
+  // Цвета для кнопок
+  buttonTheme: const ButtonThemeData(
+    buttonColor: Colors.blue, // цвет кнопок
+    textTheme: ButtonTextTheme.primary, // стиль текста кнопок
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: mainColor,
+      foregroundColor: white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(
-          Radius.circular(20),
-        ),
-        side: BorderSide(color: Colors.red),
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
-    dataTableTheme: DataTableThemeData(
-      columnSpacing: 10,
-      headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 233, 233, 233)),
-      headingTextStyle: TextStyle(
-        color: black,
-        fontWeight: FontWeight.bold,
-      ),
-      dataRowColor: WidgetStateProperty.all(white),
-      dataTextStyle: TextStyle(
-        color: black,
+  ),
+  dialogTheme: const DialogTheme(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(20),
       ),
     ),
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: mainColor,
-    )
+  ),
+  dataTableTheme: DataTableThemeData(
+    columnSpacing: 10,
+    headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 233, 233, 233)),
+    headingTextStyle: TextStyle(
+      color: black,
+      fontWeight: FontWeight.bold,
+    ),
+    dataRowColor: WidgetStateProperty.all(white),
+    dataTextStyle: TextStyle(
+      color: black,
+    ),
+  ),
+  progressIndicatorTheme: ProgressIndicatorThemeData(
+    color: mainColor,
+  ),
+  dialogBackgroundColor: white,
 
-    // iconTheme: IconThemeData(
-    //   color: white,
-    // ),
-    // iconButtonTheme: IconButtonThemeData(
-    //   style: ButtonStyle(
-    //     iconColor: WidgetStateProperty.all(Colors.white),
-    //   ),
-    // ),
-    );
+  // iconTheme: IconThemeData(
+  //   color: white,
+  // ),
+  // iconButtonTheme: IconButtonThemeData(
+  //   style: ButtonStyle(
+  //     iconColor: WidgetStateProperty.all(Colors.white),
+  //   ),
+  // ),
+);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
