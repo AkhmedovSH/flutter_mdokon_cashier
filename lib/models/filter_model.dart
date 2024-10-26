@@ -7,7 +7,7 @@ class FilterModel extends ChangeNotifier {
   Map<String, dynamic> filterData = {};
 
   Map<String, dynamic> get currentFilterData => filterData;
-  int get posId => storage.read('user')['posId'];
+  String get posId => storage.read('user')['posId'];
 
   void initFilterData(Map<String, dynamic> payload) {
     filterData = payload;

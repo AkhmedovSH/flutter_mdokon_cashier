@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:get_storage/get_storage.dart';
+
 import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +14,8 @@ import 'models/settings_model.dart';
 import 'models/user_model.dart';
 import 'models/data_model.dart';
 import 'models/filter_model.dart';
+import 'package:kassa/models/director/documents_in_model.dart';
+import 'package:kassa/models/director/inventory_model.dart';
 
 import 'helpers/routes/index.dart';
 import 'helpers/themes.dart';
@@ -59,6 +62,8 @@ void main() async {
           ),
           ChangeNotifierProvider(create: (_) => DataModel()),
           ChangeNotifierProvider(create: (_) => FilterModel()),
+          ChangeNotifierProvider(create: (_) => DocumentsInModel()),
+          ChangeNotifierProvider(create: (_) => InventoryModel()),
         ],
         child: const MyApp(),
       ),

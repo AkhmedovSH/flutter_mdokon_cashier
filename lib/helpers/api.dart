@@ -20,17 +20,19 @@ var dio = Dio(options);
 
 checkToken() async {
   if (storage.read('lastLogin') != null) {
-    var lastLogin = jsonDecode(storage.read('lastLogin'));
-    if (daysBetween(lastLogin, DateTime.now()) >= 1) {
+    var lastLogin = (storage.read('lastLogin'));
+    if (minutesBetween(lastLogin, DateTime.now()) >= 55) {
       final response = await post('/auth/login', jsonDecode(storage.read('user')), isGuest: true);
       if (response != null) {
         var lastLogin = {
           'year': DateTime.now().year,
           'month': DateTime.now().month,
           'day': DateTime.now().day,
+          'hour': DateTime.now().hour,
+          'minute': DateTime.now().minute,
         };
         storage.write('access_token', response['access_token'].toString());
-        storage.write('lastLogin', jsonEncode(lastLogin));
+        storage.write('lastLogin', (lastLogin));
         return true;
       }
     }
@@ -70,7 +72,7 @@ Future pget(String url, {payload, isGuest = false}) async {
     );
     return {
       'data': response.data,
-      'total': response.headers.value('x-total-count'),
+      'total': int.parse(response.headers.value('x-total-count').toString()),
     };
   } catch (e) {
     statuscheker(e);

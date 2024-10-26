@@ -120,6 +120,12 @@ int daysBetween(from, DateTime to) {
   return (to.difference(from).inHours / 24).round();
 }
 
+int minutesBetween(from, DateTime to) {
+  from = DateTime(from['year'], from['month'], from['day'], from['hour'], from['minute']);
+  to = DateTime(to.year, to.month, to.day, to.hour, to.minute);
+  return to.difference(from).inMinutes;
+}
+
 formatDate(date) {
   if (date == null) {
     return '';

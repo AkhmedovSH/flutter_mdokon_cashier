@@ -52,7 +52,7 @@ final ThemeData lightTheme = ThemeData(
   ),
   dataTableTheme: DataTableThemeData(
     columnSpacing: 10,
-    headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 233, 233, 233)),
+    headingRowColor: WidgetStateProperty.all(Colors.grey.shade200),
     headingTextStyle: TextStyle(
       color: black,
       fontWeight: FontWeight.bold,

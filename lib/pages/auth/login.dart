@@ -40,61 +40,65 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   login() async {
     FocusScope.of(context).unfocus();
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
-    final data = await post('/auth/login', payload, isGuest: true);
-    if (data == null) {
-      Provider.of<LoadingModel>(context, listen: false).hideLoader();
-      return;
-    }
-    print(data);
-    print(data['access_token']);
-    storage.write('access_token', data['access_token']);
-
-    var lastLogin = {
-      'year': DateTime.now().year,
-      'month': DateTime.now().month,
-      'day': DateTime.now().day,
-      'hour': DateTime.now().hour,
-      'minute': DateTime.now().minute,
-    };
-    storage.write('lastLogin', jsonEncode(lastLogin));
-
-    final Map account = await get('/services/uaa/api/account');
-    print(account);
-    Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
-
-    var checker = '';
-    for (var i = 0; i < account['authorities'].length; i++) {
-      if (account['authorities'][i] == "ROLE_CASHIER") {
-        checker = 'ROLE_CASHIER';
+    try {
+      final data = await post('/auth/login', payload, isGuest: true);
+      if (data == null) {
+        Provider.of<LoadingModel>(context, listen: false).hideLoader();
+        return;
       }
-      if (account['authorities'][i] == "ROLE_AGENT") {
-        checker = 'ROLE_AGENT';
-      }
-      if (account['authorities'][i] == "ROLE_OWNER") {
-        checker = 'ROLE_OWNER';
-      }
-    }
-    storage.write('user_roles', jsonEncode(account['authorities']));
-    storage.write('role', checker);
+      print(data);
+      print(data['access_token']);
+      storage.write('access_token', data['access_token']);
 
-    if (checker == 'ROLE_CASHIER') {
-      await getAccessPos();
-    } else if (checker == 'ROLE_AGENT') {
-      await getAgentPosId();
-    } else if (checker == 'ROLE_OWNER') {
-      final userSettings = await get("/services/web/api/user-settings");
-      final posBalance = await get("/services/web/api/pos-balance");
-      print(posBalance);
-      if (userSettings != null && userSettings['settings'] != null) {
-        Provider.of<UserModel>(context, listen: false).setUser({
-          ...storage.read('user'),
-          'posId': jsonDecode(userSettings['settings'])['posId'],
-          'posBalance': posBalance,
-        });
+      var lastLogin = {
+        'year': DateTime.now().year,
+        'month': DateTime.now().month,
+        'day': DateTime.now().day,
+        'hour': DateTime.now().hour,
+        'minute': DateTime.now().minute,
+      };
+      storage.write('lastLogin', (lastLogin));
+
+      final Map account = await get('/services/uaa/api/account');
+      print(account);
+      Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
+
+      var checker = '';
+      for (var i = 0; i < account['authorities'].length; i++) {
+        if (account['authorities'][i] == "ROLE_CASHIER") {
+          checker = 'ROLE_CASHIER';
+        }
+        if (account['authorities'][i] == "ROLE_AGENT") {
+          checker = 'ROLE_AGENT';
+        }
+        if (account['authorities'][i] == "ROLE_OWNER") {
+          checker = 'ROLE_OWNER';
+        }
       }
-      context.pushReplacement('/director');
-    } else {
-      showDangerToast('error', description: 'Нет доступа');
+      storage.write('user_roles', (account['authorities']));
+      storage.write('role', checker);
+
+      if (checker == 'ROLE_CASHIER') {
+        await getAccessPos();
+      } else if (checker == 'ROLE_AGENT') {
+        await getAgentPosId();
+      } else if (checker == 'ROLE_OWNER') {
+        final userSettings = await get("/services/web/api/user-settings");
+        final posBalance = await get("/services/web/api/pos-balance");
+        print(posBalance);
+        if (userSettings != null && userSettings['settings'] != null) {
+          Provider.of<UserModel>(context, listen: false).setUser({
+            ...storage.read('user'),
+            'posId': jsonDecode(userSettings['settings'])['posId'],
+            'posBalance': posBalance,
+          });
+        }
+        context.pushReplacement('/director');
+      } else {
+        showDangerToast('error', description: 'Нет доступа');
+      }
+    } catch (e) {
+      print(e);
     }
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }

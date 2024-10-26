@@ -20,7 +20,7 @@ class _OnCreditState extends State<OnCredit> {
   List clients = [];
   // Get.arguments
   Map data = {};
-  Map client = {'name': 'CLIENT'};
+  Map client = {'name': 'client'};
   final _formKey = GlobalKey<FormState>();
   final cashController = TextEditingController();
   final terminalController = TextEditingController();
@@ -107,7 +107,7 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 20, bottom: 5),
             child: Text(
-              '${context.tr('CLIENT')}:',
+              '${context.tr('client')}:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),

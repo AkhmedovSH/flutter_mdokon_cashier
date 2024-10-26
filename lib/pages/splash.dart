@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/models/data_model.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../helpers/api.dart';
@@ -58,12 +60,11 @@ class _SplashState extends State<Splash> {
 
   navigate() async {
     if (storage.read('lastLogin') != null && storage.read('user') != null) {
-      var lastLogin = jsonDecode(storage.read('lastLogin'));
-      print(daysBetween(lastLogin, DateTime.now()));
-      if (daysBetween(lastLogin, DateTime.now()) == 0) {
+      var lastLogin = (storage.read('lastLogin'));
+      if (minutesBetween(lastLogin, DateTime.now()) < 55) {
+        Provider.of<DataModel>(context, listen: false).getData();
         switch (storage.read('role')) {
           case "ROLE_CASHIER":
-            // context.pushReplacement('/director');
             context.pushReplacement('/cashier');
             break;
           case "ROLE_OWNER":
@@ -77,7 +78,7 @@ class _SplashState extends State<Splash> {
             break;
         }
       } else {
-      context.pushReplacement('/auth');
+        context.pushReplacement('/auth');
       }
     } else {
       context.pushReplacement('/auth');

@@ -159,7 +159,7 @@ class _PaymentState extends State<Payment> {
                 ],
               )),
           Text(
-            '${context.tr('CHANGE')}:',
+            '${context.tr('change')}:',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
