@@ -49,6 +49,7 @@ class _DocumentsInState extends State<DocumentsIn> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print(Provider.of<FilterModel>(context, listen: false).posId);
       Provider.of<FilterModel>(context, listen: false).initFilterData({
         'posId': Provider.of<FilterModel>(context, listen: false).posId,
         'startDate': formatDateTime(startDate),

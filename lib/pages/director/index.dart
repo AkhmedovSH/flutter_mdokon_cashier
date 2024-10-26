@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:unicons/unicons.dart';
 
-import './home/index.dart';
+import 'pos/index.dart';
 import './reports/index.dart';
 import './settings.dart';
 

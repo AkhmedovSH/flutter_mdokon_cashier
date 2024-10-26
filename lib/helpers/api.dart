@@ -22,7 +22,14 @@ checkToken() async {
   if (storage.read('lastLogin') != null) {
     var lastLogin = (storage.read('lastLogin'));
     if (minutesBetween(lastLogin, DateTime.now()) >= 55) {
-      final response = await post('/auth/login', jsonDecode(storage.read('user')), isGuest: true);
+      final response = await post(
+        '/auth/login',
+        {
+          "username": storage.read('user')['username'],
+          "password": storage.read('user')['password'],
+        },
+        isGuest: true,
+      );
       if (response != null) {
         var lastLogin = {
           'year': DateTime.now().year,
@@ -45,6 +52,8 @@ Future get(String url, {payload, isGuest = false}) async {
       await checkToken();
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
+    } else {
+      dio.options.headers["authorization"] = "";
     }
     print(hostUrl + url);
     final response = await dio.get(
@@ -64,6 +73,8 @@ Future pget(String url, {payload, isGuest = false}) async {
       await checkToken();
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
+    } else {
+      dio.options.headers["authorization"] = "";
     }
     print(hostUrl + url);
     final response = await dio.get(
@@ -86,6 +97,8 @@ Future post(String url, dynamic payload, {isGuest = false}) async {
       await checkToken();
       dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
       dio.options.headers["Accept"] = "application/json";
+    } else {
+      dio.options.headers["authorization"] = "";
     }
     final response = await dio.post(
       hostUrl + url,
