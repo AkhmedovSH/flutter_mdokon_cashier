@@ -61,12 +61,12 @@ class _SplashState extends State<Splash> {
     if (storage.read('lastLogin') != null && storage.read('user') != null) {
       var lastLogin = (storage.read('lastLogin'));
       if (minutesBetween(lastLogin, DateTime.now()) < 55) {
-        Provider.of<DataModel>(context, listen: false).getData();
         switch (storage.read('role')) {
           case "ROLE_CASHIER":
             context.pushReplacement('/cashier');
             break;
           case "ROLE_OWNER":
+            Provider.of<DataModel>(context, listen: false).getData();
             context.pushReplacement('/director');
             break;
           case "ROLE_AGENT":

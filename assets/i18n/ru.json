@@ -305,7 +305,7 @@
 	"size": "Поле должно быть меньше, чем {{size}}KB",
 	"product_added": "Товар уже добавлен",
 	"markup_sale": "Наценка продажная",
-	"overhead": "Накладной",
+	"overhead": "№ Накладной",
 	"price_tag": "Ценник",
 	"no_supplier_selected": "Поставщик не выбран",
 	"select_product": "Выбор товара",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/data_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/models/user_model.dart';
 import 'package:provider/provider.dart';
@@ -60,7 +61,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.write('lastLogin', (lastLogin));
 
       final Map account = await get('/services/uaa/api/account');
-      print(account);
       Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
 
       var checker = '';
@@ -85,14 +85,15 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       } else if (checker == 'ROLE_OWNER') {
         final userSettings = await get("/services/web/api/user-settings");
         final posBalance = await get("/services/web/api/pos-balance");
-        print(posBalance);
         if (userSettings != null && userSettings['settings'] != null) {
+          print(data['posId']);
           Provider.of<UserModel>(context, listen: false).setUser({
             ...storage.read('user'),
-            'posId': jsonDecode(userSettings['settings'])['posId'],
+            'posId': data['posId'],
             'posBalance': posBalance,
           });
         }
+        Provider.of<DataModel>(context, listen: false).getData();
         context.pushReplacement('/director');
       } else {
         showDangerToast('error', description: 'Нет доступа');
@@ -130,7 +131,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   getData() async {
     if (storage.read('user') != null) {
       var user = storage.read('user');
-      print(user);
       if (user['rememberMe'] != null && user['rememberMe']) {
         payload['username'] = user['username'];
         payload['password'] = user['password'];
@@ -218,6 +218,9 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                     payload['username'] = value;
                                   });
                                 },
+                                onTapOutside: (PointerDownEvent event) {
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                },
                                 cursorColor: mainColor,
                                 textInputAction: TextInputAction.next,
                                 scrollPadding: EdgeInsets.only(bottom: 200),
@@ -252,6 +255,9 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                   setState(() {
                                     payload['password'] = value;
                                   });
+                                },
+                                onTapOutside: (PointerDownEvent event) {
+                                  FocusManager.instance.primaryFocus?.unfocus();
                                 },
                                 // onFieldSubmitted: (val) {
                                 //   if (_formKey.currentState!.validate()) {

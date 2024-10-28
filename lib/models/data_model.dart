@@ -7,6 +7,10 @@ class DataModel extends ChangeNotifier {
   List<Map<String, dynamic>> productList = [];
   List<Map<String, dynamic>> poses = [];
   List<Map<String, dynamic>> organizations = [];
+  List<Map<String, dynamic>> currencies = [
+    {"id": 1, "name": "So`m"},
+    {"id": 2, "name": "USD"},
+  ];
 
   Map get currentItem => item;
   List<Map<String, dynamic>> get currentProductList => productList;
@@ -22,7 +26,10 @@ class DataModel extends ChangeNotifier {
   }
 
   Future<void> getData() async {
-    await Future.wait([fetchPoses(), fetchOrganizations()]);
+    await Future.wait([
+      fetchPoses(),
+      fetchOrganizations(),
+    ]);
     notifyListeners();
   }
 

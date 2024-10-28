@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
+import 'package:kassa/models/director/documents_in_model.dart';
 import 'package:kassa/models/filter_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
@@ -49,9 +50,12 @@ class _DocumentsInState extends State<DocumentsIn> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print(Provider.of<FilterModel>(context, listen: false).posId);
+      FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
+      DataModel dataModel = Provider.of<DataModel>(context, listen: false);
+      Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', filterModel.posId);
+      Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[0]['id']);
       Provider.of<FilterModel>(context, listen: false).initFilterData({
-        'posId': Provider.of<FilterModel>(context, listen: false).posId,
+        'posId': filterModel.posId,
         'startDate': formatDateTime(startDate),
         'endDate': formatDateTime(endDate),
         'organizationId': '',
@@ -236,7 +240,7 @@ class _DocumentsInState extends State<DocumentsIn> {
       children: [
         Dropdown(
           label: 'pos',
-          filterKey: 'pos_id',
+          filterKey: 'posId',
           items: Provider.of<DataModel>(context, listen: false).poses,
         ),
         // Dropdown(

@@ -41,7 +41,12 @@ class _YearState extends State<Year> {
               return DropdownButtonHideUnderline(
                 child: DropdownButton2<String>(
                   value: filterModel.currentFilterData['start_date'].toString(),
-                  iconStyleData: const IconStyleData(icon: Icon(UniconsLine.angle_down)),
+                  iconStyleData: const IconStyleData(
+                    icon: Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(UniconsLine.angle_down),
+                    ),
+                  ),
                   dropdownStyleData: DropdownStyleData(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
