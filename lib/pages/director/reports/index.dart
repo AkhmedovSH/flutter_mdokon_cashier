@@ -23,9 +23,14 @@ class Report extends StatelessWidget {
             children: [
               SizedBox(height: 15),
               CardItem(
-                title: 'cashboxes',
-                icon: UniconsLine.shop,
-                routeName: '/dashboard/cashboxes',
+                title: 'balance_report',
+                icon: UniconsLine.chart_pie_alt,
+                routeName: '/director/balance',
+              ),
+              CardItem(
+                title: 'sales_report',
+                icon: UniconsLine.chart_pie_alt,
+                routeName: '/director/sales',
               ),
             ],
           ),

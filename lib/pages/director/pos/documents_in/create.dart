@@ -24,7 +24,6 @@ class DocumentsInCreate extends StatelessWidget {
         leading: true,
       ),
       body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 12),
           child: Column(
@@ -87,14 +86,14 @@ class DocumentsInCreate extends StatelessWidget {
                     DataColumn(
                       label: SizedBox(
                         width: 100,
-                        child: Text(context.tr('supplier')),
+                        child: Text(context.tr('barcode')),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 120,
                         child: Text(
-                          context.tr('receipt_amount'),
+                          context.tr('residue'),
                           textAlign: TextAlign.end,
                         ),
                       ),
@@ -134,7 +133,6 @@ class DocumentsInCreate extends StatelessWidget {
                     ),
                   ],
                   rows: [
-                    // ListView.builder(itemBuilder: () {}),
                     // for (var i = 1; i < data.length; i++)
                     //   DataRow(
                     //     cells: [

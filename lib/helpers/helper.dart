@@ -126,6 +126,10 @@ int minutesBetween(from, DateTime to) {
   return to.difference(from).inMinutes;
 }
 
+String formatDateTime(date, {format = "yyyy-MM-dd"}) {
+  return DateFormat(format).format(date);
+}
+
 formatDate(date) {
   if (date == null) {
     return '';
@@ -134,9 +138,8 @@ formatDate(date) {
   return DateFormat("dd.MM.yy HH:mm").format(rawDate);
 }
 
-String formatDateBackend(date) {
-  DateTime rawDate = DateTime.parse(date);
-  return DateFormat("yyyy-MM-dd").format(rawDate);
+String formatDateBackend(date, {format = "yyyy-MM-dd"}) {
+  return DateFormat(format).format(date);
 }
 
 formatDateMonth(date, {format = "dd.MM.yyyy"}) {
@@ -147,10 +150,6 @@ formatDateMonth(date, {format = "dd.MM.yyyy"}) {
 formatDateHour(date) {
   DateTime rawDate = DateTime.parse(date);
   return DateFormat("HH:mm").format(rawDate);
-}
-
-String formatDateTime(date, {format = "yyyy-MM-dd"}) {
-  return DateFormat(format).format(date);
 }
 
 formatUnixTime(unixTime) {

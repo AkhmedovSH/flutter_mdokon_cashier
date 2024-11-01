@@ -6,7 +6,13 @@ import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Date extends StatefulWidget {
-  const Date({super.key});
+  final String label;
+  final String filterKey;
+  const Date({
+    super.key,
+    required this.label,
+    required this.filterKey,
+  });
 
   @override
   State<Date> createState() => _DateState();
@@ -15,7 +21,8 @@ class Date extends StatefulWidget {
 class _DateState extends State<Date> {
   selectDate(BuildContext context) async {
     FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
-    DateTime date = DateTime.parse(filterModel.currentFilterData['date']);
+    DateTime date =
+        filterModel.currentFilterData[widget.filterKey] != '' ? DateTime.parse(filterModel.currentFilterData[widget.filterKey]) : DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: date,
@@ -24,7 +31,7 @@ class _DateState extends State<Date> {
       currentDate: DateTime.now(),
     );
     if (mounted && picked != null) {
-      filterModel.setFilterData('date', formatDateTime(picked));
+      filterModel.setFilterData(widget.filterKey, formatDateTime(picked));
     }
   }
 
@@ -33,12 +40,16 @@ class _DateState extends State<Date> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Label(text: 'date'),
+        Label(text: widget.label),
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
           child: Consumer<FilterModel>(
             builder: (context, filterModel, chilld) {
+              bool format = true;
+              if (filterModel.currentFilterData[widget.filterKey] == '') {
+                format = false;
+              }
               return GestureDetector(
                 onTap: () {
                   selectDate(context);
@@ -56,7 +67,7 @@ class _DateState extends State<Date> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${formatDateMonth(filterModel.currentFilterData['date'])}',
+                        format ? '${formatDateMonth(filterModel.currentFilterData[widget.filterKey])}' : '',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

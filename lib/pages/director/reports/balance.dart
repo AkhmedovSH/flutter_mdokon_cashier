@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
@@ -8,33 +7,32 @@ import 'package:kassa/models/director/documents_in_model.dart';
 import 'package:kassa/models/filter_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
+import 'package:kassa/widgets/filter/date.dart';
 import 'package:kassa/widgets/filter/dropdown.dart';
-import 'package:kassa/widgets/filter/period.dart';
+import 'package:kassa/widgets/filter/search.dart';
 import 'package:kassa/widgets/table/table.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-class DocumentsIn extends StatefulWidget {
-  const DocumentsIn({super.key});
+class PosBalance extends StatefulWidget {
+  const PosBalance({super.key});
 
   @override
-  _DocumentsInState createState() => _DocumentsInState();
+  _PosBalanceState createState() => _PosBalanceState();
 }
 
-class _DocumentsInState extends State<DocumentsIn> {
-  DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month - 1, DateTime.now().day);
-  DateTime endDate = DateTime.now();
-
+class _PosBalanceState extends State<PosBalance> {
   int totalCount = 0;
   List data = [];
 
   Future<void> getData() async {
     Provider.of<LoadingModel>(context, listen: false).showLoader();
-    print(Provider.of<FilterModel>(context, listen: false).currentFilterData);
+    FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
     final response = await pget(
-      '/services/web/api/documents-in-pageList',
-      payload: Provider.of<FilterModel>(context, listen: false).currentFilterData,
+      '/services/web/api/report-balance-product/${filterModel.currentFilterData['currencyId']}',
+      payload: filterModel.currentFilterData,
     );
+    print(response);
     if (mounted) {
       if (httpOk(response)) {
         setState(() {
@@ -56,11 +54,12 @@ class _DocumentsInState extends State<DocumentsIn> {
       Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[0]['id']);
       Provider.of<FilterModel>(context, listen: false).initFilterData({
         'posId': filterModel.posId,
-        'startDate': formatDateTime(startDate),
-        'endDate': formatDateTime(endDate),
         'organizationId': '',
+        'seasonal': '',
+        'dateBalance': '',
+        'currencyId': 1,
         'search': '',
-        'page': 1,
+        'page': 0,
       });
       getData();
     });
@@ -70,16 +69,9 @@ class _DocumentsInState extends State<DocumentsIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'documents_in',
+        title: 'balance_report',
         leading: true,
         actions: [
-          IconButton(
-            tooltip: context.tr('create'),
-            onPressed: () {
-              context.go('/director/documents-in/create');
-            },
-            icon: const Icon(UniconsLine.plus_circle),
-          ),
           IconButton(
             tooltip: context.tr('filter'),
             onPressed: () async {
@@ -113,15 +105,15 @@ class _DocumentsInState extends State<DocumentsIn> {
                 ),
                 DataColumn(
                   label: SizedBox(
-                    width: 100,
-                    child: Text(context.tr('supplier')),
+                    width: 200,
+                    child: Text(context.tr('name_of_product')),
                   ),
                 ),
                 DataColumn(
                   label: SizedBox(
-                    width: 120,
+                    width: 150,
                     child: Text(
-                      context.tr('receipt_amount'),
+                      context.tr('barcode'),
                       textAlign: TextAlign.end,
                     ),
                   ),
@@ -130,23 +122,8 @@ class _DocumentsInState extends State<DocumentsIn> {
                   label: SizedBox(
                     width: 120,
                     child: Text(
-                      context.tr('sale_amount'),
+                      context.tr('quantity'),
                       textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 80,
-                    child: Text(context.tr('currency')),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 140,
-                    child: Text(
-                      context.tr('date_of_receipt'),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
@@ -154,7 +131,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                   label: SizedBox(
                     width: 100,
                     child: Text(
-                      context.tr('received_by'),
+                      context.tr('total_amount'),
                       textAlign: TextAlign.end,
                     ),
                   ),
@@ -178,15 +155,23 @@ class _DocumentsInState extends State<DocumentsIn> {
                       ),
                       DataCell(
                         SizedBox(
-                          width: 100,
-                          child: Text('${data[i]['organizationName']}'),
+                          width: 200,
+                          child: Tooltip(
+                            message: data[i]['productName'],
+                            triggerMode: TooltipTriggerMode.tap,
+                            child: Text(
+                              '${data[i]['productName']}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
                       ),
                       DataCell(
                         SizedBox(
-                          width: 120,
+                          width: 150,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
+                            '${data[i]['productBarcode']}',
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -195,23 +180,8 @@ class _DocumentsInState extends State<DocumentsIn> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
+                            '${formatMoney(data[i]['balance'])} ${data[i]['uomName']}',
                             textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: Text('${data[i]['currencyName']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 140,
-                          child: Text(
-                            '${formatDate(data[i]['createdDate'])}',
-                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
@@ -219,7 +189,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                         SizedBox(
                           width: 100,
                           child: Text(
-                            '${data[i]['createdBy'] ?? ''}',
+                            '${formatMoney(data[i]['totalAmount'])}',
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -238,11 +208,32 @@ class _DocumentsInState extends State<DocumentsIn> {
     return await showFilterModal(
       context,
       children: [
+        Search(),
         Dropdown(
           label: 'pos',
           filterKey: 'posId',
           items: Provider.of<DataModel>(context, listen: false).poses,
         ),
+        Dropdown(
+          label: 'currency',
+          filterKey: 'currencyId',
+          items: Provider.of<DataModel>(context, listen: false).currencies,
+        ),
+        Dropdown(
+          label: 'organization',
+          filterKey: 'organizationId',
+          items: Provider.of<DataModel>(context, listen: false).organizations,
+        ),
+        Dropdown(
+          label: 'seasonal',
+          filterKey: 'seasonal',
+          items: Provider.of<DataModel>(context, listen: false).seasons,
+          translate: true,
+        ),
+        Date(
+          label: 'date',
+          filterKey: 'dateBalance',
+        )
         // Dropdown(
         //   label: 'user',
         //   filterKey: 'cashier_login',
@@ -250,7 +241,6 @@ class _DocumentsInState extends State<DocumentsIn> {
         //   itemName: 'first_name',
         //   itemValue: 'login',
         // ),
-        const Period(),
       ],
     );
   }

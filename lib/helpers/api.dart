@@ -77,10 +77,12 @@ Future pget(String url, {payload, isGuest = false}) async {
       dio.options.headers["authorization"] = "";
     }
     print(hostUrl + url);
+    print(payload);
     final response = await dio.get(
       hostUrl + url,
       queryParameters: payload,
     );
+    print(response);
     return {
       'data': response.data,
       'total': int.parse(response.headers.value('x-total-count').toString()),

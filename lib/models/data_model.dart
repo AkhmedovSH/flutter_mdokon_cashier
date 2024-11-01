@@ -7,9 +7,18 @@ class DataModel extends ChangeNotifier {
   List<Map<String, dynamic>> productList = [];
   List<Map<String, dynamic>> poses = [];
   List<Map<String, dynamic>> organizations = [];
+  List<Map<String, dynamic>> paymentTypes = [];
+  List<Map<String, dynamic>> uoms = [];
+  List<Map<String, dynamic>> cashiers = [];
+  List<Map<String, dynamic>> agents = [];
   List<Map<String, dynamic>> currencies = [
     {"id": 1, "name": "So`m"},
     {"id": 2, "name": "USD"},
+  ];
+  List<Map<String, dynamic>> seasons = [
+    {'id': '', 'name': '-'},
+    {'id': 1, 'name': ('seasonal')},
+    {'id': 2, 'name': ('not_seasonal')}
   ];
 
   Map get currentItem => item;
@@ -29,6 +38,10 @@ class DataModel extends ChangeNotifier {
     await Future.wait([
       fetchPoses(),
       fetchOrganizations(),
+      fetchPaymentTypes(),
+      fetchProductUoms(),
+      fetchCashiers(),
+      fetchAgents(),
     ]);
     notifyListeners();
   }
@@ -42,6 +55,35 @@ class DataModel extends ChangeNotifier {
   Future<void> fetchOrganizations() async {
     final response = await get('/services/web/api/organization-helper');
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
     organizations = mapList;
+  }
+
+  Future<void> fetchPaymentTypes() async {
+    final response = await get('/services/web/api/product-uom-helper');
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    paymentTypes = mapList;
+  }
+
+  Future<void> fetchProductUoms() async {
+    final response = await get('/services/web/api/organization-helper');
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    uoms = mapList;
+  }
+
+  Future<void> fetchCashiers() async {
+    final response = await get('/services/web/api/cashier-helper');
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    cashiers = mapList;
+  }
+
+  Future<void> fetchAgents() async {
+    final response = await get('/services/web/api/agent-helper');
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    agents = mapList;
   }
 }
