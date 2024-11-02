@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/widgets.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
 import 'package:kassa/models/director/documents_in_model.dart';
@@ -18,6 +17,7 @@ class DocumentsInCreate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DataModel dataModel = Provider.of<DataModel>(context, listen: false);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: context.tr('create'),
@@ -68,143 +68,201 @@ class DocumentsInCreate extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(
-                child: TableWidget(
-                  headers: [
-                    DataColumn(
-                      label: SizedBox(
-                        width: 40,
-                        child: Text('№'),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 130,
-                        child: Text(context.tr('pos')),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 100,
-                        child: Text(context.tr('barcode')),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 120,
-                        child: Text(
-                          context.tr('residue'),
-                          textAlign: TextAlign.end,
+              SearchItem(),
+              SizedBox(
+                height: 400,
+                child: Consumer<DocumentsInModel>(
+                  builder: (context, documentsInModel, chilld) {
+                    return TableWidget(
+                      headers: [
+                        DataColumn(
+                          label: SizedBox(
+                            width: 40,
+                            child: Text('№'),
+                          ),
                         ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 120,
-                        child: Text(
-                          context.tr('sale_amount'),
-                          textAlign: TextAlign.end,
+                        DataColumn(
+                          label: SizedBox(
+                            width: 200,
+                            child: Text(context.tr('name_of_product')),
+                          ),
                         ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 80,
-                        child: Text(context.tr('currency')),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 140,
-                        child: Text(
-                          context.tr('date_of_receipt'),
-                          textAlign: TextAlign.center,
+                        DataColumn(
+                          label: SizedBox(
+                            width: 150,
+                            child: Text(context.tr('barcode')),
+                          ),
                         ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 100,
-                        child: Text(
-                          context.tr('received_by'),
-                          textAlign: TextAlign.end,
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(
+                              context.tr('residue'),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                  rows: [
-                    // for (var i = 1; i < data.length; i++)
-                    //   DataRow(
-                    //     cells: [
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 40,
-                    //           child: Text('${data[i]['rowNum']}'),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 130,
-                    //           child: Text('${data[i]['posName']}'),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 100,
-                    //           child: Text('${data[i]['organizationName']}'),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 120,
-                    //           child: Text(
-                    //             '${formatMoney(data[i]['totalAmount'])}',
-                    //             textAlign: TextAlign.end,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 120,
-                    //           child: Text(
-                    //             '${formatMoney(data[i]['totalAmount'])}',
-                    //             textAlign: TextAlign.end,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 80,
-                    //           child: Text('${data[i]['currencyName']}'),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 140,
-                    //           child: Text(
-                    //             '${formatDate(data[i]['createdDate'])}',
-                    //             textAlign: TextAlign.center,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //       DataCell(
-                    //         SizedBox(
-                    //           width: 100,
-                    //           child: Text(
-                    //             '${data[i]['createdBy'] ?? ''}',
-                    //             textAlign: TextAlign.end,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                  ],
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(
+                              context.tr('quantity'),
+                            ),
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(context.tr('unit')),
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(context.tr('admission_price')),
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(context.tr('wholesale_price')),
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(context.tr('bank_price')),
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100,
+                            child: Text(context.tr('amount')),
+                          ),
+                        ),
+                      ],
+                      rows: [
+                        for (var i = 1; i < documentsInModel.data['productList'].length; i++)
+                          DataRow(
+                            cells: [
+                              DataCell(
+                                SizedBox(
+                                  width: 40,
+                                  child: Text('${i + 1}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 200,
+                                  child: Text('${documentsInModel.data['productList'][i]['name']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 150,
+                                  child: Text('${documentsInModel.data['productList'][i]['balance']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['quantity']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['uomName']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['price']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['wholesalePrice']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['bankPrice']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text('${documentsInModel.data['productList'][i]['salePrice']}'),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    '${formatMoney(documentsInModel.data['productList'][i]['totalAmount'])}',
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class SearchItem extends StatelessWidget {
+  const SearchItem({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Label(text: 'search'),
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          width: MediaQuery.of(context).size.width,
+          child: Consumer<DocumentsInModel>(
+            builder: (context, documentsInModel, chilld) {
+              return Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: CustomTheme.of(context).cardColor,
+                ),
+                child: TextFormField(
+                  controller: documentsInModel.searchController,
+                  onChanged: (value) {
+                    documentsInModel.search(value);
+                  },
+                  onTapOutside: (PointerDownEvent event) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    filled: true,
+                    fillColor: CustomTheme.of(context).cardColor,
+                    enabledBorder: inputBorder,
+                    focusedBorder: inputFocusBorder,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -72,6 +72,7 @@ class _TableWidgetState extends State<TableWidget> {
         Container(
           margin: EdgeInsets.only(left: widget.fixedLeftWidth),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
