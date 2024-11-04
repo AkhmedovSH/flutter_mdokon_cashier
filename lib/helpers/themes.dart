@@ -27,6 +27,14 @@ final ThemeData lightTheme = ThemeData(
     rangePickerBackgroundColor: Colors.grey[200],
     rangePickerHeaderBackgroundColor: mainColor,
     rangePickerHeaderForegroundColor: Colors.white,
+    cancelButtonStyle: ButtonStyle(
+      foregroundColor: WidgetStateProperty.all(mainColor),
+    ),
+    confirmButtonStyle: ButtonStyle(
+      foregroundColor: WidgetStateProperty.all(mainColor),
+    ),
+    todayBackgroundColor: WidgetStateProperty.all(mainColor),
+    
   ),
 
   // Цвета для кнопок

@@ -53,7 +53,7 @@ class _DocumentsInState extends State<DocumentsIn> {
       FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
       DataModel dataModel = Provider.of<DataModel>(context, listen: false);
       Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', filterModel.posId);
-      Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[0]['id']);
+      Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[1]['id']);
       Provider.of<FilterModel>(context, listen: false).initFilterData({
         'posId': filterModel.posId,
         'startDate': formatDateTime(startDate),

@@ -11,6 +11,8 @@ class DataModel extends ChangeNotifier {
   List<Map<String, dynamic>> uoms = [];
   List<Map<String, dynamic>> cashiers = [];
   List<Map<String, dynamic>> agents = [];
+  List<Map<String, dynamic>> wallets = [];
+  List<Map<String, dynamic>> banks = [];
   List<Map<String, dynamic>> currencies = [
     {"id": 1, "name": "So`m"},
     {"id": 2, "name": "USD"},
@@ -85,5 +87,21 @@ class DataModel extends ChangeNotifier {
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
     mapList.insert(0, {'id': '', 'name': '-'});
     agents = mapList;
+  }
+
+  Future<void> fetchWallets(currencyId) async {
+    final response = await get('/services/web/api/wallet-helper', payload: {'currencyId': currencyId});
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    print(mapList);
+    wallets = mapList;
+  }
+
+  Future<void> fetchBanks(currencyId) async {
+    final response = await get('/services/web/api/bank-helper', payload: {'currencyId': currencyId});
+    final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
+    mapList.insert(0, {'id': '', 'name': '-'});
+    print(mapList);
+    banks = mapList;
   }
 }

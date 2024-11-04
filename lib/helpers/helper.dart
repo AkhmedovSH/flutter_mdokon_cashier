@@ -199,6 +199,16 @@ Future<bool> hasInternetConnection() async {
   }
 }
 
+String findFromArrayById(List<Map<String, dynamic>> array, dynamic id) {
+  if (array.isNotEmpty && id != null) {
+    return array.firstWhere(
+      (item) => item['id'].toString() == id.toString(),
+      orElse: () => {},
+    )['name'];
+  }
+  return '';
+}
+
 showSuccessToast(message, {String description = ""}) {
   toastification.show(
     title: Text(

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kassa/pages/director/pos/documents_in/create.dart';
 import 'package:kassa/pages/director/pos/documents_in/index.dart';
+import 'package:kassa/pages/director/pos/documents_in/complete.dart';
+
 import 'package:kassa/pages/director/reports/balance.dart';
 import 'package:kassa/pages/director/reports/sales.dart';
 
@@ -23,7 +25,13 @@ List<RouteBase> directors = [
       GoRoute(
         path: '/create',
         pageBuilder: (context, state) => cupertinoPageBuilder(context, state, DocumentsInCreate()),
-      )
+        routes: [
+          GoRoute(
+            path: '/complete',
+            pageBuilder: (context, state) => cupertinoPageBuilder(context, state, DocumentsInComplete()),
+          ),
+        ],
+      ),
     ],
   ),
   GoRoute(
