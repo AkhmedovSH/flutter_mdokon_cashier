@@ -1,13 +1,16 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
+import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
 import '/helpers/api.dart';
 import '/helpers/cheque.dart';
@@ -65,6 +68,8 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+
     var settings = jsonDecode(storage.read('settings'));
     if (settings['selectUserAftersale']) {
       await showSelectUserDialog();
@@ -121,15 +126,18 @@ class _PaymentSampleState extends State<PaymentSample> {
 
     if (dataCopy['discount'] > 0) {
       dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'];
+      dataCopy['discount'] = 0;
+    }
+
+    if (dataCopy['discountAmount'] == null) {
+      dataCopy['discountAmount'] = 0;
     }
 
     if (currentIndex == 1) {
       if (cashController.text.isNotEmpty) {
         if (terminalController.text.isNotEmpty) {
-          setState(() {
-            dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
-            dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
-          });
+          dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
+          dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
         } else {
           dataCopy['clientAmount'] = dataCopy['totalPrice'] - double.parse(cashController.text);
           dataCopy['paid'] = double.parse(cashController.text);
@@ -139,8 +147,7 @@ class _PaymentSampleState extends State<PaymentSample> {
         dataCopy['paid'] = 0;
       }
     }
-    print(dataCopy['paid']);
-    print(currentIndex);
+
     if (currentIndex == 2) {
       if (loyaltyController.text.isNotEmpty) {
         dataCopy['transactionsList'].add({
@@ -155,8 +162,9 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (dataCopy['clientId'] == 0) {
       dataCopy['clientId'] == null;
     }
-    //print(dataCopy);
-    //return;
+
+    log(jsonEncode(dataCopy));
+    // return;
     final response = await post('/services/desktop/api/cheque', dataCopy);
 
     if (currentIndex == 2) {
@@ -196,17 +204,18 @@ class _PaymentSampleState extends State<PaymentSample> {
       }
     }
 
-    if (response != null && response['success']) {
+    if (httpOk(response) && response['success']) {
       setState(() {});
       Navigator.of(context).pop(true);
     }
+
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   setInitState() {
     setState(() {
       data = widget.data;
       data['change'] = 0;
-      print(data['totalPrice']);
       data['text'] = data['totalPrice'].toString();
     });
     cashController.text = '';
@@ -218,7 +227,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     setState(() {
       cashbox = (storage.read('cashbox')!);
     });
-    final username = storage.read('username');
+    final username = storage.read('user')['username'];
     if (storage.read('shift') != null) {
       final shift = jsonDecode(storage.read('shift')!);
       setState(() {
@@ -235,10 +244,11 @@ class _PaymentSampleState extends State<PaymentSample> {
       data['login'] = username;
       data['cashierLogin'] = username;
       data['cashboxId'] = cashbox['cashboxId'];
+      data['device'] = 'android';
       data['cashboxVersion'] = version;
       data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      data['currencyId'] = cashbox['defaultCurrency'];
-      data['saleCurrencyId'] = cashbox['defaultCurrency'];
+      data['currencyId'] = data['currencyId'];
+      data['saleCurrencyId'] = data['currencyId'];
       data['posId'] = cashbox['posId'];
       data['chequeNumber'] = generateChequeNumber();
       data['transactionId'] = transactionId;

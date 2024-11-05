@@ -162,7 +162,6 @@ class _IndexState extends State<Index> {
   getClients() async {
     final cashbox = (storage.read('cashbox')!);
     final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
-    //print(response);
     for (var i = 0; i < response.length; i++) {
       response[i]['selected'] = false;
     }
@@ -196,7 +195,6 @@ class _IndexState extends State<Index> {
     }
     for (var i = 0; i < products.length; i++) {
       var product = Map.from(products[i]);
-      print(product);
       product['discount'] = 0;
       product['outType'] = false;
 
@@ -272,7 +270,6 @@ class _IndexState extends State<Index> {
         }
       }
     } else {
-      print(response['quantity']);
       if (response['quantity'] != "") {
         // if scaleProduct
         if (weight > 0) {
@@ -323,7 +320,6 @@ class _IndexState extends State<Index> {
 
   deleteProduct(i) {
     if (data["itemsList"].length == 1) {
-      print(111);
       deleteAllProducts();
       return;
     }
@@ -537,17 +533,34 @@ class _IndexState extends State<Index> {
     }
 
     if (key == "%") {
-      dataCopy['discountAmount'] = value;
+      if (double.parse(value.toString()) > 100) {
+        showDangerToast('Скидка не может быть больше 100%');
+        return;
+      }
+      dataCopy['discount'] = value;
       dataCopy['totalPrice'] = 0;
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
         dataCopy['totalPrice'] +=
             double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
-        dataCopy['itemsList'][i]['discountAmount'] = value;
-        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - value;
+        dataCopy['itemsList'][i]['discount'] = value;
+        dataCopy['itemsList'][i]['discountAmount'] = (dataCopy['itemsList'][i]['totalPrice'] * (value / 100));
+        dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - (dataCopy['itemsList'][i]['totalPrice'] * (value / 100));
       }
       dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
-      dataCopy['discount'] = double.parse(value.toString()) * 100 / dataCopy['totalPriceBeforeDiscount'];
-      dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * dataCopy['discount']) / 100;
+      dataCopy['discountAmount'] = dataCopy['totalPriceBeforeDiscount'] * (double.parse(value.toString()) / 100);
+      dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice']) * (dataCopy['discount'] / 100);
+
+      // dataCopy['discountAmount'] = value;
+      // dataCopy['totalPrice'] = 0;
+      // for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+      //   dataCopy['totalPrice'] +=
+      //       double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+      //   dataCopy['itemsList'][i]['discountAmount'] = value;
+      //   dataCopy['itemsList'][i]['totalPrice'] = dataCop`y['itemsList'][i]['totalPrice'] - value;
+      // }
+      // dataCopy['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
+      // dataCopy['discount'] = double.parse(value.toString()) * 100 / dataCopy['totalPriceBeforeDiscount'];
+      // dataCopy['totalPrice'] = dataCopy['totalPrice'] - (dataCopy['totalPrice'] * dataCopy['discount']) / 100;
     }
     if (key == "s") {
       dataCopy['totalPrice'] = 0;
@@ -569,8 +582,6 @@ class _IndexState extends State<Index> {
           dataCopy['totalPriceBeforeDiscount'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
         }
         dataCopy['totalPrice'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
-
-        print(dataCopy['itemsList'][i]['totalPrice']);
       }
       dynamic percent = 100 - (dataCopy['totalPrice'] * 100 / dataCopy['totalPriceBeforeDiscount']);
       dataCopy['discount'] = percent;
@@ -677,7 +688,6 @@ class _IndexState extends State<Index> {
     cashbox = storage.read('cashbox');
     data['currencyId'] = cashbox['defaultCurrency'];
     data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
-    print(data);
     setState(() {});
   }
 
@@ -795,6 +805,7 @@ class _IndexState extends State<Index> {
                   padding: EdgeInsets.zero,
                   backgroundColor: white,
                   foregroundColor: mainColor,
+                  disabledForegroundColor: white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

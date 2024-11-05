@@ -23,6 +23,7 @@ class DataModel extends ChangeNotifier {
     {'id': 2, 'name': ('not_seasonal')}
   ];
 
+  String get posId => storage.read('user')['posId'].toString();
   Map get currentItem => item;
   List<Map<String, dynamic>> get currentProductList => productList;
 
@@ -92,7 +93,7 @@ class DataModel extends ChangeNotifier {
   Future<void> fetchWallets(currencyId) async {
     final response = await get('/services/web/api/wallet-helper', payload: {'currencyId': currencyId});
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
-    mapList.insert(0, {'id': '', 'name': '-'});
+    mapList.insert(0, {'walletId': '', 'walletName': '-'});
     print(mapList);
     wallets = mapList;
   }
@@ -100,7 +101,7 @@ class DataModel extends ChangeNotifier {
   Future<void> fetchBanks(currencyId) async {
     final response = await get('/services/web/api/bank-helper', payload: {'currencyId': currencyId});
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
-    mapList.insert(0, {'id': '', 'name': '-'});
+    mapList.insert(0, {'bankId': '', 'bankName': '-'});
     print(mapList);
     banks = mapList;
   }

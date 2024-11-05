@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
@@ -142,10 +143,16 @@ bool httpOk(data) {
 statuscheker(e) async {
   print(e);
   if (e.response != null && e.response.statusCode != null) {
+    log(jsonEncode(e.response.toString()));
+
     switch (e.response.statusCode) {
       case 400:
         final message = jsonDecode(e.response.toString());
-        showDangerToast(message['message']);
+        if (message['message'] == 'error.validation') {
+          showDangerToast('error.validation', description: message['fieldErrors']);
+        } else {
+          showDangerToast(message['message']);
+        }
         break;
       case 401:
         showDangerToast(tr('Неправильный логин или пароль'));

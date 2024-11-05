@@ -2,18 +2,20 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/helpers/helper.dart';
+import 'package:provider/provider.dart';
+import 'package:unicons/unicons.dart';
+
 import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/director/documents_in_model.dart';
+import 'package:kassa/models/director/inventory_model.dart';
 
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:kassa/widgets/filter/label.dart';
 import 'package:kassa/widgets/table/table.dart';
-import 'package:provider/provider.dart';
-import 'package:unicons/unicons.dart';
 
-class DocumentsInCreate extends StatelessWidget {
-  const DocumentsInCreate({super.key});
+import 'package:kassa/helpers/helper.dart';
+
+class InventoryCreate extends StatelessWidget {
+  const InventoryCreate({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,49 +40,19 @@ class DocumentsInCreate extends StatelessWidget {
                     items: dataModel.poses,
                     dataKey: 'posId',
                   ),
-                  DropdownItem(
-                    label: 'supplier',
-                    items: dataModel.organizations,
-                    dataKey: 'organizationId',
+                  TextFielItem(
+                    label: 'inventory',
+                    dataKey: 'inventoryNumber',
                   ),
-                  DropdownItem(
-                    label: 'currency',
-                    items: dataModel.currencies,
-                    dataKey: 'currencyId',
-                  ),
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: Padding(
-                      padding: EdgeInsets.zero, // Убираем внешние отступы
-                      child: ExpansionTile(
-                        title: Text(context.tr("additionally")),
-                        tilePadding: EdgeInsets.symmetric(horizontal: 3), // Убираем внутренние отступы
-                        children: const [
-                          // TextFielItem(
-                          //   label: 'expenses',
-                          //   dataKey: 'expense',
-                          // ),
-                          TextFielItem(
-                            label: 'overhead',
-                            dataKey: 'inNumber',
-                          ),
-                          TextFielItem(
-                            label: 'note',
-                            dataKey: 'note',
-                          ),
-                          TextFielItem(
-                            label: 'VAT',
-                            dataKey: 'defaultVat',
-                          ),
-                        ],
-                      ),
-                    ),
+                  TextFielItem(
+                    label: 'note',
+                    dataKey: 'note',
                   ),
                   SearchItem(),
                   SizedBox(
-                    height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - kToolbarHeight - 220,
-                    child: Consumer<DocumentsInModel>(
-                      builder: (context, documentsInModel, chilld) {
+                    height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - kToolbarHeight - 160,
+                    child: Consumer<InventoryModel>(
+                      builder: (context, inventoryModel, chilld) {
                         return TableWidget(
                           headers: [
                             DataColumn(
@@ -113,15 +85,6 @@ class DocumentsInCreate extends StatelessWidget {
                               label: SizedBox(
                                 width: 100,
                                 child: Text(
-                                  context.tr('residue'),
-                                  textAlign: TextAlign.end,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
                                   context.tr('quantity'),
                                   textAlign: TextAlign.center,
                                 ),
@@ -138,37 +101,10 @@ class DocumentsInCreate extends StatelessWidget {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 140,
+                                width: 100,
                                 child: Text(
-                                  context.tr('admission_price'),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 140,
-                                child: Text(
-                                  context.tr('wholesale_price'),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 140,
-                                child: Text(
-                                  context.tr('bank_price'),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 140,
-                                child: Text(
-                                  context.tr('sale_price'),
-                                  textAlign: TextAlign.center,
+                                  context.tr('expected_balance'),
+                                  textAlign: TextAlign.end,
                                 ),
                               ),
                             ),
@@ -176,14 +112,14 @@ class DocumentsInCreate extends StatelessWidget {
                               label: SizedBox(
                                 width: 100,
                                 child: Text(
-                                  context.tr('amount'),
+                                  context.tr('counted'),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
                             ),
                           ],
                           rows: [
-                            for (var i = 0; i < documentsInModel.data['productList'].length; i++)
+                            for (var i = 0; i < inventoryModel.data['productList'].length; i++)
                               DataRow(
                                 cells: [
                                   DataCell(
@@ -193,7 +129,7 @@ class DocumentsInCreate extends StatelessWidget {
                                         height: 30,
                                         child: ElevatedButton(
                                           onPressed: () {
-                                            documentsInModel.removeProduct(i);
+                                            inventoryModel.removeProduct(i);
                                           },
                                           style: ElevatedButton.styleFrom(
                                             padding: EdgeInsets.zero,
@@ -216,23 +152,14 @@ class DocumentsInCreate extends StatelessWidget {
                                   DataCell(
                                     SizedBox(
                                       width: 200,
-                                      child: Text('${documentsInModel.data['productList'][i]['name']}'),
+                                      child: Text('${inventoryModel.data['productList'][i]['name']}'),
                                     ),
                                   ),
                                   DataCell(
                                     SizedBox(
                                       width: 150,
                                       child: Text(
-                                        '${documentsInModel.data['productList'][i]['barcode']}',
-                                        textAlign: TextAlign.end,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: Text(
-                                        '${documentsInModel.data['productList'][i]['balance']}',
+                                        '${inventoryModel.data['productList'][i]['barcode']}',
                                         textAlign: TextAlign.end,
                                       ),
                                     ),
@@ -241,7 +168,7 @@ class DocumentsInCreate extends StatelessWidget {
                                     SizedBox(
                                       width: 100,
                                       child: TableTextField(
-                                        documentsInModel: documentsInModel,
+                                        inventoryModel: inventoryModel,
                                         i: i,
                                         keyName: 'quantity',
                                       ),
@@ -251,7 +178,7 @@ class DocumentsInCreate extends StatelessWidget {
                                     SizedBox(
                                       width: 100,
                                       child: Text(
-                                        '${documentsInModel.data['productList'][i]['uomName']}',
+                                        '${inventoryModel.data['productList'][i]['uomName']}',
                                         textAlign: TextAlign.end,
                                       ),
                                     ),
@@ -260,48 +187,9 @@ class DocumentsInCreate extends StatelessWidget {
                                     SizedBox(
                                       width: 140,
                                       child: TableTextField(
-                                        documentsInModel: documentsInModel,
+                                        inventoryModel: inventoryModel,
                                         i: i,
                                         keyName: 'price',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 140,
-                                      child: TableTextField(
-                                        documentsInModel: documentsInModel,
-                                        i: i,
-                                        keyName: 'wholesalePrice',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 140,
-                                      child: TableTextField(
-                                        documentsInModel: documentsInModel,
-                                        i: i,
-                                        keyName: 'bankPrice',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 140,
-                                      child: TableTextField(
-                                        documentsInModel: documentsInModel,
-                                        i: i,
-                                        keyName: 'salePrice',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: Text(
-                                        '${formatMoney(documentsInModel.data['productList'][i]['totalAmount'])}',
-                                        textAlign: TextAlign.end,
                                       ),
                                     ),
                                   ),
@@ -313,7 +201,7 @@ class DocumentsInCreate extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    height: 130,
+                    height: 65,
                   )
                 ],
               ),
@@ -347,8 +235,8 @@ class DropdownItem extends StatelessWidget {
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
-          child: Consumer<DocumentsInModel>(
-            builder: (context, documentsInModel, chilld) {
+          child: Consumer<InventoryModel>(
+            builder: (context, inventoryModel, chilld) {
               return Container(
                 height: 45,
                 decoration: BoxDecoration(
@@ -357,7 +245,7 @@ class DropdownItem extends StatelessWidget {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton2<String>(
-                    value: documentsInModel.data[dataKey].toString(),
+                    value: inventoryModel.data[dataKey].toString(),
                     buttonStyleData: const ButtonStyleData(),
                     iconStyleData: const IconStyleData(
                       icon: Padding(
@@ -406,8 +294,8 @@ class SearchItem extends StatelessWidget {
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
-          child: Consumer<DocumentsInModel>(
-            builder: (context, documentsInModel, chilld) {
+          child: Consumer<InventoryModel>(
+            builder: (context, inventoryModel, chilld) {
               return Container(
                 height: 45,
                 decoration: BoxDecoration(
@@ -415,9 +303,9 @@ class SearchItem extends StatelessWidget {
                   color: CustomTheme.of(context).cardColor,
                 ),
                 child: TextFormField(
-                  controller: documentsInModel.searchController,
+                  controller: inventoryModel.searchController,
                   onChanged: (value) {
-                    documentsInModel.search(value);
+                    inventoryModel.search(value);
                   },
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
@@ -463,8 +351,8 @@ class TextFielItem extends StatelessWidget {
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
-          child: Consumer<DocumentsInModel>(
-            builder: (context, documentsInModel, chilld) {
+          child: Consumer<InventoryModel>(
+            builder: (context, inventoryModel, chilld) {
               return Container(
                 height: 45,
                 decoration: BoxDecoration(
@@ -473,12 +361,12 @@ class TextFielItem extends StatelessWidget {
                 ),
                 child: TextFormField(
                   onChanged: (value) {
-                    documentsInModel.setDataValue(dataKey, value);
+                    inventoryModel.setDataValue(dataKey, value);
                   },
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
-                  initialValue: (documentsInModel.data[dataKey] ?? '').toString(),
+                  initialValue: (inventoryModel.data[dataKey] ?? '').toString(),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
@@ -497,13 +385,13 @@ class TextFielItem extends StatelessWidget {
 }
 
 class TableTextField extends StatelessWidget {
-  final DocumentsInModel documentsInModel;
+  final InventoryModel inventoryModel;
   final int i;
   final String keyName;
 
   const TableTextField({
     super.key,
-    required this.documentsInModel,
+    required this.inventoryModel,
     required this.i,
     required this.keyName,
   });
@@ -513,14 +401,14 @@ class TableTextField extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(top: 5),
       child: TextFormField(
-        initialValue: (documentsInModel.data['productList'][i][keyName] ?? '').toString(),
+        initialValue: (inventoryModel.data['productList'][i][keyName] ?? '').toString(),
         onChanged: (value) {
-          documentsInModel.setProductListValue(i, keyName, value);
+          inventoryModel.setProductListValue(i, keyName, value);
         },
         onTapOutside: (PointerDownEvent event) {
           FocusManager.instance.primaryFocus?.unfocus();
-          // if (documentsInModel.data['productList'][i + 1] != null) {
-          //   FocusScope.of(context).requestFocus(documentsInModel.data['productList'][i + 1]['focusNode']);
+          // if (inventoryModel.data['productList'][i + 1] != null) {
+          //   FocusScope.of(context).requestFocus(inventoryModel.data['productList'][i + 1]['focusNode']);
           // } else {
           // }
         },
@@ -554,76 +442,6 @@ class TotalAmountItem extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    context.tr('total_quantity'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Consumer<DocumentsInModel>(
-                    builder: (context, documentsInModel, child) {
-                      return Text(
-                        '${formatMoney(documentsInModel.data['totalQuantity'])}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.tr('receipt_amount'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Consumer<DocumentsInModel>(
-                    builder: (context, documentsInModel, child) {
-                      return Text(
-                        '${formatMoney(documentsInModel.data['totalIncome'])}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.tr('sale_amount'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Consumer<DocumentsInModel>(
-                    builder: (context, documentsInModel, child) {
-                      return Text(
-                        '${formatMoney(documentsInModel.data['totalSale'])}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
                   Expanded(
                     flex: 1,
                     child: SizedBox(
@@ -644,12 +462,12 @@ class TotalAmountItem extends StatelessWidget {
                     flex: 2,
                     child: SizedBox(
                       height: 50,
-                      child: Consumer<DocumentsInModel>(
-                        builder: (context, documentsInModel, child) {
+                      child: Consumer<InventoryModel>(
+                        builder: (context, inventoryModel, child) {
                           return ElevatedButton(
-                            onPressed: documentsInModel.data['productList'].isNotEmpty
+                            onPressed: inventoryModel.data['productList'].isNotEmpty
                                 ? () {
-                                    documentsInModel.checkData(context);
+                                    inventoryModel.checkData(context);
                                   }
                                 : null,
                             child: Text(context.tr('save')),

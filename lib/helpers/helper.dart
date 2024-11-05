@@ -201,10 +201,11 @@ Future<bool> hasInternetConnection() async {
 
 String findFromArrayById(List<Map<String, dynamic>> array, dynamic id) {
   if (array.isNotEmpty && id != null) {
-    return array.firstWhere(
+    var item = array.firstWhere(
       (item) => item['id'].toString() == id.toString(),
-      orElse: () => {},
-    )['name'];
+      orElse: () => {}, // Return an empty map if not found
+    );
+    return item['name'] ?? ''; // Use empty string if 'name' is not present
   }
   return '';
 }
@@ -237,7 +238,7 @@ showSuccessToast(message, {String description = ""}) {
   );
 }
 
-showDangerToast(message, {String description = ""}) {
+showDangerToast(message, {description = ""}) {
   toastification.show(
     title: Text(
       '$message',
@@ -245,7 +246,7 @@ showDangerToast(message, {String description = ""}) {
     ),
     description: description.isNotEmpty
         ? Text(
-            description,
+            '$description',
             style: TextStyle(color: black),
           )
         : null,

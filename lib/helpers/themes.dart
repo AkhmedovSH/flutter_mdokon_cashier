@@ -34,7 +34,6 @@ final ThemeData lightTheme = ThemeData(
       foregroundColor: WidgetStateProperty.all(mainColor),
     ),
     todayBackgroundColor: WidgetStateProperty.all(mainColor),
-    
   ),
 
   // Цвета для кнопок
@@ -60,6 +59,7 @@ final ThemeData lightTheme = ThemeData(
   ),
   dataTableTheme: DataTableThemeData(
     columnSpacing: 10,
+    horizontalMargin: 10,
     headingRowColor: WidgetStateProperty.all(Color(0xFFF5F5F5)),
     headingTextStyle: TextStyle(
       color: black,

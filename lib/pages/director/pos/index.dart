@@ -24,8 +24,13 @@ class Home extends StatelessWidget {
               SizedBox(height: 15),
               CardItem(
                 title: 'documents_in',
-                icon: UniconsLine.shop,
+                icon: UniconsLine.bring_front,
                 routeName: '/director/documents-in',
+              ),
+              CardItem(
+                title: 'inventory',
+                icon: UniconsLine.calculator_alt,
+                routeName: '/director/inventory',
               ),
             ],
           ),

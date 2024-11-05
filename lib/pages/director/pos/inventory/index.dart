@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/director/documents_in_model.dart';
+import 'package:kassa/models/director/inventory_model.dart';
 import 'package:kassa/models/filter_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
@@ -14,14 +14,14 @@ import 'package:kassa/widgets/table/table.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-class DocumentsIn extends StatefulWidget {
-  const DocumentsIn({super.key});
+class Inventory extends StatefulWidget {
+  const Inventory({super.key});
 
   @override
-  _DocumentsInState createState() => _DocumentsInState();
+  _InventoryState createState() => _InventoryState();
 }
 
-class _DocumentsInState extends State<DocumentsIn> {
+class _InventoryState extends State<Inventory> {
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month - 1, DateTime.now().day);
   DateTime endDate = DateTime.now();
 
@@ -30,10 +30,10 @@ class _DocumentsInState extends State<DocumentsIn> {
 
   Future<void> getData() async {
     Provider.of<LoadingModel>(context, listen: false).showLoader();
-    print(Provider.of<FilterModel>(context, listen: false).currentFilterData);
+    FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
     final response = await pget(
-      '/services/web/api/documents-in-pageList',
-      payload: Provider.of<FilterModel>(context, listen: false).currentFilterData,
+      '/services/web/api/inventory-pageList/${filterModel.currentFilterData['posId']}',
+      payload: filterModel.currentFilterData,
     );
     if (mounted) {
       if (httpOk(response)) {
@@ -55,7 +55,6 @@ class _DocumentsInState extends State<DocumentsIn> {
         'posId': filterModel.posId,
         'startDate': formatDateTime(startDate),
         'endDate': formatDateTime(endDate),
-        'organizationId': '',
         'search': '',
         'page': 0,
       });
@@ -67,18 +66,15 @@ class _DocumentsInState extends State<DocumentsIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'documents_in',
+        title: 'inventory',
         leading: true,
         actions: [
           IconButton(
             tooltip: context.tr('create'),
             onPressed: () {
               DataModel dataModel = Provider.of<DataModel>(context, listen: false);
-
-              Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', dataModel.posId);
-              Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[1]['id']);
-
-              context.go('/director/documents-in/create');
+              Provider.of<InventoryModel>(context, listen: false).setDataValue('posId', dataModel.posId);
+              context.go('/director/inventory/create');
             },
             icon: const Icon(UniconsLine.plus_circle),
           ),
@@ -116,15 +112,21 @@ class _DocumentsInState extends State<DocumentsIn> {
                 DataColumn(
                   label: SizedBox(
                     width: 100,
-                    child: Text(context.tr('supplier')),
+                    child: Text(context.tr('created_by')),
+                  ),
+                ),
+                DataColumn(
+                  label: SizedBox(
+                    width: 100,
+                    child: Text(context.tr('document')),
                   ),
                 ),
                 DataColumn(
                   label: SizedBox(
                     width: 120,
                     child: Text(
-                      context.tr('receipt_amount'),
-                      textAlign: TextAlign.end,
+                      context.tr('begin_date'),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
@@ -132,22 +134,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                   label: SizedBox(
                     width: 120,
                     child: Text(
-                      context.tr('sale_amount'),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 80,
-                    child: Text(context.tr('currency')),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 140,
-                    child: Text(
-                      context.tr('date_of_receipt'),
+                      context.tr('end_date'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -155,10 +142,13 @@ class _DocumentsInState extends State<DocumentsIn> {
                 DataColumn(
                   label: SizedBox(
                     width: 100,
-                    child: Text(
-                      context.tr('received_by'),
-                      textAlign: TextAlign.end,
-                    ),
+                    child: Text(context.tr('completed_by')),
+                  ),
+                ),
+                DataColumn(
+                  label: SizedBox(
+                    width: 100,
+                    child: Text(context.tr('status')),
                   ),
                 ),
               ],
@@ -181,15 +171,21 @@ class _DocumentsInState extends State<DocumentsIn> {
                       DataCell(
                         SizedBox(
                           width: 100,
-                          child: Text('${data[i]['organizationName']}'),
+                          child: Text('${data[i]['createdBy']}'),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 100,
+                          child: Text('${data[i]['inventoryNumber'] ?? ''}'),
                         ),
                       ),
                       DataCell(
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
-                            textAlign: TextAlign.end,
+                            '${formatDate(data[i]['beginDate'])}',
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
@@ -197,22 +193,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: Text('${data[i]['currencyName']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 140,
-                          child: Text(
-                            '${formatDate(data[i]['createdDate'])}',
+                            '${formatDate(data[i]['endDate'])}',
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -220,10 +201,13 @@ class _DocumentsInState extends State<DocumentsIn> {
                       DataCell(
                         SizedBox(
                           width: 100,
-                          child: Text(
-                            '${data[i]['createdBy'] ?? ''}',
-                            textAlign: TextAlign.end,
-                          ),
+                          child: Text('${data[i]['completed']}'),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 100,
+                          child: Text('${data[i]['completedBy'] ?? ''}'),
                         ),
                       ),
                     ],

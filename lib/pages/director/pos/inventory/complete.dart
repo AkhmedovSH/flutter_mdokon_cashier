@@ -9,14 +9,14 @@ import 'package:kassa/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-class DocumentsInComplete extends StatefulWidget {
-  const DocumentsInComplete({super.key});
+class InventoryComplete extends StatefulWidget {
+  const InventoryComplete({super.key});
 
   @override
-  State<DocumentsInComplete> createState() => _DocumentsInCompleteState();
+  State<InventoryComplete> createState() => _InventoryCompleteState();
 }
 
-class _DocumentsInCompleteState extends State<DocumentsInComplete> {
+class _InventoryCompleteState extends State<InventoryComplete> {
   @override
   Widget build(BuildContext context) {
     DataModel dataModel = Provider.of<DataModel>(context, listen: false);

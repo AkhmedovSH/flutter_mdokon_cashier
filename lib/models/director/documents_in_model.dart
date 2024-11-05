@@ -64,7 +64,7 @@ class DocumentsInModel extends ChangeNotifier {
     var sendData = Map.from(data);
     sendData['totalAmount'] = sendData['totalIncome'];
 
-    final response = await post('/services/web/api/documents-in', data);
+    final response = await post('/services/web/api/documents-in', sendData);
     if (httpOk(response)) {
       data = {
         "productList": [],
@@ -166,6 +166,7 @@ class DocumentsInModel extends ChangeNotifier {
             showDangerToast('Продукт уже добавлен');
           } else {
             // newProduct['focusNode'] = FocusNode();
+            newProduct['vat'] = data['defaultVat'];
             data['productList'].add(newProduct);
           }
         }
@@ -175,6 +176,12 @@ class DocumentsInModel extends ChangeNotifier {
       searchController.text = '';
       countTotalAmount();
     });
+  }
+
+  void removeProduct(int index) {
+    data['productList'].removeAt(index);
+    countTotalAmount(); // Обновляем общую сумму после удаления продукта
+    notifyListeners(); // Уведомляем слушателей об изменении
   }
 
   @override
