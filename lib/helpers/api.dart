@@ -133,8 +133,8 @@ Future put(String url, dynamic payload) async {
   return false;
 }
 
-bool httpOk(data) {
-  if (data != null && data != false && data != {} && data != "") {
+bool httpOk(response) {
+  if (response != null && response != false && response != {} && response != "") {
     return true;
   }
   return false;

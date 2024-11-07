@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
@@ -41,7 +40,7 @@ class InventoryCreate extends StatelessWidget {
                     dataKey: 'posId',
                   ),
                   TextFielItem(
-                    label: 'inventory',
+                    label: '${context.tr('inventory')} №',
                     dataKey: 'inventoryNumber',
                   ),
                   TextFielItem(
@@ -58,18 +57,22 @@ class InventoryCreate extends StatelessWidget {
                             DataColumn(
                               label: SizedBox(
                                 width: 40,
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 40,
                                 child: Text('№'),
                               ),
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 200,
+                                width: 180,
                                 child: Text(context.tr('name_of_product')),
+                              ),
+                            ),
+                            DataColumn(
+                              label: SizedBox(
+                                width: 100,
+                                child: Text(
+                                  context.tr('counted'),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                             DataColumn(
@@ -78,15 +81,6 @@ class InventoryCreate extends StatelessWidget {
                                 child: Text(
                                   context.tr('barcode'),
                                   textAlign: TextAlign.end,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('quantity'),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
@@ -103,6 +97,15 @@ class InventoryCreate extends StatelessWidget {
                               label: SizedBox(
                                 width: 100,
                                 child: Text(
+                                  context.tr('quantity'),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: SizedBox(
+                                width: 150,
+                                child: Text(
                                   context.tr('expected_balance'),
                                   textAlign: TextAlign.end,
                                 ),
@@ -110,11 +113,7 @@ class InventoryCreate extends StatelessWidget {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('counted'),
-                                  textAlign: TextAlign.end,
-                                ),
+                                width: 40,
                               ),
                             ),
                           ],
@@ -122,6 +121,64 @@ class InventoryCreate extends StatelessWidget {
                             for (var i = 0; i < inventoryModel.data['productList'].length; i++)
                               DataRow(
                                 cells: [
+                                  DataCell(
+                                    SizedBox(
+                                      width: 40,
+                                      child: Text('${i + 1}'),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 180,
+                                      child: Text('${inventoryModel.data['productList'][i]['productName']}'),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 100,
+                                      child: TableTextField(
+                                        inventoryModel: inventoryModel,
+                                        i: i,
+                                        keyName: 'actualBalance',
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 150,
+                                      child: Text(
+                                        '${inventoryModel.data['productList'][i]['barcode']}',
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        '${inventoryModel.data['productList'][i]['uomName']}',
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        '${inventoryModel.data['productList'][i]['price']}',
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 150,
+                                      child: Text(
+                                        '${inventoryModel.data['productList'][i]['balance']}',
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
                                   DataCell(
                                     Center(
                                       child: SizedBox(
@@ -140,56 +197,6 @@ class InventoryCreate extends StatelessWidget {
                                             size: 20,
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 40,
-                                      child: Text('${i + 1}'),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 200,
-                                      child: Text('${inventoryModel.data['productList'][i]['name']}'),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['barcode']}',
-                                        textAlign: TextAlign.end,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: TableTextField(
-                                        inventoryModel: inventoryModel,
-                                        i: i,
-                                        keyName: 'quantity',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['uomName']}',
-                                        textAlign: TextAlign.end,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 140,
-                                      child: TableTextField(
-                                        inventoryModel: inventoryModel,
-                                        i: i,
-                                        keyName: 'price',
                                       ),
                                     ),
                                   ),
@@ -443,23 +450,6 @@ class TotalAmountItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: danger,
-                        ),
-                        child: Text(context.tr('cancel')),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
                     child: SizedBox(
                       height: 50,
                       child: Consumer<InventoryModel>(
@@ -467,10 +457,37 @@ class TotalAmountItem extends StatelessWidget {
                           return ElevatedButton(
                             onPressed: inventoryModel.data['productList'].isNotEmpty
                                 ? () {
-                                    inventoryModel.checkData(context);
+                                    inventoryModel.saveToDraft(context);
                                   }
                                 : null,
-                            child: Text(context.tr('save')),
+                            child: Text(
+                              context.tr('save_to_draft'),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: Consumer<InventoryModel>(
+                        builder: (context, inventoryModel, child) {
+                          return ElevatedButton(
+                            onPressed: inventoryModel.data['productList'].isNotEmpty
+                                ? () {
+                                    inventoryModel.save(context);
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: success,
+                            ),
+                            child: Text(
+                              context.tr('complete'),
+                              textAlign: TextAlign.center,
+                            ),
                           );
                         },
                       ),

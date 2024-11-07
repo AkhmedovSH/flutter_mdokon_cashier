@@ -148,7 +148,19 @@ class _InventoryState extends State<Inventory> {
                 DataColumn(
                   label: SizedBox(
                     width: 100,
-                    child: Text(context.tr('status')),
+                    child: Text(
+                      context.tr('status'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: SizedBox(
+                    width: 40,
+                    child: Text(
+                      context.tr('action'),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ],
@@ -201,13 +213,67 @@ class _InventoryState extends State<Inventory> {
                       DataCell(
                         SizedBox(
                           width: 100,
-                          child: Text('${data[i]['completed']}'),
+                          child: Text('${data[i]['completedBy'] ?? '-'}'),
                         ),
                       ),
                       DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: Text('${data[i]['completedBy'] ?? ''}'),
+                        data[i]['completed']
+                            ? Center(
+                                child: Container(
+                                  width: 90,
+                                  decoration: BoxDecoration(
+                                    color: success,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    context.tr('closed'),
+                                    style: TextStyle(
+                                      color: white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Container(
+                                  width: 90,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF74788d),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    context.tr('expected'),
+                                    style: TextStyle(
+                                      color: white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      DataCell(
+                        Center(
+                          child: SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Provider.of<InventoryModel>(context, listen: false).redirect(context, data[i]['id']);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Icon(
+                                UniconsLine.edit_alt,
+                                size: 16,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
