@@ -1,4 +1,3 @@
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -130,6 +129,8 @@ class _ChequesState extends State<Cheques> {
         ),
         body: RefreshIndicator(
           onRefresh: getCheques,
+          color: mainColor,
+          backgroundColor: CustomTheme.of(context).cardColor,
           child: SingleChildScrollView(
             child: Column(
               children: [

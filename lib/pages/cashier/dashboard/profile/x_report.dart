@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -32,7 +30,7 @@ class _XReportState extends State<XReport> {
       cashboxId = prefsCashbox['id'];
       cashbox = prefsCashbox;
     } else {
-      final shift = jsonDecode(storage.read('shift')!);
+      final shift = (storage.read('shift')!);
       cashboxId = shift['id'];
       cashbox = shift;
     }

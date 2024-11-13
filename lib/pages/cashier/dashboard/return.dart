@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +5,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:kassa/helpers/api.dart';
 
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Return extends StatefulWidget {
@@ -241,12 +241,12 @@ class _ReturnState extends State<Return> {
     setState(() {
       cashbox = (storage.read('cashbox')!);
       if (storage.read('shift') != null) {
-        shift = jsonDecode(storage.read('shift')!);
+        shift = (storage.read('shift')!);
       }
     });
     // dynamic shift = {};
     if (storage.read('shift') != null) {
-      shift = jsonDecode(storage.read('shift')!);
+      shift = (storage.read('shift')!);
     }
     final shiftId = cashbox['id'] ?? shift['id'];
     setState(() {
@@ -276,12 +276,12 @@ class _ReturnState extends State<Return> {
     setState(() {
       cashbox = (storage.read('cashbox')!);
       if (storage.read('shift') != null) {
-        shift = jsonDecode(storage.read('shift')!);
+        shift = (storage.read('shift')!);
       }
     });
     // dynamic shift = {};
     if (storage.read('shift') != null) {
-      shift = jsonDecode(storage.read('shift')!);
+      shift = (storage.read('shift')!);
     }
     final shiftId = cashbox['id'] ?? shift['id'];
     setState(() {
@@ -289,11 +289,11 @@ class _ReturnState extends State<Return> {
       sendData['posId'] = cashbox['posId'];
       sendData['shiftId'] = shiftId;
     });
-    // if (Get.arguments != null) {
-    //   final id = Get.arguments['id'];
-    //   data['id'] = id.toString();
-    //   searchCheque(id);
-    // }
+    DashboardModel dashboardModel = Provider.of<DashboardModel>(context, listen: false);
+    print(dashboardModel.returnCheque);
+    if (dashboardModel.returnCheque['id'] != null) {
+      searchCheque(dashboardModel.returnCheque['id']);
+    }
   }
 
   @override

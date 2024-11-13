@@ -68,6 +68,7 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
+    print(111);
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
     var settings = jsonDecode(storage.read('settings'));
@@ -229,7 +230,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     });
     final username = storage.read('user')['username'];
     if (storage.read('shift') != null) {
-      final shift = jsonDecode(storage.read('shift')!);
+      final shift = (storage.read('shift')!);
       setState(() {
         data['shiftId'] = shift['id'];
       });
@@ -239,7 +240,7 @@ class _PaymentSampleState extends State<PaymentSample> {
       });
     }
     final transactionId = generateTransactionId(cashbox['posId'].toString(), cashbox['cashboxId'].toString(),
-        storage.read('shift') != null ? jsonDecode(storage.read('shift')!)['id'] : cashbox['cashboxId'].toString());
+        storage.read('shift') != null ? (storage.read('shift')!)['id'] : cashbox['cashboxId'].toString());
     setState(() {
       data['login'] = username;
       data['cashierLogin'] = username;
@@ -267,10 +268,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     }
 
     if (currentIndex == 2) {
-      if (data['loyaltyClientName'] != null &&
-          data['loyaltyClientAmount'] != null &&
-          data['loyaltyBonus'] != null &&
-          (data['totalPrice'] == data['paid'])) {
+      if (data['loyaltyClientName'] != null && data['clientCode'] != null && data['loyaltyBonus'] != null && (data['totalPrice'] == data['paid'])) {
         return true;
       } else {
         return false;
@@ -316,7 +314,6 @@ class _PaymentSampleState extends State<PaymentSample> {
                             margin: EdgeInsets.symmetric(horizontal: 5),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: white,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: currentIndex == i ? blue : grey,
@@ -354,15 +351,7 @@ class _PaymentSampleState extends State<PaymentSample> {
           child: ElevatedButton(
             onPressed: isDisabled()
                 ? () {
-                    if (currentIndex == 0 && data['change'] >= 0) {
-                      createCheque();
-                    }
-                    if (currentIndex == 1 && data['change'] < 0 && data['clientId'] != 0) {
-                      createCheque();
-                    }
-                    if (currentIndex == 2 && (isDisabled() == mainColor)) {
-                      createCheque();
-                    }
+                    createCheque();
                   }
                 : null,
             style: ElevatedButton.styleFrom(

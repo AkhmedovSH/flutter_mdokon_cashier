@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 
 import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +32,7 @@ void main() async {
   var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
   final theme = isDarkTheme ? darkTheme : lightTheme;
 
-  bool savedLocaleId = storage.read('language') ?? false;
+bool savedLocaleId = storage.read('language') ?? false;
 
   Locale locale = const Locale('ru', '');
   if (savedLocaleId) {
@@ -64,6 +65,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => FilterModel()),
           ChangeNotifierProvider(create: (_) => DocumentsInModel()),
           ChangeNotifierProvider(create: (_) => InventoryModel()),
+          ChangeNotifierProvider(create: (_) => DashboardModel()),
         ],
         child: const MyApp(),
       ),

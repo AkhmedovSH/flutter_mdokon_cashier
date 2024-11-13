@@ -170,7 +170,7 @@ class _IndexState extends State<Index> {
       debtIn['cashboxId'] = cashbox['cashboxId'];
       debtIn['posId'] = cashbox['posId'];
       if (storage.read('shift') != null) {
-        debtIn['shiftId'] = jsonDecode(storage.read('shift')!)['id'];
+        debtIn['shiftId'] = (storage.read('shift')!)['id'];
       } else {
         debtIn['shiftId'] = cashbox['id'];
       }
@@ -346,6 +346,10 @@ class _IndexState extends State<Index> {
   }
 
   deleteAllProducts({type = false}) {
+    print(cashbox);
+    print(data);
+    print(data['currencyId'] == 1);
+    print(data['currencyId'] == '1');
     data = {
       "cashboxVersion": "",
       "login": "",
@@ -360,7 +364,7 @@ class _IndexState extends State<Index> {
       "clientComment": "",
       "clientId": 0,
       "currencyId": data['currencyId'],
-      "currencyName": data['currencyName'] == 1 ? 'So\'m' : 'USD',
+      "currencyName": data['currencyId'] == 1 ? 'So\'m' : 'USD',
       "currencyRate": 0,
       "discount": 0,
       "note": "",
@@ -1310,7 +1314,7 @@ class _IndexState extends State<Index> {
       expenseOut['posId'] = cashbox['posId'].toString();
       expenseOut['currencyId'] = cashbox['defaultCurrency'].toString();
       if (storage.read('shift') != null) {
-        expenseOut['shiftId'] = jsonDecode(storage.read('shift')!)['id'];
+        expenseOut['shiftId'] = storage.read('shift')['id'];
       } else {
         expenseOut['shiftId'] = cashbox['id'].toString();
       }

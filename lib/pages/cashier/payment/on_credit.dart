@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +19,7 @@ class OnCredit extends StatefulWidget {
 }
 
 class _OnCreditState extends State<OnCredit> {
+  List allClients = [];
   List clients = [];
   // Get.arguments
   Map data = {};
@@ -66,6 +69,7 @@ class _OnCreditState extends State<OnCredit> {
       response[i]['selected'] = false;
     }
     setState(() {
+      allClients = response;
       clients = response;
     });
   }
@@ -107,33 +111,8 @@ class _OnCreditState extends State<OnCredit> {
           Container(
             margin: EdgeInsets.only(top: 20, bottom: 5),
             child: Text(
-              '${context.tr('client')}:',
+              '${context.tr('client')}: ${client['name']}',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            child: TextFormField(
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return context.tr('required_field');
-                }
-                return null;
-              },
-              onChanged: (value) {},
-              enabled: false,
-              enableInteractiveSelection: false,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                border: inputBorder,
-                enabledBorder: inputBorder,
-                focusedBorder: inputFocusBorder,
-                errorBorder: inputErrorBorder,
-                focusedErrorBorder: inputErrorBorder,
-                focusColor: blue,
-                hintText: '${client['name']}',
-                hintStyle: TextStyle(color: a2),
-              ),
             ),
           ),
           Row(
@@ -433,6 +412,22 @@ class _OnCreditState extends State<OnCredit> {
     );
   }
 
+  Timer? _debounce;
+
+  void searchUser(setState, String search) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      setState(() {
+        clients = allClients.where((client) {
+          final nameMatch = client['name']?.toLowerCase().contains(search.toLowerCase()) ?? false;
+          final phoneMatch = client['phone1']?.toLowerCase().contains(search.toLowerCase()) ?? false;
+          final commentMatch = client['comment']?.toLowerCase().contains(search.toLowerCase()) ?? false;
+          return nameMatch || phoneMatch || commentMatch;
+        }).toList();
+      });
+    });
+  }
+
   showSelectUserDialog() async {
     await getClients();
     final result = await showDialog(
@@ -440,8 +435,8 @@ class _OnCreditState extends State<OnCredit> {
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
-              title: Text(''),
-              titlePadding: EdgeInsets.all(0),
+              title: Text(context.tr('clients')),
+              titlePadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               contentPadding: EdgeInsets.symmetric(horizontal: 10),
               insetPadding: EdgeInsets.all(10),
               actionsPadding: EdgeInsets.all(0),
@@ -450,64 +445,81 @@ class _OnCreditState extends State<OnCredit> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Table(
-                          border: TableBorder(
-                            horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
-                          ),
-                          children: [
-                            TableRow(
-                              children: [
-                                Text(context.tr('contact')),
-                                Text(context.tr('number')),
-                                Text(context.tr('comment')),
-                              ],
+                  SizedBox(
+                    height: 40,
+                    child: TextField(
+                      onChanged: (value) {
+                        searchUser(setState, value); // Обновляем список при вводе текста
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        hintText: context.tr('search'),
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Table(
+                            border: TableBorder(
+                              horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                             ),
-                            for (var i = 0; i < clients.length; i++)
+                            children: [
                               TableRow(
                                 children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text(
-                                        '${clients[i]['name']}',
-                                        style: TextStyle(
-                                          overflow: TextOverflow.ellipsis,
+                                  Text(context.tr('contact')),
+                                  Text(context.tr('number')),
+                                  Text(context.tr('comment')),
+                                ],
+                              ),
+                              for (var i = 0; i < clients.length; i++)
+                                TableRow(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text(
+                                          '${clients[i]['name']}',
+                                          style: TextStyle(
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text('${clients[i]['phone1']}'),
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text('${clients[i]['phone1']}'),
+                                      ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text(clients[i]['comment'] ?? ''),
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text(clients[i]['comment'] ?? ''),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ],
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

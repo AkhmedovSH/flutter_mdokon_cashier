@@ -42,13 +42,13 @@ class _CashBoxesState extends State<CashBoxes> {
       'cashboxId': cashbox['id'],
       'cashboxName': cashbox['name'],
     };
-    storage.write('cashbox', jsonEncode(prepareprefs));
+    storage.write('cashbox', prepareprefs);
     final response = await post('/services/desktop/api/open-shift', {
       'posId': pos['posId'],
       'cashboxId': cashbox['id'],
       'offline': false,
     });
-    storage.write('shift', jsonEncode(response));
+    storage.write('shift', response);
     if (response['success']) {
       context.go('/cashier');
     }

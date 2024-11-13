@@ -2,7 +2,8 @@
 	package="com.mdokon.cabinet">
 	<application
 		android:label="mDokon"
-		android:icon="@mipmap/launcher_icon">
+		android:icon="@mipmap/launcher_icon"
+		android:enableOnBackInvokedCallback="true">
 		<activity
 			android:name=".MainActivity"
 			android:launchMode="singleTop"
@@ -48,5 +49,5 @@
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	
+
 </manifest>

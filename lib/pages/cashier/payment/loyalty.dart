@@ -24,6 +24,7 @@ class _LoyaltyState extends State<Loyalty> {
 
   Timer? _debounce;
   dynamic data = {};
+  dynamic clientCodeController = TextEditingController();
   dynamic clientInfoController = TextEditingController();
   dynamic clientBalanceController = TextEditingController();
   dynamic pointsController = TextEditingController();
@@ -45,20 +46,25 @@ class _LoyaltyState extends State<Loyalty> {
   searchUserBalance() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
+      print(search.length);
       if (search.length == 6 || search.length == 12) {
-        var sendData = {'clientCode': search, 'key': cashbox['loyaltyApi']};
-        final response = await lPost('/services/gocashapi/api/get-user-balance', sendData);
+        var sendData = {
+          'clientCode': search,
+          'apiKey': cashbox['loyaltyApi'],
+          'lang': "ru",
+        };
+        final response = await lPost('/services/gocashapi/api/user-all-info', {...data, ...sendData});
         print(response);
-        if (response != null && response['reason'] == "SUCCESS") {
+        if (response != null && response['userId'] != null) {
           setState(() {
-            clientInfoController.text =
-                '${response['firstName'] + ' ' + response['lastName'] + '[' + response['status'] + ' ' + response['award'].round().toString() + '%]'}';
+            clientInfoController.text = '${response['firstName']} ${response['lastName']}';
             clientBalanceController.text = response['balance'].round().toString();
+            widget.setPayload!('loyaltyClientBalance', response['balance']);
             widget.setPayload!('loyaltyClientName', response['firstName'] + response['lastName']);
             widget.setPayload!('clientCode', search);
             data['award'] = response['award'].round();
 
-            awardController.text = (data['totalPrice'] * (double.parse(data['award'].toString()) / 100)).toStringAsFixed(2);
+            awardController.text = data['award'].toStringAsFixed(2);
           });
         } else {
           showDangerToast(context.tr('user_not_found'));
@@ -67,23 +73,22 @@ class _LoyaltyState extends State<Loyalty> {
     });
   }
 
-  getData() async {
-    cashbox = (storage.read('cashbox')!);
-  }
+  getData() async {}
 
   @override
   void initState() {
     super.initState();
     setState(() {
+      cashbox = (storage.read('cashbox')!);
       data = widget.data!;
     });
-    getData();
-    // clientInfoController.text = "1";
-    // clientBalanceController.text = "2";
-    // pointsController.text = "3";
-    // cashController.text = "4";
+    clientCodeController.text = (data['clientCode'] ?? '').toString();
+    clientInfoController.text = (data['loyaltyClientName'] ?? '').toString();
+    clientBalanceController.text = (data['loyaltyClientBalance'] ?? '').toString();
+    pointsController.text = (data['writeOff'] ?? '').toString();
+    cashController.text = data['totalPrice'].toString();
     // terminalController.text = "5";
-    // awardController.text = "6";
+    awardController.text = (data['award'] ?? '').toString();
   }
 
   calculateAward(value, type) {
@@ -109,22 +114,12 @@ class _LoyaltyState extends State<Loyalty> {
       totalPrice += double.parse(terminalController.text);
     }
 
-    dynamic loyaltyAmountIn = 0;
-    if (pointsController.text == "") {
-      loyaltyAmountIn = "0";
-    } else {
-      loyaltyAmountIn = pointsController.text;
-    }
-
-    awardController.text =
-        ((double.parse(data['totalPrice'].toString()) - double.parse(loyaltyAmountIn)) * (double.parse(data['award'].toString()) / 100))
-            .toStringAsFixed(2);
-
     dynamic loyaltyData = {
       "points": pointsController.text,
       "cash": cashController.text,
       "terminal": terminalController.text,
       "loyaltyBonus": awardController.text,
+      "writeOff": pointsController.text,
       "paid": totalPrice,
     };
     widget.setLoyaltyData!(loyaltyData);
@@ -147,19 +142,21 @@ class _LoyaltyState extends State<Loyalty> {
           margin: const EdgeInsets.only(bottom: 10),
           width: MediaQuery.of(context).size.width,
           child: TextFormField(
-            controller: index == 1
-                ? clientInfoController
-                : index == 2
-                    ? clientBalanceController
-                    : index == 3
-                        ? pointsController
-                        : index == 4
-                            ? cashController
-                            : index == 5
-                                ? terminalController
-                                : index == 6
-                                    ? awardController
-                                    : null,
+            controller: index == 0
+                ? clientCodeController
+                : index == 1
+                    ? clientInfoController
+                    : index == 2
+                        ? clientBalanceController
+                        : index == 3
+                            ? pointsController
+                            : index == 4
+                                ? cashController
+                                : index == 5
+                                    ? terminalController
+                                    : index == 6
+                                        ? awardController
+                                        : null,
             keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null || value.isEmpty) {

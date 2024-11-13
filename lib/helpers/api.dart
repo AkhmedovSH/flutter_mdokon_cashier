@@ -175,16 +175,14 @@ statuscheker(e) async {
 
 Future lPost(String url, dynamic payload) async {
   try {
-    if (storage.read('access_token') != null) {
-      dio.options.headers["authorization"] = "";
-      dio.options.headers["Accept"] = "application/json";
-    }
+    dio.options.headers["authorization"] = "";
     final response = await dio.post(
       'https://cabinet.cashbek.uz' + url,
       data: payload,
     );
     return response.data;
   } catch (e) {
+    print(e);
     statuscheker(e);
   }
 }

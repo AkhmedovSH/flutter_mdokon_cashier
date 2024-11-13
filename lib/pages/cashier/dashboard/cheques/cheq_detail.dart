@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 //
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
@@ -497,7 +499,9 @@ class _CheqDetailState extends State<CheqDetail> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    context.go('/cashier', extra: {'value': 2, 'id': cheque['chequeNumber']});
+                    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(2);
+                    Provider.of<DashboardModel>(context, listen: false).setCurrentCheque(cheque);
+                    context.go('/cashier');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14),
