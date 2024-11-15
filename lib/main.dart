@@ -32,7 +32,7 @@ void main() async {
   var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
   final theme = isDarkTheme ? darkTheme : lightTheme;
 
-bool savedLocaleId = storage.read('language') ?? false;
+  bool savedLocaleId = storage.read('language') ?? false;
 
   Locale locale = const Locale('ru', '');
   if (savedLocaleId) {

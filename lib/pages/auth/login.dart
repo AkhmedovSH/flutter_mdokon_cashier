@@ -172,13 +172,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Center(
-                  child: SvgPicture.asset(
-                    'images/icons/login_bg.svg',
-                    height: 270,
-                    width: MediaQuery.of(context).size.width,
+                if (MediaQuery.of(context).size.width > 320)
+                  Center(
+                    child: SvgPicture.asset(
+                      'images/icons/login_bg.svg',
+                      height: 270,
+                      width: MediaQuery.of(context).size.width,
+                    ),
                   ),
-                ),
                 Text(
                   'Авторизация',
                   style: TextStyle(

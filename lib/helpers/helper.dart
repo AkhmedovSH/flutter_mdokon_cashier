@@ -300,7 +300,7 @@ showFilterModal(BuildContext context, {required List<Widget> children}) async {
                 const SizedBox(height: 10),
                 Center(
                   child: SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.5,
+                    width: MediaQuery.of(context).size.width * 0.53,
                     child: TextButton(
                       onPressed: () {
                         Provider.of<FilterModel>(context, listen: false).resetFilterData();

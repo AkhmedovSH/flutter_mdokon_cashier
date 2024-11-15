@@ -19,7 +19,6 @@ class InventoryCreate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DataModel dataModel = Provider.of<DataModel>(context, listen: false);
-
     return Scaffold(
       appBar: CustomAppBar(
         title: context.tr('create'),
@@ -39,14 +38,16 @@ class InventoryCreate extends StatelessWidget {
                     items: dataModel.poses,
                     dataKey: 'posId',
                   ),
-                  TextFielItem(
-                    label: '${context.tr('inventory')} №',
-                    dataKey: 'inventoryNumber',
-                  ),
-                  TextFielItem(
-                    label: 'note',
-                    dataKey: 'note',
-                  ),
+                  if (MediaQuery.of(context).size.width > 320) ...[
+                    TextFielItem(
+                      label: '${context.tr('inventory')} №',
+                      dataKey: 'inventoryNumber',
+                    ),
+                    TextFielItem(
+                      label: 'note',
+                      dataKey: 'note',
+                    ),
+                  ],
                   SearchItem(),
                   SizedBox(
                     height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - kToolbarHeight - 160,
@@ -56,13 +57,7 @@ class InventoryCreate extends StatelessWidget {
                           headers: [
                             DataColumn(
                               label: SizedBox(
-                                width: 40,
-                                child: Text('№'),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 180,
+                                width: 150,
                                 child: Text(context.tr('name_of_product')),
                               ),
                             ),
@@ -123,14 +118,12 @@ class InventoryCreate extends StatelessWidget {
                                 cells: [
                                   DataCell(
                                     SizedBox(
-                                      width: 40,
-                                      child: Text('${i + 1}'),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 180,
-                                      child: Text('${inventoryModel.data['productList'][i]['productName']}'),
+                                      width: 150,
+                                      child: Text(
+                                        '${i + 1} ${inventoryModel.data['productList'][i]['productName']}',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
                                   DataCell(
@@ -311,16 +304,20 @@ class SearchItem extends StatelessWidget {
                 ),
                 child: TextFormField(
                   controller: inventoryModel.searchController,
+                  focusNode: inventoryModel.searchFocus,
                   onChanged: (value) {
+                    print(value);
                     inventoryModel.search(value);
+                  },
+                  onFieldSubmitted: (value) {
+                    // Обработка отсканированного значения
+                    print('Отсканировано: $value');
                   },
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
-                  textInputAction: TextInputAction.next, // Устанавливаем тип кнопки "Next"
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).nextFocus(); // Переход на следующий инпут
-                  },
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.search, // Устанавливаем тип кнопки "Next"
                   scrollPadding: EdgeInsets.only(bottom: 700),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -403,25 +400,42 @@ class TableTextField extends StatelessWidget {
     required this.keyName,
   });
 
+  // Функция для преобразования символов в цифры
+  String convertToNumbers(String input) {
+    final Map<String, String> charToNumber = {
+      '@': '1',
+      'a': '2',
+      'd': '3',
+      'g': '4',
+      'j': '5',
+      'm': '6',
+      'p': '7',
+      't': '8',
+      'w': '9',
+    };
+
+    return input
+        .split('') // Разбиваем строку на символы
+        .map((char) => charToNumber[char] ?? char) // Преобразуем символ или оставляем без изменений
+        .join(); // Объединяем символы обратно в строку
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 5),
       child: TextFormField(
-        initialValue: (inventoryModel.data['productList'][i][keyName] ?? '').toString(),
+        controller: inventoryModel.data['productList'][i]['controller'],
+        focusNode: inventoryModel.data['productList'][i]['focus'],
         onChanged: (value) {
-          inventoryModel.setProductListValue(i, keyName, value);
+          String convertedValue = convertToNumbers(value);
+          inventoryModel.setProductListValue(i, keyName, convertedValue);
         },
-        onTapOutside: (PointerDownEvent event) {
-          FocusManager.instance.primaryFocus?.unfocus();
-          // if (inventoryModel.data['productList'][i + 1] != null) {
-          //   FocusScope.of(context).requestFocus(inventoryModel.data['productList'][i + 1]['focusNode']);
-          // } else {
-          // }
+        onFieldSubmitted: (value) {
+          inventoryModel.searchFocus.requestFocus();
         },
-        textInputAction: TextInputAction.next, // Устанавливаем тип кнопки "Next"
-        keyboardType: TextInputType.number,
-        onFieldSubmitted: (_) {},
+        textInputAction: TextInputAction.done, // Устанавливаем тип кнопки "Next"
+        keyboardType: TextInputType.text,
         textAlign: TextAlign.center,
         scrollPadding: EdgeInsets.only(bottom: 100),
         decoration: InputDecoration(

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 class InventoryModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
   TextEditingController searchController = TextEditingController();
+  FocusNode searchFocus = FocusNode();
   Timer? debounce; // Timer для дебаунса
 
   Map data = {
@@ -36,6 +37,7 @@ class InventoryModel extends ChangeNotifier {
 
   setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
+    data['productList'][index]['controller'].text = value.toString();
     notifyListeners();
   }
 
@@ -109,11 +111,19 @@ class InventoryModel extends ChangeNotifier {
   Future<void> search(String barcode) async {
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 500), () async {
+      print({
+        'name': barcode,
+        'posId': data['posId'],
+        'categoryList': [],
+        'barcode': true,
+      });
       List response = await post('/services/web/api/product-inventory-list', {
         'name': barcode,
         'posId': data['posId'],
-        'currencyId': data['currencyId'],
+        'categoryList': [],
+        'barcode': true,
       });
+      print(response);
       if (httpOk(response)) {
         if (response.length == 1) {
           var newProduct = response[0];
@@ -132,12 +142,18 @@ class InventoryModel extends ChangeNotifier {
           } else {
             // newProduct['focusNode'] = FocusNode();
             newProduct['vat'] = data['defaultVat'];
+            newProduct['controller'] = TextEditingController();
+            newProduct['focus'] = FocusNode();
             data['productList'].add(newProduct);
+            Timer(Duration(milliseconds: 300), () {
+              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
+            });
           }
         }
       } else {
         data['productList'] = [];
       }
+      searchFocus.requestFocus();
       searchController.text = '';
       notifyListeners();
     });
@@ -152,6 +168,7 @@ class InventoryModel extends ChangeNotifier {
   void dispose() {
     debounce?.cancel();
     searchController.dispose();
+    searchFocus.dispose();
     super.dispose();
   }
 }
