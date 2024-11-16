@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
 import 'package:kassa/models/director/documents_in_model.dart';
@@ -85,19 +84,17 @@ class DocumentsInCreate extends StatelessWidget {
                           headers: [
                             DataColumn(
                               label: SizedBox(
-                                width: 40,
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 40,
-                                child: Text('№'),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 200,
+                                width: 150,
                                 child: Text(context.tr('name_of_product')),
+                              ),
+                            ),
+                            DataColumn(
+                              label: SizedBox(
+                                width: 100,
+                                child: Text(
+                                  context.tr('quantity'),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                             DataColumn(
@@ -115,15 +112,6 @@ class DocumentsInCreate extends StatelessWidget {
                                 child: Text(
                                   context.tr('residue'),
                                   textAlign: TextAlign.end,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('quantity'),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
@@ -181,42 +169,34 @@ class DocumentsInCreate extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            DataColumn(
+                              label: SizedBox(
+                                width: 40,
+                              ),
+                            ),
                           ],
                           rows: [
-                            for (var i = 0; i < documentsInModel.data['productList'].length; i++)
+                            for (var i = 0; i < documentsInModel.data['productList'].reversed.toList().length; i++)
                               DataRow(
                                 cells: [
                                   DataCell(
-                                    Center(
-                                      child: SizedBox(
-                                        width: 30,
-                                        height: 30,
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            documentsInModel.removeProduct(i);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            padding: EdgeInsets.zero,
-                                            backgroundColor: danger,
-                                          ),
-                                          child: Icon(
-                                            UniconsLine.times,
-                                            size: 20,
-                                          ),
-                                        ),
+                                    SizedBox(
+                                      width: 150,
+                                      child: Text(
+                                        '${i + 1} ${documentsInModel.data['productList'][i]['name']}',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),
                                   DataCell(
                                     SizedBox(
-                                      width: 40,
-                                      child: Text('${i + 1}'),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 200,
-                                      child: Text('${documentsInModel.data['productList'][i]['name']}'),
+                                      width: 100,
+                                      child: TableTextField(
+                                        documentsInModel: documentsInModel,
+                                        i: i,
+                                        keyName: 'quantity',
+                                      ),
                                     ),
                                   ),
                                   DataCell(
@@ -234,16 +214,6 @@ class DocumentsInCreate extends StatelessWidget {
                                       child: Text(
                                         '${documentsInModel.data['productList'][i]['balance']}',
                                         textAlign: TextAlign.end,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: TableTextField(
-                                        documentsInModel: documentsInModel,
-                                        i: i,
-                                        keyName: 'quantity',
                                       ),
                                     ),
                                   ),
@@ -302,6 +272,27 @@ class DocumentsInCreate extends StatelessWidget {
                                       child: Text(
                                         '${formatMoney(documentsInModel.data['productList'][i]['totalAmount'])}',
                                         textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: SizedBox(
+                                        width: 30,
+                                        height: 30,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            documentsInModel.removeProduct(i);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            backgroundColor: danger,
+                                          ),
+                                          child: Icon(
+                                            UniconsLine.times,
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -416,16 +407,15 @@ class SearchItem extends StatelessWidget {
                 ),
                 child: TextFormField(
                   controller: documentsInModel.searchController,
+                  focusNode: documentsInModel.searchFocus,
                   onChanged: (value) {
                     documentsInModel.search(value);
                   },
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
-                  textInputAction: TextInputAction.next, // Устанавливаем тип кнопки "Next"
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).nextFocus(); // Переход на следующий инпут
-                  },
+                  textInputAction: TextInputAction.search, // Устанавливаем тип кнопки "Next"
+                  keyboardType: TextInputType.number,
                   scrollPadding: EdgeInsets.only(bottom: 700),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -508,25 +498,43 @@ class TableTextField extends StatelessWidget {
     required this.keyName,
   });
 
+  // Функция для преобразования символов в цифры
+  String convertToNumbers(String input) {
+    final Map<String, String> charToNumber = {
+      '@': '1',
+      'a': '2',
+      'd': '3',
+      'g': '4',
+      'j': '5',
+      'm': '6',
+      'p': '7',
+      't': '8',
+      'w': '9',
+    };
+
+    return input
+        .split('') // Разбиваем строку на символы
+        .map((char) => charToNumber[char] ?? char) // Преобразуем символ или оставляем без изменений
+        .join(); // Объединяем символы обратно в строку
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 5),
       child: TextFormField(
-        initialValue: (documentsInModel.data['productList'][i][keyName] ?? '').toString(),
+        controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
+        focusNode: keyName == 'quantity' ? documentsInModel.data['productList'][i]['focus'] : null,
         onChanged: (value) {
-          documentsInModel.setProductListValue(i, keyName, value);
+          String convertedValue = convertToNumbers(value);
+          print(convertedValue);
+          documentsInModel.setProductListValue(i, keyName, convertedValue);
         },
-        onTapOutside: (PointerDownEvent event) {
-          FocusManager.instance.primaryFocus?.unfocus();
-          // if (documentsInModel.data['productList'][i + 1] != null) {
-          //   FocusScope.of(context).requestFocus(documentsInModel.data['productList'][i + 1]['focusNode']);
-          // } else {
-          // }
+        onFieldSubmitted: (value) {
+          documentsInModel.searchFocus.requestFocus();
         },
-        textInputAction: TextInputAction.next, // Устанавливаем тип кнопки "Next"
+        textInputAction: TextInputAction.done, // Устанавливаем тип кнопки "Next"
         keyboardType: TextInputType.number,
-        onFieldSubmitted: (_) {},
         textAlign: TextAlign.center,
         scrollPadding: EdgeInsets.only(bottom: 100),
         decoration: InputDecoration(
@@ -621,44 +629,21 @@ class TotalAmountItem extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: danger,
-                        ),
-                        child: Text(context.tr('cancel')),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 50,
-                      child: Consumer<DocumentsInModel>(
-                        builder: (context, documentsInModel, child) {
-                          return ElevatedButton(
-                            onPressed: documentsInModel.data['productList'].isNotEmpty
-                                ? () {
-                                    documentsInModel.checkData(context);
-                                  }
-                                : null,
-                            child: Text(context.tr('save')),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: 50,
+                child: Consumer<DocumentsInModel>(
+                  builder: (context, documentsInModel, child) {
+                    return ElevatedButton(
+                      onPressed: documentsInModel.data['productList'].isNotEmpty
+                          ? () {
+                              documentsInModel.checkData(context);
+                            }
+                          : null,
+                      child: Text(context.tr('save')),
+                    );
+                  },
+                ),
               ),
             ],
           ),

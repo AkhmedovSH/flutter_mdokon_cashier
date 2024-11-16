@@ -435,7 +435,7 @@ class TableTextField extends StatelessWidget {
           inventoryModel.searchFocus.requestFocus();
         },
         textInputAction: TextInputAction.done, // Устанавливаем тип кнопки "Next"
-        keyboardType: TextInputType.text,
+        keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         scrollPadding: EdgeInsets.only(bottom: 100),
         decoration: InputDecoration(

@@ -73,6 +73,7 @@ class _InventoryState extends State<Inventory> {
             tooltip: context.tr('create'),
             onPressed: () {
               DataModel dataModel = Provider.of<DataModel>(context, listen: false);
+              Provider.of<InventoryModel>(context, listen: false).clearData();
               Provider.of<InventoryModel>(context, listen: false).setDataValue('posId', dataModel.posId);
               context.go('/director/inventory/create');
             },

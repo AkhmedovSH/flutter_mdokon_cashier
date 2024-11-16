@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 class DocumentsInModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
   TextEditingController searchController = TextEditingController();
+  FocusNode searchFocus = FocusNode();
   TextEditingController paidAmountController = TextEditingController();
   Timer? debounce; // Timer для дебаунса
 
@@ -49,6 +50,7 @@ class DocumentsInModel extends ChangeNotifier {
 
   setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
+    data['productList'][index]['controller'].text = value.toString();
     countTotalAmount();
   }
 
@@ -158,16 +160,28 @@ class DocumentsInModel extends ChangeNotifier {
           );
 
           if (existingProduct != null) {
+            newProduct['vat'] = data['defaultVat'];
+            newProduct['controller'] = TextEditingController();
+            newProduct['focus'] = FocusNode();
+            data['productList'].add(newProduct);
+            Timer(Duration(milliseconds: 300), () {
+              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
+            });
             // if (existingProduct['quantity'] != null) {
             //   existingProduct['quantity'] = 1;
             // } else {
             //   existingProduct['quantity'] += 1;
             // }
-            showDangerToast('Продукт уже добавлен');
+            // showDangerToast('Продукт уже добавлен');
           } else {
             // newProduct['focusNode'] = FocusNode();
             newProduct['vat'] = data['defaultVat'];
+            newProduct['controller'] = TextEditingController();
+            newProduct['focus'] = FocusNode();
             data['productList'].add(newProduct);
+            Timer(Duration(milliseconds: 300), () {
+              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
+            });
           }
         }
       } else {

@@ -95,7 +95,7 @@ class _TableWidgetState extends State<TableWidget> {
                   if (loaderModel.currentLoading == 0 && widget.rows.isEmpty) {
                     return Column(
                       children: [
-                        SizedBox(height: 100),
+                        SizedBox(height: 50),
                         Icon(
                           UniconsLine.inbox,
                           size: 48,

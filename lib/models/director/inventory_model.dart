@@ -41,6 +41,14 @@ class InventoryModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearData() {
+    data = {
+      "productList": [],
+      "posId": 0,
+    };
+    notifyListeners();
+  }
+
   Future<void> save(BuildContext context) async {
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
@@ -133,6 +141,7 @@ class InventoryModel extends ChangeNotifier {
           );
 
           if (existingProduct != null) {
+            
             // if (existingProduct['quantity'] != null) {
             //   existingProduct['quantity'] = 1;
             // } else {
