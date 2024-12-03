@@ -346,10 +346,6 @@ class _IndexState extends State<Index> {
   }
 
   deleteAllProducts({type = false}) {
-    print(cashbox);
-    print(data);
-    print(data['currencyId'] == 1);
-    print(data['currencyId'] == '1');
     data = {
       "cashboxVersion": "",
       "login": "",
@@ -365,6 +361,8 @@ class _IndexState extends State<Index> {
       "clientId": 0,
       "currencyId": data['currencyId'],
       "currencyName": data['currencyId'] == 1 ? 'So\'m' : 'USD',
+      "cashierLogin": storage.read('user')['login'],
+      "cashierName": '${storage.read('user')['firstName'] ?? ''}',
       "currencyRate": 0,
       "discount": 0,
       "note": "",
@@ -692,6 +690,8 @@ class _IndexState extends State<Index> {
     cashbox = storage.read('cashbox');
     data['currencyId'] = cashbox['defaultCurrency'];
     data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
+    data['cashierLogin'] = storage.read('user')['login'];
+    data['cashierName'] = '${storage.read('user')['firstName'] ?? ''}';
     setState(() {});
   }
 
