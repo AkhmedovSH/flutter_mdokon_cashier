@@ -140,7 +140,7 @@ class _PosSalesState extends State<PosSales> {
                 ),
                 DataColumn(
                   label: SizedBox(
-                    width: 100,
+                    width: 120,
                     child: Text(
                       context.tr('barcode'),
                       textAlign: TextAlign.end,
@@ -213,7 +213,7 @@ class _PosSalesState extends State<PosSales> {
                         SizedBox(
                           width: 200,
                           child: Text(
-                            '${data[i]['organizationName']}',
+                            '${data[i]['organizationName'] ?? ''}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -243,8 +243,11 @@ class _PosSalesState extends State<PosSales> {
                       ),
                       DataCell(
                         SizedBox(
-                          width: 100,
-                          child: Text('${data[i]['productBarcode']}'),
+                          width: 120,
+                          child: Text(
+                            '${data[i]['productBarcode']}',
+                            textAlign: TextAlign.end,
+                          ),
                         ),
                       ),
                       DataCell(

@@ -111,23 +111,22 @@ class _TableWidgetState extends State<TableWidget> {
                       ],
                     );
                   }
-                  return const SizedBox();
-                },
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: ClampingScrollPhysics(),
-                  // controller: verticalScrollController1,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: horizontalScrollController2,
-                    child: DataTable(
-                      headingRowHeight: 0,
-                      columns: widget.headers,
-                      rows: widget.rows,
+                  return Expanded(
+                    child: SingleChildScrollView(
+                      physics: ClampingScrollPhysics(),
+                      // controller: verticalScrollController1,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        controller: horizontalScrollController2,
+                        child: DataTable(
+                          headingRowHeight: 0,
+                          columns: widget.headers,
+                          rows: widget.rows,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),

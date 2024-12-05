@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/loading_layout.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Cheques extends StatefulWidget {
@@ -47,6 +49,8 @@ class _ChequesState extends State<Cheques> {
   };
 
   Future<void> getCheques() async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 1);
+
     dynamic cashbox = (storage.read('cashbox')!);
     setState(() {
       sendData['posId'] = cashbox['posId'];
@@ -63,6 +67,7 @@ class _ChequesState extends State<Cheques> {
         });
       }
     }
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   getStatus(status) {

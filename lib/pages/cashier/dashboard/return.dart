@@ -54,6 +54,7 @@ class _ReturnState extends State<Return> {
     } else {
       response = await get('/services/desktop/api/cheque-byNumber/$search/${sendData['posId']}');
     }
+    print(response);
     if (response['id'] != null) {
       setState(() {
         data = response;
@@ -200,7 +201,7 @@ class _ReturnState extends State<Return> {
 
   returnCheque() async {
     if (!isValid()) {
-      showDangerToast('check_quantity'.tr);
+      showDangerToast(context.tr('check_quantity'));
       return;
     }
     setState(() {
@@ -232,7 +233,7 @@ class _ReturnState extends State<Return> {
     });
     final response = await post('/services/desktop/api/cheque-returned', sendData);
     if (response['success']) {
-      showSuccessToast('return_completed_successfully'.tr);
+      showSuccessToast(context.tr('return_completed_successfully'));
       setInitState();
     }
   }
@@ -274,12 +275,11 @@ class _ReturnState extends State<Return> {
 
   getData() async {
     setState(() {
-      cashbox = (storage.read('cashbox')!);
+      cashbox = storage.read('cashbox');
       if (storage.read('shift') != null) {
-        shift = (storage.read('shift')!);
+        shift = storage.read('shift');
       }
     });
-    // dynamic shift = {};
     if (storage.read('shift') != null) {
       shift = (storage.read('shift')!);
     }
@@ -290,9 +290,8 @@ class _ReturnState extends State<Return> {
       sendData['shiftId'] = shiftId;
     });
     DashboardModel dashboardModel = Provider.of<DashboardModel>(context, listen: false);
-    print(dashboardModel.returnCheque);
-    if (dashboardModel.returnCheque['id'] != null) {
-      searchCheque(dashboardModel.returnCheque['id']);
+    if (dashboardModel.returnCheque['chequeNumber'] != null) {
+      searchCheque(dashboardModel.returnCheque['chequeNumber']);
     }
   }
 
@@ -373,14 +372,33 @@ class _ReturnState extends State<Return> {
                     children: [
                       Container(
                         margin: EdgeInsets.only(bottom: 5),
-                        child: Text(
-                          '${context.tr('cash_receipt')} №: ${data['chequeNumber']}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            color: grey,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${context.tr('cash_receipt')} №:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: grey,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${data['chequeNumber']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        // child: Text(
+                        //   ' ',
+                        //   style: TextStyle(
+
+                        //   ),
+                        // ),
                       ),
                       Container(
                         margin: EdgeInsets.only(bottom: 10),
@@ -606,23 +624,17 @@ class _ReturnState extends State<Return> {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Container(
-                                          margin: EdgeInsets.only(left: 5),
-                                          child: IconButton(
-                                            onPressed: () {
-                                              addToItemsList(sendData['itemsList'][i], i);
-                                            },
-                                            padding: EdgeInsets.zero,
-                                            constraints: BoxConstraints(),
-                                            tooltip: context.tr('return_to_list'),
-                                            icon: Icon(
-                                              UniconsLine.angle_left_b,
-                                              size: 20,
-                                            ),
+                                        InkWell(
+                                          onTap: () {
+                                            addToItemsList(sendData['itemsList'][i], i);
+                                          },
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Icon(
+                                            UniconsLine.angle_left_b,
+                                            size: 24,
                                           ),
                                         ),
-                                        SizedBox(
-                                          width: 100,
+                                        Flexible(
                                           child: Text(
                                             '${sendData['itemsList'][i]['productName']} ',
                                             style: TextStyle(color: Color(0xFF495057)),

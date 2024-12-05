@@ -36,10 +36,10 @@ class _DashboardState extends State<CashierDashboard> {
             body: SizedBox.expand(
               child: IndexedStack(
                 index: dashboardModel.currentIndex,
-                children: const [
+                children: [
                   Index(),
-                  Cheques(),
-                  Return(),
+                  dashboardModel.currentIndex == 1 ? Cheques() : SizedBox(),
+                  dashboardModel.currentIndex == 2 ? Return() : SizedBox(),
                   Profile(),
                 ],
               ),

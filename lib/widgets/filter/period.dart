@@ -15,8 +15,8 @@ class Period extends StatefulWidget {
 class _PeriodState extends State<Period> {
   selectDate(BuildContext context, int date) async {
     FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
-    DateTime startDate = DateTime.parse(filterModel.currentFilterData['start_date']);
-    DateTime endDate = DateTime.parse(filterModel.currentFilterData['end_date']);
+    DateTime startDate = DateTime.parse(filterModel.currentFilterData['startDate']);
+    DateTime endDate = DateTime.parse(filterModel.currentFilterData['endDate']);
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: date == 1 ? startDate : endDate,
@@ -26,10 +26,10 @@ class _PeriodState extends State<Period> {
     );
     if (mounted && picked != null) {
       if (date == 1) {
-        filterModel.setFilterData('start_date', formatDateTime(picked));
+        filterModel.setFilterData('startDate', formatDateTime(picked));
       }
       if (date == 2) {
-        filterModel.setFilterData('end_date', formatDateTime(picked));
+        filterModel.setFilterData('endDate', formatDateTime(picked));
       }
     }
   }

@@ -60,25 +60,26 @@ class _SearchState extends State<Search> {
       productsList.add(Map.from(products[i]));
       products[i]['originalBalance'] = products[i]['balance'];
       products[i]['balance'] = products[i]['balance'] - double.parse(products[i]['quantity'].toString());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(milliseconds: 1200),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
-          ),
-          content: Text(
-            context.tr(products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + 'added'),
-            style: TextStyle(
-              color: white,
-            ),
-          ),
-          backgroundColor: mainColor,
-        ),
-      );
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(milliseconds: 1200),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+        ),
+        content: Text(
+          products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + context.tr('added'),
+          style: TextStyle(
+            color: white,
+          ),
+        ),
+        backgroundColor: mainColor,
+      ),
+    );
+
     Provider.of<DataModel>(context, listen: false).setProductList(productsList);
     setState(() {});
   }
