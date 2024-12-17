@@ -522,6 +522,7 @@ class TableTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 5),
+      height: 35,
       child: TextFormField(
         initialValue: keyName == 'quantity' ? null : documentsInModel.data['productList'][i][keyName].toString(),
         controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
@@ -534,12 +535,15 @@ class TableTextField extends StatelessWidget {
         onFieldSubmitted: (value) {
           documentsInModel.searchFocus.requestFocus();
         },
-        textInputAction: TextInputAction.done, // Устанавливаем тип кнопки "Next"
+        textInputAction: TextInputAction.done,
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         scrollPadding: EdgeInsets.only(bottom: 100),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
+          enabledBorder: inputBorder,
+          focusedBorder: inputFocusBorder,
+          border: inputFocusBorder,
         ),
       ),
     );
