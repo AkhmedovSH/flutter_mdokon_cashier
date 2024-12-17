@@ -10,6 +10,7 @@ import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:kassa/widgets/filter/dropdown.dart';
 import 'package:kassa/widgets/filter/period.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 import 'package:kassa/widgets/table/table.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -65,173 +66,205 @@ class _DocumentsInState extends State<DocumentsIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'documents_in',
-        leading: true,
-        actions: [
-          IconButton(
-            tooltip: context.tr('create'),
-            onPressed: () {
-              DataModel dataModel = Provider.of<DataModel>(context, listen: false);
+    return LoadingLayout(
+      onlySecond: true,
+      body: Scaffold(
+        appBar: CustomAppBar(
+          title: 'documents_in',
+          leading: true,
+          actions: [
+            IconButton(
+              tooltip: context.tr('create'),
+              onPressed: () async {
+                DataModel dataModel = Provider.of<DataModel>(context, listen: false);
 
-              Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', dataModel.posId);
-              Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[1]['id']);
-
-              context.go('/director/documents-in/create');
-            },
-            icon: const Icon(UniconsLine.plus_circle),
-          ),
-          IconButton(
-            tooltip: context.tr('filter'),
-            onPressed: () async {
-              var result = await showFilterDialog();
-              if (mounted) {
-                if (result == true) {
-                  getData();
-                }
-              }
-            },
-            icon: const Icon(UniconsLine.filter),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: TableWidget(
-              headers: [
-                DataColumn(
-                  label: SizedBox(
-                    width: 40,
-                    child: Text('№'),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 130,
-                    child: Text(context.tr('pos')),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 100,
-                    child: Text(context.tr('supplier')),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 120,
-                    child: Text(
-                      context.tr('receipt_amount'),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 120,
-                    child: Text(
-                      context.tr('sale_amount'),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 80,
-                    child: Text(context.tr('currency')),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 140,
-                    child: Text(
-                      context.tr('date_of_receipt'),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 100,
-                    child: Text(
-                      context.tr('received_by'),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-              ],
-              rows: [
-                for (var i = 0; i < data.length; i++)
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text('${data[i]['rowNum']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 130,
-                          child: Text('${data[i]['posName']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: Text('${data[i]['organizationName']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 120,
-                          child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 120,
-                          child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: Text('${data[i]['currencyName']}'),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 140,
-                          child: Text(
-                            '${formatDate(data[i]['createdDate'])}',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            '${data[i]['createdBy'] ?? ''}',
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
+                Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', dataModel.posId);
+                Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[1]['id']);
+                await context.push('/director/documents-in/create');
+                getData();
+              },
+              icon: const Icon(UniconsLine.plus_circle),
             ),
-          ),
-        ],
+            IconButton(
+              tooltip: context.tr('filter'),
+              onPressed: () async {
+                var result = await showFilterDialog();
+                if (mounted) {
+                  if (result == true) {
+                    getData();
+                  }
+                }
+              },
+              icon: const Icon(UniconsLine.filter),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: TableWidget(
+                headers: [
+                  DataColumn(
+                    label: SizedBox(
+                      width: 40,
+                      child: Text('№'),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 130,
+                      child: Text(context.tr('pos')),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 100,
+                      child: Text(context.tr('supplier')),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 120,
+                      child: Text(
+                        context.tr('receipt_amount'),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 120,
+                      child: Text(
+                        context.tr('sale_amount'),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 80,
+                      child: Text(context.tr('currency')),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 140,
+                      child: Text(
+                        context.tr('date_of_receipt'),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 100,
+                      child: Text(
+                        context.tr('received_by'),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 100,
+                      child: Text(
+                        context.tr('action'),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                ],
+                rows: [
+                  for (var i = 0; i < data.length; i++)
+                    DataRow(
+                      cells: [
+                        DataCell(
+                          SizedBox(
+                            width: 40,
+                            child: Text('${data[i]['rowNum']}'),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 130,
+                            child: Text('${data[i]['posName']}'),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 100,
+                            child: Text('${data[i]['organizationName']}'),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              '${formatMoney(data[i]['totalAmount'])}',
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              '${formatMoney(data[i]['totalAmount'])}',
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 80,
+                            child: Text('${data[i]['currencyName']}'),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 140,
+                            child: Text(
+                              '${formatDate(data[i]['createdDate'])}',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              '${data[i]['createdBy'] ?? ''}',
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          SizedBox(
+                            width: 100,
+                            child: data[i]['completed']
+                                ? SizedBox()
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      IconButton(
+                                        onPressed: () async {
+                                          await Provider.of<DocumentsInModel>(context, listen: false).getData(context, data[i]['id']);
+                                          await context.push('/director/documents-in/create');
+                                          getData();
+                                        },
+                                        icon: Icon(UniconsLine.edit_alt),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

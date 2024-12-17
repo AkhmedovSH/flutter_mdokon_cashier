@@ -60,9 +60,63 @@ class DocumentsInModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  clearControllers() {
+    for (var i = 0; i < data['productList'].length; i++) {
+      data['productList'][i]['controller'] = null;
+      data['productList'][i]['focus'] = null;
+    }
+  }
+
+  Future<void> saveToDraft(BuildContext context) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+
+    clearControllers();
+    var sendData = Map.from(data);
+
+    var response = {};
+    // Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    // return;
+    if (data['id'] != null) {
+      response = await put('/services/web/api/documents-in-draft', sendData);
+    } else {
+      response = await post('/services/web/api/documents-in-draft', sendData);
+    }
+    if (httpOk(response)) {
+      data = {
+        "productList": [],
+        "posId": 0,
+        "productCategoryId": '',
+        "paymentTypeId": '1',
+        "walletId": '',
+        "bankId": '',
+        "paid": 1,
+        "based": '',
+        "organizationId": '',
+        "currencyId": 1,
+        "currencyName": '',
+        "productSerial": false,
+        "importExcel": false,
+        "wholesalePriceMarkup": 0,
+        "bankPriceMarkup": 0,
+        "salePriceMarkup": 0,
+        "defaultVat": 0,
+        "totalAmount": 0,
+        "expense": '',
+        "totalQuantity": 0,
+        "totalIncome": 0,
+        "totalSale": 0,
+      };
+      context.go('/director/documents-in');
+    }
+    notifyListeners();
+
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+  }
+
   Future<void> save(BuildContext context) async {
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
+    clearControllers();
     var sendData = Map.from(data);
     sendData['totalAmount'] = sendData['totalIncome'];
 
@@ -94,11 +148,12 @@ class DocumentsInModel extends ChangeNotifier {
       };
       context.go('/director/documents-in');
     }
+
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
     notifyListeners();
   }
 
-  Future<void> checkData(BuildContext context) async {
+  Future<bool> checkData(BuildContext context) async {
     bool error = false;
     for (var i = 0; i < data['productList'].length; i++) {
       var item = data['productList'][i];
@@ -122,6 +177,7 @@ class DocumentsInModel extends ChangeNotifier {
       showDangerToast('Проверьте заполненные поля');
     }
     notifyListeners();
+    return !error;
   }
 
   countTotalAmount() {
@@ -139,6 +195,7 @@ class DocumentsInModel extends ChangeNotifier {
     }
     data['totalQuantity'] = temporaryTotalQuantity;
     data['totalIncome'] = temporaryTotalIncome;
+    data['totalAmount'] = temporaryTotalIncome;
     data['totalSale'] = temporaryTotalSale;
     notifyListeners();
   }
@@ -196,6 +253,29 @@ class DocumentsInModel extends ChangeNotifier {
     data['productList'].removeAt(index);
     countTotalAmount(); // Обновляем общую сумму после удаления продукта
     notifyListeners(); // Уведомляем слушателей об изменении
+  }
+
+  Future<void> getData(context, id) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+
+    final response = await get('/services/web/api/documents-in/$id');
+    if (httpOk(response)) {
+      response['productList'] = response['productList']['content'];
+      for (var i = 0; i < response['productList'].length; i++) {
+        response['productList'][i]['name'] = response['productList'][i]['productName'];
+        response['productList'][i]['controller'] = TextEditingController(text: response['productList'][i]['quantity'].round().toString());
+        response['productList'][i]['focus'] = FocusNode();
+      }
+      if (response['walletId'] == 0) {
+        response['walletId'] = '';
+      }
+      if (response['bankId'] == 0) {
+        response['bankId'] = '';
+      }
+      data = response;
+      countTotalAmount();
+    }
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   @override

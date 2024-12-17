@@ -20,7 +20,7 @@ class DocumentsInCreate extends StatelessWidget {
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: context.tr('create'),
+        title: 'create',
         leading: true,
       ),
       resizeToAvoidBottomInset: false,
@@ -523,6 +523,7 @@ class TableTextField extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(top: 5),
       child: TextFormField(
+        initialValue: keyName == 'quantity' ? null : documentsInModel.data['productList'][i][keyName].toString(),
         controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
         focusNode: keyName == 'quantity' ? documentsInModel.data['productList'][i]['focus'] : null,
         onChanged: (value) {

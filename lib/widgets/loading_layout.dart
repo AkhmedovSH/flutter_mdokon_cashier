@@ -8,7 +8,12 @@ import '/helpers/helper.dart';
 
 class LoadingLayout extends StatelessWidget {
   final Widget body;
-  const LoadingLayout({super.key, required this.body});
+  final bool onlySecond;
+  const LoadingLayout({
+    super.key,
+    required this.body,
+    this.onlySecond = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +22,7 @@ class LoadingLayout extends StatelessWidget {
         body,
         Consumer<LoadingModel>(
           builder: (context, loaderModel, child) {
-            if (loaderModel.currentLoading == 1) {
+            if (loaderModel.currentLoading == 1 && !onlySecond) {
               return Positioned.fill(
                 child: Container(
                   alignment: Alignment.center,

@@ -198,11 +198,54 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
           height: 50,
           width: MediaQuery.of(context).size.width,
           margin: EdgeInsets.only(left: 32),
-          child: ElevatedButton(
-            onPressed: () {
-              documentsInModel.save(context);
-            },
-            child: Text(context.tr('confirm')),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 50,
+                  child: Consumer<DocumentsInModel>(
+                    builder: (context, model, child) {
+                      return ElevatedButton(
+                        onPressed: model.data['productList'].isNotEmpty
+                            ? () {
+                                model.saveToDraft(context);
+                              }
+                            : null,
+                        child: Text(
+                          context.tr('save_to_draft'),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 50,
+                  child: Consumer<DocumentsInModel>(
+                    builder: (context, model, child) {
+                      return ElevatedButton(
+                        onPressed: model.data['productList'].isNotEmpty
+                            ? () {
+                                model.save(context);
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: success,
+                        ),
+                        child: Text(
+                          context.tr('complete'),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
