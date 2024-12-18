@@ -12,7 +12,7 @@ class LocaleModel with ChangeNotifier {
 
   void setLocale(Locale locale) {
     _locale = locale;
-    storage.write('locale', locale.languageCode);
+    storage.write('language', locale.languageCode == 'ru' ? false : true);
     notifyListeners();
   }
 }

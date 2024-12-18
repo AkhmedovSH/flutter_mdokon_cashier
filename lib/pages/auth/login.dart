@@ -74,6 +74,9 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         if (account['authorities'][i] == "ROLE_OWNER") {
           checker = 'ROLE_OWNER';
         }
+        if (account['authorities'][i] == "ROLE_MERCHANDISER") {
+          checker = 'ROLE_MERCHANDISER';
+        }
       }
       storage.write('user_roles', (account['authorities']));
       storage.write('role', checker);
@@ -82,11 +85,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         await getAccessPos();
       } else if (checker == 'ROLE_AGENT') {
         await getAgentPosId();
-      } else if (checker == 'ROLE_OWNER') {
+      } else if (checker == 'ROLE_OWNER' || checker == 'ROLE_MERCHANDISER') {
         final userSettings = await get("/services/web/api/user-settings");
         final posBalance = await get("/services/web/api/pos-balance");
         if (userSettings != null && userSettings['settings'] != null) {
-          print(data['posId']);
           Provider.of<UserModel>(context, listen: false).setUser({
             ...storage.read('user'),
             'posId': data['posId'],

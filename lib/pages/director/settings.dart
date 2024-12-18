@@ -36,205 +36,208 @@ class Settings extends StatelessWidget {
     ];
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Consumer<UserModel>(
-              builder: (context, userModel, child) {
-                print(userModel.user['usermame']);
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(21),
-                    color: CustomTheme.of(context).cardColor,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            const TextSpan(
-                              text: 'ID: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '${userModel.user['posId']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${context.tr('login')}: ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '${userModel.user['login']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18,
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' (${userModel.user['firstName']})',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: CustomTheme.of(context).textColor.withOpacity(0.5),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${context.tr('balance2')}: ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '${formatMoney(userModel.user['posBalance'])}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18,
-                                color: userModel.user['posBalance'] >= 0 ? success : danger,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            Text(
-              context.tr('general'),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              height: 50,
-              decoration: BoxDecoration(
-                color: CustomTheme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(21),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      context.tr('language'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Consumer<UserModel>(
+                builder: (context, userModel, child) {
+                  print(userModel.user['usermame']);
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(21),
+                      color: CustomTheme.of(context).cardColor,
                     ),
-                  ),
-                  SizedBox(
-                    width: 115,
-                    child: Consumer<LocaleModel>(
-                      builder: (context, localeModel, chilld) {
-                        return DropdownButtonHideUnderline(
-                          child: DropdownButton2<String>(
-                            value: localeModel.localeName,
-                            buttonStyleData: const ButtonStyleData(width: 125),
-                            dropdownStyleData: DropdownStyleData(
-                              width: 125,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: CustomTheme.of(context).cardColor,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: 'ID: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
                               ),
-                              offset: const Offset(-10, -10),
-                            ),
-                            isDense: true,
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                Locale locale = const Locale('ru', '');
-                                if (newValue == '1') {
-                                  locale = const Locale('ru', '');
-                                }
-                                if (newValue == '3') {
-                                  locale = const Locale('uz', 'Latn');
-                                }
-                                context.setLocale(locale);
-                                localeModel.setLocale(locale);
-                              }
-                            },
-                            items: languages.map(
-                              (Map<String, dynamic> language) {
-                                return DropdownMenuItem<String>(
-                                  value: language['locale'],
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                    child: Text(language['name']!),
-                                  ),
-                                );
-                              },
-                            ).toList(),
+                              TextSpan(
+                                text: '${userModel.user['posId']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${context.tr('login')}: ',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${userModel.user['login']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' (${userModel.user['firstName']})',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: CustomTheme.of(context).textColor.withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${context.tr('balance2')}: ',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${formatMoney(userModel.user['posBalance'])}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                  color: userModel.user['posBalance'] >= 0 ? success : danger,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-            CardItemSwitch(
-              title: context.tr('dark_theme'),
-              value: settingsModel.theme,
-              onChanged: (value) {
-                settingsModel.updateSetting('theme', value);
-                if (settingsModel.theme) {
-                  themeModel.setTheme(darkTheme);
-                } else {
-                  themeModel.setTheme(lightTheme);
-                }
-              },
-            ),
-            Text(
-              context.tr('other'),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
+              Text(
+                context.tr('general'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            SizedBox(height: 15),
-            CardItem(
-              icon: UniconsLine.sign_out_alt,
-              title: 'logout',
-            ),
-            CardItem(
-              icon: UniconsLine.calling,
-              title: 'support',
-            ),
-          ],
+              const SizedBox(height: 10),
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CustomTheme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(21),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        context.tr('language'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 115,
+                      child: Consumer<LocaleModel>(
+                        builder: (context, localeModel, chilld) {
+                          return DropdownButtonHideUnderline(
+                            child: DropdownButton2<String>(
+                              value: localeModel.localeName,
+                              buttonStyleData: const ButtonStyleData(width: 125),
+                              dropdownStyleData: DropdownStyleData(
+                                width: 125,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: CustomTheme.of(context).cardColor,
+                                ),
+                                offset: const Offset(-10, -10),
+                              ),
+                              isDense: true,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  print(newValue);
+                                  Locale locale = const Locale('ru', '');
+                                  if (newValue == 'ru') {
+                                    locale = const Locale('ru', '');
+                                  }
+                                  if (newValue == 'uz') {
+                                    locale = const Locale('uz', 'Latn');
+                                  }
+                                  context.setLocale(locale);
+                                  localeModel.setLocale(locale);
+                                }
+                              },
+                              items: languages.map(
+                                (Map<String, dynamic> language) {
+                                  return DropdownMenuItem<String>(
+                                    value: language['locale'],
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                      child: Text(language['name']!),
+                                    ),
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              CardItemSwitch(
+                title: context.tr('dark_theme'),
+                value: settingsModel.theme,
+                onChanged: (value) {
+                  settingsModel.updateSetting('theme', value);
+                  if (settingsModel.theme) {
+                    themeModel.setTheme(darkTheme);
+                  } else {
+                    themeModel.setTheme(lightTheme);
+                  }
+                },
+              ),
+              Text(
+                context.tr('other'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 15),
+              CardItem(
+                icon: UniconsLine.sign_out_alt,
+                title: 'logout',
+              ),
+              CardItem(
+                icon: UniconsLine.calling,
+                title: 'support',
+              ),
+            ],
+          ),
         ),
       ),
     );

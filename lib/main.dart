@@ -24,7 +24,7 @@ import 'helpers/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await GetStorage.init();
   await EasyLocalization.ensureInitialized();
 
@@ -33,10 +33,10 @@ void main() async {
   var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
   final theme = isDarkTheme ? darkTheme : lightTheme;
 
-  bool savedLocaleId = storage.read('language') ?? false;
+  bool savedLocale = storage.read('language') ?? false;
 
   Locale locale = const Locale('ru', '');
-  if (savedLocaleId) {
+  if (savedLocale) {
     locale = const Locale('uz', 'Latn');
   }
 

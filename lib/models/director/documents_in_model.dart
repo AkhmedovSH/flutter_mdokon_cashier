@@ -217,27 +217,28 @@ class DocumentsInModel extends ChangeNotifier {
           );
 
           if (existingProduct != null) {
-            newProduct['vat'] = data['defaultVat'];
-            newProduct['controller'] = TextEditingController();
-            newProduct['focus'] = FocusNode();
-            data['productList'].add(newProduct);
-            Timer(Duration(milliseconds: 300), () {
-              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
-            });
-            // if (existingProduct['quantity'] != null) {
-            //   existingProduct['quantity'] = 1;
-            // } else {
-            //   existingProduct['quantity'] += 1;
-            // }
+            // newProduct['vat'] = data['defaultVat'];
+            // newProduct['controller'] = TextEditingController();
+            // newProduct['focus'] = FocusNode();
+            // data['productList'].insert(0, newProduct);
+            // Timer(Duration(milliseconds: 300), () {
+            //   data['productList'][0]['focus'].requestFocus();
+            // });
+            if (existingProduct['quantity'] == null) {
+              existingProduct['quantity'] = 1;
+            } else {
+              existingProduct['quantity'] = double.parse(existingProduct['quantity'].toString()) + 1;
+              existingProduct['controller'].text = (double.parse(existingProduct['quantity'].toString()) + 1).round().toString();
+            }
             // showDangerToast('Продукт уже добавлен');
           } else {
             // newProduct['focusNode'] = FocusNode();
             newProduct['vat'] = data['defaultVat'];
             newProduct['controller'] = TextEditingController();
             newProduct['focus'] = FocusNode();
-            data['productList'].add(newProduct);
+            data['productList'].insert(0, newProduct);
             Timer(Duration(milliseconds: 300), () {
-              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
+              data['productList'][0]['focus'].requestFocus();
             });
           }
         }
