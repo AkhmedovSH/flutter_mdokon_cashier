@@ -406,6 +406,7 @@
 	"gtin_by_default": "ИКПУ по умолчанию",
 	"packagecode_by_default": "Единица измерения по умолчанию",
 	"payment_amount_to_supplier": "Сумма оплаты поставщику",
+	"date_amount_to_supplier": "Дата оплаты поставщику",
 	"debt_repayment_date": "Дата погашения долга",
 	"safe": "Сейф",
 	"documents_out": "Возврат поставщику",

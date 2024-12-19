@@ -414,10 +414,16 @@ class SearchItem extends StatelessWidget {
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
-                  textInputAction: TextInputAction.search, // Устанавливаем тип кнопки "Next"
+                  textInputAction: TextInputAction.search,
                   keyboardType: TextInputType.number,
                   scrollPadding: EdgeInsets.only(bottom: 700),
                   decoration: InputDecoration(
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        showProductDialog(context);
+                      },
+                      icon: Icon(UniconsLine.plus_circle),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
                     fillColor: CustomTheme.of(context).cardColor,
@@ -524,7 +530,11 @@ class TableTextField extends StatelessWidget {
       margin: EdgeInsets.only(top: 5),
       height: 35,
       child: TextFormField(
-        initialValue: keyName == 'quantity' ? null : documentsInModel.data['productList'][i][keyName].toString(),
+        initialValue: keyName == 'quantity'
+            ? null
+            : documentsInModel.data['productList'][i][keyName] == '0'
+                ? null
+                : documentsInModel.data['productList'][i][keyName].toString(),
         controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
         focusNode: keyName == 'quantity' ? documentsInModel.data['productList'][i]['focus'] : null,
         onChanged: (value) {
@@ -641,8 +651,8 @@ class TotalAmountItem extends StatelessWidget {
                   builder: (context, documentsInModel, child) {
                     return ElevatedButton(
                       onPressed: documentsInModel.data['productList'].isNotEmpty
-                          ? () {
-                              documentsInModel.checkData(context);
+                          ? () async {
+                              documentsInModel.redirect(context);
                             }
                           : null,
                       child: Text(context.tr('save')),
@@ -654,6 +664,103 @@ class TotalAmountItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+showProductDialog(BuildContext context) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: Colors.black.withOpacity(0.5),
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+      return Scaffold(
+        appBar: CustomAppBar(
+          title: 'new_product',
+          leading: true,
+        ),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              ProductField(
+                label: 'name_of_product',
+              ),
+              ProductField(
+                label: 'barcode',
+              ),
+              ProductField(
+                label: 'unit_of_measurement',
+              ),
+              ProductField(
+                label: 'artikul',
+              ),
+              ProductField(
+                label: 'ИКПУ',
+              ),
+              SizedBox(height: 80),
+            ],
+          ),
+        ),
+        floatingActionButton: Container(
+          height: 50,
+          width: MediaQuery.of(context).size.width,
+          margin: EdgeInsets.only(left: 32),
+          child: ElevatedButton(
+            onPressed: () {},
+            child: Text(context.tr('create')),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class ProductField extends StatelessWidget {
+  final String label;
+  const ProductField({
+    super.key,
+    this.label = '',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Label(text: label),
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          width: MediaQuery.of(context).size.width,
+          child: Consumer<DocumentsInModel>(
+            builder: (context, documentsInModel, chilld) {
+              return Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: CustomTheme.of(context).cardColor,
+                ),
+                child: TextFormField(
+                  onChanged: (value) {},
+                  onTapOutside: (PointerDownEvent event) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  scrollPadding: EdgeInsets.only(bottom: 100),
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    filled: true,
+                    fillColor: CustomTheme.of(context).cardColor,
+                    enabledBorder: inputBorder,
+                    focusedBorder: inputFocusBorder,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -86,15 +87,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       } else if (checker == 'ROLE_AGENT') {
         await getAgentPosId();
       } else if (checker == 'ROLE_OWNER' || checker == 'ROLE_MERCHANDISER') {
-        final userSettings = await get("/services/web/api/user-settings");
+        // final userSettings = await get("/services/web/api/user-settings");
         final posBalance = await get("/services/web/api/pos-balance");
-        if (userSettings != null && userSettings['settings'] != null) {
-          Provider.of<UserModel>(context, listen: false).setUser({
-            ...storage.read('user'),
-            'posId': data['posId'],
-            'posBalance': posBalance,
-          });
-        }
+        log(data.toString());
+        Provider.of<UserModel>(context, listen: false).setUser({
+          ...storage.read('user'),
+          'posId': data['posId'],
+          'posBalance': posBalance,
+        });
         Provider.of<DataModel>(context, listen: false).getData();
         context.pushReplacement('/director');
       } else {

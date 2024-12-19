@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -12,6 +14,7 @@ class UserModel extends ChangeNotifier {
   Map get cashbox => _cashbox;
 
   void setUser(Map payload) {
+    log(payload.toString());
     _user = payload;
     storage.write('user', payload);
     notifyListeners();

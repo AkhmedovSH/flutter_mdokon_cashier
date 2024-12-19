@@ -21,7 +21,7 @@ class InventoryCreate extends StatelessWidget {
     DataModel dataModel = Provider.of<DataModel>(context, listen: false);
     return Scaffold(
       appBar: CustomAppBar(
-        title: context.tr('create'),
+        title: 'create',
         leading: true,
       ),
       resizeToAvoidBottomInset: false,
@@ -92,7 +92,7 @@ class InventoryCreate extends StatelessWidget {
                               label: SizedBox(
                                 width: 100,
                                 child: Text(
-                                  context.tr('quantity'),
+                                  context.tr('price'),
                                   textAlign: TextAlign.center,
                                 ),
                               ),

@@ -1,12 +1,13 @@
 import 'dart:math';
 import 'package:dio/dio.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'package:easy_localization/easy_localization.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
+
 import '/models/filter_model.dart';
 import '../widgets/custom_app_bar.dart';
 import 'themes.dart';
@@ -210,6 +211,12 @@ String findFromArrayById(List<Map<String, dynamic>> array, dynamic id) {
   return '';
 }
 
+bool checkRole(role) {
+  GetStorage storage = GetStorage();
+  List<dynamic> roles = storage.read<List<dynamic>>('user_roles') ?? [];
+  return roles.contains(role);
+}
+
 showSuccessToast(message, {String description = ""}) {
   toastification.show(
     title: Text(
@@ -257,6 +264,35 @@ showDangerToast(message, {description = ""}) {
     animationDuration: const Duration(milliseconds: 200),
     autoCloseDuration: const Duration(seconds: 4),
     type: ToastificationType.error,
+    style: ToastificationStyle.flatColored,
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    margin: const EdgeInsets.only(top: 45, right: 10, left: 10),
+    alignment: Alignment.topCenter,
+    borderRadius: BorderRadius.circular(21),
+    closeOnClick: true,
+    showProgressBar: false,
+  );
+}
+
+showWarningToast(message, {description = ""}) {
+  toastification.show(
+    title: Text(
+      '$message',
+      style: TextStyle(color: black),
+    ),
+    description: description.isNotEmpty
+        ? Text(
+            '$description',
+            style: TextStyle(color: black),
+          )
+        : null,
+    icon: Icon(
+      UniconsLine.exclamation_triangle,
+      color: warning,
+    ),
+    animationDuration: const Duration(milliseconds: 200),
+    autoCloseDuration: const Duration(seconds: 4),
+    type: ToastificationType.warning,
     style: ToastificationStyle.flatColored,
     padding: const EdgeInsets.symmetric(horizontal: 12),
     margin: const EdgeInsets.only(top: 45, right: 10, left: 10),

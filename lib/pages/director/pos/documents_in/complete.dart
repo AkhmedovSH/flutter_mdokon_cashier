@@ -34,165 +34,166 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
         ),
         body: SingleChildScrollView(
           child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RowItem(
-                    title: 'pos',
-                    value: findFromArrayById(
-                      dataModel.poses,
-                      documentsInModel.data['posId'],
-                    ),
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RowItem(
+                  title: 'pos',
+                  value: findFromArrayById(
+                    dataModel.poses,
+                    documentsInModel.data['posId'],
                   ),
-                  SizedBox(height: 10),
-                  RowItem(
-                    title: 'supplier',
-                    value: findFromArrayById(
-                      dataModel.organizations,
-                      documentsInModel.data['organizationId'],
-                    ),
+                ),
+                SizedBox(height: 10),
+                RowItem(
+                  title: 'supplier',
+                  value: findFromArrayById(
+                    dataModel.organizations,
+                    documentsInModel.data['organizationId'],
                   ),
-                  SizedBox(height: 10),
-                  RowItem(
-                    title: 'currency',
-                    value: findFromArrayById(
-                      dataModel.currencies,
-                      documentsInModel.data['currencyId'],
-                    ),
+                ),
+                SizedBox(height: 10),
+                RowItem(
+                  title: 'currency',
+                  value: findFromArrayById(
+                    dataModel.currencies,
+                    documentsInModel.data['currencyId'],
                   ),
-                  SizedBox(height: 10),
-                  RowItem(
-                    title: 'receipt_amount',
-                    value: '${formatMoney(documentsInModel.data['totalIncome'])} ${documentsInModel.data['currencyName']}',
-                  ),
-                  SizedBox(height: 10),
-                  RowItem(
-                    title: 'sale_amount',
-                    value: '${formatMoney(documentsInModel.data['totalSale'])} ${documentsInModel.data['currencyName']}',
-                  ),
-                  SizedBox(height: 20),
+                ),
+                SizedBox(height: 10),
+                RowItem(
+                  title: 'receipt_amount',
+                  value: '${formatMoney(documentsInModel.data['totalIncome'])} ${documentsInModel.data['currencyName']}',
+                ),
+                SizedBox(height: 10),
+                RowItem(
+                  title: 'sale_amount',
+                  value: '${formatMoney(documentsInModel.data['totalSale'])} ${documentsInModel.data['currencyName']}',
+                ),
+                SizedBox(height: 20),
+                DropdownItem(
+                  items: paymentTypes,
+                  label: 'choose_payment_type',
+                  dataKey: 'paymentTypeId',
+                  itemName: 'name',
+                  itemValue: 'id',
+                ),
+                if (documentsInModel.data['paymentTypeId'] == '1')
                   DropdownItem(
-                    items: paymentTypes,
-                    label: 'choose_payment_type',
-                    dataKey: 'paymentTypeId',
-                    itemName: 'name',
-                    itemValue: 'id',
+                    items: dataModel.wallets,
+                    label: 'safe',
+                    dataKey: 'walletId',
+                    itemName: 'walletName',
+                    itemValue: 'walletId',
+                  )
+                else
+                  DropdownItem(
+                    items: dataModel.banks,
+                    label: 'bank',
+                    dataKey: 'bankId',
+                    itemName: 'bankName',
+                    itemValue: 'bankId',
                   ),
-                  if (documentsInModel.data['paymentTypeId'] == '1')
-                    DropdownItem(
-                      items: dataModel.wallets,
-                      label: 'safe',
-                      dataKey: 'walletId',
-                      itemName: 'walletName',
-                      itemValue: 'walletId',
-                    )
-                  else
-                    DropdownItem(
-                      items: dataModel.banks,
-                      label: 'bank',
-                      dataKey: 'bankId',
-                      itemName: 'bankName',
-                      itemValue: 'bankId',
-                    ),
-                  Label(text: 'payment_amount_to_supplier'),
-                  Stack(
-                    children: [
-                      SizedBox(
-                        height: 45,
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
-                          controller: documentsInModel.paidAmountController,
-                          onChanged: (value) {
-                            documentsInModel.setDataValue('paidAmount', value);
-                          },
-                          onTapOutside: (PointerDownEvent event) {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                          },
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                          ),
+                Label(text: 'payment_amount_to_supplier'),
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 45,
+                      child: TextFormField(
+                        keyboardType: TextInputType.number,
+                        controller: documentsInModel.paidAmountController,
+                        onChanged: (value) {
+                          documentsInModel.setDataValue('paidAmount', value);
+                        },
+                        onTapOutside: (PointerDownEvent event) {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                        },
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
                         ),
                       ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: SizedBox(
-                            height: 45,
-                            width: 60,
-                            child: TextButton(
-                              onPressed: () {
-                                documentsInModel.setPaidAmount('paidAmount', documentsInModel.data['totalIncome']);
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: mainColor,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.zero,
-                                    bottomLeft: Radius.zero,
-                                    topRight: Radius.circular(16),
-                                    bottomRight: Radius.circular(16),
-                                  ),
+                    ),
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          height: 45,
+                          width: 60,
+                          child: TextButton(
+                            onPressed: () {
+                              documentsInModel.setPaidAmount('paidAmount', documentsInModel.data['totalIncome']);
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: mainColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.zero,
+                                  bottomLeft: Radius.zero,
+                                  topRight: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
                                 ),
                               ),
-                              child: Icon(
-                                UniconsLine.transaction,
-                                size: 20,
-                                color: Colors.white,
-                              ),
+                            ),
+                            child: Icon(
+                              UniconsLine.transaction,
+                              size: 20,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      )
-                    ],
-                  ),
-                  //
-                  Label(text: 'payment_amount_to_supplier'),
-                  SizedBox(
-                    height: 45,
-                    child: GestureDetector(
-                      onTap: () async {
-                        DateTime date = documentsInModel.data['debtPaymentDate'] != null
-                            ? DateTime.parse(documentsInModel.data['debtPaymentDate'])
-                            : DateTime.now();
-                        final DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: date,
-                          firstDate: DateTime(2020, 1),
-                          lastDate: DateTime.now(),
-                          currentDate: DateTime.now(),
-                        );
-                        if (mounted && picked != null) {
-                          documentsInModel.setDataValue('debtPaymentDate', formatDateTime(picked));
-                        }
-                      },
-                      child: Container(
-                        height: 45,
-                        width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        alignment: Alignment.centerLeft,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: CustomTheme.of(context).cardColor,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              documentsInModel.data['debtPaymentDate'] != null ? '${formatDateMonth(documentsInModel.data['debtPaymentDate'])}' : '',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                      ),
+                    )
+                  ],
+                ),
+                Label(text: 'date_amount_to_supplier'),
+                SizedBox(
+                  height: 45,
+                  child: GestureDetector(
+                    onTap: () async {
+                      DateTime date = documentsInModel.data['debtPaymentDate'] != null
+                          ? DateTime.parse(documentsInModel.data['debtPaymentDate'])
+                          : DateTime.now();
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: date,
+                        firstDate: DateTime(2020, 1),
+                        lastDate: DateTime.now(),
+                        currentDate: DateTime.now(),
+                      );
+                      if (mounted && picked != null) {
+                        documentsInModel.setDataValue('debtPaymentDate', formatDateTime(picked));
+                      }
+                    },
+                    child: Container(
+                      height: 45,
+                      width: MediaQuery.of(context).size.width,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: CustomTheme.of(context).cardColor,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            documentsInModel.data['debtPaymentDate'] != null ? '${formatDateMonth(documentsInModel.data['debtPaymentDate'])}' : '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
-                            const Icon(UniconsLine.calendar_alt, size: 20)
-                          ],
-                        ),
+                          ),
+                          const Icon(UniconsLine.calendar_alt, size: 20)
+                        ],
                       ),
                     ),
                   ),
-                ],
-              )),
+                ),
+                SizedBox(height: 80),
+              ],
+            ),
+          ),
         ),
         floatingActionButton: Container(
           height: 50,
@@ -348,11 +349,15 @@ class RowItem extends StatelessWidget {
             fontSize: 18,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 18,
+        SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.end,
           ),
         ),
       ],

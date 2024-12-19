@@ -1,16 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
 import 'package:kassa/models/director/documents_in_model.dart';
 import 'package:kassa/models/filter_model.dart';
-import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:kassa/widgets/filter/dropdown.dart';
 import 'package:kassa/widgets/filter/period.dart';
 import 'package:kassa/widgets/loading_layout.dart';
+import 'package:kassa/widgets/table/pagination.dart';
 import 'package:kassa/widgets/table/table.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -26,25 +25,8 @@ class _DocumentsInState extends State<DocumentsIn> {
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month - 1, DateTime.now().day);
   DateTime endDate = DateTime.now();
 
-  int totalCount = 0;
-  List data = [];
-
-  Future<void> getData() async {
-    Provider.of<LoadingModel>(context, listen: false).showLoader();
-    print(Provider.of<FilterModel>(context, listen: false).currentFilterData);
-    final response = await pget(
-      '/services/web/api/documents-in-pageList',
-      payload: Provider.of<FilterModel>(context, listen: false).currentFilterData,
-    );
-    if (mounted) {
-      if (httpOk(response)) {
-        setState(() {
-          data = response['data'];
-          totalCount = response['total'];
-        });
-      }
-      Provider.of<LoadingModel>(context, listen: false).hideLoader();
-    }
+  getData() {
+    Provider.of<DocumentsInModel>(context, listen: false).getPageList(context);
   }
 
   @override
@@ -52,7 +34,7 @@ class _DocumentsInState extends State<DocumentsIn> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
-      Provider.of<FilterModel>(context, listen: false).initFilterData({
+      filterModel.initFilterData({
         'posId': filterModel.posId,
         'startDate': formatDateTime(startDate),
         'endDate': formatDateTime(endDate),
@@ -60,7 +42,7 @@ class _DocumentsInState extends State<DocumentsIn> {
         'search': '',
         'page': 0,
       });
-      getData();
+      Provider.of<DocumentsInModel>(context, listen: false).getPageList(context);
     });
   }
 
@@ -80,8 +62,7 @@ class _DocumentsInState extends State<DocumentsIn> {
 
                 Provider.of<DocumentsInModel>(context, listen: false).setDataValue('posId', dataModel.posId);
                 Provider.of<DocumentsInModel>(context, listen: false).setDataValue('organizationId', dataModel.organizations[1]['id']);
-                await context.push('/director/documents-in/create');
-                getData();
+                context.push('/director/documents-in/create');
               },
               icon: const Icon(UniconsLine.plus_circle),
             ),
@@ -91,7 +72,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                 var result = await showFilterDialog();
                 if (mounted) {
                   if (result == true) {
-                    getData();
+                    Provider.of<DocumentsInModel>(context, listen: false).getPageList(context);
                   }
                 }
               },
@@ -99,171 +80,179 @@ class _DocumentsInState extends State<DocumentsIn> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: TableWidget(
-                headers: [
-                  DataColumn(
-                    label: SizedBox(
-                      width: 40,
-                      child: Text('№'),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 130,
-                      child: Text(context.tr('pos')),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 100,
-                      child: Text(context.tr('supplier')),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 120,
-                      child: Text(
-                        context.tr('receipt_amount'),
-                        textAlign: TextAlign.end,
+        body: Consumer<DocumentsInModel>(
+          builder: (context, model, child) {
+            print(model.totalCount);
+            return Column(
+              children: [
+                Expanded(
+                  child: TableWidget(
+                    headers: [
+                      DataColumn(
+                        label: SizedBox(
+                          width: 40,
+                          child: Text('№'),
+                        ),
                       ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 120,
-                      child: Text(
-                        context.tr('sale_amount'),
-                        textAlign: TextAlign.end,
+                      DataColumn(
+                        label: SizedBox(
+                          width: 130,
+                          child: Text(context.tr('pos')),
+                        ),
                       ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 80,
-                      child: Text(context.tr('currency')),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 140,
-                      child: Text(
-                        context.tr('date_of_receipt'),
-                        textAlign: TextAlign.center,
+                      DataColumn(
+                        label: SizedBox(
+                          width: 100,
+                          child: Text(context.tr('supplier')),
+                        ),
                       ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 100,
-                      child: Text(
-                        context.tr('received_by'),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: SizedBox(
-                      width: 100,
-                      child: Text(
-                        context.tr('action'),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ],
-                rows: [
-                  for (var i = 0; i < data.length; i++)
-                    DataRow(
-                      cells: [
-                        DataCell(
-                          SizedBox(
-                            width: 40,
-                            child: Text('${data[i]['rowNum']}'),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 120,
+                          child: Text(
+                            context.tr('receipt_amount'),
+                            textAlign: TextAlign.end,
                           ),
                         ),
-                        DataCell(
-                          SizedBox(
-                            width: 130,
-                            child: Text('${data[i]['posName']}'),
+                      ),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 120,
+                          child: Text(
+                            context.tr('sale_amount'),
+                            textAlign: TextAlign.end,
                           ),
                         ),
-                        DataCell(
-                          SizedBox(
-                            width: 100,
-                            child: Text('${data[i]['organizationName']}'),
+                      ),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 80,
+                          child: Text(context.tr('currency')),
+                        ),
+                      ),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 140,
+                          child: Text(
+                            context.tr('date_of_receipt'),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                        DataCell(
-                          SizedBox(
-                            width: 120,
-                            child: Text(
-                              '${formatMoney(data[i]['totalAmount'])}',
-                              textAlign: TextAlign.end,
+                      ),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 100,
+                          child: Text(
+                            context.tr('received_by'),
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: SizedBox(
+                          width: 100,
+                          child: Text(
+                            context.tr('action'),
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: [
+                      for (var i = 0; i < model.pageList.length; i++)
+                        DataRow(
+                          cells: [
+                            DataCell(
+                              SizedBox(
+                                width: 40,
+                                child: Text('${model.pageList[i]['rowNum']}'),
+                              ),
                             ),
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 120,
-                            child: Text(
-                              '${formatMoney(data[i]['totalAmount'])}',
-                              textAlign: TextAlign.end,
+                            DataCell(
+                              SizedBox(
+                                width: 130,
+                                child: Text('${model.pageList[i]['posName']}'),
+                              ),
                             ),
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 80,
-                            child: Text('${data[i]['currencyName']}'),
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 140,
-                            child: Text(
-                              '${formatDate(data[i]['createdDate'])}',
-                              textAlign: TextAlign.center,
+                            DataCell(
+                              SizedBox(
+                                width: 100,
+                                child: Text('${model.pageList[i]['organizationName']}'),
+                              ),
                             ),
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 100,
-                            child: Text(
-                              '${data[i]['createdBy'] ?? ''}',
-                              textAlign: TextAlign.end,
+                            DataCell(
+                              SizedBox(
+                                width: 120,
+                                child: Text(
+                                  '${formatMoney(model.pageList[i]['totalAmount'])}',
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 100,
-                            child: data[i]['completed']
-                                ? SizedBox()
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      IconButton(
-                                        onPressed: () async {
-                                          await Provider.of<DocumentsInModel>(context, listen: false).getData(context, data[i]['id']);
-                                          await context.push('/director/documents-in/create');
-                                          getData();
-                                        },
-                                        icon: Icon(UniconsLine.edit_alt),
+                            DataCell(
+                              SizedBox(
+                                width: 120,
+                                child: Text(
+                                  '${formatMoney(model.pageList[i]['totalAmount'])}',
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 80,
+                                child: Text('${model.pageList[i]['currencyName']}'),
+                              ),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 140,
+                                child: Text(
+                                  '${formatDate(model.pageList[i]['createdDate'])}',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  '${model.pageList[i]['createdBy'] ?? ''}',
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 100,
+                                child: model.pageList[i]['completed']
+                                    ? SizedBox()
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          IconButton(
+                                            onPressed: () async {
+                                              await Provider.of<DocumentsInModel>(context, listen: false).getData(context, model.pageList[i]['id']);
+                                              context.push('/director/documents-in/create');
+                                            },
+                                            icon: Icon(UniconsLine.edit_alt),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ],
+                    ],
+                  ),
+                ),
+                Pagination(
+                  getData: getData,
+                  total: model.totalCount,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

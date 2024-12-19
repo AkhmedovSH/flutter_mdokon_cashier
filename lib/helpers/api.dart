@@ -157,6 +157,9 @@ statuscheker(e) async {
       case 401:
         showDangerToast(tr('Неправильный логин или пароль'));
         break;
+      case 403:
+        showDangerToast(tr('Нет доступа'));
+        break;
       case 404:
         showDangerToast(tr('Не найдено'));
         break;

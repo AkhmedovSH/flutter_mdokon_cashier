@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
 import 'package:kassa/models/data_model.dart';
+import 'package:kassa/models/filter_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:provider/provider.dart';
 
@@ -41,6 +42,9 @@ class DocumentsInModel extends ChangeNotifier {
     "totalSale": 0,
   };
 
+  List pageList = [];
+  int totalCount = 0;
+
   Map get currentItem => data;
 
   setDataValue(String key, dynamic value) {
@@ -50,7 +54,9 @@ class DocumentsInModel extends ChangeNotifier {
 
   setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
-    data['productList'][index]['controller'].text = value.toString();
+    if (data['productList'][index]['controller'] != null) {
+      data['productList'][index]['controller'].text = value.toString();
+    }
     countTotalAmount();
   }
 
@@ -82,9 +88,12 @@ class DocumentsInModel extends ChangeNotifier {
       response = await post('/services/web/api/documents-in-draft', sendData);
     }
     if (httpOk(response)) {
+      await getPageList(context);
+      context.go('/director/documents-in');
+
       data = {
         "productList": [],
-        "posId": 0,
+        "posId": data['posId'],
         "productCategoryId": '',
         "paymentTypeId": '1',
         "walletId": '',
@@ -106,7 +115,6 @@ class DocumentsInModel extends ChangeNotifier {
         "totalIncome": 0,
         "totalSale": 0,
       };
-      context.go('/director/documents-in');
     }
     notifyListeners();
 
@@ -120,33 +128,36 @@ class DocumentsInModel extends ChangeNotifier {
     var sendData = Map.from(data);
     sendData['totalAmount'] = sendData['totalIncome'];
 
-    final response = await post('/services/web/api/documents-in', sendData);
-    if (httpOk(response)) {
-      data = {
-        "productList": [],
-        "posId": 0,
-        "productCategoryId": '',
-        "paymentTypeId": '1',
-        "walletId": '',
-        "bankId": '',
-        "paid": 1,
-        "based": '',
-        "organizationId": '',
-        "currencyId": 1,
-        "currencyName": '',
-        "productSerial": false,
-        "importExcel": false,
-        "wholesalePriceMarkup": 0,
-        "bankPriceMarkup": 0,
-        "salePriceMarkup": 0,
-        "defaultVat": 0,
-        "totalAmount": 0,
-        "expense": '',
-        "totalQuantity": 0,
-        "totalIncome": 0,
-        "totalSale": 0,
-      };
-      context.go('/director/documents-in');
+    if (await checkData(context)) {
+      final response = await post('/services/web/api/documents-in', sendData);
+      if (httpOk(response)) {
+        data = {
+          "productList": [],
+          "posId": 0,
+          "productCategoryId": '',
+          "paymentTypeId": '1',
+          "walletId": '',
+          "bankId": '',
+          "paid": 1,
+          "based": '',
+          "organizationId": '',
+          "currencyId": 1,
+          "currencyName": '',
+          "productSerial": false,
+          "importExcel": false,
+          "wholesalePriceMarkup": 0,
+          "bankPriceMarkup": 0,
+          "salePriceMarkup": 0,
+          "defaultVat": 0,
+          "totalAmount": 0,
+          "expense": '',
+          "totalQuantity": 0,
+          "totalIncome": 0,
+          "totalSale": 0,
+        };
+        await getPageList(context);
+        context.go('/director/documents-in');
+      }
     }
 
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
@@ -165,19 +176,24 @@ class DocumentsInModel extends ChangeNotifier {
         error = true;
       }
     }
-    if (!error) {
-      final dataModel = Provider.of<DataModel>(context, listen: false);
-
-      await Future.wait([
-        dataModel.fetchBanks(data['currencyId']),
-        dataModel.fetchWallets(data['currencyId']),
-      ]);
-      context.go('/director/documents-in/create/complete');
-    } else {
+    if (error) {
       showDangerToast('Проверьте заполненные поля');
     }
     notifyListeners();
     return !error;
+  }
+
+  redirect(BuildContext context) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+
+    final dataModel = Provider.of<DataModel>(context, listen: false);
+
+    await Future.wait([
+      dataModel.fetchBanks(data['currencyId']),
+      dataModel.fetchWallets(data['currencyId']),
+    ]);
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    context.go('/director/documents-in/create/complete');
   }
 
   countTotalAmount() {
@@ -186,7 +202,11 @@ class DocumentsInModel extends ChangeNotifier {
     double temporaryTotalSale = 0;
     for (var i = 0; i < data['productList'].length; i++) {
       var item = data['productList'][i];
-      if (item['price'] != null && double.parse(item['price'].toString()) > 0 && item['quantity'] != null && item['quantity'] != '') {
+      if (item['price'] != null &&
+          item['price'] != '' &&
+          double.parse((item['price']).toString()) > 0 &&
+          item['quantity'] != null &&
+          item['quantity'] != '') {
         data['productList'][i]['totalAmount'] = double.parse((item['quantity']).toString()) * double.parse(item['price'].toString());
         temporaryTotalQuantity += double.parse(item['quantity'].toString());
         temporaryTotalIncome += double.parse(item['price'].toString()) * double.parse(item['quantity'].toString());
@@ -277,6 +297,25 @@ class DocumentsInModel extends ChangeNotifier {
       countTotalAmount();
     }
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
+  }
+
+  Future<void> getPageList(BuildContext context) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader();
+    print(Provider.of<FilterModel>(context, listen: false).currentFilterData);
+    final response = await pget(
+      '/services/web/api/documents-in-pageList',
+      payload: Provider.of<FilterModel>(context, listen: false).currentFilterData,
+    );
+    if (context.mounted) {
+      if (httpOk(response)) {
+        print(response['data']);
+        pageList = response['data'];
+        totalCount = response['total'];
+      }
+      Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    }
+
+    notifyListeners();
   }
 
   @override

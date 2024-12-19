@@ -22,29 +22,38 @@ class Pagination extends StatelessWidget {
     List<int?> generatePageNumbers(int totalPages, int currentPage) {
       List<int?> pages = [];
 
-      // Всегда показываем первую и вторую страницы
+      // Всегда показываем первую страницу
       pages.add(0);
+
+      // Всегда показываем вторую страницу, если общее число страниц больше 1
       if (totalPages > 1) pages.add(1);
 
-      // Логика для троеточий
+      // Если текущая страница больше 3, добавляем троеточие
       if (currentPage > 3) {
         pages.add(null); // Первое троеточие
       }
 
-      // Добавляем центральные страницы в зависимости от текущей
+      // Добавляем страницы вокруг текущей страницы
       for (int i = currentPage - 1; i <= currentPage + 1; i++) {
         if (i > 1 && i < totalPages - 2) {
-          pages.add(i);
+          if (!pages.contains(i)) {
+            pages.add(i); // Только если этой страницы еще нет в списке
+          }
         }
       }
 
+      // Если текущая страница далеко от конца, добавляем троеточие
       if (currentPage < totalPages - 4) {
         pages.add(null); // Второе троеточие
       }
 
       // Всегда показываем предпоследнюю и последнюю страницы
-      if (totalPages > 2) pages.add(totalPages - 2);
-      pages.add(totalPages - 1);
+      if (totalPages > 2 && !pages.contains(totalPages - 2)) {
+        pages.add(totalPages - 2);
+      }
+      if (!pages.contains(totalPages - 1)) {
+        pages.add(totalPages - 1);
+      }
 
       return pages;
     }

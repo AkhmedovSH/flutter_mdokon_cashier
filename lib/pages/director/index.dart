@@ -77,9 +77,9 @@ class _DashboardState extends State<DirectorDashboard> {
             // onPageChanged: (index) {
             //   setState(() => currentIndex = index);
             // },
-            children: const [
+            children: [
               Home(),
-              Report(),
+              if (storage.read('role') == 'ROLE_OWNER') Report(),
               Settings(),
             ],
           ),
@@ -124,10 +124,11 @@ class _DashboardState extends State<DirectorDashboard> {
                     icon: Icon(UniconsLine.estate),
                     label: context.tr('home'),
                   ),
-                  BottomNavigationBarItem(
-                    icon: Icon(UniconsLine.chart_pie_alt),
-                    label: context.tr('report'),
-                  ),
+                  if (storage.read('role') == 'ROLE_OWNER')
+                    BottomNavigationBarItem(
+                      icon: Icon(UniconsLine.chart_pie_alt),
+                      label: context.tr('report'),
+                    ),
                   BottomNavigationBarItem(
                     icon: Icon(UniconsLine.cog),
                     label: context.tr('settings'),

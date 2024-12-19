@@ -11,7 +11,7 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: CustomAppBar(
         title: 'home',
         leading: false,
@@ -22,16 +22,18 @@ class Home extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 15),
-              CardItem(
-                title: 'documents_in',
-                icon: UniconsLine.bring_front,
-                routeName: '/director/documents-in',
-              ),
-              CardItem(
-                title: 'inventory',
-                icon: UniconsLine.calculator_alt,
-                routeName: '/director/inventory',
-              ),
+              if (checkRole('POS_DOCUMENT_IN'))
+                CardItem(
+                  title: 'documents_in',
+                  icon: UniconsLine.bring_front,
+                  routeName: '/director/documents-in',
+                ),
+              if (checkRole('POS_INVENTORY'))
+                CardItem(
+                  title: 'inventory',
+                  icon: UniconsLine.calculator_alt,
+                  routeName: '/director/inventory',
+                ),
             ],
           ),
         ),

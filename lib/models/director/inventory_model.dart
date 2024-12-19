@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/models/filter_model.dart';
 import 'package:kassa/models/loading_model.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +19,9 @@ class InventoryModel extends ChangeNotifier {
     "productList": [],
     "posId": 0,
   };
+
+  List pageList = [];
+  int totalCount = 0;
 
   Map get currentItem => data;
 
@@ -55,6 +59,11 @@ class InventoryModel extends ChangeNotifier {
     if (await checkData(context)) {
       var sendData = Map.from(data);
 
+      for (var i = 0; i < sendData['productList'].length; i++) {
+        sendData['productList'][i]['controller'] = '';
+        sendData['productList'][i]['focus'] = '';
+      }
+
       var response = {};
       if (data['id'] != null) {
         response = await put('/services/web/api/inventory-completed', sendData);
@@ -66,6 +75,7 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
+        await getPageList(context);
         context.go('/director/inventory');
       }
       notifyListeners();
@@ -79,6 +89,11 @@ class InventoryModel extends ChangeNotifier {
     if (await checkData(context)) {
       var sendData = Map.from(data);
 
+      for (var i = 0; i < sendData['productList'].length; i++) {
+        sendData['productList'][i]['controller'] = '';
+        sendData['productList'][i]['focus'] = '';
+      }
+
       var response = {};
       if (data['id'] != null) {
         response = await put('/services/web/api/inventory', sendData);
@@ -90,6 +105,7 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
+        await getPageList(context);
         context.go('/director/inventory');
       }
       notifyListeners();
@@ -141,23 +157,16 @@ class InventoryModel extends ChangeNotifier {
           );
 
           if (existingProduct != null) {
-            
-            // if (existingProduct['quantity'] != null) {
-            //   existingProduct['quantity'] = 1;
-            // } else {
-            //   existingProduct['quantity'] += 1;
-            // }
-            showDangerToast('Продукт уже добавлен');
-          } else {
-            // newProduct['focusNode'] = FocusNode();
-            newProduct['vat'] = data['defaultVat'];
-            newProduct['controller'] = TextEditingController();
-            newProduct['focus'] = FocusNode();
-            data['productList'].add(newProduct);
-            Timer(Duration(milliseconds: 300), () {
-              data['productList'][data['productList'].length - 1]['focus'].requestFocus();
-            });
+            showWarningToast('Продукт уже добавлен');
           }
+
+          newProduct['vat'] = data['defaultVat'];
+          newProduct['controller'] = TextEditingController();
+          newProduct['focus'] = FocusNode();
+          data['productList'].insert(0, newProduct);
+          Timer(Duration(milliseconds: 300), () {
+            data['productList'][0]['focus'].requestFocus();
+          });
         }
       } else {
         data['productList'] = [];
@@ -171,6 +180,24 @@ class InventoryModel extends ChangeNotifier {
   void removeProduct(int index) {
     data['productList'].removeAt(index);
     notifyListeners(); // Уведомляем слушателей об изменении
+  }
+
+  Future<void> getPageList(BuildContext context) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader();
+    FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
+    final response = await pget(
+      '/services/web/api/inventory-pageList/${filterModel.currentFilterData['posId']}',
+      payload: filterModel.currentFilterData,
+    );
+    if (context.mounted) {
+      if (httpOk(response)) {
+        pageList = response['data'];
+        totalCount = response['total'];
+      }
+      Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    }
+
+    notifyListeners();
   }
 
   @override
