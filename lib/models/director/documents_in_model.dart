@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kassa/helpers/api.dart';
@@ -42,10 +44,92 @@ class DocumentsInModel extends ChangeNotifier {
     "totalSale": 0,
   };
 
+  List uoms = [];
+  Map product = {
+    'name': '',
+    'barcode': '',
+    'categoryId': 2,
+    'uomId': 1,
+    'gtin': '',
+    'artikul': '',
+    'modQuantity': '',
+  };
+  Map<String, TextEditingController> productControllers = {
+    'barcode': TextEditingController(),
+    'name': TextEditingController(),
+    'gtin': TextEditingController(),
+    'artikul': TextEditingController(),
+  };
+
   List pageList = [];
   int totalCount = 0;
 
   Map get currentItem => data;
+
+  getProductOums() async {
+    final response = await get('/services/web/api/product-uom-helper');
+    if (httpOk(response)) {
+      uoms = response;
+      notifyListeners();
+    }
+  }
+
+  createProduct(BuildContext context) async {
+    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+
+    var productCopy = Map.from(product);
+    productCopy['name'] = productControllers['name']?.text;
+    productCopy['barcode'] = productControllers['barcode']?.text;
+    productCopy['gtin'] = productControllers['gtin']?.text;
+    productCopy['artikul'] = productControllers['artikul']?.text;
+    print(productCopy);
+    var newProduct = await post('/services/web/api/product-instant-create', productCopy);
+    if (httpOk(newProduct)) {
+      print(newProduct);
+      newProduct['name'] = productCopy['name'];
+      newProduct['vat'] = data['defaultVat'];
+      newProduct['controller'] = TextEditingController();
+      newProduct['focus'] = FocusNode();
+      data['productList'].insert(0, newProduct);
+      clearProduct();
+      context.pop();
+      Timer(Duration(milliseconds: 300), () {
+        data['productList'][0]['focus'].requestFocus();
+      });
+    }
+    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+
+    notifyListeners();
+  }
+
+  clearProduct() {
+    productControllers['name']?.text = '';
+    productControllers['barcode']?.text = '';
+    productControllers['gtin']?.text = '';
+    productControllers['artikul']?.text = '';
+    productControllers['name']?.text = '';
+    notifyListeners();
+  }
+
+  setProductValue(String key, value) {
+    product[key] = value;
+    notifyListeners();
+  }
+
+  generateBarcode() {
+    final random = Random();
+    int barcode = 100000 + random.nextInt(900000);
+    productControllers['barcode']?.text = '$barcode';
+  }
+
+  getOfdProduct() async {
+    final response = await get('services/web/api/get-ofd-product?barcode=${productControllers['barcode']?.text}');
+    if (httpOk(response)) {
+      productControllers['name']?.text = response['name'];
+      productControllers['gtin']?.text = response['gtin'];
+    }
+    notifyListeners();
+  }
 
   setDataValue(String key, dynamic value) {
     data[key] = value;

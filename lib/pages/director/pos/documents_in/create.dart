@@ -7,6 +7,7 @@ import 'package:kassa/models/director/documents_in_model.dart';
 
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:kassa/widgets/filter/label.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 import 'package:kassa/widgets/table/table.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -676,41 +677,107 @@ showProductDialog(BuildContext context) {
     barrierColor: Colors.black.withOpacity(0.5),
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
-      return Scaffold(
-        appBar: CustomAppBar(
-          title: 'new_product',
-          leading: true,
-        ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ProductField(
-                label: 'name_of_product',
-              ),
-              ProductField(
-                label: 'barcode',
-              ),
-              ProductField(
-                label: 'unit_of_measurement',
-              ),
-              ProductField(
-                label: 'artikul',
-              ),
-              ProductField(
-                label: 'ИКПУ',
-              ),
-              SizedBox(height: 80),
-            ],
+      DataModel dataModel = Provider.of<DataModel>(context, listen: false);
+
+      return LoadingLayout(
+        body: Scaffold(
+          appBar: CustomAppBar(
+            title: 'new_product',
+            leading: true,
           ),
-        ),
-        floatingActionButton: Container(
-          height: 50,
-          width: MediaQuery.of(context).size.width,
-          margin: EdgeInsets.only(left: 32),
-          child: ElevatedButton(
-            onPressed: () {},
-            child: Text(context.tr('create')),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ProductField(
+                  label: 'name_of_product',
+                  productKey: 'name',
+                ),
+                ProductField(
+                  label: 'barcode',
+                  productKey: 'barcode',
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Label(text: 'unit_of_measurement'),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: Consumer<DocumentsInModel>(
+                        builder: (context, model, chilld) {
+                          return Container(
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: CustomTheme.of(context).cardColor,
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton2<String>(
+                                value: model.product['uomId'].toString(),
+                                buttonStyleData: const ButtonStyleData(),
+                                iconStyleData: const IconStyleData(
+                                  icon: Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: Icon(UniconsLine.angle_down),
+                                  ),
+                                ),
+                                dropdownStyleData: DropdownStyleData(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: CustomTheme.of(context).cardColor,
+                                  ),
+                                  maxHeight: 300,
+                                  offset: const Offset(0, -10),
+                                ),
+                                isDense: true,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    model.setProductValue('uomId', newValue);
+                                  }
+                                },
+                                items: dataModel.uoms.map(
+                                  (Map<String, dynamic> item) {
+                                    return DropdownMenuItem<String>(
+                                      value: item['id'].toString(),
+                                      child: Text(item['name']),
+                                    );
+                                  },
+                                ).toList(),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                // ProductField(
+                //   label: 'unit_of_measurement',
+                //   productKey: 'uomId',
+                // ),
+                ProductField(
+                  label: 'artikul',
+                  productKey: 'artikul',
+                ),
+                ProductField(
+                  label: 'ИКПУ',
+                  productKey: 'gtin',
+                ),
+                SizedBox(height: 80),
+              ],
+            ),
+          ),
+          floatingActionButton: Container(
+            height: 50,
+            width: MediaQuery.of(context).size.width,
+            margin: EdgeInsets.only(left: 32),
+            child: ElevatedButton(
+              onPressed: () {
+                Provider.of<DocumentsInModel>(context, listen: false).createProduct(context);
+              },
+              child: Text(context.tr('create')),
+            ),
           ),
         ),
       );
@@ -720,9 +787,11 @@ showProductDialog(BuildContext context) {
 
 class ProductField extends StatelessWidget {
   final String label;
+  final String productKey;
   const ProductField({
     super.key,
     this.label = '',
+    this.productKey = '',
   });
 
   @override
@@ -743,12 +812,33 @@ class ProductField extends StatelessWidget {
                   color: CustomTheme.of(context).cardColor,
                 ),
                 child: TextFormField(
+                  controller: documentsInModel.productControllers[productKey],
                   onChanged: (value) {},
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
                   scrollPadding: EdgeInsets.only(bottom: 100),
                   decoration: InputDecoration(
+                    suffixIcon: label == 'barcode'
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  documentsInModel.generateBarcode();
+                                },
+                                icon: Icon(UniconsLine.redo),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  documentsInModel.getOfdProduct();
+                                },
+                                icon: Icon(UniconsLine.shield_check),
+                              ),
+                            ],
+                          )
+                        : SizedBox(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
                     fillColor: CustomTheme.of(context).cardColor,

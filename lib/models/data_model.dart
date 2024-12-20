@@ -70,7 +70,7 @@ class DataModel extends ChangeNotifier {
   }
 
   Future<void> fetchProductUoms() async {
-    final response = await get('/services/web/api/organization-helper');
+    final response = await get('/services/web/api/product-uom-helper');
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
     mapList.insert(0, {'id': '', 'name': '-'});
     uoms = mapList;
