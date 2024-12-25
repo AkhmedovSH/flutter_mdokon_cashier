@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -17,6 +18,7 @@ class InventoryModel extends ChangeNotifier {
 
   Map data = {
     "productList": [],
+    "categoryList": [],
     "posId": 0,
   };
 
@@ -64,12 +66,8 @@ class InventoryModel extends ChangeNotifier {
         sendData['productList'][i]['focus'] = '';
       }
 
-      var response = {};
-      if (data['id'] != null) {
-        response = await put('/services/web/api/inventory-completed', sendData);
-      } else {
-        response = await post('/services/web/api/inventory-completed', sendData);
-      }
+      log(sendData.toString());
+      final response = await put('/services/web/api/inventory-completed', sendData);
       if (httpOk(response)) {
         data = {
           "productList": [],
@@ -78,9 +76,9 @@ class InventoryModel extends ChangeNotifier {
         await getPageList(context);
         context.go('/director/inventory');
       }
-      notifyListeners();
     }
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    notifyListeners();
   }
 
   Future<void> saveToDraft(BuildContext context) async {

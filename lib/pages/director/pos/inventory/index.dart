@@ -243,21 +243,23 @@ class _InventoryState extends State<Inventory> {
                               child: SizedBox(
                                 width: 30,
                                 height: 30,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Provider.of<InventoryModel>(context, listen: false).redirect(context, model.pageList[i]['id']);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    UniconsLine.edit_alt,
-                                    size: 16,
-                                  ),
-                                ),
+                                child: model.pageList[i]['completed']
+                                    ? SizedBox()
+                                    : ElevatedButton(
+                                        onPressed: () {
+                                          Provider.of<InventoryModel>(context, listen: false).redirect(context, model.pageList[i]['id']);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          UniconsLine.edit_alt,
+                                          size: 16,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
