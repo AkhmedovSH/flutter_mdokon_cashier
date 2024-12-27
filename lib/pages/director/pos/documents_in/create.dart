@@ -514,16 +514,15 @@ class TableTextField extends StatelessWidget {
       margin: EdgeInsets.only(top: 5),
       height: 35,
       child: TextFormField(
-        initialValue: keyName == 'quantity'
-            ? null
-            : documentsInModel.data['productList'][i][keyName] == '0'
-                ? null
-                : documentsInModel.data['productList'][i][keyName].toString(),
+        // initialValue: keyName == 'quantity'
+        //     ? null
+        //     : documentsInModel.data['productList'][i][keyName] == '0'
+        //         ? null
+        //         : documentsInModel.data['productList'][i][keyName].toString(),
         controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
         focusNode: keyName == 'quantity' ? documentsInModel.data['productList'][i]['focus'] : null,
         onChanged: (value) {
           String convertedValue = convertToNumbers(value);
-          print(convertedValue);
           documentsInModel.setProductListValue(i, keyName, convertedValue);
         },
         onFieldSubmitted: (value) {

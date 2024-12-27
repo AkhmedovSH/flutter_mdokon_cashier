@@ -138,7 +138,7 @@ class DocumentsInModel extends ChangeNotifier {
 
   setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
-    if (data['productList'][index]['controller'] != null) {
+    if (data['productList'][index]['controller'] != null && key == 'quantity') {
       data['productList'][index]['controller'].text = value.toString();
     }
     countTotalAmount();
