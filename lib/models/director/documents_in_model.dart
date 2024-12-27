@@ -337,10 +337,13 @@ class DocumentsInModel extends ChangeNotifier {
             // showDangerToast('Продукт уже добавлен');
           } else {
             // newProduct['focusNode'] = FocusNode();
+            newProduct['primary_key'] = UniqueKey().toString();
             newProduct['vat'] = data['defaultVat'];
             newProduct['controller'] = TextEditingController();
             newProduct['focus'] = FocusNode();
+            print(newProduct);
             data['productList'].insert(0, newProduct);
+            // data['productList'].add(newProduct);
             Timer(Duration(milliseconds: 300), () {
               data['productList'][0]['focus'].requestFocus();
             });

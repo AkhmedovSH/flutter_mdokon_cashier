@@ -510,17 +510,22 @@ class TableTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final product = documentsInModel.data['productList'][i];
+
+    print(keyName);
+    print(documentsInModel.data['productList'][i][keyName]);
     return Container(
       margin: EdgeInsets.only(top: 5),
       height: 35,
       child: TextFormField(
-        // initialValue: keyName == 'quantity'
-        //     ? null
-        //     : documentsInModel.data['productList'][i][keyName] == '0'
-        //         ? null
-        //         : documentsInModel.data['productList'][i][keyName].toString(),
-        controller: keyName == 'quantity' ? documentsInModel.data['productList'][i]['controller'] : null,
-        focusNode: keyName == 'quantity' ? documentsInModel.data['productList'][i]['focus'] : null,
+        key: ValueKey(product['primary_key']),
+        initialValue: keyName == 'quantity'
+            ? null
+            : product[keyName] == '0'
+                ? null
+                : product[keyName].toString(),
+        controller: keyName == 'quantity' ? product['controller'] : null,
+        focusNode: keyName == 'quantity' ? product['focus'] : null,
         onChanged: (value) {
           String convertedValue = convertToNumbers(value);
           documentsInModel.setProductListValue(i, keyName, convertedValue);
