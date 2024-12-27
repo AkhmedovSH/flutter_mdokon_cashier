@@ -147,15 +147,6 @@ class DocumentsInCreate extends StatelessWidget {
                               label: SizedBox(
                                 width: 140,
                                 child: Text(
-                                  context.tr('bank_price'),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 140,
-                                child: Text(
                                   context.tr('sale_price'),
                                   textAlign: TextAlign.center,
                                 ),
@@ -244,16 +235,6 @@ class DocumentsInCreate extends StatelessWidget {
                                         documentsInModel: documentsInModel,
                                         i: i,
                                         keyName: 'wholesalePrice',
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 140,
-                                      child: TableTextField(
-                                        documentsInModel: documentsInModel,
-                                        i: i,
-                                        keyName: 'bankPrice',
                                       ),
                                     ),
                                   ),
@@ -366,7 +347,9 @@ class DropdownItem extends StatelessWidget {
                       offset: const Offset(0, -10),
                     ),
                     isDense: true,
-                    onChanged: (String? newValue) {},
+                    onChanged: (String? newValue) {
+                      documentsInModel.setDataValue(dataKey, newValue);
+                    },
                     items: items.map(
                       (Map<String, dynamic> item) {
                         return DropdownMenuItem<String>(

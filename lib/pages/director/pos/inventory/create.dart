@@ -54,6 +54,7 @@ class InventoryCreate extends StatelessWidget {
                     child: Consumer<InventoryModel>(
                       builder: (context, inventoryModel, chilld) {
                         return TableWidget(
+                          showLoading: false,
                           headers: [
                             DataColumn(
                               label: SizedBox(
@@ -262,7 +263,9 @@ class DropdownItem extends StatelessWidget {
                       offset: const Offset(0, -10),
                     ),
                     isDense: true,
-                    onChanged: (String? newValue) {},
+                    onChanged: (String? newValue) {
+                      inventoryModel.setDataValue(dataKey, newValue);
+                    },
                     items: items.map(
                       (Map<String, dynamic> item) {
                         return DropdownMenuItem<String>(

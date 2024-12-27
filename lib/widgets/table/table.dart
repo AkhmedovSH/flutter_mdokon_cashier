@@ -14,6 +14,8 @@ class TableWidget extends StatefulWidget {
   final List<DataColumn> fixedLeftHeaders;
   final List<DataRow> fixedLeftRows;
   final double fixedLeftWidth;
+  final bool showLoading;
+
   const TableWidget({
     super.key,
     required this.headers,
@@ -21,6 +23,7 @@ class TableWidget extends StatefulWidget {
     this.fixedLeftHeaders = dataColumns,
     this.fixedLeftRows = dataRows,
     this.fixedLeftWidth = 0,
+    this.showLoading = true,
   });
 
   @override
@@ -84,7 +87,7 @@ class _TableWidgetState extends State<TableWidget> {
               ),
               Consumer<LoadingModel>(
                 builder: (context, loaderModel, child) {
-                  if (loaderModel.currentLoading == 1) {
+                  if (loaderModel.currentLoading == 1 && widget.showLoading) {
                     return Padding(
                       padding: EdgeInsets.only(top: 50),
                       child: CircularProgressIndicator(

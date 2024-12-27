@@ -28,29 +28,40 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(
-        '${context.tr(title)} ${titleCount > 0 ? '[$titleCount]' : ''}',
-        style: titleStyle,
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.black.withOpacity(0.3),
+            width: 0.33,
+          ),
+        ),
       ),
-      leading: leading
-          ? IconButton(
-              onPressed: () {
-                context.pop();
-              },
-              icon: const Icon(
-                UniconsLine.arrow_left,
-                size: 32,
-              ),
-            )
-          : null,
-      automaticallyImplyLeading: leading,
-      leadingWidth: 50,
-      titleSpacing: leading ? 0 : 16,
-      backgroundColor: CustomTheme.of(context).bgColor,
-      surfaceTintColor: CustomTheme.of(context).bgColor,
-      elevation: 0,
-      actions: actions ?? [],
+      child: AppBar(
+        title: Text(
+          '${context.tr(title)} ${titleCount > 0 ? '[$titleCount]' : ''}',
+          style: titleStyle,
+        ),
+        leading: leading
+            ? IconButton(
+                onPressed: () {
+                  context.pop();
+                },
+                icon: const Icon(
+                  UniconsLine.arrow_left,
+                  size: 32,
+                ),
+              )
+            : null,
+        automaticallyImplyLeading: leading,
+        leadingWidth: 50,
+        titleSpacing: leading ? 0 : 16,
+        backgroundColor: CustomTheme.of(context).bgColor,
+        surfaceTintColor: CustomTheme.of(context).bgColor,
+        elevation: 0,
+        actions: actions ?? [],
+      ),
     );
   }
 

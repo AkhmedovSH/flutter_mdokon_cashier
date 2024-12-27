@@ -13,7 +13,7 @@ class Report extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       appBar: CustomAppBar(
-        title: 'home',
+        title: 'reports',
         leading: false,
       ),
       body: SingleChildScrollView(
