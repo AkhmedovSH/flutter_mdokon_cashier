@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -147,7 +148,6 @@ class _IndexState extends State<Index> {
     if (isEdit) {
       sendData['id'] = dataCopy['id'];
     }
-
     Map? response;
     if (isEdit) {
       response = await put('/services/desktop/api/cheque-online', sendData);
@@ -584,6 +584,8 @@ class _IndexState extends State<Index> {
           dataCopy['totalPriceBeforeDiscount'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
         }
         dataCopy['totalPrice'] += double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
+        dataCopy['itemsList'][i]['discountAmount'] =
+            double.parse(dataCopy['itemsList'][i]['totalPriceOriginal'].toString()) - double.parse(dataCopy['itemsList'][i]['totalPrice'].toString());
       }
       dynamic percent = 100 - (dataCopy['totalPrice'] * 100 / dataCopy['totalPriceBeforeDiscount']);
       dataCopy['discount'] = percent;
@@ -863,7 +865,7 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showSelectUserDialog();
                 },
-                tooltip: context.tr('Выбрать клиента'),
+                tooltip: ('Выбрать клиента'),
                 icon: Icon(
                   UniconsLine.user,
                   size: 22,
@@ -876,7 +878,7 @@ class _IndexState extends State<Index> {
                 onPressed: () {
                   showCreateUserModal();
                 },
-                tooltip: context.tr('Создать клиента'),
+                tooltip: ('Создать клиента'),
                 icon: Icon(
                   UniconsLine.user_plus,
                   color: white,

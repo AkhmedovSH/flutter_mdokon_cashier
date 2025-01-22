@@ -96,42 +96,52 @@ class _AgentDashboardState extends State<AgentDashboard> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFFEFEFE),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [boxShadow],
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20.0),
-              topRight: Radius.circular(20.0),
+            border: Border(
+              top: BorderSide(
+                color: black.withOpacity(0.3),
+                width: 0.33,
+              ),
             ),
-            child: BottomAppBar(
-              padding: EdgeInsets.all(5),
-              elevation: 0,
+          ),
+          child: BottomAppBar(
+            padding: const EdgeInsets.all(0),
+            elevation: 0,
+            color: Colors.transparent,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                splashFactory: NoSplash.splashFactory,
+              ),
               child: BottomNavigationBar(
                 onTap: (index) => setState(() {
                   currentIndex = index;
                 }),
                 backgroundColor: Colors.transparent,
-                selectedItemColor: blue,
+                selectedItemColor: mainColor,
                 currentIndex: currentIndex,
                 type: BottomNavigationBarType.fixed,
-                selectedFontSize: 10,
-                unselectedFontSize: 10,
-                selectedLabelStyle: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: blue,
-                  fontSize: 14,
+                selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  color: black,
-                  fontWeight: FontWeight.w400,
+                  color: grey,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
                 elevation: 0,
                 items: [
-                  getDashBoardItem(UniconsLine.monitor, 'sale'),
-                  getDashBoardItem(UniconsLine.receipt, 'checks'),
-                  getDashBoardItem(UniconsLine.user, 'profile'),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.monitor),
+                    label: context.tr('sale'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.receipt),
+                    label: context.tr('checks'),
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(UniconsLine.user),
+                    label: context.tr('profile'),
+                  ),
                 ],
               ),
             ),
