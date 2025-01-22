@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -600,7 +599,9 @@ class _IndexState extends State<Index> {
       dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'] - (dataCopy['totalPrice'] * percent) / 100;
 
       for (var i = 0; i < dataCopy['itemsList'].length; i++) {
+        dataCopy['itemsList'][i]['discountAmount'] = value;
         dataCopy['itemsList'][i]['discount'] = percent;
+        dataCopy['itemsList'][i]['totalPriceBeforeDiscount'] = dataCopy['totalPrice'];
         dataCopy['itemsList'][i]['totalPrice'] = dataCopy['itemsList'][i]['totalPrice'] - ((dataCopy['itemsList'][i]['totalPrice'] * percent) / 100);
       }
     }
