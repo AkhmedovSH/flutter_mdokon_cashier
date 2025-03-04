@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
+// import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -191,19 +191,19 @@ class _PaymentSampleState extends State<PaymentSample> {
       await lPost('/services/gocashapi/api/create-cheque', sendData);
     }
 
-    if (settings['printAfterSale']) {
-      var status = await BluetoothThermalPrinter.connectionStatus;
-      if (status == 'true') {
-        await printCheque(dataCopy, dataCopy['itemsList']);
-      } else {
-        var result = await connectToPrinter();
-        if (result) {
-          printCheque(dataCopy, dataCopy['itemsList']);
-        } else {
-          showDangerToast(context.tr('failed_to_connect'));
-        }
-      }
-    }
+    // if (settings['printAfterSale']) {
+    //   var status = await BluetoothThermalPrinter.connectionStatus;
+    //   if (status == 'true') {
+    //     await printCheque(dataCopy, dataCopy['itemsList']);
+    //   } else {
+    //     var result = await connectToPrinter();
+    //     if (result) {
+    //       printCheque(dataCopy, dataCopy['itemsList']);
+    //     } else {
+    //       showDangerToast(context.tr('failed_to_connect'));
+    //     }
+    //   }
+    // }
 
     if (httpOk(response) && response['success']) {
       setState(() {});

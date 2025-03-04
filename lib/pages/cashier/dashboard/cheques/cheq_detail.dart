@@ -10,9 +10,9 @@ import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 //
-import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
+// import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:screenshot/screenshot.dart';
+// import 'package:screenshot/screenshot.dart';
 import 'package:unicons/unicons.dart';
 
 import '/helpers/api.dart';
@@ -31,7 +31,7 @@ class CheqDetail extends StatefulWidget {
 
 class _CheqDetailState extends State<CheqDetail> {
   Timer? timer;
-  ScreenshotController screenshotController = ScreenshotController();
+  // ScreenshotController screenshotController = ScreenshotController();
   GetStorage storage = GetStorage();
 
   bool bluetoothPermission = false;
@@ -75,24 +75,24 @@ class _CheqDetailState extends State<CheqDetail> {
   dynamic tips;
   dynamic device;
 
-  Future<void> getBluetooth() async {
-    final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
-    if (bluetooths != null) {
-      availableBluetoothDevices = bluetooths;
-      var status = await BluetoothThermalPrinter.connectionStatus;
-      if (status == 'true') {
-        connected = true;
-      } else {
-        connected = false;
-      }
-      if (availableBluetoothDevices.isNotEmpty) {
-        // openBluetoothDevices();
-      } else {
-        showDangerToast(context.tr('there_are_no_active_devices_bluetooth_is_disabled'));
-      }
-      setState(() {});
-    }
-  }
+  // Future<void> getBluetooth() async {
+  //   final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
+  //   if (bluetooths != null) {
+  //     availableBluetoothDevices = bluetooths;
+  //     var status = await BluetoothThermalPrinter.connectionStatus;
+  //     if (status == 'true') {
+  //       connected = true;
+  //     } else {
+  //       connected = false;
+  //     }
+  //     if (availableBluetoothDevices.isNotEmpty) {
+  //       // openBluetoothDevices();
+  //     } else {
+  //       showDangerToast(context.tr('there_are_no_active_devices_bluetooth_is_disabled'));
+  //     }
+  //     setState(() {});
+  //   }
+  // }
 
   // Future<void> setConnect(String mac, newSetState) async {
   //   if (timer != null) {
@@ -473,29 +473,29 @@ class _CheqDetailState extends State<CheqDetail> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  getBluetooth();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(UniconsLine.print),
-                    SizedBox(width: 10),
-                    Text(context.tr('PRINT')),
-                  ],
-                ),
-              ),
-            ),
+            // Expanded(
+            //   child: ElevatedButton(
+            //     onPressed: () {
+            //       getBluetooth();
+            //     },
+            //     style: ElevatedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 14),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(16),
+            //       ),
+            //     ),
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: [
+            //         Icon(UniconsLine.print),
+            //         SizedBox(width: 10),
+            //         Text(context.tr('PRINT')),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             if (cheque['status'] != 2) ...[
-              SizedBox(width: 10),
+              // SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {

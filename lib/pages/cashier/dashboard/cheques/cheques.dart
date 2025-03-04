@@ -56,7 +56,7 @@ class _ChequesState extends State<Cheques> {
       sendData['posId'] = cashbox['posId'];
     });
     final response = await get('/services/desktop/api/cashier-cheque-pageList', payload: sendData);
-    if (httpOk(response)) {
+    if (httpOk(response) && mounted) {
       setState(() {
         cheques = response;
       });
@@ -67,7 +67,7 @@ class _ChequesState extends State<Cheques> {
         });
       }
     }
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    if (mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   getStatus(status) {
@@ -99,7 +99,9 @@ class _ChequesState extends State<Cheques> {
       filter['startDate'].text = DateFormat('dd.MM.yyyy').format(DateTime.now());
       filter['endDate'].text = DateFormat('dd.MM.yyyy').format(DateTime.now());
     });
-    getCheques();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getCheques();
+    });
   }
 
   @override

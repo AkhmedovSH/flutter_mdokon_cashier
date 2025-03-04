@@ -15,7 +15,7 @@ import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:unicons/unicons.dart';
-import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
+// import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../helpers/helper.dart';
@@ -398,29 +398,29 @@ class _SettingsState extends State<Settings> {
   dynamic device;
 
   Future<void> getBluetooth() async {
-    final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
-    if (bluetooths != null) {
-      for (var i = 0; i < bluetooths.length; i++) {
-        var item = bluetooths[i].split("#")[1];
-        if (storage.read('defaultPrinter') == item) {
-          activeIndex = i;
-        }
-      }
-      availableBluetoothDevices = bluetooths;
+    // final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
+    // if (bluetooths != null) {
+    //   for (var i = 0; i < bluetooths.length; i++) {
+    //     var item = bluetooths[i].split("#")[1];
+    //     if (storage.read('defaultPrinter') == item) {
+    //       activeIndex = i;
+    //     }
+    //   }
+    //   availableBluetoothDevices = bluetooths;
 
-      var status = await BluetoothThermalPrinter.connectionStatus;
-      if (status == 'true') {
-        connected = true;
-      } else {
-        connected = false;
-      }
-      setState(() {});
-      if (availableBluetoothDevices.isNotEmpty) {
-        openBluetoothDevices();
-      } else {
-        showDangerToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
-      }
-    }
+    //   var status = await BluetoothThermalPrinter.connectionStatus;
+    //   if (status == 'true') {
+    //     connected = true;
+    //   } else {
+    //     connected = false;
+    //   }
+    //   setState(() {});
+    //   if (availableBluetoothDevices.isNotEmpty) {
+    //     openBluetoothDevices();
+    //   } else {
+    //     showDangerToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
+    //   }
+    // }
   }
 
   // Future<void> setConnect(String mac, newSetState) async {

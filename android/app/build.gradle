@@ -32,7 +32,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 35
     namespace 'com.mdokon.cabinet'
 
 
@@ -53,7 +53,7 @@ android {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.mdokon.cabinet"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionName '1.0.12'
         versionCode 12
         versionCode flutterVersionCode.toInteger()
