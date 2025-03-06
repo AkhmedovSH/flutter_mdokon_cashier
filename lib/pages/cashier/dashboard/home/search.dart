@@ -163,6 +163,7 @@ class _SearchState extends State<Search> {
         ),
         body: Column(
           children: [
+            SizedBox(height: 10),
             Container(
               margin: EdgeInsets.only(bottom: 10, right: 16, left: 16),
               child: Row(

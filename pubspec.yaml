@@ -42,9 +42,10 @@ dependencies:
   syncfusion_flutter_sliders: ^28.2.9
   syncfusion_flutter_barcodes: ^28.2.9
 
-flutter_icons:
+flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
+  remove_alpha_ios: true
   image_path: "images/build-logo.png"
 
 dev_dependencies:

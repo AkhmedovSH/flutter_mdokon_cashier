@@ -1,0 +1,6 @@
+NSPhotoLibraryUsageDescription="Доступ к вашей фотогалерее для сохранения изображений."
+NSBluetoothPeripheralUsageDescription="Доступ для подключения к беспроводным устройствам Bluetooth, таким как принтеры."
+NSCameraUsageDescription="Доступ к камере устройства для сканирования штрих-кодов."
+NSLocationAlwaysAndWhenInUseUsageDescription="Доступ для определения вашего местоположения в любое время с использованием GPS."
+NSLocationWhenInUseUsageDescription="Доступ для определения вашего местоположения при использовании приложения."
+NSBluetoothAlwaysUsageDescription="Для постоянного использования Bluetooth для связи с другими устройствами."
