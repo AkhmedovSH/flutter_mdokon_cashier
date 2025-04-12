@@ -23,7 +23,7 @@ class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
 
   @override
-  _LoginState createState() => _LoginState();
+  State<Login> createState() => _LoginState();
 }
 
 class _LoginState extends State<Login> with TickerProviderStateMixin {
@@ -81,7 +81,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       }
       storage.write('user_roles', (account['authorities']));
       storage.write('role', checker);
-
+      print(checker);
       if (checker == 'ROLE_CASHIER') {
         await getAccessPos();
       } else if (checker == 'ROLE_AGENT') {

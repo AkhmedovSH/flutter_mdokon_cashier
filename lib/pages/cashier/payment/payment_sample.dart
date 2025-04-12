@@ -13,7 +13,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '/helpers/api.dart';
-import '/helpers/cheque.dart';
 import '../../../helpers/helper.dart';
 
 import '../../../widgets/loading_layout.dart';
