@@ -92,6 +92,21 @@ class _IndexState extends State<Index> {
   Map cashbox = {};
   List clients = [];
   List expenses = [];
+  List prices = [
+    {
+      'id': 0,
+      'name': 'sale_price',
+    },
+    {
+      'id': 1,
+      'name': 'wholesale_price',
+    },
+    {
+      'id': 2,
+      'name': 'bank_price',
+    },
+  ];
+
   Map expenseOut = {
     "cashboxId": '',
     "posId": '',
@@ -199,8 +214,11 @@ class _IndexState extends State<Index> {
 
       if (data['activePrice'] == 1) {
         product['wholesale'] = true;
+      } else if (data['activePrice'] == 2) {
+        product['bank'] = true;
       } else {
         product['wholesale'] = false;
+        product['bank'] = false;
       }
 
       if (product['unitList'] != null && product['unitList'].length > 0) {
@@ -261,6 +279,12 @@ class _IndexState extends State<Index> {
               double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
           dataCopy['itemsList'][i]['totalPrice'] =
               double.parse(dataCopy['itemsList'][i]['wholesalePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+        } else if (dataCopy['itemsList'][i]['bank'] == true) {
+          dataCopy['itemsList'][i]['salePrice'] = double.parse(dataCopy['itemsList'][i]['bankPrice'].toString());
+          dataCopy['totalPrice'] +=
+              double.parse(dataCopy['itemsList'][i]['bankPrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
+          dataCopy['itemsList'][i]['totalPrice'] =
+              double.parse(dataCopy['itemsList'][i]['bankPrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
         } else {
           dataCopy['totalPrice'] +=
               double.parse(dataCopy['itemsList'][i]['salePrice'].toString()) * double.parse(dataCopy['itemsList'][i]['quantity'].toString());
@@ -901,32 +925,89 @@ class _IndexState extends State<Index> {
               ),
             ),
           SizedBox(
-            child: Tooltip(
-              message: context.tr('wholesale_price'),
-              child: Checkbox(
-                activeColor: mainColor,
-                checkColor: white,
-                focusColor: white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5.0),
+            width: 35,
+            child: Center(
+              child: DropdownButtonHideUnderline(
+                child: ButtonTheme(
+                  alignedDropdown: false,
+                  child: DropdownButton2(
+                    value: data['activePrice'].toString(),
+                    customButton: SizedBox(
+                      child: Icon(
+                        Icons.more_vert,
+                        size: 24,
+                        color: white,
+                      ),
+                    ),
+                    dropdownStyleData: DropdownStyleData(
+                      width: 250,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: white,
+                      ),
+                      offset: const Offset(-140, -10),
+                    ),
+                    underline: Container(),
+                    isExpanded: true,
+                    // hint: Text('${expenses[0]['name']}'),
+                    iconStyleData: IconStyleData(
+                      icon: const Icon(UniconsLine.angle_down),
+                      iconSize: 24,
+                      iconEnabledColor: mainColor,
+                    ),
+                    onChanged: (newValue) {
+                      data['activePrice'] = int.parse(newValue!);
+                      setState(() {});
+                    },
+                    items: prices.map((item) {
+                      return DropdownMenuItem<String>(
+                        value: '${item['id']}',
+                        child: Row(
+                          children: [
+                            if (item['id'] == data['activePrice'])
+                              Icon(
+                                UniconsLine.check,
+                                color: CustomTheme.of(context).textColor,
+                              ),
+                            Text(
+                              context.tr(item['name']),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
-                // side: MaterialStateBorderSide.resolveWith(
-                //   (states) => BorderSide(width: 2.0, color: white),
-                // ),
-                value: data['activePrice'] == 1,
-                onChanged: data['itemsList'].length == 0
-                    ? (value) {
-                        if (data['activePrice'] == 1) {
-                          data['activePrice'] = 0;
-                        } else {
-                          data['activePrice'] = 1;
-                        }
-                        setState(() {});
-                      }
-                    : null,
               ),
             ),
           ),
+          // SizedBox(
+          //   child: Tooltip(
+          //     message: context.tr('wholesale_price'),
+          //     child: Checkbox(
+          //       activeColor: mainColor,
+          //       checkColor: white,
+          //       focusColor: white,
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(5.0),
+          //       ),
+          //       // side: MaterialStateBorderSide.resolveWith(
+          //       //   (states) => BorderSide(width: 2.0, color: white),
+          //       // ),
+          //       value: data['activePrice'] == 1,
+          //       onChanged: data['itemsList'].length == 0
+          //           ? (value) {
+          //               if (data['activePrice'] == 1) {
+          //                 data['activePrice'] = 0;
+          //               } else {
+          //                 data['activePrice'] = 1;
+          //               }
+          //               setState(() {});
+          //             }
+          //           : null,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
       body: data["itemsList"].length == 0

@@ -11,7 +11,7 @@ import 'package:kassa/models/loading_model.dart';
 import 'package:kassa/widgets/custom_app_bar.dart';
 import 'package:kassa/widgets/loading.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
@@ -127,16 +127,30 @@ class _SearchState extends State<Search> {
     await Permission.camera.request();
     var status = await Permission.camera.status;
 
-    // final permission = await getCameraPermission();
     if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
       return;
     }
-    var result = await FlutterBarcodeScanner.scanBarcode("#5b73e8", context.tr("back"), false, ScanMode.BARCODE);
-    if (result != '-1') {
-      setState(() {
-        searchProducts(result);
-        textEditingController.text = result;
-      });
+    if (mounted) {
+      String? result = await SimpleBarcodeScanner.scanBarcode(
+        context,
+        barcodeAppBar: const BarcodeAppBar(
+          appBarTitle: '',
+          centerTitle: false,
+          enableBackButton: true,
+          backButtonIcon: Icon(Icons.arrow_back_ios),
+        ),
+        cancelButtonText: context.tr('back'),
+        isShowFlashIcon: false,
+        delayMillis: 500,
+        cameraFace: CameraFace.back,
+        scanFormat: ScanFormat.ONLY_BARCODE,
+      );
+      if (result != null && result != '-1') {
+        setState(() {
+          searchProducts(result);
+          textEditingController.text = result;
+        });
+      }
     }
   }
 

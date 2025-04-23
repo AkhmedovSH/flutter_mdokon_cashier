@@ -51,6 +51,7 @@ final ThemeData lightTheme = ThemeData(
     ),
   ),
   dialogTheme: const DialogTheme(
+    backgroundColor: Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(
         Radius.circular(20),
@@ -111,6 +112,14 @@ final ThemeData darkTheme = ThemeData(
     ),
   ),
 
+  dialogTheme: DialogTheme(
+    backgroundColor: Color(0xFF171717),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(20),
+      ),
+    ),
+  ),
   // Цвета для кнопок
   buttonTheme: const ButtonThemeData(
     buttonColor: Colors.redAccent, // цвет кнопок

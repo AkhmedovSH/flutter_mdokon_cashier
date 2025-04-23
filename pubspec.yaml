@@ -2,7 +2,7 @@ name: kassa
 description: A new Flutter project.
 publish_to: "none"
 
-version: 1.0.27+27
+version: 1.0.28+28
 
 environment:
   sdk: ">=3.4.1 <4.0.0"
@@ -27,7 +27,6 @@ dependencies:
 
   lottie: ^3.3.1
   permission_handler: ^11.4.0
-  flutter_barcode_scanner: ^2.0.0
   # Bluetoth print
   # bluetooth_thermal_printer: ^0.0.6
   # esc_pos_utils_plus: ^2.0.1+6
@@ -41,6 +40,7 @@ dependencies:
   toastification: ^3.0.1
   syncfusion_flutter_sliders: ^28.2.9
   syncfusion_flutter_barcodes: ^28.2.9
+  simple_barcode_scanner: ^0.3.0
 
 flutter_launcher_icons:
   android: "launcher_icon"
