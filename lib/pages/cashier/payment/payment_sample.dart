@@ -67,7 +67,6 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   createCheque() async {
-    print(111);
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
     var settings = jsonDecode(storage.read('settings'));
@@ -137,7 +136,9 @@ class _PaymentSampleState extends State<PaymentSample> {
       if (cashController.text.isNotEmpty) {
         if (terminalController.text.isNotEmpty) {
           dataCopy['paid'] = double.parse(cashController.text) + double.parse(terminalController.text);
-          dataCopy['clientAmount'] = dataCopy['totalPrice'] - (double.parse(cashController.text) + double.parse(terminalController.text));
+          dataCopy['clientAmount'] = dataCopy['totalPrice'] -
+              (double.parse(cashController.text) + double.parse(terminalController.text)) -
+              double.parse(dataCopy['discountAmount'].toString());
         } else {
           dataCopy['clientAmount'] = dataCopy['totalPrice'] - double.parse(cashController.text);
           dataCopy['paid'] = double.parse(cashController.text);
@@ -162,7 +163,6 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (dataCopy['clientId'] == 0) {
       dataCopy['clientId'] == null;
     }
-
     log(jsonEncode(dataCopy));
     // return;
     final response = await post('/services/desktop/api/cheque', dataCopy);
