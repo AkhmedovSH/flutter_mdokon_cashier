@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/widgets/loading_layout.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class AgentHistory extends StatefulWidget {
@@ -101,7 +103,10 @@ class _AgentHistoryState extends State<AgentHistory> {
               onPressed: () {
                 showFilterDialog();
               },
-              icon: Icon(UniconsLine.filter),
+              icon: Icon(
+                UniconsLine.filter,
+                color: white,
+              ),
             ),
           ],
         ),
@@ -159,7 +164,11 @@ class _AgentHistoryState extends State<AgentHistory> {
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: () {
+                              print(111);
+                              print(cheques[i]);
                               context.go('/agent', extra: cheques[i]);
+                              DashboardModel dashboardModel = Provider.of<DashboardModel>(context, listen: false);
+                              dashboardModel.setCurrentIndex(0);
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 14),

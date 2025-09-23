@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
+import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
 
@@ -46,12 +48,6 @@ class _AgentDashboardState extends State<AgentDashboard> {
     setState(() {});
   }
 
-  changeIndex(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -73,6 +69,8 @@ class _AgentDashboardState extends State<AgentDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    DashboardModel dashboardModel = Provider.of<DashboardModel>(context);
+
     return WillPopScope(
       onWillPop: () async {
         showSecondModalConfirm();
@@ -82,14 +80,14 @@ class _AgentDashboardState extends State<AgentDashboard> {
         resizeToAvoidBottomInset: false,
         body: SizedBox.expand(
           child: IndexedStack(
-            index: currentIndex,
+            index: dashboardModel.currentIndex,
             // controller: pageController,
             // onPageChanged: (index) {
             //   setState(() => currentIndex = index);
             // },
             children: [
-              currentIndex == 0 ? Index() : Container(),
-              currentIndex == 1 ? AgentHistory() : Container(),
+              dashboardModel.currentIndex == 0 ? Index() : Container(),
+              dashboardModel.currentIndex == 1 ? AgentHistory() : Container(),
               Profile(),
             ],
           ),
@@ -98,7 +96,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: black.withOpacity(0.3),
+                color: black.withValues(alpha: 0.3),
                 width: 0.33,
               ),
             ),
@@ -113,11 +111,11 @@ class _AgentDashboardState extends State<AgentDashboard> {
               ),
               child: BottomNavigationBar(
                 onTap: (index) => setState(() {
-                  currentIndex = index;
+                  dashboardModel.setCurrentIndex(index);
                 }),
                 backgroundColor: Colors.transparent,
                 selectedItemColor: mainColor,
-                currentIndex: currentIndex,
+                currentIndex: dashboardModel.currentIndex,
                 type: BottomNavigationBarType.fixed,
                 selectedLabelStyle: const TextStyle(
                   fontWeight: FontWeight.w500,

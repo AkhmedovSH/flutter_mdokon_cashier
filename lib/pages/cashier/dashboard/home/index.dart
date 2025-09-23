@@ -894,6 +894,7 @@ class _IndexState extends State<Index> {
                 icon: Icon(
                   UniconsLine.user,
                   size: 22,
+                  color: white,
                 ),
               ),
             ),
@@ -1123,7 +1124,7 @@ class _IndexState extends State<Index> {
                                     style: TextStyle(fontSize: 16),
                                   )
                                 : Text(
-                                    '(' + formatMoney(data['discount']) + '%)',
+                                    '(${formatMoney(data['discount'])}%)',
                                     style: TextStyle(fontSize: 16),
                                   ),
                             SizedBox(width: 10),
@@ -1217,7 +1218,7 @@ class _IndexState extends State<Index> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                (i + 1).toString() + '. ' + data["itemsList"][i]['productName'],
+                                '${(i + 1)}. ${data["itemsList"][i]['productName']}',
                                 style: const TextStyle(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
