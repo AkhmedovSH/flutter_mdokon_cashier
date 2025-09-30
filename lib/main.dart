@@ -24,7 +24,7 @@ import 'helpers/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await GetStorage.init();
   await EasyLocalization.ensureInitialized();
 

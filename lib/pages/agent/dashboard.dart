@@ -71,6 +71,8 @@ class _AgentDashboardState extends State<AgentDashboard> {
   Widget build(BuildContext context) {
     DashboardModel dashboardModel = Provider.of<DashboardModel>(context);
 
+    print(dashboardModel.currentIndex);
+
     return WillPopScope(
       onWillPop: () async {
         showSecondModalConfirm();

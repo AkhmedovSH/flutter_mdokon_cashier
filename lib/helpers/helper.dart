@@ -175,16 +175,19 @@ formatPhone(phone) {
 }
 
 formatMoney(amount, {decimalDigits = 0}) {
-  GetStorage storage = GetStorage();
-
-  if (decimalDigits == 0 && storage.read('decimalDigits') != null) {
-    decimalDigits = storage.read('decimalDigits').round();
-  }
   if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
-    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits).format(amount);
+    return NumberFormat.currency(
+      symbol: '',
+      decimalDigits: decimalDigits,
+      locale: 'UZ',
+    ).format(amount).trimRight();
   } else {
-    return NumberFormat.currency(symbol: '', decimalDigits: decimalDigits).format(0);
+    return NumberFormat.currency(
+      symbol: '',
+      decimalDigits: decimalDigits,
+      locale: 'UZ',
+    ).format(0).trimRight();
   }
 }
 
