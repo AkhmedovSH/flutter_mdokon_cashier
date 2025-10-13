@@ -168,13 +168,17 @@ formatPhone(phone) {
     var z = phone.substring(5, 8);
     var d = phone.substring(8, 10);
     var q = phone.substring(10, 12);
-    return '+' + x + ' ' + y + ' ' + z + ' ' + d + ' ' + q;
+    return '+$x $y $z $d $q';
   } else {
     return phone;
   }
 }
 
 formatMoney(amount, {decimalDigits = 0}) {
+  if (decimalDigits == 0) {
+    GetStorage storage = GetStorage();
+    decimalDigits = (storage.read('decimalDigits').round());
+  }
   if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
     return NumberFormat.currency(
