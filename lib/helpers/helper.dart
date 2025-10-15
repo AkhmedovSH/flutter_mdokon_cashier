@@ -177,7 +177,7 @@ formatPhone(phone) {
 formatMoney(amount, {decimalDigits = 0}) {
   if (decimalDigits == 0) {
     GetStorage storage = GetStorage();
-    decimalDigits = (storage.read('decimalDigits').round());
+    decimalDigits = ((storage.read('decimalDigits') ?? 0).round());
   }
   if (amount != null && amount != "") {
     amount = double.parse(amount.toString());
