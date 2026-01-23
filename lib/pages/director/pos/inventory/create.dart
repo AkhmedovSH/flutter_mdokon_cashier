@@ -1,6 +1,7 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:kassa/widgets/loading_layout.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
@@ -19,197 +20,200 @@ class InventoryCreate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DataModel dataModel = Provider.of<DataModel>(context, listen: false);
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'create',
-        leading: true,
-      ),
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DropdownItem(
-                    label: 'pos',
-                    items: dataModel.poses,
-                    dataKey: 'posId',
-                  ),
-                  if (MediaQuery.of(context).size.width > 320) ...[
-                    TextFielItem(
-                      label: '${context.tr('inventory')} №',
-                      dataKey: 'inventoryNumber',
+    return LoadingLayout(
+      onlySecond: true,
+      body: Scaffold(
+        appBar: CustomAppBar(
+          title: 'create',
+          leading: true,
+        ),
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownItem(
+                      label: 'pos',
+                      items: dataModel.poses,
+                      dataKey: 'posId',
                     ),
-                    TextFielItem(
-                      label: 'note',
-                      dataKey: 'note',
-                    ),
-                  ],
-                  SearchItem(),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - kToolbarHeight - 160,
-                    child: Consumer<InventoryModel>(
-                      builder: (context, inventoryModel, chilld) {
-                        return TableWidget(
-                          showLoading: false,
-                          headers: [
-                            DataColumn(
-                              label: SizedBox(
-                                width: 150,
-                                child: Text(context.tr('name_of_product')),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('counted'),
-                                  textAlign: TextAlign.center,
+                    if (MediaQuery.of(context).size.width > 320) ...[
+                      TextFielItem(
+                        label: '${context.tr('inventory')} №',
+                        dataKey: 'inventoryNumber',
+                      ),
+                      TextFielItem(
+                        label: 'note',
+                        dataKey: 'note',
+                      ),
+                    ],
+                    SearchItem(),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - kToolbarHeight - 160,
+                      child: Consumer<InventoryModel>(
+                        builder: (context, inventoryModel, chilld) {
+                          return TableWidget(
+                            showLoading: false,
+                            headers: [
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 150,
+                                  child: Text(context.tr('name_of_product')),
                                 ),
                               ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 150,
-                                child: Text(
-                                  context.tr('barcode'),
-                                  textAlign: TextAlign.end,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    context.tr('counted'),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('unit'),
-                                  textAlign: TextAlign.end,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    context.tr('barcode'),
+                                    textAlign: TextAlign.end,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  context.tr('price'),
-                                  textAlign: TextAlign.center,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    context.tr('unit'),
+                                    textAlign: TextAlign.end,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 150,
-                                child: Text(
-                                  context.tr('expected_balance'),
-                                  textAlign: TextAlign.end,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    context.tr('price'),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 40,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    context.tr('expected_balance'),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                          rows: [
-                            for (var i = 0; i < inventoryModel.data['productList'].length; i++)
-                              DataRow(
-                                cells: [
-                                  DataCell(
-                                    SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        '${i + 1} ${inventoryModel.data['productList'][i]['productName']}',
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 40,
+                                ),
+                              ),
+                            ],
+                            rows: [
+                              for (var i = 0; i < inventoryModel.data['productList'].length; i++)
+                                DataRow(
+                                  cells: [
+                                    DataCell(
+                                      SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          '${i + 1} ${inventoryModel.data['productList'][i]['productName']}',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: TableTextField(
-                                        inventoryModel: inventoryModel,
-                                        i: i,
-                                        keyName: 'actualBalance',
+                                    DataCell(
+                                      SizedBox(
+                                        width: 100,
+                                        child: TableTextField(
+                                          inventoryModel: inventoryModel,
+                                          i: i,
+                                          keyName: 'actualBalance',
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['barcode']}',
-                                        textAlign: TextAlign.end,
+                                    DataCell(
+                                      SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          '${inventoryModel.data['productList'][i]['barcode']}',
+                                          textAlign: TextAlign.end,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['uomName']}',
-                                        textAlign: TextAlign.end,
+                                    DataCell(
+                                      SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          '${inventoryModel.data['productList'][i]['uomName']}',
+                                          textAlign: TextAlign.end,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 100,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['price']}',
-                                        textAlign: TextAlign.end,
+                                    DataCell(
+                                      SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          '${inventoryModel.data['productList'][i]['price']}',
+                                          textAlign: TextAlign.end,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        '${inventoryModel.data['productList'][i]['balance']}',
-                                        textAlign: TextAlign.end,
+                                    DataCell(
+                                      SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          '${inventoryModel.data['productList'][i]['balance']}',
+                                          textAlign: TextAlign.end,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    Center(
-                                      child: SizedBox(
-                                        width: 30,
-                                        height: 30,
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            inventoryModel.removeProduct(i);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            padding: EdgeInsets.zero,
-                                            backgroundColor: danger,
-                                          ),
-                                          child: Icon(
-                                            UniconsLine.times,
-                                            size: 20,
+                                    DataCell(
+                                      Center(
+                                        child: SizedBox(
+                                          width: 30,
+                                          height: 30,
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              inventoryModel.removeProduct(i);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              padding: EdgeInsets.zero,
+                                              backgroundColor: danger,
+                                            ),
+                                            child: Icon(
+                                              UniconsLine.times,
+                                              size: 20,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        );
-                      },
+                                  ],
+                                ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 65,
-                  )
-                ],
+                    SizedBox(
+                      height: 65,
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-          TotalAmountItem()
-        ],
+            TotalAmountItem()
+          ],
+        ),
       ),
     );
   }
@@ -427,6 +431,7 @@ class TableTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 5),
+      height: 35,
       child: TextFormField(
         controller: inventoryModel.data['productList'][i]['controller'],
         focusNode: inventoryModel.data['productList'][i]['focus'],

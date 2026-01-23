@@ -30,6 +30,10 @@ class InventoryModel extends ChangeNotifier {
   Future<void> redirect(BuildContext context, id) async {
     final response = await get('/services/web/api/inventory/$id');
     if (httpOk(response)) {
+      print(response);
+      for (var i = 0; i < response['productList'].length; i++) {
+        response['productList'][i]['controller'] = TextEditingController(text: response['productList'][i]['actualBalance'].round().toString());
+      }
       data = response;
       context.go('/director/inventory/create');
     }
@@ -73,7 +77,7 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
-        await getPageList(context);
+        await getPageList(context, showLoader: false);
         context.go('/director/inventory');
       }
     }
@@ -103,12 +107,13 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
-        await getPageList(context);
+        await getPageList(context, showLoader: false);
         context.go('/director/inventory');
       }
+
+      Provider.of<LoadingModel>(context, listen: false).hideLoader();
       notifyListeners();
     }
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   Future<bool> checkData(BuildContext context) async {
@@ -180,8 +185,8 @@ class InventoryModel extends ChangeNotifier {
     notifyListeners(); // Уведомляем слушателей об изменении
   }
 
-  Future<void> getPageList(BuildContext context) async {
-    Provider.of<LoadingModel>(context, listen: false).showLoader();
+  Future<void> getPageList(BuildContext context, {bool showLoader = true}) async {
+    if (showLoader) Provider.of<LoadingModel>(context, listen: false).showLoader();
     FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
     final response = await pget(
       '/services/web/api/inventory-pageList/${filterModel.currentFilterData['posId']}',
@@ -192,7 +197,8 @@ class InventoryModel extends ChangeNotifier {
         pageList = response['data'];
         totalCount = response['total'];
       }
-      Provider.of<LoadingModel>(context, listen: false).hideLoader();
+
+      if (showLoader) Provider.of<LoadingModel>(context, listen: false).hideLoader();
     }
 
     notifyListeners();

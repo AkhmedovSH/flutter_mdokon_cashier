@@ -50,7 +50,7 @@ final ThemeData lightTheme = ThemeData(
       ),
     ),
   ),
-  dialogTheme: const DialogTheme(
+  dialogTheme:  DialogThemeData(
     backgroundColor: Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(
@@ -112,7 +112,7 @@ final ThemeData darkTheme = ThemeData(
     ),
   ),
 
-  dialogTheme: DialogTheme(
+  dialogTheme: DialogThemeData(
     backgroundColor: Color(0xFF171717),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(
