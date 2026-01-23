@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/models/data_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -43,7 +44,7 @@ class _IndexState extends State<Index> {
   TextEditingController packagingController = TextEditingController();
   TextEditingController pieceController = TextEditingController();
 
-  Map<String, dynamic> data = {
+  Map data = {
     "cashboxVersion": "",
     "login": "",
     "loyaltyBonus": 0,
@@ -90,6 +91,7 @@ class _IndexState extends State<Index> {
   };
 
   Map cashbox = {};
+  List allClients = [];
   List clients = [];
   List expenses = [];
   List prices = [
@@ -173,6 +175,28 @@ class _IndexState extends State<Index> {
     }
   }
 
+  void searchDebtor(String value, Function setState) {
+    if (value.isEmpty) {
+      // Если строка поиска пустая, отображаем всех клиентов
+      setState(() {
+        clients = List.from(allClients);
+      });
+      return;
+    }
+
+    final query = value.toLowerCase();
+
+    final filteredClients = allClients.where((client) {
+      final nameLower = client['clientName'].toLowerCase();
+      final phoneLower = client['phone1'].toLowerCase();
+      return nameLower.contains(query) || phoneLower.contains(query);
+    }).toList();
+
+    setState(() {
+      clients = filteredClients;
+    });
+  }
+
   getClients() async {
     final cashbox = (storage.read('cashbox')!);
     final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
@@ -180,7 +204,8 @@ class _IndexState extends State<Index> {
       response[i]['selected'] = false;
     }
     setState(() {
-      clients = response;
+      allClients = [...response];
+      clients = [...response];
       debtIn['cashboxId'] = cashbox['cashboxId'];
       debtIn['posId'] = cashbox['posId'];
       if (storage.read('shift') != null) {
@@ -719,6 +744,10 @@ class _IndexState extends State<Index> {
     data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
     data['cashierLogin'] = storage.read('user')['login'];
     data['cashierName'] = '${storage.read('user')['firstName'] ?? ''}';
+    if (cashbox['isAgent'] == true) {
+      data = jsonDecode(Provider.of<DashboardModel>(context, listen: false).returnCheque['cheque']);
+      Provider.of<DashboardModel>(context, listen: false).setCurrentCheque({});
+    }
     setState(() {});
   }
 
@@ -894,6 +923,7 @@ class _IndexState extends State<Index> {
                 icon: Icon(
                   UniconsLine.user,
                   size: 22,
+                  color: white,
                 ),
               ),
             ),
@@ -1123,7 +1153,7 @@ class _IndexState extends State<Index> {
                                     style: TextStyle(fontSize: 16),
                                   )
                                 : Text(
-                                    '(' + formatMoney(data['discount']) + '%)',
+                                    '(${formatMoney(data['discount'])}%)',
                                     style: TextStyle(fontSize: 16),
                                   ),
                             SizedBox(width: 10),
@@ -1217,7 +1247,7 @@ class _IndexState extends State<Index> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                (i + 1).toString() + '. ' + data["itemsList"][i]['productName'],
+                                '${(i + 1)}. ${data["itemsList"][i]['productName']}',
                                 style: const TextStyle(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
@@ -1602,7 +1632,8 @@ class _IndexState extends State<Index> {
 
   showModalDebtor() async {
     await getClients();
-    var closed = await showDialog(
+    if (mounted) {
+      var closed = await showDialog(
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
@@ -1615,78 +1646,95 @@ class _IndexState extends State<Index> {
                 ),
               ),
               titlePadding: EdgeInsets.all(0),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              insetPadding: EdgeInsets.fromLTRB(10, 0, 10, 20),
               actionsPadding: EdgeInsets.all(0),
               buttonPadding: EdgeInsets.all(0),
+              titleTextStyle: TextStyle(fontSize: 0),
               scrollable: true,
               content: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 child: Column(
                   children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(12),
+                        hintText: context.tr('search'),
+                      ),
+                      onChanged: (value) {
+                        searchDebtor(value, setState);
+                      },
+                    ),
+                    SizedBox(height: 10),
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.2,
                       child: SingleChildScrollView(
                         child: Table(
-                            border: TableBorder(horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid)),
+                            border: TableBorder(
+                              horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
+                            ),
                             children: [
-                              TableRow(children: const [
-                                Text(
-                                  'Контакт',
-                                ),
-                                Text(
-                                  'Валюта',
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  'Сумма долга',
-                                  textAlign: TextAlign.end,
-                                ),
-                              ]),
+                              TableRow(
+                                children: const [
+                                  Text(
+                                    'Контакт',
+                                  ),
+                                  Text(
+                                    'Валюта',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    'Сумма долга',
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ],
+                              ),
                               for (var i = 0; i < clients.length; i++)
-                                TableRow(children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text(
-                                        '${clients[i]['clientName']}',
-                                        style: TextStyle(
-                                          overflow: TextOverflow.ellipsis,
+                                TableRow(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.fromLTRB(5, 8, 0, 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text(
+                                          '${clients[i]['clientName']}',
+                                          style: TextStyle(
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text(
-                                        clients[i]['currencyName'],
-                                        textAlign: TextAlign.center,
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text(
+                                          clients[i]['currencyName'],
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      selectDebtorClient(setState, i);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
-                                      color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
-                                      child: Text(
-                                        '${formatMoney(clients[i]['balance'])}',
-                                        textAlign: TextAlign.end,
+                                    GestureDetector(
+                                      onTap: () {
+                                        selectDebtorClient(setState, i);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
+                                        color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
+                                        child: Text(
+                                          '${formatMoney(clients[i]['balance'])}',
+                                          textAlign: TextAlign.end,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ]),
+                                  ],
+                                ),
                             ]),
                       ),
                     ),
@@ -1728,22 +1776,24 @@ class _IndexState extends State<Index> {
               ],
             );
           });
+        },
+      );
+      if (closed == null) {
+        setState(() {
+          debtIn = {
+            "cash": "",
+            "terminal": "",
+            "amountIn": 0,
+            "amountOut": 0,
+            "cashboxId": '',
+            "clientId": 0,
+            "currencyId": 0,
+            "posId": '',
+            "shiftId": '',
+            "transactionsList": []
+          };
         });
-    if (closed == null) {
-      setState(() {
-        debtIn = {
-          "cash": "",
-          "terminal": "",
-          "amountIn": 0,
-          "amountOut": 0,
-          "cashboxId": '',
-          "clientId": 0,
-          "currencyId": 0,
-          "posId": '',
-          "shiftId": '',
-          "transactionsList": []
-        };
-      });
+      }
     }
   }
 

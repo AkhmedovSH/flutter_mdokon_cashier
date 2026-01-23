@@ -357,7 +357,12 @@ class _ReturnState extends State<Return> {
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.zero,
                         ),
-                        child: Center(child: Icon(UniconsLine.search)),
+                        child: Center(
+                          child: Icon(
+                            UniconsLine.search,
+                            color: white,
+                          ),
+                        ),
                       ),
                     ),
                   )
@@ -761,7 +766,7 @@ class _ReturnState extends State<Return> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '${formatMoney(sendData['totalAmount'])}',

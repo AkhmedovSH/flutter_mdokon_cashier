@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -33,7 +34,6 @@ class _ProfileState extends State<Profile> {
     cashbox = (storage.read('cashbox') ?? {});
     account = (storage.read('user') ?? {});
     setState(() {});
-    print(account);
   }
 
   @override
@@ -54,7 +54,11 @@ class _ProfileState extends State<Profile> {
                 context.go('/cashier/profile/x-report');
               }
               if (title == 'balance') {
-                context.go('/cashier/profile/balance');
+                if (cashbox['isAgent'] == true) {
+                  context.go('/agent/profile/balance');
+                } else {
+                  context.go('/cashier/profile/balance');
+                }
               }
               if (title == 'info') {
                 context.go('/cashier/profile/info');
@@ -132,6 +136,9 @@ class _ProfileState extends State<Profile> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
+                  margin: const EdgeInsets.only(right: 15),
+                  height: 64,
+                  width: 64,
                   child: CircleAvatar(
                     radius: 30.0,
                     backgroundColor: const Color(0xFFF8F8F8),
@@ -140,9 +147,6 @@ class _ProfileState extends State<Profile> {
                       width: 50,
                     ),
                   ),
-                  margin: const EdgeInsets.only(right: 15),
-                  height: 64,
-                  width: 64,
                 ),
                 Consumer<UserModel>(
                   builder: (context, userModel, child) {
@@ -226,6 +230,8 @@ class _ProfileState extends State<Profile> {
     storage.remove('user');
     storage.remove('access_token');
     storage.remove('lastLogin');
+    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
+
     context.go('/auth');
     //print(response);
   }

@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:kassa/models/cashier/dashboard_model.dart';
 import 'package:kassa/widgets/loading_layout.dart';
 
 import 'package:kassa/helpers/api.dart';
 import 'package:kassa/helpers/helper.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class AgentHistory extends StatefulWidget {
@@ -46,6 +48,7 @@ class _AgentHistoryState extends State<AgentHistory> {
   };
 
   getCheques() async {
+    loading = true;
     setState(() {});
 
     dynamic cashbox = (storage.read('cashbox')!);
@@ -54,16 +57,14 @@ class _AgentHistoryState extends State<AgentHistory> {
     });
     final response = await get('/services/desktop/api/cheque-online-list/${cashbox['posId']}');
     if (response != null) {
-      setState(() {
-        cheques = response;
-      });
+      cheques = response;
     } else {
       if (mounted) {
-        setState(() {
-          cheques = [];
-        });
+        cheques = [];
       }
     }
+    loading = false;
+    setState(() {});
   }
 
   @override
@@ -101,108 +102,117 @@ class _AgentHistoryState extends State<AgentHistory> {
               onPressed: () {
                 showFilterDialog();
               },
-              icon: Icon(UniconsLine.filter),
+              icon: Icon(
+                UniconsLine.filter,
+                color: white,
+              ),
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: 15),
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Table(
-                  border: TableBorder(
-                    horizontalInside: BorderSide(
-                      width: 1,
-                      color: tableBorderColor,
-                      style: BorderStyle.solid,
-                    ),
-                  ), // Allows to add a border decoration around your table
+        body: loading
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : SingleChildScrollView(
+                child: Column(
                   children: [
-                    TableRow(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            'Имя агента',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Container(
+                      margin: EdgeInsets.only(top: 15),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Table(
+                        border: TableBorder(
+                          horizontalInside: BorderSide(
+                            width: 1,
+                            color: tableBorderColor,
+                            style: BorderStyle.solid,
                           ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            'Итоговая сумма',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            'Дата',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    for (var i = 0; i < cheques.length; i++)
-                      TableRow(
+                        ), // Allows to add a border decoration around your table
                         children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              context.go('/agent', extra: cheques[i]);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                '${i + 1}. ${cheques[i]['agentName']}',
+                          TableRow(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.only(bottom: 10),
+                                child: Text(
+                                  'Имя агента',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              context.go('/agent', extra: cheques[i]);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                //cheques[i]['totalPrice']
-                                '${formatMoney(jsonDecode(cheques[i]['cheque'])['totalPrice'])}',
-                                textAlign: TextAlign.center,
+                              Container(
+                                padding: EdgeInsets.only(bottom: 10),
+                                child: Text(
+                                  'Итоговая сумма',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              context.go('/agent', extra: cheques[i]);
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                '${formatDate(cheques[i]['createdDate'])}',
-                                textAlign: TextAlign.center,
+                              Container(
+                                padding: EdgeInsets.only(bottom: 10),
+                                child: Text(
+                                  'Дата',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
+                          for (var i = 0; i < cheques.length; i++)
+                            TableRow(
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    Provider.of<DashboardModel>(context, listen: false).setCurrentCheque(cheques[i]);
+                                    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
+                                    // context.go('/agent', extra: cheques[i]);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text(
+                                      '${i + 1}. ${cheques[i]['agentName']}',
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    context.go('/agent', extra: cheques[i]);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text(
+                                      //cheques[i]['totalPrice']
+                                      '${formatMoney(jsonDecode(cheques[i]['cheque'])['totalPrice'])}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    context.go('/agent', extra: cheques[i]);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text(
+                                      '${formatDate(cheques[i]['createdDate'])}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
+                    )
                   ],
                 ),
-              )
-            ],
-          ),
-        ),
+              ),
       ),
     );
   }

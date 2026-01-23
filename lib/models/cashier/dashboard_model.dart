@@ -13,7 +13,6 @@ class DashboardModel extends ChangeNotifier {
 
   setCurrentCheque(Map cheque) {
     returnCheque = cheque;
-    notifyListeners();
   }
 
   closeApp() async {

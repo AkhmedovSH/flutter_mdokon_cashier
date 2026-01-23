@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kassa/pages/cashier/dashboard/profile/balance.dart';
 import 'package:kassa/pages/page_not_found.dart';
 
 import '/pages/splash.dart';
@@ -70,7 +71,13 @@ final globalRouter = GoRouter(
     GoRoute(
       path: '/agent',
       pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const AgentDashboard()),
-      routes: cashiers,
+      routes: [
+        ...cashiers,
+        GoRoute(
+          path: '/profile/balance',
+          pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Balance()),
+        ),
+      ],
     ),
     // GoRoute(
     //   path: '/',

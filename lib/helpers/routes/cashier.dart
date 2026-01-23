@@ -44,7 +44,7 @@ List<RouteBase> cashiers = [
     path: '/payment',
     pageBuilder: (context, state) {
       print(state.extra);
-      final extraData = state.extra as Map<String, dynamic>?;
+      final extraData = state.extra as Map?;
       return cupertinoPageBuilder(context, state, PaymentSample(data: extraData!));
     },
   ),

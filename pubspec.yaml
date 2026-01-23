@@ -2,7 +2,7 @@ name: kassa
 description: A new Flutter project.
 publish_to: "none"
 
-version: 1.0.28+28
+version: 1.0.32+32
 
 environment:
   sdk: ">=3.4.1 <4.0.0"
@@ -14,7 +14,7 @@ dependencies:
     sdk: flutter
 
   intl: ^0.19.0
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.2   
   dio: ^5.5.0+1
   go_router: ^14.2.0
   easy_localization: ^3.0.7
