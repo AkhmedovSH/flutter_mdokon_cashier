@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +34,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     'username': TextEditingController(),
     'password': TextEditingController(),
   };
+  Map smsData = {
+    'otpController': TextEditingController(),
+    'sendSms': false,
+  };
 
   bool showPassword = false;
   bool loading = false;
@@ -42,62 +45,24 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   login() async {
     FocusScope.of(context).unfocus();
     LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
-    UserModel userModel = Provider.of<UserModel>(context, listen: false);
     loadingModel.showLoader(num: 2);
     try {
       final data = await post('/auth/login', payload, isGuest: true);
       if (data == null) {
-        Provider.of<LoadingModel>(context, listen: false).hideLoader();
+        loadingModel.hideLoader();
         return;
       }
       storage.write('access_token', data['access_token']);
 
-      var lastLogin = {
-        'year': DateTime.now().year,
-        'month': DateTime.now().month,
-        'day': DateTime.now().day,
-        'hour': DateTime.now().hour,
-        'minute': DateTime.now().minute,
-      };
-      storage.write('lastLogin', (lastLogin));
-
-      final Map account = await get('/services/uaa/api/account');
-      userModel.setUser({...payload, ...account});
-
-      var checker = '';
-      for (var i = 0; i < account['authorities'].length; i++) {
-        if (account['authorities'][i] == "ROLE_CASHIER") {
-          checker = 'ROLE_CASHIER';
+      final checkOtp = await get('/services/desktop/api/check-otp');
+      if (httpOk(checkOtp)) {
+        print(checkOtp);
+        if (customIf(checkOtp['sendSms'])) {
+          smsData = checkOtp;
+          setState(() {});
+        } else {
+          getAccount();
         }
-        if (account['authorities'][i] == "ROLE_AGENT") {
-          checker = 'ROLE_AGENT';
-        }
-        if (account['authorities'][i] == "ROLE_OWNER") {
-          checker = 'ROLE_OWNER';
-        }
-        if (account['authorities'][i] == "ROLE_MERCHANDISER") {
-          checker = 'ROLE_MERCHANDISER';
-        }
-      }
-      storage.write('user_roles', (account['authorities']));
-      storage.write('role', checker);
-      if (checker == 'ROLE_CASHIER') {
-        await getAccessPos();
-      } else if (checker == 'ROLE_AGENT') {
-        await getAgentPosId();
-      } else if (checker == 'ROLE_OWNER' || checker == 'ROLE_MERCHANDISER') {
-        // final userSettings = await get("/services/web/api/user-settings");
-        final posBalance = await get("/services/web/api/pos-balance");
-        log(data.toString());
-        userModel.setUser({
-          ...storage.read('user'),
-          'posId': data['posId'],
-          'posBalance': posBalance,
-        });
-        Provider.of<DataModel>(context, listen: false).getData();
-        context.pushReplacement('/director');
-      } else {
-        showDangerToast('error', description: 'Нет доступа');
       }
     } catch (e) {
       print(e);
@@ -107,6 +72,70 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   void openPhoneCall() async {
     if (!await launchUrl(Uri.parse("tel://+998555000089"))) throw 'Could not launch';
+  }
+
+  verifyOtp() async {
+    smsData['sendSms'] = false;
+    smsData['otpController'] = '';
+    setState(() {});
+    final response = await post('/services/desktop/api/verify-otp', smsData);
+    if (httpOk(response)) {
+      if (response['success']) {
+        getAccount();
+      }
+    }
+  }
+
+  getAccount() async {
+    UserModel userModel = Provider.of<UserModel>(context, listen: false);
+
+    final Map account = await get('/services/uaa/api/account');
+    userModel.setUser({...payload, ...account});
+    var lastLogin = {
+      'year': DateTime.now().year,
+      'month': DateTime.now().month,
+      'day': DateTime.now().day,
+      'hour': DateTime.now().hour,
+      'minute': DateTime.now().minute,
+    };
+    storage.write('lastLogin', (lastLogin));
+
+    var checker = '';
+    for (var i = 0; i < account['authorities'].length; i++) {
+      if (account['authorities'][i] == "ROLE_CASHIER") {
+        checker = 'ROLE_CASHIER';
+      }
+      if (account['authorities'][i] == "ROLE_AGENT") {
+        checker = 'ROLE_AGENT';
+      }
+      if (account['authorities'][i] == "ROLE_OWNER") {
+        checker = 'ROLE_OWNER';
+      }
+      if (account['authorities'][i] == "ROLE_MERCHANDISER") {
+        checker = 'ROLE_MERCHANDISER';
+      }
+    }
+    storage.write('user_roles', (account['authorities']));
+    storage.write('role', checker);
+    if (checker == 'ROLE_CASHIER') {
+      await getAccessPos();
+    } else if (checker == 'ROLE_AGENT') {
+      await getAgentPosId();
+    } else if (checker == 'ROLE_OWNER' || checker == 'ROLE_MERCHANDISER') {
+      // final userSettings = await get("/services/web/api/user-settings");
+      final posBalance = await get("/services/web/api/pos-balance");
+      userModel.setUser({
+        ...storage.read('user'),
+        'posId': data['posId'],
+        'posBalance': posBalance,
+      });
+      if (mounted) {
+        Provider.of<DataModel>(context, listen: false).getData();
+        context.pushReplacement('/director');
+      }
+    } else {
+      showDangerToast('error', description: 'Нет доступа');
+    }
   }
 
   getAgentPosId() async {
@@ -149,7 +178,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     if (storage.read('settings') == null) {
       storage.write(
         'settings',
-        jsonEncode({
+        {
           'showChequeProducts': false,
           'printAfterSale': false,
           'searchGroupProducts': false,
@@ -158,7 +187,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
           'additionalInfo': false,
           'language': false,
           'theme': false,
-        }),
+        },
       );
     }
   }
@@ -167,6 +196,9 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     getData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UserModel>(context, listen: false).checkVersion(context);
+    });
   }
 
   @override
@@ -209,102 +241,145 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                       Form(
                         key: _formKey,
                         child: Column(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              child: TextFormField(
-                                controller: data['username'],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return context.tr('required_field');
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  setState(() {
-                                    payload['username'] = value;
-                                  });
-                                },
-                                onTapOutside: (PointerDownEvent event) {
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                },
-                                cursorColor: mainColor,
-                                textInputAction: TextInputAction.next,
-                                scrollPadding: EdgeInsets.only(bottom: 200),
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  prefixIcon: Icon(
-                                    payload['username'].length > 0 ? UniconsLine.user_check : UniconsLine.user,
-                                    size: 24,
-                                    color: mainColor,
-                                  ),
-                                  border: inputBorder,
-                                  enabledBorder: inputBorder,
-                                  focusedBorder: inputFocusBorder,
-                                  errorBorder: inputErrorBorder,
-                                  focusedErrorBorder: inputErrorBorder,
-                                  hintText: 'Логин',
-                                  hintStyle: TextStyle(color: mainColor),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              child: TextFormField(
-                                controller: data['password'],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return context.tr('required_field');
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  setState(() {
-                                    payload['password'] = value;
-                                  });
-                                },
-                                onTapOutside: (PointerDownEvent event) {
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                },
-                                // onFieldSubmitted: (val) {
-                                //   if (_formKey.currentState!.validate()) {
-                                //     login();
-                                //   }
-                                // },
-                                cursorColor: mainColor,
-                                obscureText: !showPassword,
-                                scrollPadding: EdgeInsets.only(bottom: 200),
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                                  prefixIcon: Icon(
-                                    showPassword ? UniconsLine.unlock_alt : UniconsLine.lock_alt,
-                                    size: 30,
-                                    color: mainColor,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        showPassword = !showPassword;
-                                      });
+                          children: smsData['sendSms']
+                              ? [
+                                  if (smsData['sendSms'])
+                                    Container(
+                                      margin: EdgeInsets.only(bottom: 10),
+                                      child: Text('${smsData['offer']}'),
+                                    ),
+
+                                  TextFormField(
+                                    controller: smsData['otpController'],
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return context.tr('required_field');
+                                      }
+                                      return null;
                                     },
-                                    icon: Icon(
-                                      showPassword ? UniconsLine.eye : UniconsLine.eye_slash,
-                                      size: 24,
-                                      color: grey,
+                                    onChanged: (value) {
+                                      smsData['otp'] = value;
+                                      setState(() {});
+                                    },
+                                    onTapOutside: (PointerDownEvent event) {
+                                      FocusManager.instance.primaryFocus?.unfocus();
+                                    },
+                                    cursorColor: mainColor,
+                                    textInputAction: TextInputAction.next,
+                                    scrollPadding: EdgeInsets.only(bottom: 200),
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.all(16),
+                                      prefixIcon: Icon(
+                                        customIf(smsData['otp']) ? UniconsLine.comment_dots : UniconsLine.comment,
+                                        size: 24,
+                                        color: mainColor,
+                                      ),
+                                      border: inputBorder,
+                                      enabledBorder: inputBorder,
+                                      focusedBorder: inputFocusBorder,
+                                      errorBorder: inputErrorBorder,
+                                      focusedErrorBorder: inputErrorBorder,
+                                      hintText: 'Введите смс',
+                                      hintStyle: TextStyle(color: mainColor),
                                     ),
                                   ),
-                                  border: inputBorder,
-                                  enabledBorder: inputBorder,
-                                  focusedBorder: inputFocusBorder,
-                                  errorBorder: inputErrorBorder,
-                                  focusedErrorBorder: inputErrorBorder,
-                                  focusColor: mainColor,
-                                  hintText: 'Пароль',
-                                  hintStyle: TextStyle(color: mainColor),
-                                ),
-                              ),
-                            ),
-                          ],
+                                ]
+                              : [
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    child: TextFormField(
+                                      controller: data['username'],
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return context.tr('required_field');
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        setState(() {
+                                          payload['username'] = value;
+                                        });
+                                      },
+                                      onTapOutside: (PointerDownEvent event) {
+                                        FocusManager.instance.primaryFocus?.unfocus();
+                                      },
+                                      cursorColor: mainColor,
+                                      textInputAction: TextInputAction.next,
+                                      scrollPadding: EdgeInsets.only(bottom: 200),
+                                      decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.all(16),
+                                        prefixIcon: Icon(
+                                          payload['username'].length > 0 ? UniconsLine.user_check : UniconsLine.user,
+                                          size: 24,
+                                          color: mainColor,
+                                        ),
+                                        border: inputBorder,
+                                        enabledBorder: inputBorder,
+                                        focusedBorder: inputFocusBorder,
+                                        errorBorder: inputErrorBorder,
+                                        focusedErrorBorder: inputErrorBorder,
+                                        hintText: 'Логин',
+                                        hintStyle: TextStyle(color: mainColor),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    child: TextFormField(
+                                      controller: data['password'],
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return context.tr('required_field');
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        setState(() {
+                                          payload['password'] = value;
+                                        });
+                                      },
+                                      onTapOutside: (PointerDownEvent event) {
+                                        FocusManager.instance.primaryFocus?.unfocus();
+                                      },
+                                      // onFieldSubmitted: (val) {
+                                      //   if (_formKey.currentState!.validate()) {
+                                      //     login();
+                                      //   }
+                                      // },
+                                      cursorColor: mainColor,
+                                      obscureText: !showPassword,
+                                      scrollPadding: EdgeInsets.only(bottom: 200),
+                                      decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
+                                        prefixIcon: Icon(
+                                          showPassword ? UniconsLine.unlock_alt : UniconsLine.lock_alt,
+                                          size: 30,
+                                          color: mainColor,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              showPassword = !showPassword;
+                                            });
+                                          },
+                                          icon: Icon(
+                                            showPassword ? UniconsLine.eye : UniconsLine.eye_slash,
+                                            size: 24,
+                                            color: grey,
+                                          ),
+                                        ),
+                                        border: inputBorder,
+                                        enabledBorder: inputBorder,
+                                        focusedBorder: inputFocusBorder,
+                                        errorBorder: inputErrorBorder,
+                                        focusedErrorBorder: inputErrorBorder,
+                                        focusColor: mainColor,
+                                        hintText: 'Пароль',
+                                        hintStyle: TextStyle(color: mainColor),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                         ),
                       ),
                       Row(
@@ -376,26 +451,64 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
               ),
               SizedBox(height: 10),
               Container(
-                width: MediaQuery.of(context).size.width,
                 margin: EdgeInsets.only(left: 32),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(150, 50),
-                    backgroundColor: mainColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  spacing: 10,
+                  children: [
+                    if (smsData['sendSms'])
+                      SizedBox(
+                        height: 55,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: white,
+                            overlayColor: grey,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(color: grey),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              smsData['sendSms'] = false;
+                            });
+                          },
+                          child: Icon(
+                            UniconsLine.arrow_left,
+                            color: grey,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    Expanded(
+                      child: SizedBox(
+                        height: 55,
+                        width: MediaQuery.of(context).size.width,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(150, 50),
+                            backgroundColor: mainColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              if (smsData['sendSms']) {
+                                verifyOtp();
+                              } else {
+                                login();
+                              }
+                            }
+                          },
+                          child: Text(
+                            'ВОЙТИ',
+                            style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      login();
-                    }
-                  },
-                  child: Text(
-                    'ВОЙТИ',
-                    style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
-                  ),
+                  ],
                 ),
               ),
             ],

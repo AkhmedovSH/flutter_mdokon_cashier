@@ -39,9 +39,11 @@ class _XReportState extends State<XReport> {
     setState(() {
       report = response;
       reportList = report['xReportList'];
-      report['shiftOpenDate'] = DateFormat('dd.MM.yyyy HH:ss').format(DateTime.parse(
-        response['shiftOpenDate'],
-      ));
+      report['shiftOpenDate'] = DateFormat('dd.MM.yyyy HH:ss').format(
+        DateTime.parse(
+          response['shiftOpenDate'],
+        ),
+      );
     });
   }
 
@@ -62,7 +64,7 @@ class _XReportState extends State<XReport> {
         Text(
           '${text2 ?? ''}',
           style: TextStyle(fontSize: fz),
-        )
+        ),
       ],
     );
   }
@@ -74,11 +76,12 @@ class _XReportState extends State<XReport> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-                flex: 6,
-                child: Text(
-                  text,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
-                )),
+              flex: 6,
+              child: Text(
+                text,
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
+              ),
+            ),
             Expanded(
               flex: 3,
               child: Text(
@@ -86,10 +89,10 @@ class _XReportState extends State<XReport> {
                 textAlign: TextAlign.end,
                 style: TextStyle(fontSize: fz),
               ),
-            )
+            ),
           ],
         ),
-        Divider(color: Colors.black)
+        Divider(color: Colors.black),
       ],
     );
   }
@@ -97,125 +100,129 @@ class _XReportState extends State<XReport> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
-        appBar: CustomAppBar(
-          title: 'X_report',
-          leading: true,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                children: [
-                  Center(
-                      child: Image.asset(
+      key: _scaffoldKey,
+      appBar: CustomAppBar(
+        title: 'X_report',
+        leading: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              children: [
+                Center(
+                  child: Image.asset(
                     'images/splash_logo.png',
                     height: 64,
                     width: 200,
-                  )),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      context.tr('DUPLICATE'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    context.tr('DUPLICATE'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
                     ),
                   ),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      '${report['posName']}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    '${report['posName']}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      '${context.tr('phone')}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    '${context.tr('phone')}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
-                  Container(
-                    alignment: Alignment.center,
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  buildRow('cashier', report['cashierName']),
-                  buildRow('${context.tr('cashbox')} №', report['shiftNumber']),
-                  report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
-                  buildRow('date', report['shiftOpenDate']),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Text(
-                      '*****************************************************************************************',
-                      overflow: TextOverflow.clip,
-                      maxLines: 1,
-                      softWrap: false,
-                    ),
+                ),
+                buildRow('cashier', report['cashierName']),
+                buildRow('${context.tr('cashbox')} №', report['shiftNumber']),
+                report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
+                buildRow('date', report['shiftOpenDate']),
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: Text(
+                    '*****************************************************************************************',
+                    overflow: TextOverflow.clip,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
-                  for (var i = 0; i < reportList.length; i++)
-                    reportList[i]['amountIn'] != 0
-                        ? buildRow2(
-                            '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Приход (${reportList[i]['currencyName']}) ',
-                            reportList[i]['amountIn'])
-                        : buildRow2(
-                            '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Расход (${reportList[i]['currencyName']}) ',
-                            reportList[i]['amountOut']),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Text(
-                      '*****************************************************************************************',
-                      overflow: TextOverflow.clip,
-                      maxLines: 1,
-                      softWrap: false,
-                    ),
+                ),
+                for (var i = 0; i < reportList.length; i++)
+                  reportList[i]['amountIn'] != 0
+                      ? buildRow2(
+                          '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Приход (${reportList[i]['currencyName']}) ',
+                          reportList[i]['amountIn'],
+                        )
+                      : buildRow2(
+                          '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Расход (${reportList[i]['currencyName']}) ',
+                          reportList[i]['amountOut'],
+                        ),
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: Text(
+                    '*****************************************************************************************',
+                    overflow: TextOverflow.clip,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
-                  buildRow('sold_on_credit', report['debt']),
-                  buildRow('discount_amount', report['discountAmount']),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Text(
-                      '*****************************************************************************************',
-                      overflow: TextOverflow.clip,
-                      maxLines: 1,
-                      softWrap: false,
-                    ),
+                ),
+                buildRow('sold_on_credit', report['debt']),
+                buildRow('discount_amount', report['discountAmount']),
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: Text(
+                    '*****************************************************************************************',
+                    overflow: TextOverflow.clip,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
-                  buildRow('cash_balance', report['cashboxTotalAmount']),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Text(
-                      '*****************************************************************************************',
-                      overflow: TextOverflow.clip,
-                      maxLines: 1,
-                      softWrap: false,
-                    ),
+                ),
+                buildRow('cash_balance', formatMoney(report['cashboxTotalAmount'])),
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: Text(
+                    '*****************************************************************************************',
+                    overflow: TextOverflow.clip,
+                    maxLines: 1,
+                    softWrap: false,
                   ),
-                  buildRow('NUMBER_X_OF_REPORTS', report['countRequest']),
-                  SizedBox(height: 20)
-                ],
-              ),
+                ),
+                buildRow('NUMBER_X_OF_REPORTS', report['countRequest']),
+                SizedBox(height: 20),
+              ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

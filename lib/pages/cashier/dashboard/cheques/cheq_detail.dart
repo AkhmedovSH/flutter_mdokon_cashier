@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mdokon/models/cashier/print_model.dart';
+import 'package:flutter_mdokon/widgets/dialogs.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -482,30 +484,37 @@ class _CheqDetailState extends State<CheqDetail> {
       bottomSheet: Padding(
         padding: EdgeInsets.only(bottom: 10),
         child: Row(
+          spacing: 10,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(width: 10),
-            // Expanded(
-            //   child: ElevatedButton(
-            //     onPressed: () {
-            //       getBluetooth();
-            //     },
-            //     style: ElevatedButton.styleFrom(
-            //       padding: EdgeInsets.symmetric(vertical: 14),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(16),
-            //       ),
-            //     ),
-            //     child: Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: [
-            //         Icon(UniconsLine.print),
-            //         SizedBox(width: 10),
-            //         Text(context.tr('PRINT')),
-            //       ],
-            //     ),
-            //   ),
-            // ),
+
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () async {
+                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
+                  printerModel.startScan();
+                  var result = await showPrinterPicker(context);
+                  if (customIf(result)) {
+                    printerModel.printFullCheque(cheque, itemsList);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(UniconsLine.print),
+                    SizedBox(width: 10),
+                    Text(context.tr('PRINT')),
+                  ],
+                ),
+              ),
+            ),
             if (cheque['status'] != 2) ...[
               // SizedBox(width: 10),
               Expanded(

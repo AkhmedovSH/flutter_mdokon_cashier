@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_mdokon/helpers/helper.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import '/pages/cashier/dashboard/profile/balance.dart';
 import '/pages/page_not_found.dart';
-
-import '/pages/splash.dart';
 
 // auth
 import '/pages/auth/login.dart';
@@ -30,12 +29,52 @@ Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widge
 }
 
 final globalRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/',
   errorBuilder: (context, state) => PageNotFound(),
+
+  redirect: (context, state) {
+    print(state.matchedLocation);
+    final lastLogin = storage.read('lastLogin');
+    final user = storage.read('user');
+    final role = storage.read('role');
+
+    bool isAuthorized = false;
+    if (customIf(lastLogin) && customIf(user)) {
+      if (minutesBetween(lastLogin, DateTime.now()) < 55) {
+        isAuthorized = true;
+      }
+    }
+
+    final isLoggingIn = state.matchedLocation == '/auth';
+    if (!isAuthorized) {
+      return isLoggingIn ? null : '/auth';
+    }
+
+    if (state.matchedLocation == '/' || isLoggingIn) {
+      switch (role) {
+        case "ROLE_CASHIER":
+          return '/cashier';
+        case "ROLE_OWNER":
+          return '/director';
+        case "ROLE_DIRECTOR":
+          return '/director';
+        case "ROLE_AGENT":
+          return '/agent';
+        default:
+          return '/auth';
+      }
+    }
+
+    return null; // В остальных случаях не мешаем навигации
+  },
   routes: [
     GoRoute(
       path: '/auth',
-      builder: (context, start) => Login(),
+      pageBuilder: (context, state) {
+        return cupertinoPageBuilder(context, state, const Login());
+      },
+
+      // builder: (context, start) => Login(),
       routes: [
         GoRoute(
           path: '/cashboxes',
@@ -53,10 +92,6 @@ final globalRouter = GoRouter(
           routes: cashiers,
         ),
       ],
-    ),
-    GoRoute(
-      path: '/splash',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const Splash()),
     ),
     GoRoute(
       path: '/cashier',

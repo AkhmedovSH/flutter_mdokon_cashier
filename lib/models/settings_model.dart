@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
 class SettingsModel with ChangeNotifier {
-  final GetStorage _box = GetStorage();
+  final GetStorage box = GetStorage();
 
   bool _theme = false;
   bool _showChequeProducts = false;
@@ -15,15 +15,15 @@ class SettingsModel with ChangeNotifier {
   double _decimalDigits = 0;
 
   SettingsModel() {
-    _theme = _box.read('theme') ?? false;
-    _showChequeProducts = _box.read('showChequeProducts') ?? false;
-    _searchGroupProducts = _box.read('searchGroupProducts') ?? false;
-    _printAfterSale = _box.read('printAfterSale') ?? false;
-    _selectUserAftersale = _box.read('selectUserAftersale') ?? false;
-    _offlineDeferment = _box.read('offlineDeferment') ?? false;
-    _additionalInfo = _box.read('additionalInfo') ?? false;
-    _language = _box.read('language') ?? false;
-    _decimalDigits = _box.read('decimalDigits') ?? 0;
+    _theme = box.read('theme') ?? false;
+    _showChequeProducts = box.read('showChequeProducts') ?? false;
+    _searchGroupProducts = box.read('searchGroupProducts') ?? false;
+    _printAfterSale = box.read('printAfterSale') ?? false;
+    _selectUserAftersale = box.read('selectUserAftersale') ?? false;
+    _offlineDeferment = box.read('offlineDeferment') ?? false;
+    _additionalInfo = box.read('additionalInfo') ?? false;
+    _language = box.read('language') ?? false;
+    _decimalDigits = box.read('decimalDigits') ?? 0;
   }
 
   bool get theme => _theme;
@@ -66,7 +66,7 @@ class SettingsModel with ChangeNotifier {
         _decimalDigits = value;
         break;
     }
-    _box.write(key, value);
+    box.write(key, value);
     notifyListeners();
   }
 }

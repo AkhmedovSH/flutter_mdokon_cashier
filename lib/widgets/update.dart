@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,21 +26,27 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
       duration: const Duration(milliseconds: 250),
     );
 
-    _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05), // Диалог начинается снизу (1.0 по вертикали)
-      end: const Offset(0, 0), // Диалог приходит в позицию (0.0 по вертикали)
-    ).animate(CurvedAnimation(
-      parent: _controller!,
-      curve: Curves.easeOut,
-    ));
+    _offsetAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 0.05), // Диалог начинается снизу (1.0 по вертикали)
+          end: const Offset(0, 0), // Диалог приходит в позицию (0.0 по вертикали)
+        ).animate(
+          CurvedAnimation(
+            parent: _controller!,
+            curve: Curves.easeOut,
+          ),
+        );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0, // Начальная прозрачность (0.0 = полностью прозрачно)
-      end: 1.0, // Конечная прозрачность (1.0 = полностью непрозрачно)
-    ).animate(CurvedAnimation(
-      parent: _controller!,
-      curve: Curves.easeIn,
-    ));
+    _fadeAnimation =
+        Tween<double>(
+          begin: 0.0, // Начальная прозрачность (0.0 = полностью прозрачно)
+          end: 1.0, // Конечная прозрачность (1.0 = полностью непрозрачно)
+        ).animate(
+          CurvedAnimation(
+            parent: _controller!,
+            curve: Curves.easeIn,
+          ),
+        );
 
     _controller!.forward(); // Запуск анимации при инициализации
   }
@@ -131,8 +139,10 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
                           height: 45,
                           child: ElevatedButton(
                             onPressed: () async {
-                              if (await canLaunchUrl(Uri.parse('https://play.google.com/store/apps/details?id=cabinet.pdd.uz'))) {
-                                await launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=cabinet.pdd.uz'));
+                              if (Platform.isIOS) {
+                                await launchUrl(Uri.parse('https://apps.apple.com/us/app/mdokon-kassa/id6471837929'));
+                              } else {
+                                await launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=com.mdokon.cabinet'));
                               }
                             },
                             style: ElevatedButton.styleFrom(

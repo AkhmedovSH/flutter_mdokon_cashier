@@ -234,13 +234,13 @@ bool customIf(dynamic value) {
   if (value is bool) {
     return value;
   }
-  if (value is int && value > 0) {
-    return true;
+  if (value is int && value <= 0) {
+    return false;
   }
-  if (value is String && value != '' && value != ' ') {
-    return true;
+  if (value is String && (value == '' || value == ' ')) {
+    return false;
   }
-  return false;
+  return true;
 }
 
 double customNumber(value) {

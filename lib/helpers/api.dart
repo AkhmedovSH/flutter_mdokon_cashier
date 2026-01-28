@@ -14,7 +14,7 @@ GetStorage storage = GetStorage();
 BaseOptions options = BaseOptions(
   baseUrl: hostUrl,
   receiveDataWhenStatusError: true,
-  connectTimeout: const Duration(seconds: 60),
+  connectTimeout: const Duration(seconds: 5),
   // receiveTimeout: const Duration(seconds: 20),
 );
 var dio = Dio(options);
