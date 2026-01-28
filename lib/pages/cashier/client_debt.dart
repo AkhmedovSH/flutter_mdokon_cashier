@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/widgets/custom_app_bar.dart';
 
 import '../../helpers/helper.dart';
 

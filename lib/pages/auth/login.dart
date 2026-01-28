@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/loading_model.dart';
-import 'package:kassa/models/user_model.dart';
+import '/models/data_model.dart';
+import '/models/loading_model.dart';
+import '/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -41,15 +41,15 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
 
   login() async {
     FocusScope.of(context).unfocus();
-    Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
+    LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+    UserModel userModel = Provider.of<UserModel>(context, listen: false);
+    loadingModel.showLoader(num: 2);
     try {
       final data = await post('/auth/login', payload, isGuest: true);
       if (data == null) {
         Provider.of<LoadingModel>(context, listen: false).hideLoader();
         return;
       }
-      print(data);
-      print(data['access_token']);
       storage.write('access_token', data['access_token']);
 
       var lastLogin = {
@@ -62,7 +62,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.write('lastLogin', (lastLogin));
 
       final Map account = await get('/services/uaa/api/account');
-      Provider.of<UserModel>(context, listen: false).setUser({...payload, ...account});
+      userModel.setUser({...payload, ...account});
 
       var checker = '';
       for (var i = 0; i < account['authorities'].length; i++) {
@@ -81,7 +81,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       }
       storage.write('user_roles', (account['authorities']));
       storage.write('role', checker);
-      print(checker);
       if (checker == 'ROLE_CASHIER') {
         await getAccessPos();
       } else if (checker == 'ROLE_AGENT') {
@@ -90,7 +89,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
         // final userSettings = await get("/services/web/api/user-settings");
         final posBalance = await get("/services/web/api/pos-balance");
         log(data.toString());
-        Provider.of<UserModel>(context, listen: false).setUser({
+        userModel.setUser({
           ...storage.read('user'),
           'posId': data['posId'],
           'posBalance': posBalance,
@@ -103,7 +102,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     } catch (e) {
       print(e);
     }
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    loadingModel.hideLoader();
   }
 
   void openPhoneCall() async {
@@ -114,19 +113,24 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     final response = await get('/services/desktop/api/get-access-pos');
     response['isAgent'] = true;
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-    Provider.of<UserModel>(context, listen: false).setCashbox(response);
-    context.go('/agent');
+    if (mounted) {
+      Provider.of<UserModel>(context, listen: false).setCashbox(response);
+      context.go('/agent');
+    }
   }
 
   getAccessPos() async {
+    UserModel userModel = Provider.of<UserModel>(context, listen: false);
     final response = await get('/services/desktop/api/get-access-pos');
     if (response['openShift']) {
       storage.remove('shift');
       response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-      Provider.of<UserModel>(context, listen: false).setCashbox(response['shift']);
-      context.go('/cashier');
+      userModel.setCashbox(response['shift']);
+      final responsePaymentTypes = await get("/services/desktop/api/payment-type-helper/${response['shift']['posId']}");
+      userModel.setPaymentTypes(responsePaymentTypes);
+      if (mounted) context.go('/cashier');
     } else {
-      context.go('/auth/cashboxes', extra: {'posList': response['posList']});
+      if (mounted) context.go('/auth/cashboxes', extra: {'posList': response['posList']});
     }
   }
 

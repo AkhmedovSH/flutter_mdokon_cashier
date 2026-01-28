@@ -1,182 +1,136 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
-
-import 'package:kassa/helpers/helper.dart';
+import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
+import 'package:flutter_mdokon/models/user_model.dart';
+import 'package:provider/provider.dart'; // Импорт провайдера
 import 'package:unicons/unicons.dart';
 
+import '/helpers/helper.dart';
+
 class Payment extends StatefulWidget {
-  const Payment({Key? key, this.setPayload, this.data, this.setData}) : super(key: key);
-  final Function? setPayload;
-  final Function? setData;
-  final dynamic data;
+  const Payment({Key? key}) : super(key: key);
 
   @override
   _PaymentState createState() => _PaymentState();
 }
 
 class _PaymentState extends State<Payment> {
-  GetStorage storage = GetStorage();
-  int currentIndex = 0;
-  final _formKey = GlobalKey<FormState>();
-  final cashController = TextEditingController();
-  final terminalController = TextEditingController();
-  dynamic sendData = {};
-  dynamic data = {};
-
-  calculateChange() {
-    widget.setData!(cashController.text, terminalController.text);
-    dynamic change = 0;
-    dynamic paid = 0;
-    if (cashController.text.isNotEmpty) {
-      paid += double.parse(cashController.text);
-    }
-    if (terminalController.text.isNotEmpty) {
-      paid += double.parse(terminalController.text);
-    }
-    change = (paid - double.parse(data['totalPrice'].toString()));
-    setState(() {
-      data['change'] = change;
-      data['paid'] = paid;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    data = widget.data;
-    // cashController.text = double.parse(data['text']).toStringAsFixed(storage.read('decimalDigits').round());
-    cashController.text = double.parse(data['text']).toString();
-    Timer(Duration(milliseconds: 300), () {
-      calculateChange();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: EdgeInsets.only(top: 20),
-            child: Text(
-              context.tr('TO_PAY'),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    final formKey = GlobalKey<FormState>();
+
+    return Consumer<CashboxModel>(
+      builder: (context, model, child) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 20),
+                child: Text(
+                  context.tr('TO_PAY'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.only(bottom: 10),
-            child: Text(
-              '${formatMoney(data['totalPrice'])} ${data['currencyName']}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '${formatMoney(model.data['totalPrice'])} ${model.data['currencyName'] ?? ''}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      context.tr('cash'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+              Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var entry in model.data['paymentTypes'].asMap().entries)
+                      Builder(
+                        builder: (context) {
+                          int index = entry.key;
+                          var item = entry.value;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  '${item['customPaymentTypeName']}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 15),
+                                child: TextFormField(
+                                  controller: item['controller'],
+                                  keyboardType: TextInputType.number,
+                                  onTapOutside: (PointerDownEvent event) {
+                                    FocusManager.instance.primaryFocus?.unfocus();
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return context.tr('required_field');
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    model.updateInputs(index, value);
+                                  },
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                    suffixIcon: IconButton(
+                                      onPressed: () {
+                                        model.exactAmount(index);
+                                      },
+                                      icon: Icon(UniconsLine.money_bill),
+                                    ),
+                                    enabledBorder: inputBorder,
+                                    focusedBorder: inputFocusBorder,
+                                    errorBorder: inputErrorBorder,
+                                    focusedErrorBorder: inputErrorBorder,
+                                    hintText: '0.00 ${model.data['currencyName'] ?? ''}',
+                                    hintStyle: TextStyle(color: a2),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 15),
-                    child: TextFormField(
-                      controller: cashController,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return context.tr('required_field');
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        calculateChange();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        suffixIcon: Icon(UniconsLine.money_bill),
-                        enabledBorder: inputBorder,
-                        focusedBorder: inputFocusBorder,
-                        errorBorder: inputErrorBorder,
-                        focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${data['currencyName']}',
-                        hintStyle: TextStyle(color: a2),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      context.tr('terminal'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 15),
-                    child: TextFormField(
-                      controller: terminalController,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return context.tr('required_field');
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        calculateChange();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        suffixIcon: Icon(UniconsLine.credit_card),
-                        enabledBorder: inputBorder,
-                        focusedBorder: inputFocusBorder,
-                        errorBorder: inputErrorBorder,
-                        focusedErrorBorder: inputErrorBorder,
-                        hintText: '0.00 ${data['currencyName']}',
-                        hintStyle: TextStyle(color: a2),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-          Text(
-            '${context.tr('change')}:',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.only(bottom: 10, top: 5),
-            child: Text(
-              '${formatMoney(data['change'])} ${data['currencyName']}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                  ],
+                ),
               ),
-            ),
+              Text(
+                '${context.tr('change')}:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 10, top: 5),
+                child: Text(
+                  '${formatMoney(model.data['change'])} ${model.data['currencyName'] ?? ''}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

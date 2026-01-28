@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/widgets/custom_app_bar.dart';
 
 import '../../helpers/helper.dart';
 import '../../helpers/api.dart';

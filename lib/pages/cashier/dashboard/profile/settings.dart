@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
-import 'package:kassa/helpers/themes.dart';
-import 'package:kassa/models/settings_model.dart';
-import 'package:kassa/models/theme_model.dart';
+import '/helpers/themes.dart';
+import '/models/settings_model.dart';
+import '/models/theme_model.dart';
 
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:unicons/unicons.dart';

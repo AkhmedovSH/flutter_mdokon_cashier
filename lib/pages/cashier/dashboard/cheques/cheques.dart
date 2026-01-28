@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/models/loading_model.dart';
-import 'package:kassa/widgets/loading_layout.dart';
+import '/models/loading_model.dart';
+import '/widgets/loading_layout.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/helper.dart';
+import '/helpers/api.dart';
+import '/helpers/helper.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

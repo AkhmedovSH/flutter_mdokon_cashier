@@ -7,8 +7,9 @@ class UserModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
   Map _user = {};
   Map _cashbox = {};
+  List paymentTypes = [];
 
-  UserModel(this._user, this._cashbox);
+  UserModel(this._user, this._cashbox, this.paymentTypes);
 
   Map get user => _user;
   Map get cashbox => _cashbox;
@@ -23,6 +24,12 @@ class UserModel extends ChangeNotifier {
   void setCashbox(Map payload) {
     _cashbox = payload;
     storage.write('cashbox', payload);
+    notifyListeners();
+  }
+
+  void setPaymentTypes(List payload) {
+    paymentTypes = payload;
+    storage.write('paymentTypes', payload);
     notifyListeners();
   }
 }

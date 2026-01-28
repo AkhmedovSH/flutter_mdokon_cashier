@@ -1,18 +1,18 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:kassa/widgets/loading_layout.dart';
+import '/widgets/loading_layout.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/director/inventory_model.dart';
+import '/models/data_model.dart';
+import '/models/director/inventory_model.dart';
 
-import 'package:kassa/widgets/custom_app_bar.dart';
-import 'package:kassa/widgets/filter/label.dart';
-import 'package:kassa/widgets/table/table.dart';
+import '/widgets/custom_app_bar.dart';
+import '/widgets/filter/label.dart';
+import '/widgets/table/table.dart';
 
-import 'package:kassa/helpers/helper.dart';
+import '/helpers/helper.dart';
 
 class InventoryCreate extends StatelessWidget {
   const InventoryCreate({super.key});

@@ -2,11 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:kassa/widgets/filter/label.dart';
+import '/widgets/filter/label.dart';
 
-import 'package:kassa/models/filter_model.dart';
+import '/models/filter_model.dart';
 
-import 'package:kassa/helpers/helper.dart';
+import '/helpers/helper.dart';
 
 class Search extends StatelessWidget {
   const Search({super.key});

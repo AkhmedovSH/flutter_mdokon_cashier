@@ -1,6 +1,0 @@
-NSPhotoLibraryUsageDescription="Rasmlarni saqlash uchun foto galereyangizga kiring."
-NSBluetoothPeripheralUsageDescription="Eshitish vositalari yoki sensorlar kabi Bluetooth simsiz qurilmalariga ulanish uchun ruxsat."
-NSCameraUsageDescription="Surat yoki video olish uchun qurilmangiz kamerasiga kiring."
-NSLocationAlwaysAndWhenInUseUsageDescription="GPS yordamida istalgan vaqtda joylashuvingizni aniqlash uchun ruxsat."
-NSLocationWhenInUseUsageDescription="Ilovadan foydalanganda joylashuvingizni aniqlash uchun ruxsat."
-NSBluetoothAlwaysUsageDescription="Boshqa qurilmalar bilan muloqot qilish uchun har doim Bluetooth-dan foydalanish uchun."

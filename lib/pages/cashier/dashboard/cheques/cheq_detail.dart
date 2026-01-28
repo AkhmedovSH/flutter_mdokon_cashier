@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/models/cashier/dashboard_model.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/models/cashier/dashboard_model.dart';
+import '/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 //
@@ -64,7 +64,7 @@ class _CheqDetailState extends State<CheqDetail> {
     "returned": 0,
     "returnedPrice": 0,
     "itemsList": [],
-    "transactionsList": []
+    "transactionsList": [],
   };
   Map cashbox = {
     "posName": "",
@@ -152,15 +152,16 @@ class _CheqDetailState extends State<CheqDetail> {
   // }
 
   getCheque() async {
-    dynamic response = await get('/services/desktop/api/cheque-byId/${widget.id}');
+    dynamic response = await get('/services/desktop/api/cheque-byId-v2/${widget.id}');
     //print(response);
     setState(() {
       cashbox = (storage.read('cashbox')!);
       cheque = response;
+      print(response['itemsList']);
       itemsList = response['itemsList'];
       transactionsList = response['transactionsList'];
       cheque['discount'] = cheque['discount'];
-      cheque['to_pay'] = cheque['totalPrice'] - (cheque['totalPrice'] * cheque['discount']) / 100;
+      cheque['to_pay'] = cheque['totalPrice'] - (customNumber(cheque['totalPrice']) * customNumber(cheque['discount'])) / 100;
       cheque['chequeDate'] = formatUnixTime(cheque['chequeDate']);
     });
     //print(cheque);
@@ -224,7 +225,7 @@ class _CheqDetailState extends State<CheqDetail> {
         Text(
           '$text2',
           style: TextStyle(fontSize: fz),
-        )
+        ),
       ],
     );
   }
@@ -305,107 +306,114 @@ class _CheqDetailState extends State<CheqDetail> {
                     softWrap: false,
                   ),
                 ),
-                Table(columnWidths: const {
-                  0: FlexColumnWidth(5),
-                  1: FlexColumnWidth(3),
-                  2: FlexColumnWidth(3),
-                }, children: [
-                  TableRow(children: [
-                    Container(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        '№ ${context.tr('product')}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        context.tr('qty'),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        context.tr('price'),
-                        textAlign: TextAlign.end,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ]),
-                  for (var i = 0; i < itemsList.length; i++)
-                    TableRow(children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '${i + 1} ${itemsList[i]['productName']}',
-                          style: TextStyle(
-                            decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                            decorationColor: getColor(itemsList[i]['returned']),
+                Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(5),
+                    1: FlexColumnWidth(3),
+                    2: FlexColumnWidth(3),
+                  },
+                  children: [
+                    TableRow(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            '№ ${context.tr('product')}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        Container(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            context.tr('qty'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            context.tr('price'),
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    for (var i = 0; i < itemsList.length; i++)
+                      TableRow(
                         children: [
-                          itemsList[i]['returnedQuantity'] != itemsList[i]['quantity']
-                              ? Container(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Text(
-                                    '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                                  ),
-                                )
-                              : Container(),
-                          itemsList[i]['returnedQuantity'] != 0
-                              ? Container(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Text(
-                                    '${formatMoney(itemsList[i]['returnedQuantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                                    style: TextStyle(
-                                      decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                                      decorationColor: getColor(itemsList[i]['returned']),
-                                    ),
-                                  ),
-                                )
-                              : Container(),
+                          Container(
+                            padding: EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              '${i + 1} ${itemsList[i]['productName']}',
+                              style: TextStyle(
+                                decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
+                                decorationColor: getColor(itemsList[i]['returned']),
+                              ),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              itemsList[i]['returnedQuantity'] != itemsList[i]['quantity']
+                                  ? Container(
+                                      padding: EdgeInsets.symmetric(vertical: 4),
+                                      child: Text(
+                                        '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
+                                      ),
+                                    )
+                                  : Container(),
+                              itemsList[i]['returnedQuantity'] != 0
+                                  ? Container(
+                                      padding: EdgeInsets.symmetric(vertical: 4),
+                                      child: Text(
+                                        '${formatMoney(itemsList[i]['returnedQuantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
+                                        style: TextStyle(
+                                          decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
+                                          decorationColor: getColor(itemsList[i]['returned']),
+                                        ),
+                                      ),
+                                    )
+                                  : Container(),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              itemsList[i]['returnedPrice'] != itemsList[i]['totalPrice']
+                                  ? Container(
+                                      padding: EdgeInsets.symmetric(vertical: 4),
+                                      child: Text(
+                                        '${formatMoney(itemsList[i]['totalPrice'])}',
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    )
+                                  : Container(),
+                              itemsList[i]['returnedPrice'] != 0
+                                  ? Container(
+                                      padding: EdgeInsets.symmetric(vertical: 4),
+                                      child: Text(
+                                        '${formatMoney(itemsList[i]['returnedPrice'])}',
+                                        textAlign: TextAlign.end,
+                                        style: TextStyle(
+                                          decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
+                                          decorationColor: getColor(itemsList[i]['returned']),
+                                        ),
+                                      ),
+                                    )
+                                  : Container(),
+                            ],
+                          ),
                         ],
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          itemsList[i]['returnedPrice'] != itemsList[i]['totalPrice']
-                              ? Container(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Text(
-                                    '${formatMoney(itemsList[i]['totalPrice'])}',
-                                    textAlign: TextAlign.end,
-                                  ),
-                                )
-                              : Container(),
-                          itemsList[i]['returnedPrice'] != 0
-                              ? Container(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: Text(
-                                    '${formatMoney(itemsList[i]['returnedPrice'])}',
-                                    textAlign: TextAlign.end,
-                                    style: TextStyle(
-                                      decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                                      decorationColor: getColor(itemsList[i]['returned']),
-                                    ),
-                                  ),
-                                )
-                              : Container(),
-                        ],
-                      ),
-                    ])
-                ]),
+                  ],
+                ),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
@@ -416,7 +424,7 @@ class _CheqDetailState extends State<CheqDetail> {
                   ),
                 ),
                 buildRow(context.tr('sale_amount'), formatMoney(cheque['totalPrice'])),
-                buildRow(context.tr('discount'), formatMoney((cheque['totalPrice'] * cheque['discount']) / 100)),
+                buildRow(context.tr('discount'), formatMoney((customNumber(cheque['totalPrice']) * customNumber(cheque['discount'])) / 100)),
                 buildRow(context.tr('to_pay'), formatMoney(cheque['to_pay']), fz: 20.0),
                 buildRow(context.tr('paid'), formatMoney(cheque['paid'])),
                 buildRow('${context.tr('VAT')} %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
@@ -433,7 +441,7 @@ class _CheqDetailState extends State<CheqDetail> {
                       Text(
                         '${formatMoney(transactionsList[i]['amountIn'])}',
                         style: TextStyle(fontSize: 16),
-                      )
+                      ),
                     ],
                   ),
                 cheque['clientAmount'] > 0 ? buildRow('Сумма долга', formatMoney(cheque['clientAmount'])) : Container(),
@@ -443,7 +451,11 @@ class _CheqDetailState extends State<CheqDetail> {
                 cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${context.tr('bonus')}', formatMoney(cheque['loyaltyBonus'])) : Container(),
                 buildRow(context.tr('change'), formatMoney(cheque['change'])),
                 Container(
-                    margin: EdgeInsets.only(top: 15, bottom: 10), height: 50, width: 200, child: SfBarcodeGenerator(value: '${cheque['barcode']}')),
+                  margin: EdgeInsets.only(top: 15, bottom: 10),
+                  height: 50,
+                  width: 200,
+                  child: SfBarcodeGenerator(value: '${cheque['barcode']}'),
+                ),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: Text(

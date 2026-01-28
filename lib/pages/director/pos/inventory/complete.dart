@@ -1,11 +1,11 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/director/documents_in_model.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
-import 'package:kassa/widgets/filter/label.dart';
+import '/helpers/helper.dart';
+import '/models/data_model.dart';
+import '/models/director/documents_in_model.dart';
+import '/widgets/custom_app_bar.dart';
+import '/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

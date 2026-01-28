@@ -2,14 +2,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:kassa/models/cashier/dashboard_model.dart';
+import '/models/cashier/dashboard_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
 
 import '../cashier/dashboard/home/index.dart';
 import 'cheques.dart';
-import 'package:kassa/pages/cashier/dashboard/profile/profile.dart';
+import '/pages/cashier/dashboard/profile/profile.dart';
 
 import '../../helpers/helper.dart';
 

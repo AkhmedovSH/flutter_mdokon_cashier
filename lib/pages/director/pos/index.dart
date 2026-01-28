@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/helpers/helper.dart';
+import '/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
 
 class Home extends StatelessWidget {

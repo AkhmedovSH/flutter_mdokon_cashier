@@ -3,7 +3,7 @@ import 'package:flutter/scheduler.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:kassa/models/cashier/dashboard_model.dart';
+import '/models/cashier/dashboard_model.dart';
 
 import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +16,11 @@ import 'models/user_model.dart';
 import 'models/data_model.dart';
 import 'models/filter_model.dart';
 
-import 'package:kassa/models/director/documents_in_model.dart';
-import 'package:kassa/models/director/inventory_model.dart';
+import '/models/cashier/cashbox_model.dart';
+import '/models/cashier/payment_model.dart';
+
+import '/models/director/documents_in_model.dart';
+import '/models/director/inventory_model.dart';
 
 import 'helpers/routes/index.dart';
 import 'helpers/themes.dart';
@@ -60,6 +63,7 @@ void main() async {
             create: (_) => UserModel(
               storage.read('user') ?? {},
               storage.read('cashbox') ?? {},
+              storage.read('paymentTypes') ?? [],
             ),
           ),
           ChangeNotifierProvider(create: (_) => DataModel()),
@@ -67,6 +71,8 @@ void main() async {
           ChangeNotifierProvider(create: (_) => DocumentsInModel()),
           ChangeNotifierProvider(create: (_) => InventoryModel()),
           ChangeNotifierProvider(create: (_) => DashboardModel()),
+          ChangeNotifierProvider(create: (_) => CashboxModel()),
+          ChangeNotifierProvider(create: (_) => PaymentModel()),
         ],
         child: const MyApp(),
       ),

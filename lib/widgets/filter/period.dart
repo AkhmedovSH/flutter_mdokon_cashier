@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/models/filter_model.dart';
-import 'package:kassa/widgets/filter/label.dart';
+import '/helpers/helper.dart';
+import '/models/filter_model.dart';
+import '/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

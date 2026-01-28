@@ -224,6 +224,32 @@ bool checkRole(role) {
   return roles.contains(role);
 }
 
+bool customIf(dynamic value) {
+  if (value == null) {
+    return false;
+  }
+  if (value == 0) {
+    return false;
+  }
+  if (value is bool) {
+    return value;
+  }
+  if (value is int && value > 0) {
+    return true;
+  }
+  if (value is String && value != '' && value != ' ') {
+    return true;
+  }
+  return false;
+}
+
+double customNumber(value) {
+  if (customIf(value)) {
+    return double.parse(value.toString());
+  }
+  return 0;
+}
+
 showSuccessToast(message, {String description = ""}) {
   toastification.show(
     title: Text(

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:flutter/services.dart';
@@ -11,10 +12,10 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/models/cashier/dashboard_model.dart';
-import 'package:kassa/models/data_model.dart';
+import '/helpers/api.dart';
+import '/helpers/helper.dart';
+import '/models/cashier/dashboard_model.dart';
+import '/models/data_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
@@ -127,7 +128,7 @@ class _IndexState extends State<Index> {
     "currencyId": 0,
     "posId": '',
     "shiftId": '',
-    "transactionsList": []
+    "transactionsList": [],
   };
   List itemList = [
     {
@@ -221,11 +222,14 @@ class _IndexState extends State<Index> {
       showDangerToast(context.tr('discount_has_been_applied'));
       return;
     }
-    await context.push('/cashier/search', extra: {
-      'activePrice': data['activePrice'],
-      'currencyId': data['currencyId'],
-      'currencyName': data['currencyName'],
-    });
+    await context.push(
+      '/cashier/search',
+      extra: {
+        'activePrice': data['activePrice'],
+        'currencyId': data['currencyId'],
+        'currencyName': data['currencyName'],
+      },
+    );
     List<Map<String, dynamic>> products = Provider.of<DataModel>(context, listen: false).currentProductList;
     Provider.of<DataModel>(context, listen: false).setProductList([]);
     if (products.isEmpty) {
@@ -900,7 +904,7 @@ class _IndexState extends State<Index> {
                 ),
               ),
             ),
-          if (cashbox['isAgent'] != true)
+          if (cashbox['isAgent'] != true && checkRole('CASHBOX_EXPENSE'))
             SizedBox(
               child: IconButton(
                 onPressed: () {
@@ -940,7 +944,7 @@ class _IndexState extends State<Index> {
                 ),
               ),
             ),
-          if (data['itemsList'].length > 0)
+          if (data['itemsList'].length > 0 && checkRole('CASHBOX_DELETE_SCAN_ITEM'))
             SizedBox(
               child: IconButton(
                 onPressed: () {
@@ -1164,7 +1168,8 @@ class _IndexState extends State<Index> {
                                   )
                                 : Text(
                                     formatMoney(
-                                            double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString())) +
+                                          double.parse(data['totalPriceBeforeDiscount'].toString()) - double.parse(data['totalPrice'].toString()),
+                                        ) +
                                         context.tr('sum'),
                                     style: TextStyle(fontSize: 16),
                                   ),
@@ -1207,6 +1212,7 @@ class _IndexState extends State<Index> {
                         key: UniqueKey(),
                         closeOnScroll: false,
                         useTextDirection: false,
+                        enabled: checkRole('CASHBOX_DELETE_SCAN_ITEM'),
                         endActionPane: ActionPane(
                           motion: const StretchMotion(),
                           dismissible: DismissiblePane(
@@ -1287,7 +1293,7 @@ class _IndexState extends State<Index> {
                         ),
                       ),
                     ),
-                  SizedBox(height: 80)
+                  SizedBox(height: 80),
                 ],
               ),
             ),
@@ -1320,6 +1326,7 @@ class _IndexState extends State<Index> {
                   child: ElevatedButton(
                     onPressed: data["itemsList"].length > 0
                         ? () async {
+                            Provider.of<CashboxModel>(context, listen: false).init(data);
                             dynamic result = await context.push('/cashier/payment', extra: data);
                             if (result == true) {
                               deleteAllProducts();
@@ -1345,7 +1352,7 @@ class _IndexState extends State<Index> {
               size: 28,
               color: white,
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1405,9 +1412,9 @@ class _IndexState extends State<Index> {
                       ),
                       child: Text(context.tr('continue')),
                     ),
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -1444,10 +1451,11 @@ class _IndexState extends State<Index> {
 
   showModalExpense() async {
     await showDialog(
-        context: context,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
+      context: context,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
               titlePadding: EdgeInsets.all(0),
@@ -1585,11 +1593,13 @@ class _IndexState extends State<Index> {
                     ),
                     child: Text('Принять'),
                   ),
-                )
+                ),
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
   }
 
   createClientDebt(setState) async {
@@ -1621,7 +1631,7 @@ class _IndexState extends State<Index> {
         "currencyId": 0,
         "posId": '',
         "shiftId": '',
-        "transactionsList": []
+        "transactionsList": [],
       };
     });
     Navigator.pop(context);
@@ -1637,39 +1647,40 @@ class _IndexState extends State<Index> {
         context: context,
         useSafeArea: true,
         builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              title: Text(''),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(24.0),
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: Text(''),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(24.0),
+                  ),
                 ),
-              ),
-              titlePadding: EdgeInsets.all(0),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              insetPadding: EdgeInsets.fromLTRB(10, 0, 10, 20),
-              actionsPadding: EdgeInsets.all(0),
-              buttonPadding: EdgeInsets.all(0),
-              titleTextStyle: TextStyle(fontSize: 0),
-              scrollable: true,
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(12),
-                        hintText: context.tr('search'),
+                titlePadding: EdgeInsets.all(0),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                insetPadding: EdgeInsets.fromLTRB(10, 0, 10, 20),
+                actionsPadding: EdgeInsets.all(0),
+                buttonPadding: EdgeInsets.all(0),
+                titleTextStyle: TextStyle(fontSize: 0),
+                scrollable: true,
+                content: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: Column(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.all(12),
+                          hintText: context.tr('search'),
+                        ),
+                        onChanged: (value) {
+                          searchDebtor(value, setState);
+                        },
                       ),
-                      onChanged: (value) {
-                        searchDebtor(value, setState);
-                      },
-                    ),
-                    SizedBox(height: 10),
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      child: SingleChildScrollView(
-                        child: Table(
+                      SizedBox(height: 10),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.2,
+                        child: SingleChildScrollView(
+                          child: Table(
                             border: TableBorder(
                               horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                             ),
@@ -1735,47 +1746,49 @@ class _IndexState extends State<Index> {
                                     ),
                                   ],
                                 ),
-                            ]),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    for (var i = 0; i < itemList.length; i++)
-                      buildTextField(
-                        context.tr(itemList[i]['label']),
-                        itemList[i]['icon'],
-                        itemList[i],
-                        i,
-                        setState,
+                      SizedBox(
+                        height: 10,
                       ),
-                  ],
-                ),
-              ),
-              actions: [
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                  child: ElevatedButton(
-                    onPressed: (debtIn['clientId'] != 0 && (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) && !loading)
-                        ? () {
-                            if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
-                              createClientDebt(setState);
-                            }
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: mainColor,
-                      disabledBackgroundColor: disabledColor,
-                      disabledForegroundColor: black,
-                    ),
-                    child: Text('Принять'),
+                      for (var i = 0; i < itemList.length; i++)
+                        buildTextField(
+                          context.tr(itemList[i]['label']),
+                          itemList[i]['icon'],
+                          itemList[i],
+                          i,
+                          setState,
+                        ),
+                    ],
                   ),
-                )
-              ],
-            );
-          });
+                ),
+                actions: [
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                    child: ElevatedButton(
+                      onPressed: (debtIn['clientId'] != 0 && (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) && !loading)
+                          ? () {
+                              if (debtIn['cash'].length > 0 || debtIn['terminal'].length > 0) {
+                                createClientDebt(setState);
+                              }
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: mainColor,
+                        disabledBackgroundColor: disabledColor,
+                        disabledForegroundColor: black,
+                      ),
+                      child: Text('Принять'),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
         },
       );
       if (closed == null) {
@@ -1790,7 +1803,7 @@ class _IndexState extends State<Index> {
             "currencyId": 0,
             "posId": '',
             "shiftId": '',
-            "transactionsList": []
+            "transactionsList": [],
           };
         });
       }
@@ -1803,119 +1816,121 @@ class _IndexState extends State<Index> {
       useSafeArea: true,
       useRootNavigator: false,
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            title: Text(''),
-            titlePadding: EdgeInsets.all(0),
-            contentPadding: EdgeInsets.symmetric(horizontal: 10),
-            insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            actionsPadding: EdgeInsets.all(0),
-            buttonPadding: EdgeInsets.all(0),
-            scrollable: true,
-            content: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Кол во',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    width: MediaQuery.of(context).size.width,
-                    child: TextFormField(
-                      controller: packagingController,
-                      onChanged: (value) {
-                        calculateProductWithParamsUnit(setState);
-                      },
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: mainColor,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: mainColor,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: borderColor,
-                        focusColor: mainColor,
-                        hintText: '0',
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Из упаковки',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    width: MediaQuery.of(context).size.width,
-                    child: TextFormField(
-                      controller: pieceController,
-                      onChanged: (value) {
-                        calculateProductWithParamsUnit(setState);
-                      },
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: mainColor,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: mainColor,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: borderColor,
-                        focusColor: mainColor,
-                        hintText: '0',
-                      ),
-                    ),
-                  ),
-                  Text('Наименование: ${productWithParams['productName']}'),
-                  Text('В упаковке: ${formatMoney(productWithParams['selectedUnit']['quantity'])}'),
-                  Text('Цена: ${formatMoney(productWithParams['salePrice'])}'),
-                  Text('Кол-во: ${formatMoney(productWithParamsUnit['quantity'])}'),
-                  Text('К оплате: ${formatMoney(productWithParamsUnit['totalPrice'])}'),
-                  SizedBox(height: 10),
-                ],
-              ),
-            ),
-            actions: [
-              Container(
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(''),
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              actionsPadding: EdgeInsets.all(0),
+              buttonPadding: EdgeInsets.all(0),
+              scrollable: true,
+              content: SizedBox(
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (packagingController.text != "" || pieceController.text != "") {
-                      addToListUnit();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: (packagingController.text != "" || pieceController.text != "") ? mainColor : lightGrey,
-                  ),
-                  child: Text('Принять'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Кол во',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: TextFormField(
+                        controller: packagingController,
+                        onChanged: (value) {
+                          calculateProductWithParamsUnit(setState);
+                        },
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: mainColor,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: mainColor,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: borderColor,
+                          focusColor: mainColor,
+                          hintText: '0',
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Из упаковки',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      width: MediaQuery.of(context).size.width,
+                      child: TextFormField(
+                        controller: pieceController,
+                        onChanged: (value) {
+                          calculateProductWithParamsUnit(setState);
+                        },
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: mainColor,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: mainColor,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: borderColor,
+                          focusColor: mainColor,
+                          hintText: '0',
+                        ),
+                      ),
+                    ),
+                    Text('Наименование: ${productWithParams['productName']}'),
+                    Text('В упаковке: ${formatMoney(productWithParams['selectedUnit']['quantity'])}'),
+                    Text('Цена: ${formatMoney(productWithParams['salePrice'])}'),
+                    Text('Кол-во: ${formatMoney(productWithParamsUnit['quantity'])}'),
+                    Text('К оплате: ${formatMoney(productWithParamsUnit['totalPrice'])}'),
+                    SizedBox(height: 10),
+                  ],
                 ),
-              )
-            ],
-          );
-        });
+              ),
+              actions: [
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (packagingController.text != "" || pieceController.text != "") {
+                        addToListUnit();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: (packagingController.text != "" || pieceController.text != "") ? mainColor : lightGrey,
+                    ),
+                    child: Text('Принять'),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
     if (closed == null) {
@@ -1955,10 +1970,11 @@ class _IndexState extends State<Index> {
 
   showCreateUserModal() {
     showDialog(
-        context: context,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
+      context: context,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
               shape: const RoundedRectangleBorder(
@@ -2060,8 +2076,10 @@ class _IndexState extends State<Index> {
                 ),
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
   }
 
   Timer? debounce;
@@ -2091,10 +2109,11 @@ class _IndexState extends State<Index> {
       clients = response;
     });
     final result = await showDialog(
-        context: context,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
+      context: context,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
             return AlertDialog(
               title: Text(''),
               titlePadding: EdgeInsets.all(0),
@@ -2215,11 +2234,13 @@ class _IndexState extends State<Index> {
                     },
                     child: Text(context.tr('choose')),
                   ),
-                )
+                ),
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
     if (result != null) {
       for (var i = 0; i < result.length; i++) {
         if (result[i]['selected'] == true) {

@@ -4,12 +4,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/helpers/helper.dart';
-import 'package:kassa/helpers/themes.dart';
-import 'package:kassa/models/locale_model.dart';
-import 'package:kassa/models/settings_model.dart';
-import 'package:kassa/models/theme_model.dart';
-import 'package:kassa/models/user_model.dart';
+import '/helpers/helper.dart';
+import '/helpers/themes.dart';
+import '/models/locale_model.dart';
+import '/models/settings_model.dart';
+import '/models/theme_model.dart';
+import '/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,7 +44,6 @@ class Settings extends StatelessWidget {
             children: [
               Consumer<UserModel>(
                 builder: (context, userModel, child) {
-                  print(userModel.user['usermame']);
                   return Container(
                     width: MediaQuery.of(context).size.width,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),

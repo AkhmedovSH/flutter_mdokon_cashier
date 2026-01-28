@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/pages/cashier/dashboard/profile/balance.dart';
-import 'package:kassa/pages/page_not_found.dart';
+import '/pages/cashier/dashboard/profile/balance.dart';
+import '/pages/page_not_found.dart';
 
 import '/pages/splash.dart';
 
@@ -11,7 +11,7 @@ import '/pages/auth/login.dart';
 import '/pages/auth/cashboxes.dart';
 
 import '/pages/cashier/dashboard/dashboard.dart';
-import 'package:kassa/pages/director/index.dart';
+import '/pages/director/index.dart';
 import '/pages/agent/dashboard.dart';
 
 import 'cashier.dart';

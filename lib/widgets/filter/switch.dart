@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
 import 'package:provider/provider.dart';
-import 'package:kassa/models/filter_model.dart';
-import 'package:kassa/widgets/filter/label.dart';
+import '/models/filter_model.dart';
+import '/widgets/filter/label.dart';
 
 class FilterSwitch extends StatelessWidget {
   final String label;

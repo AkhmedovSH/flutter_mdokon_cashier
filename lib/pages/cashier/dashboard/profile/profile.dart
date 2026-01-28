@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/models/cashier/dashboard_model.dart';
-import 'package:kassa/models/user_model.dart';
+import '/models/cashier/dashboard_model.dart';
+import '/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -174,7 +174,7 @@ class _ProfileState extends State<Profile> {
                           style: TextStyle(
                             color: white,
                           ),
-                        )
+                        ),
                       ],
                     );
                   },
@@ -184,7 +184,7 @@ class _ProfileState extends State<Profile> {
           ),
           SizedBox(height: 15),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.clipboard_alt, 'X_report'),
-          buildRow(UniconsLine.box, 'balance'),
+          if (checkRole('CASHBOX_BRANCH_BALANCE')) buildRow(UniconsLine.box, 'balance'),
           buildRow(UniconsLine.question_circle, 'info'),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.cog, 'settings'),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.sign_out_alt, 'close_shift'),
@@ -295,7 +295,7 @@ class _ProfileState extends State<Profile> {
                       ),
                       child: Text(context.tr('continue')),
                     ),
-                  )
+                  ),
                 ],
               ),
               SizedBox(height: 20),

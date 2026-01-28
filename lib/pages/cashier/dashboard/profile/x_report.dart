@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
 
-import 'package:kassa/widgets/custom_app_bar.dart';
+import '/widgets/custom_app_bar.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/helper.dart';
+import '/helpers/api.dart';
+import '/helpers/helper.dart';
 
 class XReport extends StatefulWidget {
   const XReport({Key? key}) : super(key: key);

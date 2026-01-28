@@ -6,15 +6,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kassa/models/data_model.dart';
-import 'package:kassa/models/loading_model.dart';
-import 'package:kassa/widgets/custom_app_bar.dart';
-import 'package:kassa/widgets/loading.dart';
+import '/models/data_model.dart';
+import '/models/loading_model.dart';
+import '/widgets/custom_app_bar.dart';
+import '/widgets/loading.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
-import 'package:kassa/helpers/api.dart';
-import 'package:kassa/helpers/helper.dart';
+import '/helpers/api.dart';
+import '/helpers/helper.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

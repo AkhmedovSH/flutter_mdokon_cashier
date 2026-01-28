@@ -30,6 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
+      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
