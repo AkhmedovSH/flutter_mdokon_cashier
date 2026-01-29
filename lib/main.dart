@@ -95,9 +95,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  setInitData() async {
+    // initializeNotifications(context);
+    Provider.of<PrinterModel>(context, listen: false).autoConnectSavedPrinter();
+  }
+
   @override
   void initState() {
     super.initState();
+    setInitData();
   }
 
   @override

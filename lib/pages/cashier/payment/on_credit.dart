@@ -38,55 +38,57 @@ class _OnCreditState extends State<OnCredit> {
               contentPadding: EdgeInsets.symmetric(horizontal: 10),
               insetPadding: EdgeInsets.all(10),
               scrollable: true,
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 40,
-                    child: TextField(
-                      onChanged: (value) => model.searchClients(value),
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        hintText: context.tr('search'),
-                        prefixIcon: Icon(Icons.search),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 40,
+                      child: TextField(
+                        onChanged: (value) => model.searchClients(value),
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                          hintText: context.tr('search'),
+                          prefixIcon: Icon(Icons.search),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.5,
-                    child: SingleChildScrollView(
-                      child: Table(
-                        border: TableBorder(
-                          horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
-                        ),
-                        children: [
-                          TableRow(
-                            children: [
-                              Text(context.tr('contact'), style: TextStyle(fontWeight: FontWeight.bold)),
-                              Text(context.tr('number'), style: TextStyle(fontWeight: FontWeight.bold)),
-                              Text(context.tr('comment'), style: TextStyle(fontWeight: FontWeight.bold)),
-                            ],
+                    SizedBox(height: 10),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: SingleChildScrollView(
+                        child: Table(
+                          border: TableBorder(
+                            horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
                           ),
-                          // Генерируем список клиентов из модели
-                          for (var i = 0; i < model.clients.length; i++)
+                          children: [
                             TableRow(
                               children: [
-                                _buildTableCell(model.clients[i]['name'], i, model, context),
-                                _buildTableCell(model.clients[i]['phone1'], i, model, context),
-                                _buildTableCell(model.clients[i]['comment'] ?? '', i, model, context),
+                                Text(context.tr('contact'), style: TextStyle(fontWeight: FontWeight.bold)),
+                                Text(context.tr('number'), style: TextStyle(fontWeight: FontWeight.bold)),
+                                Text(context.tr('comment'), style: TextStyle(fontWeight: FontWeight.bold)),
                               ],
                             ),
-                        ],
+                            // Генерируем список клиентов из модели
+                            for (var i = 0; i < model.clients.length; i++)
+                              TableRow(
+                                children: [
+                                  _buildTableCell(model.clients[i]['name'], i, model, context),
+                                  _buildTableCell(model.clients[i]['phone1'], i, model, context),
+                                  _buildTableCell(model.clients[i]['comment'] ?? '', i, model, context),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               actions: [
                 Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                  width: MediaQuery.of(context).size.width,
                   child: ElevatedButton(
                     onPressed: () {
                       // Выбор уже произошел по клику на ячейку, кнопка просто закрывает

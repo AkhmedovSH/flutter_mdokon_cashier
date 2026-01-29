@@ -31,9 +31,7 @@ Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widge
 final globalRouter = GoRouter(
   initialLocation: '/',
   errorBuilder: (context, state) => PageNotFound(),
-
   redirect: (context, state) {
-    print(state.matchedLocation);
     final lastLogin = storage.read('lastLogin');
     final user = storage.read('user');
     final role = storage.read('role');
@@ -65,7 +63,7 @@ final globalRouter = GoRouter(
       }
     }
 
-    return null; // В остальных случаях не мешаем навигации
+    return null;
   },
   routes: [
     GoRoute(

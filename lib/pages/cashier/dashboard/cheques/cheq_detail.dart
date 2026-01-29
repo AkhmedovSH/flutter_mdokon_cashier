@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/print_model.dart';
-import 'package:flutter_mdokon/widgets/dialogs.dart';
+import 'package:flutter_mdokon/models/loading_model.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -283,6 +283,7 @@ class _CheqDetailState extends State<CheqDetail> {
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 Container(
@@ -294,6 +295,7 @@ class _CheqDetailState extends State<CheqDetail> {
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 buildRow(context.tr('cashier'), cheque['cashierName']),
@@ -482,22 +484,20 @@ class _CheqDetailState extends State<CheqDetail> {
         ),
       ),
       bottomSheet: Padding(
-        padding: EdgeInsets.only(bottom: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           spacing: 10,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(width: 10),
-
             Expanded(
               child: ElevatedButton(
                 onPressed: () async {
+                  LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+                  loadingModel.showLoader(num: 2);
+                  await Future.delayed(Duration.zero);
                   PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
-                  printerModel.startScan();
-                  var result = await showPrinterPicker(context);
-                  if (customIf(result)) {
-                    printerModel.printFullCheque(cheque, itemsList);
-                  }
+                  await printerModel.printFullCheque(cheque, itemsList);
+                  loadingModel.hideLoader();
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
@@ -542,7 +542,6 @@ class _CheqDetailState extends State<CheqDetail> {
                 ),
               ),
             ],
-            SizedBox(width: 10),
           ],
         ),
       ),

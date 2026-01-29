@@ -42,11 +42,7 @@ List<RouteBase> cashiers = [
   ),
   GoRoute(
     path: '/payment',
-    pageBuilder: (context, state) {
-      print(state.extra);
-      final extraData = state.extra as Map?;
-      return cupertinoPageBuilder(context, state, PaymentSample(data: extraData!));
-    },
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, PaymentSample()),
   ),
   GoRoute(
     path: '/profile/x-report',

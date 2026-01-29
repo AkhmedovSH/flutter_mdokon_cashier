@@ -1,10 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mdokon/models/cashier/print_model.dart';
+import 'package:flutter_mdokon/models/locale_model.dart';
+import 'package:flutter_mdokon/widgets/dialogs.dart';
 
 import 'package:get_storage/get_storage.dart';
 import '/helpers/themes.dart';
@@ -31,7 +34,20 @@ class _SettingsState extends State<Settings> {
   GetStorage storage = GetStorage();
 
   Uint8List? image;
-  String? printer;
+  final List<Map<String, dynamic>> sizes = [
+    {
+      "id": '576',
+      "name": '80mm',
+    },
+    {
+      "id": '512',
+      "name": '72mm',
+    },
+    {
+      "id": '384',
+      "name": '58mm',
+    },
+  ];
 
   Map settings = {
     'showChequeProducts': false,
@@ -43,29 +59,6 @@ class _SettingsState extends State<Settings> {
     'language': false,
     'theme': false,
   };
-
-  save() {
-    SettingsModel settingsModel = Provider.of<SettingsModel>(context, listen: false);
-
-    if (settingsModel.language) {
-      if (!context.supportedLocales.contains(const Locale('uz', 'Latn'))) {
-        context.setLocale(const Locale('uz', 'Latn'));
-      }
-    } else {
-      if (!context.supportedLocales.contains(const Locale('ru', ''))) {
-        context.setLocale(const Locale('ru  ', ''));
-      }
-    }
-
-    if (settingsModel.theme) {
-      Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
-    } else {
-      Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
-    }
-    storage.write('settings', jsonEncode(settings));
-    showSuccessToast(context.tr('settings_saved'));
-    setState(() {});
-  }
 
   // uploadImage() async {
   //   XFile? img = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -83,9 +76,6 @@ class _SettingsState extends State<Settings> {
     if (storage.read('printImage') != null) {
       List<int> intList = storage.read('printImage').cast<int>().toList();
       image = Uint8List.fromList(intList);
-    }
-    if (storage.read('defaultPrinter') != null) {
-      printer = storage.read('defaultPrinter');
     }
     setState(() {});
   }
@@ -129,42 +119,100 @@ class _SettingsState extends State<Settings> {
         leading: true,
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.all(12),
         child: SingleChildScrollView(
           child: Column(
+            spacing: 15,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Title(title: 'general'),
-              SizedBox(height: 15),
+
               CardItem(
                 title: 'settings_title_1',
                 description: 'settings_description_1',
                 value: settingsModel.theme,
                 onChanged: (value) {
+                  if (value) {
+                    Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
+                  } else {
+                    Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
+                  }
+
                   settingsModel.updateSetting('theme', value);
                 },
               ),
-              SizedBox(height: 15),
-              CardItem(
-                title: 'settings_title_2',
-                description: 'settings_description_2',
-                value: settingsModel.language,
-                onChanged: (value) {
-                  settingsModel.updateSetting('language', value);
-                },
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CustomTheme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        context.tr('language'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 115,
+                      child: Consumer<LocaleModel>(
+                        builder: (context, localeModel, chilld) {
+                          return DropdownButtonHideUnderline(
+                            child: DropdownButton2<String>(
+                              value: localeModel.localeName,
+                              buttonStyleData: const ButtonStyleData(width: 125),
+                              dropdownStyleData: DropdownStyleData(
+                                width: 125,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: CustomTheme.of(context).cardColor,
+                                ),
+                                offset: const Offset(-10, -10),
+                              ),
+                              isDense: true,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  Locale locale = const Locale('ru', '');
+                                  if (newValue == 'ru') {
+                                    locale = const Locale('ru', '');
+                                  }
+                                  if (newValue == 'uz') {
+                                    locale = const Locale('uz', 'Latn');
+                                  }
+                                  context.setLocale(locale);
+                                  localeModel.setLocale(locale);
+                                }
+                              },
+                              items: languages.map(
+                                (Map<String, dynamic> language) {
+                                  return DropdownMenuItem<String>(
+                                    value: language['locale'],
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                      child: Text(language['name']!),
+                                    ),
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 15),
               Title(title: 'cashbox'),
-              SizedBox(height: 15),
-              CardItem(
-                title: 'settings_title_3',
-                description: 'settings_description_3',
-                value: settingsModel.selectUserAftersale,
-                onChanged: (value) {
-                  settingsModel.updateSetting('selectUserAftersale', value);
-                },
-              ),
-              SizedBox(height: 15),
+
               CardItem(
                 title: 'settings_title_12',
                 description: 'settings_description_12',
@@ -173,29 +221,8 @@ class _SettingsState extends State<Settings> {
                   settingsModel.updateSetting('changeCurrencyOnSale', value);
                 },
               ),
-              SizedBox(height: 15),
-              CardItem(
-                title: 'settings_title_4',
-                description: 'settings_description_4',
-                value: settingsModel.searchGroupProducts,
-                onChanged: (value) {
-                  settingsModel.updateSetting('searchGroupProducts', value);
-                },
-                soon: true,
-              ),
-              SizedBox(height: 15),
-              CardItem(
-                title: 'settings_title_5',
-                description: 'settings_description_5',
-                value: settingsModel.offlineDeferment,
-                onChanged: (value) {
-                  settingsModel.updateSetting('offlineDeferment', value);
-                },
-                soon: true,
-              ),
-              SizedBox(height: 15),
+
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 12),
                 padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
                   color: CustomTheme.of(context).cardColor,
@@ -239,68 +266,16 @@ class _SettingsState extends State<Settings> {
                   ],
                 ),
               ),
-              SizedBox(height: 15),
+
               Title(title: 'print'),
-              SizedBox(height: 15),
+
               GestureDetector(
-                onTap: () {},
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 12),
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: CustomTheme.of(context).cardColor,
-                    boxShadow: [boxShadow],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.6,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('settings_title_6'),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              context.tr('settings_description_6'),
-                              style: TextStyle(
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (storage.read('printImage') == null)
-                        Icon(
-                          UniconsLine.image_download,
-                        )
-                      else if (image != null)
-                        SizedBox(
-                          child: Image.memory(
-                            image!,
-                            height: 64,
-                            width: 64,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              GestureDetector(
-                onTap: () {
-                  getBluetooth();
+                onTap: () async {
+                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
+                  printerModel.startScan();
+                  await showPrinterPicker(context);
                 },
                 child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 12),
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
                     color: CustomTheme.of(context).cardColor,
@@ -311,8 +286,7 @@ class _SettingsState extends State<Settings> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5,
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -333,22 +307,136 @@ class _SettingsState extends State<Settings> {
                           ],
                         ),
                       ),
-                      if (printer == null)
-                        Icon(
-                          UniconsLine.print_slash,
-                        )
-                      else if (printer != null)
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.3,
-                          child: Text(
-                            '$printer',
-                          ),
-                        ),
+                      Consumer<PrinterModel>(
+                        builder: (context, model, child) {
+                          if (customIf(model.selectedDevice)) {
+                            return SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.3,
+                              child: Text(model.selectedDeviceName),
+                            );
+                          } else {
+                            return Icon(
+                              UniconsLine.print_slash,
+                            );
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 15),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CustomTheme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        context.tr('receipt_print_width'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 115,
+                      child: Consumer<PrinterModel>(
+                        builder: (context, model, chilld) {
+                          return DropdownButtonHideUnderline(
+                            child: DropdownButton2<String>(
+                              value: model.printerSize,
+                              buttonStyleData: const ButtonStyleData(width: 125),
+                              dropdownStyleData: DropdownStyleData(
+                                width: 125,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: CustomTheme.of(context).cardColor,
+                                ),
+                                offset: const Offset(-10, -10),
+                              ),
+                              isDense: true,
+                              onChanged: (String? newValue) {
+                                model.setPrinterSize(newValue);
+                              },
+                              items: sizes.map(
+                                (Map<String, dynamic> item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item['id'],
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                      child: Text(item['name']!),
+                                    ),
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              //
+              // GestureDetector(
+              //   onTap: () {},
+              //   child: Container(
+              //     margin: EdgeInsets.symmetric(horizontal: 12),
+              //     padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              //     decoration: BoxDecoration(
+              //       color: CustomTheme.of(context).cardColor,
+              //       boxShadow: [boxShadow],
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //     child: Row(
+              //       crossAxisAlignment: CrossAxisAlignment.center,
+              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //       children: [
+              //         SizedBox(
+              //           width: MediaQuery.of(context).size.width * 0.6,
+              //           child: Column(
+              //             crossAxisAlignment: CrossAxisAlignment.start,
+              //             children: [
+              //               Text(
+              //                 context.tr('settings_title_6'),
+              //                 style: TextStyle(
+              //                   fontSize: 18,
+              //                   fontWeight: FontWeight.w500,
+              //                 ),
+              //               ),
+              //               SizedBox(height: 5),
+              //               Text(
+              //                 context.tr('settings_description_6'),
+              //                 style: TextStyle(
+              //                   fontSize: 12,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         if (storage.read('printImage') == null)
+              //           Icon(
+              //             UniconsLine.image_download,
+              //           )
+              //         else if (image != null)
+              //           SizedBox(
+              //             child: Image.memory(
+              //               image!,
+              //               height: 64,
+              //               width: 64,
+              //             ),
+              //           ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
               CardItem(
                 title: 'settings_title_8',
                 description: 'settings_description_8',
@@ -357,7 +445,7 @@ class _SettingsState extends State<Settings> {
                   settingsModel.updateSetting('printAfterSale', value);
                 },
               ),
-              SizedBox(height: 15),
+
               CardItem(
                 title: 'settings_title_9',
                 description: 'settings_description_9',
@@ -366,7 +454,7 @@ class _SettingsState extends State<Settings> {
                   settingsModel.updateSetting('showChequeProducts', value);
                 },
               ),
-              SizedBox(height: 15),
+
               CardItem(
                 title: 'settings_title_10',
                 description: 'settings_description_10',
@@ -375,21 +463,7 @@ class _SettingsState extends State<Settings> {
                   settingsModel.updateSetting('additionalInfo', value);
                 },
               ),
-              SizedBox(height: 70),
             ],
-          ),
-        ),
-      ),
-      bottomSheet: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: () {
-              save();
-            },
-            child: Text(context.tr('save')),
           ),
         ),
       ),
@@ -546,7 +620,6 @@ class _SettingsState extends State<Settings> {
                             },
                           ),
                         ),
-                        const SizedBox(height: 15),
                         Padding(
                           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
                         ),
@@ -576,14 +649,11 @@ class Title extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12),
-      child: Text(
-        context.tr(title),
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+    return Text(
+      context.tr(title),
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -612,7 +682,6 @@ class CardItem extends StatelessWidget {
         onChanged(!value);
       },
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 12),
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
           color: CustomTheme.of(context).cardColor,
@@ -622,11 +691,11 @@ class CardItem extends StatelessWidget {
         child: Stack(
           children: [
             Row(
+              spacing: 10,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.6,
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

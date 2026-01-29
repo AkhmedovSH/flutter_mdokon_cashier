@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter_mdokon/helpers/helper.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image/image.dart' as img;
-import 'package:screenshot/screenshot.dart';
 
 class PrinterModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
@@ -19,6 +19,9 @@ class PrinterModel extends ChangeNotifier {
   StreamSubscription? scanSubscription;
   StreamSubscription? isScanningSubscription;
 
+  String get selectedDeviceName => customIf(storage.read('printerName')) ? storage.read('printerName') : selectedDevice!.advName;
+  String get printerSize => customIf(storage.read('printerSize')) ? storage.read('printerSize') : '576';
+
   PrinterModel() {
     isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
       isScanning = state;
@@ -26,9 +29,15 @@ class PrinterModel extends ChangeNotifier {
     });
   }
 
+  setPrinterSize(value) {
+    storage.write('printerSize', value);
+    notifyListeners();
+  }
+
   void selectDevice(BluetoothDevice device) {
     selectedDevice = device;
-    storage.write('printer_id', selectedDevice!.remoteId.str);
+    storage.write('printerId', selectedDevice!.remoteId.str);
+    storage.write('printerName', selectedDevice!.advName);
     notifyListeners();
   }
 
@@ -49,23 +58,24 @@ class PrinterModel extends ChangeNotifier {
   }
 
   Future<void> autoConnectSavedPrinter() async {
-    String? savedId = GetStorage().read('printer_id');
+    String? savedId = GetStorage().read('printerId');
     if (savedId == null) return;
-
+    print(111);
+    print(savedId);
     try {
       List<BluetoothDevice> devices = await FlutterBluePlus.systemDevices([]);
+      print(devices);
+      print(BluetoothDevice.fromId(savedId));
 
       for (var device in devices) {
         if (device.remoteId.str == savedId) {
           selectedDevice = device;
-          notifyListeners();
           debugPrint("Восстановлено системное устройство: ${device.platformName}");
           return;
         }
       }
 
       selectedDevice = BluetoothDevice.fromId(savedId);
-      notifyListeners();
     } catch (e) {
       debugPrint("Ошибка при автоподключении: $e");
     }
@@ -75,11 +85,19 @@ class PrinterModel extends ChangeNotifier {
     if (selectedDevice == null) return;
 
     final profile = await CapabilityProfile.load(name: 'default');
-    final generator = Generator(PaperSize.mm80, profile);
+    PaperSize paperSize = PaperSize.mm80;
+    if (printerSize == '384') {
+      paperSize = PaperSize.mm58;
+    } else if (printerSize == '512') {
+      paperSize = PaperSize.mm72;
+    }
+    final generator = Generator(paperSize, profile);
     List<int> bytes = [];
-    final settings = jsonDecode(storage.read('settings'));
-    print(settings);
+    final settings = storage.read('settings');
+    final cashboxSettings = storage.read('cashboxSettings');
+    print(cashboxSettings);
     bytes += generator.reset();
+    bytes += generator.setGlobalCodeTable('CP866');
 
     // 1. Логотип (если есть в хранилище)
     if (storage.read('printImage') != null) {
@@ -104,35 +122,74 @@ class PrinterModel extends ChangeNotifier {
     }
 
     // 3. Инфо о чеке
+    // bytes += await textCyrillic(generator, 'Кассир: Иванов', styles: const PosStyles(align: PosAlign.left));
     bytes += _getChequeRow(generator, 'Kassir', '${cheque['cashierName'] ?? ''}');
     bytes += _getChequeRow(generator, '# Tekshirish', '${cheque['chequeNumber'] ?? ''}');
     bytes += _getChequeRow(generator, 'Sana', '${cheque['chequeDate'] ?? ''}');
     bytes += generator.hr(ch: '*');
 
     if (customIf(storage.read('showChequeProducts'))) {
-      final Uint8List? productBytes = await _generateProductsTable(itemsList);
-      if (productBytes != null) {
-        final img.Image? image = img.decodeImage(productBytes);
-        if (image != null) {
-          bytes += generator.image(img.copyResize(image, width: 576)); // 384px - стандарт для 58mm
+      final cfg = tableConfigForPaper(int.parse(printerSize));
+      bytes += await tableDivider(generator, cfg);
+
+      // Шапка таблицы
+      bytes += await tableLine(
+        generator,
+        cfg,
+        'Товар',
+        'Кол-во',
+        'Сумма',
+        bold: true,
+      );
+      bytes += await tableDivider(generator, cfg);
+
+      // Товары
+      for (int i = 0; i < itemsList.length; i++) {
+        final item = itemsList[i];
+
+        final name = '${i + 1}. ${item['productName']}';
+        final qty = '${item['quantity']}x${formatMoney(item['salePrice'], decimalDigits: 0)}';
+        final sum = formatMoney(
+          customNumber(item['quantity']) * customNumber(item['salePrice']),
+        );
+
+        bytes += await tableLine(
+          generator,
+          cfg,
+          name,
+          qty,
+          sum,
+        );
+
+        // Промокоды
+        final promoCodes = item['promoCodes'];
+        if (promoCodes is List && promoCodes.isNotEmpty) {
+          for (final code in promoCodes) {
+            bytes += await promoCodeLine(
+              generator,
+              cfg,
+              code.toString(),
+            );
+          }
         }
       }
-      bytes += generator.hr(ch: '*');
+
+      bytes += await tableDivider(generator, cfg);
     }
 
     // 5. Итоги
-    bytes += _getChequeRow(generator, 'Sotish miqdori', '${cheque['totalPrice'] ?? 0}');
-    bytes += _getChequeRow(generator, 'Chegirma', '${cheque['discountAmount']}');
+    bytes += _getChequeRow(generator, 'Sotish miqdori', '${formatMoney(cheque['totalPrice'] ?? 0)}');
+    bytes += _getChequeRow(generator, 'Chegirma', '${formatMoney(cheque['discountAmount'] ?? 0)}');
 
     bytes += _getChequeRow(
       generator,
       'Tolash uchun',
-      '${cheque['to_pay'] ?? 0}',
+      '${formatMoney(cheque['to_pay'] ?? 0)}',
       bold: true,
     );
 
-    bytes += _getChequeRow(generator, 'Tolangan', '${cheque['paid'] ?? 0}');
-    bytes += _getChequeRow(generator, 'QQS %', '${cheque['totalVatAmount'] ?? 0}');
+    bytes += _getChequeRow(generator, 'Tolangan', '${formatMoney(cheque['paid'] ?? 0)}');
+    bytes += _getChequeRow(generator, 'QQS %', '${formatMoney(cheque['totalVatAmount'] ?? 0)}');
     bytes += generator.hr(ch: '*', linesAfter: 1);
 
     // 6. Подвал
@@ -146,7 +203,6 @@ class PrinterModel extends ChangeNotifier {
     await _sendBytesToDevice(bytes);
   }
 
-  // Декодирование логотипа из старого кода
   Future<img.Image?> _decodeImage(dynamic dynamicList) async {
     try {
       List<int> intList = dynamicList.cast<int>().toList();
@@ -159,83 +215,123 @@ class PrinterModel extends ChangeNotifier {
     }
   }
 
-  // Улучшенная генерация таблицы товаров (как в старом коде)
-  Future<Uint8List?> _generateProductsTable(List itemsList) async {
-    final screenshotController = ScreenshotController();
-    return await screenshotController.captureFromWidget(
-      Container(
-        color: Colors.white,
-        width: 576, // Фиксированная ширина для стабильности рендера
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Заголовки
-            Row(
-              children: const [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    '№ Товар',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Кол-во',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Цена',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(color: Colors.black),
-            // Список
-            for (var i = 0; i < itemsList.length; i++)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text('${i + 1}. ${itemsList[i]['productName']}', style: const TextStyle(fontSize: 16, color: Colors.black)),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        '${itemsList[i]['quantity']} x',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, color: Colors.black),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        '${itemsList[i]['salePrice']}',
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 16, color: Colors.black),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+  String padToTableWidth(String line, int totalWidth) {
+    if (line.length < totalWidth) {
+      return line + ' ' * (totalWidth - line.length);
+    }
+    return line;
+  }
+
+  Future<List<int>> tableLine(
+    Generator generator,
+    TableConfig cfg,
+    String name,
+    String qty,
+    String sum, {
+    bool bold = false,
+  }) async {
+    final nameLines = wrapText(name, cfg.name);
+    final bytes = <int>[];
+
+    for (int i = 0; i < nameLines.length; i++) {
+      final rawLine =
+          cell(nameLines[i], cfg.name) +
+          '|' +
+          cell(i == 0 ? qty : '', cfg.qty, align: 'center') +
+          '|' +
+          cell(i == 0 ? sum : '', cfg.sum, align: 'right');
+
+      final line = padToTableWidth(rawLine, cfg.total);
+
+      bytes.addAll(
+        await textCyrillic(
+          generator,
+          line,
+          bold: bold && i == 0,
         ),
+      );
+    }
+
+    return bytes;
+  }
+
+  Future<List<int>> promoCodeLine(
+    Generator generator,
+    TableConfig cfg,
+    String promoCode,
+  ) async {
+    final rawLine = cell('Промокод', cfg.name) + '|' + cell('', cfg.qty, align: 'center') + '|' + cell(promoCode, cfg.sum, align: 'right');
+
+    final line = padToTableWidth(rawLine, cfg.total);
+
+    return textCyrillic(generator, line);
+  }
+
+  Future<List<int>> tableDivider(
+    Generator generator,
+    TableConfig cfg,
+  ) async {
+    final line = ('-' * cfg.name) + ('-' * cfg.qty) + ('-' * cfg.sum);
+
+    return textCyrillic(generator, line);
+  }
+
+  String cell(
+    String text,
+    int width, {
+    String align = 'left',
+  }) {
+    if (text.length > width) {
+      text = text.substring(0, width);
+    }
+
+    switch (align) {
+      case 'right':
+        return text.padLeft(width);
+      case 'center':
+        final pad = width - text.length;
+        return ' ' * (pad ~/ 2) + text + ' ' * (pad - pad ~/ 2);
+      default:
+        return text.padRight(width);
+    }
+  }
+
+  List<String> wrapText(String text, int width) {
+    final result = <String>[];
+    var line = '';
+
+    for (final word in text.split(' ')) {
+      if (line.isEmpty) {
+        line = word;
+      } else if ((line.length + 1 + word.length) <= width) {
+        line += ' $word';
+      } else {
+        result.add(line);
+        line = word;
+      }
+    }
+
+    if (line.isNotEmpty) result.add(line);
+    return result;
+  }
+
+  Future<List<int>> textCyrillic(
+    Generator generator,
+    String text, {
+    bool bold = false,
+  }) async {
+    final encoded = await CharsetConverter.encode('CP866', text);
+
+    return generator.textEncoded(
+      Uint8List.fromList(encoded),
+      styles: PosStyles(
+        bold: bold,
+        height: PosTextSize.size1,
+        width: PosTextSize.size1,
       ),
     );
   }
 
-  // Вспомогательный метод для строк чека
   List<int> _getChequeRow(Generator generator, String left, String right, {bool bold = false}) {
     return generator.row([
       PosColumn(
@@ -249,6 +345,220 @@ class PrinterModel extends ChangeNotifier {
         styles: PosStyles(align: PosAlign.right, bold: bold),
       ),
     ]);
+  }
+
+  Future<void> printXReport(
+    Map report,
+    Map cashbox,
+    Map<String, String> labels,
+  ) async {
+    if (selectedDevice == null) return;
+
+    final profile = await CapabilityProfile.load(name: 'default');
+    final generator = Generator(PaperSize.mm80, profile);
+    List<int> bytes = [];
+
+    bytes += generator.reset();
+    bytes += generator.setGlobalCodeTable('CP866');
+
+    // ---------- ШАПКА ----------
+    bytes += await _text(
+      generator,
+      report['isZReport'] == true ? labels['z_report']! : labels['x_report']!,
+      bold: true,
+      align: PosAlign.center,
+    );
+
+    bytes += await _text(
+      generator,
+      report['posName'] ?? '',
+      align: PosAlign.center,
+    );
+
+    bytes += await _text(
+      generator,
+      '${labels['phone']}: ${cashbox['posPhone'] ?? ''}',
+      align: PosAlign.center,
+    );
+
+    bytes += generator.hr();
+
+    // ---------- ОБЩАЯ ИНФА ----------
+    bytes += await _row(generator, labels['cashier']!, '${report['cashierName'] ?? ''}');
+    bytes += await _row(generator, labels['shift_ID']!, '${report['shiftId'] ?? ''}');
+    bytes += await _row(generator, labels['cashbox_number']!, '${report['shiftNumber'] ?? ''}');
+
+    if (report['tin'] != null) {
+      bytes += await _row(generator, labels['inn']!, '${report['tin']}');
+    }
+
+    bytes += await _row(generator, labels['date']!, '${report['shiftOpenDate'] ?? ''}', align: RowAlign.rightWide);
+    bytes += await _row(generator, labels['shift_duration']!, '${report['shiftDuration'] ?? ''}');
+
+    bytes += generator.hr();
+
+    // ---------- СЧЁТЧИКИ ----------
+    bytes += await _row(generator, labels['number_of_receipts']!, '${report['totalCountCheque'] ?? 0}');
+    bytes += await _row(generator, labels['number_of_returned_receipts']!, '${report['countReturnedCheque'] ?? 0}', align: RowAlign.leftWide);
+    bytes += await _row(generator, labels['number_of_returned_products']!, '${report['countReturnedProducts'] ?? 0}', align: RowAlign.leftWide);
+
+    if ((report['countDeletedCheque'] ?? 0) > 0) {
+      bytes += await _row(
+        generator,
+        '${labels['number_of_receipts']} (${labels['deleted']})',
+        '${report['countDeletedCheque']}',
+      );
+    }
+
+    bytes += generator.hr();
+
+    // ---------- ПРОДАЖИ ----------
+    if (report['salesList'] != null) {
+      for (final item in report['salesList']) {
+        bytes += await _row(
+          generator,
+          '${labels['sales_amount']} (${item['currencyName']})',
+          formatMoney(item['salesAmount']),
+        );
+        bytes += await _row(
+          generator,
+          '${labels['discount_amount']} (${item['currencyName']})',
+          formatMoney(item['discountAmount']),
+        );
+        bytes += await _row(
+          generator,
+          '${labels['return_amount']} (${item['currencyName']})',
+          formatMoney(item['returnAmount']),
+        );
+        bytes += generator.feed(1);
+      }
+    }
+
+    bytes += generator.hr();
+
+    // ---------- ПРИХОД ----------
+    if (report['amountInList'] != null && report['amountInList'].isNotEmpty) {
+      bytes += await _text(generator, labels['income']!, bold: true);
+      for (final item in report['amountInList']) {
+        bytes += await _row(
+          generator,
+          '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+          '${formatMoney(item['amountIn'])} ${item['currencyName']}',
+        );
+      }
+    }
+
+    // ---------- РАСХОД ----------
+    if (report['amountOutList'] != null && report['amountOutList'].isNotEmpty) {
+      bytes += await _text(generator, labels['expense']!, bold: true);
+      for (final item in report['amountOutList']) {
+        bytes += await _row(
+          generator,
+          '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+          '${formatMoney(item['amountOut'])} ${item['currencyName']}',
+        );
+      }
+    }
+
+    bytes += generator.hr();
+
+    // ---------- БАЛАНС ----------
+    if (report['balanceList'] != null) {
+      for (final item in report['balanceList']) {
+        bytes += await _row(
+          generator,
+          labels['cashbox_balance']!,
+          '${formatMoney(item['balance'])} ${item['currencyName']}',
+        );
+      }
+    }
+
+    // ---------- ИТОГИ ----------
+    if (report['totalList'] != null) {
+      for (final item in report['totalList']) {
+        if ((item['totalCash'] ?? 0) > 0) {
+          bytes += await _row(
+            generator,
+            '${labels['total_cash']} (${item['currencyName']})',
+            formatMoney(item['totalCash']),
+          );
+        }
+        if ((item['totalBank'] ?? 0) > 0) {
+          bytes += await _row(
+            generator,
+            '${labels['total_bank']} (${item['currencyName']})',
+            formatMoney(item['totalBank']),
+          );
+        }
+      }
+    }
+
+    if ((report['countRequest'] ?? 0) > 0) {
+      bytes += await _row(
+        generator,
+        labels['number_of_x_reports']!,
+        '${report['countRequest']}',
+      );
+    }
+
+    bytes += generator.feed(2);
+    bytes += generator.cut();
+
+    await _sendBytesToDevice(bytes);
+  }
+
+  Future<List<int>> _row(
+    Generator g,
+    String left,
+    String right, {
+    RowAlign align = RowAlign.normal,
+  }) async {
+    int leftWidth;
+    int rightWidth;
+
+    switch (align) {
+      case RowAlign.leftWide:
+        leftWidth = 32;
+        rightWidth = 16;
+        break;
+      case RowAlign.rightWide:
+        leftWidth = 16;
+        rightWidth = 32;
+        break;
+      default:
+        leftWidth = 24;
+        rightWidth = 24;
+    }
+
+    // Жёсткое ограничение
+    if (left.length > leftWidth) {
+      left = left.substring(0, leftWidth);
+    }
+    if (right.length > rightWidth) {
+      right = right.substring(0, rightWidth);
+    }
+
+    final line = left.padRight(leftWidth) + right.padLeft(rightWidth);
+
+    return _text(g, line);
+  }
+
+  Future<List<int>> _text(
+    Generator g,
+    String text, {
+    bool bold = false,
+    PosAlign align = PosAlign.left,
+  }) async {
+    final encoded = await CharsetConverter.encode('CP866', text);
+    return g.textEncoded(
+      Uint8List.fromList(encoded),
+      styles: PosStyles(
+        bold: bold,
+        align: align,
+        height: PosTextSize.size1,
+        width: PosTextSize.size1,
+      ),
+    );
   }
 
   Future<void> _sendBytesToDevice(List<int> bytes) async {
@@ -291,4 +601,40 @@ class PrinterModel extends ChangeNotifier {
     isScanningSubscription?.cancel();
     super.dispose();
   }
+}
+
+class TableConfig {
+  final int name;
+  final int qty;
+  final int sum;
+
+  TableConfig({
+    required this.name,
+    required this.qty,
+    required this.sum,
+  });
+
+  int get total => name + qty + sum + 2;
+}
+
+TableConfig tableConfigForPaper(int printerWidthPx) {
+  if (printerWidthPx <= 400) {
+    return TableConfig(
+      name: 13,
+      qty: 7,
+      sum: 8,
+    );
+  } else {
+    return TableConfig(
+      name: 22,
+      qty: 11,
+      sum: 13,
+    );
+  }
+}
+
+enum RowAlign {
+  normal, // 24 / 24
+  leftWide, // 32 / 16
+  rightWide, // 16 / 32
 }

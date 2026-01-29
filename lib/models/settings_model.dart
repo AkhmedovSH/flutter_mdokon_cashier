@@ -74,6 +74,7 @@ class SettingsModel with ChangeNotifier {
     storage.write(key, value);
     var settings = storage.read('settings');
     settings[key] = value;
+    print(settings);
     storage.write('settings', settings);
     notifyListeners();
   }

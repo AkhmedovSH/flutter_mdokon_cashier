@@ -22,19 +22,6 @@ class Settings extends StatelessWidget {
     final settingsModel = Provider.of<SettingsModel>(context);
     final themeModel = Provider.of<ThemeModel>(context);
 
-    final List<Map<String, dynamic>> languages = [
-      {
-        "id": '1',
-        "locale": 'ru',
-        "name": 'Русский',
-      },
-      {
-        "id": '3',
-        "locale": 'uz',
-        "name": 'O`zbekcha',
-      },
-    ];
-
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -175,7 +162,6 @@ class Settings extends StatelessWidget {
                               isDense: true,
                               onChanged: (String? newValue) {
                                 if (newValue != null) {
-                                  print(newValue);
                                   Locale locale = const Locale('ru', '');
                                   if (newValue == 'ru') {
                                     locale = const Locale('ru', '');

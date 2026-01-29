@@ -2,12 +2,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
+import 'package:flutter_mdokon/models/cashier/print_model.dart';
 import 'package:flutter_mdokon/models/loading_model.dart';
 
 import 'package:get_storage/get_storage.dart';
 import '/widgets/custom_app_bar.dart';
 
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '/helpers/api.dart';
@@ -19,10 +19,8 @@ import './loyalty.dart';
 import './payment.dart';
 
 class PaymentSample extends StatefulWidget {
-  final Map data;
   const PaymentSample({
     Key? key,
-    required this.data,
   }) : super(key: key);
 
   @override
@@ -32,111 +30,6 @@ class PaymentSample extends StatefulWidget {
 class _PaymentSampleState extends State<PaymentSample> {
   GetStorage storage = GetStorage();
 
-  int currentIndex = 0;
-  bool loading = false;
-  Map data = {};
-  TextEditingController cashController = TextEditingController();
-  TextEditingController terminalController = TextEditingController();
-  TextEditingController loyaltyController = TextEditingController();
-  Map cashbox = {};
-
-  setData(payload, payload2) {
-    setState(() {
-      cashController.text = payload;
-      terminalController.text = payload2;
-    });
-  }
-
-  setLoyaltyData(payload) {
-    setState(() {
-      data['loyaltyClientAmount'] = payload['points'];
-      cashController.text = payload['cash'];
-      terminalController.text = payload['terminal'];
-      loyaltyController.text = payload['points'];
-      data['loyaltyBonus'] = payload['loyaltyBonus'];
-      data['paid'] = payload['paid'];
-    });
-  }
-
-  setPayload(key, payload) {
-    setState(() {
-      data[key] = payload;
-    });
-  }
-
-  setInitState() {
-    setState(() {
-      data = widget.data;
-      data['change'] = 0;
-      data['text'] = data['totalPrice'].toString();
-    });
-    cashController.text = '';
-  }
-
-  getData() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String version = packageInfo.version;
-    setState(() {
-      cashbox = (storage.read('cashbox')!);
-    });
-    final username = storage.read('user')['username'];
-    if (storage.read('shift') != null) {
-      final shift = (storage.read('shift')!);
-      setState(() {
-        data['shiftId'] = shift['id'];
-      });
-    } else {
-      setState(() {
-        data['shiftId'] = cashbox['id'];
-      });
-    }
-    final transactionId = generateTransactionId(
-      cashbox['posId'].toString(),
-      cashbox['cashboxId'].toString(),
-      storage.read('shift') != null ? (storage.read('shift')!)['id'] : cashbox['cashboxId'].toString(),
-    );
-    setState(() {
-      data['login'] = username;
-      data['cashierLogin'] = username;
-      data['cashboxId'] = cashbox['cashboxId'];
-      data['device'] = 'android';
-      data['cashboxVersion'] = version;
-      data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      data['currencyId'] = data['currencyId'];
-      data['saleCurrencyId'] = data['currencyId'];
-      data['posId'] = cashbox['posId'];
-      data['chequeNumber'] = generateChequeNumber();
-      data['transactionId'] = transactionId;
-
-      cashController.text = data['text'];
-    });
-  }
-
-  isDisabled() {
-    if (currentIndex == 0) {
-      return data['change'] < 0 ? false : true;
-    }
-
-    if (currentIndex == 1) {
-      return data['clientId'] == 0 ? false : true;
-    }
-
-    if (currentIndex == 2) {
-      if (data['loyaltyClientName'] != null && data['clientCode'] != null && data['loyaltyBonus'] != null && (data['totalPrice'] == data['paid'])) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    setInitState();
-    getData();
-  }
-
   @override
   Widget build(BuildContext context) {
     return LoadingLayout(
@@ -145,60 +38,64 @@ class _PaymentSampleState extends State<PaymentSample> {
           title: 'sale',
           leading: true,
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    for (var i = 0; i < 3; i++)
-                      if (i != 1 || (i == 1 && checkRole('CASHBOX_DEBT')))
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                currentIndex = i;
-                              });
-                              setInitState();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              margin: EdgeInsets.symmetric(horizontal: 5),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: currentIndex == i ? blue : grey,
+        body: Selector<CashboxModel, int>(
+          selector: (context, model) => model.currentIndex,
+          builder: (context, currentIndex, child) {
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        for (var i = 0; i < 3; i++)
+                          if (i != 1 || (i == 1 && checkRole('CASHBOX_DEBT')))
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  CashboxModel model = Provider.of<CashboxModel>(context, listen: false);
+
+                                  model.setIndex(i);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: currentIndex == i ? blue : grey,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    i == 0
+                                        ? context.tr('payment')
+                                        : i == 1
+                                        ? context.tr('on_credit')
+                                        : context.tr('loyalty'),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: currentIndex == i ? blue : black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                i == 0
-                                    ? context.tr('payment')
-                                    : i == 1
-                                    ? context.tr('on_credit')
-                                    : context.tr('loyalty'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: currentIndex == i ? blue : black,
-                                ),
-                                textAlign: TextAlign.center,
                               ),
                             ),
-                          ),
-                        ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                  if (currentIndex == 0) Payment(),
+                  if (currentIndex == 1) OnCredit(),
+                  if (currentIndex == 2) Loyalty(),
+                  SizedBox(height: 70),
+                ],
               ),
-              if (currentIndex == 0) Payment(),
-              if (currentIndex == 1) OnCredit(),
-              if (currentIndex == 2) Loyalty(),
-              SizedBox(height: 70),
-            ],
-          ),
+            );
+          },
         ),
         floatingActionButton: Consumer<CashboxModel>(
           builder: (context, model, child) {
@@ -209,11 +106,15 @@ class _PaymentSampleState extends State<PaymentSample> {
                 onPressed: model.isSubmitDisabled
                     ? () async {
                         LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+                        PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
                         loadingModel.showLoader(num: 2);
                         var result = await model.createCheque();
                         loadingModel.hideLoader();
-                        if (customIf(result) && context.mounted) {
-                          Navigator.pop(context, result);
+                        if (customIf(result)) {
+                          if (customIf(storage.read('settings')['printAfterSale'])) {
+                            await printerModel.printFullCheque(model.data, model.data['itemsList']);
+                          }
+                          if (context.mounted) Navigator.pop(context, result);
                         }
                       }
                     : null,

@@ -102,6 +102,19 @@ OutlineInputBorder inputErrorBorder = OutlineInputBorder(
   borderRadius: BorderRadius.circular(16),
 );
 
+final List<Map<String, dynamic>> languages = [
+  {
+    "id": '1',
+    "locale": 'ru',
+    "name": 'Русский',
+  },
+  {
+    "id": '3',
+    "locale": 'uz',
+    "name": 'O`zbekcha',
+  },
+];
+
 getUnixTime() {
   return DateTime.now().toUtc().millisecondsSinceEpoch;
 }
@@ -185,7 +198,7 @@ formatMoney(amount, {decimalDigits = 0}) {
       symbol: '',
       decimalDigits: decimalDigits,
       locale: 'UZ',
-    ).format(amount).trimRight();
+    ).format(amount).replaceAll('\u00A0', ' ').replaceAll('\u202F', ' ').trimRight();
   } else {
     return NumberFormat.currency(
       symbol: '',

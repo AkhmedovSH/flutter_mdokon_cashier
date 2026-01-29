@@ -564,6 +564,10 @@
 	"number_of_x_reports": "X-hisobotlar soni",
 	"totalCash": "Umumiy naqd summa",
 	"totalBank": "Umumiy terminal summasi",
+	"receipt_print_width": "Chek chop etish kengligi",
+	"expense": "Xarajat",
+	"total_cash": "Umumiy naqd summa",
+	"total_bank": "Umumiy terminal summasi",
 	"-": "-",
 	"": ""
 }

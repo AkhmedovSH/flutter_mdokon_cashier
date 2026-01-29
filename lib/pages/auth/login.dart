@@ -153,9 +153,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       storage.remove('shift');
       response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
       userModel.setCashbox(response['shift']);
-      final responsePaymentTypes = await get("/services/desktop/api/payment-type-helper/${response['shift']['posId']}");
-      userModel.setPaymentTypes(responsePaymentTypes);
-      if (mounted) context.go('/cashier');
+      bool success = await userModel.getPaymentTypes(response['shift']['posId']);
+      await userModel.getCashboxSettings(response['shift']['posId']);
+
+      if (mounted && success) context.go('/cashier');
     } else {
       if (mounted) context.go('/auth/cashboxes', extra: {'posList': response['posList']});
     }

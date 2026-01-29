@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mdokon/models/user_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '/widgets/custom_app_bar.dart';
 
 import '../../helpers/helper.dart';
@@ -25,8 +27,8 @@ class _CashBoxesState extends State<CashBoxes> {
   List poses = [];
 
   selectCashbox(pos, cashbox) async {
-    print(cashbox);
-    print(cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m');
+    UserModel userModel = Provider.of<UserModel>(context, listen: false);
+
     final prepareprefs = {
       'defaultCurrency': cashbox['defaultCurrency'],
       'defaultCurrencyName': cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m',
@@ -46,8 +48,11 @@ class _CashBoxesState extends State<CashBoxes> {
       'cashboxId': cashbox['id'],
       'offline': false,
     });
+    bool success = await userModel.getPaymentTypes(pos['posId']);
+    await userModel.getCashboxSettings(pos['posId']);
+
     storage.write('shift', response);
-    if (response['success']) {
+    if (response['success'] && success && mounted) {
       context.go('/cashier');
     }
   }
@@ -114,7 +119,7 @@ class _CashBoxesState extends State<CashBoxes> {
                       ],
                     ),
                   ),
-                )
+                ),
               ],
             ),
             SizedBox(height: 10),
@@ -159,7 +164,7 @@ class _CashBoxesState extends State<CashBoxes> {
                             ),
                         ],
                       ),
-                    ]
+                    ],
                   ],
                 ),
               ),

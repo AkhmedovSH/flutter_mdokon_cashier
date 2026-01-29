@@ -50,7 +50,7 @@ final ThemeData lightTheme = ThemeData(
       ),
     ),
   ),
-  dialogTheme:  DialogThemeData(
+  dialogTheme: DialogThemeData(
     backgroundColor: Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(
@@ -74,6 +74,17 @@ final ThemeData lightTheme = ThemeData(
   progressIndicatorTheme: ProgressIndicatorThemeData(
     color: mainColor,
   ),
+  bottomSheetTheme: BottomSheetThemeData(
+    backgroundColor: Colors.white,
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      overlayColor: Colors.black,
+      foregroundColor: black,
+      iconColor: black,
+    ),
+  ),
+
   dialogBackgroundColor: white,
 
   // iconTheme: IconThemeData(
@@ -97,7 +108,6 @@ final ThemeData darkTheme = ThemeData(
 
   // Цвета для фона
   scaffoldBackgroundColor: const Color(0xFF0D0D0D), // цвет заднего фона
-
   // Цвета для инпутов
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
@@ -133,6 +143,9 @@ final ThemeData darkTheme = ThemeData(
         borderRadius: BorderRadius.circular(12),
       ),
     ),
+  ),
+  bottomSheetTheme: BottomSheetThemeData(
+    backgroundColor: Colors.black,
   ),
 );
 

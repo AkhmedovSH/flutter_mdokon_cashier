@@ -1,7 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mdokon/models/cashier/dashboard_model.dart';
+import 'package:flutter_mdokon/models/cashier/print_model.dart';
+import 'package:flutter_mdokon/models/loading_model.dart';
 
 import 'package:get_storage/get_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '/widgets/custom_app_bar.dart';
 
@@ -22,6 +27,37 @@ class _XReportState extends State<XReport> {
   Map report = {};
   List reportList = [];
   Map cashbox = {};
+
+  void closeShift() async {
+    int id = 0;
+    dynamic shift = {'id': null};
+    Map response = {
+      'success': true,
+    };
+    if (cashbox['isAgent'] != true) {
+      if (storage.read('shift') != null) {
+        shift = (storage.read('shift')!);
+      }
+      if (shift['id'] != null) {
+        id = shift['id'];
+      } else {
+        id = cashbox['id'];
+      }
+      response = await post('/services/desktop/api/close-shift', {
+        'cashboxId': cashbox['cashboxId'],
+        'posId': cashbox['posId'],
+        'offline': false,
+        'id': id,
+      });
+    }
+
+    storage.remove('user');
+    if (response['success'] && mounted) {
+      Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
+      context.pushReplacement('/auth');
+    }
+    //print(response);
+  }
 
   getReport() async {
     final prefsCashbox = storage.read('cashbox');
@@ -102,7 +138,7 @@ class _XReportState extends State<XReport> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: CustomAppBar(
-        title: context.tr('X_report'), // Добавлена локализация заголовка
+        title: 'X_report', // Добавлена локализация заголовка
         leading: true,
       ),
       body: SafeArea(
@@ -158,7 +194,7 @@ class _XReportState extends State<XReport> {
                   _buildSectionTitle(context.tr('income')),
                   for (var item in report['amountInList'])
                     buildRow(
-                      '${item['paymentTypeName']} ${item['paymentPurposeName']}',
+                      '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
                       '${formatMoney(item['amountIn'])} ${item['currencyName']}',
                       leftPadding: true,
                     ),
@@ -167,7 +203,11 @@ class _XReportState extends State<XReport> {
                 if (report['amountOutList'] != null && report['amountOutList'].isNotEmpty) ...[
                   _buildSectionTitle(context.tr('expense')),
                   for (var item in report['amountOutList'])
-                    buildRow('${item['paymentTypeName']} ${item['paymentPurposeName']}', '${formatMoney(item['amountOut'])} ${item['currencyName']}'),
+                    buildRow(
+                      '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+                      '${formatMoney(item['amountOut'])} ${item['currencyName']}',
+                      leftPadding: true,
+                    ),
                 ],
 
                 // Баланс кассы (balanceList)
@@ -187,10 +227,89 @@ class _XReportState extends State<XReport> {
 
                 if ((report['countRequest'] ?? 0) > 0) buildRow('number_of_x_reports', report['countRequest']),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 80),
               ],
             ),
           ),
+        ),
+      ),
+      bottomSheet: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          spacing: 10,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () async {
+                  final labels = {
+                    'x_report': context.tr('x_report'),
+                    'z_report': context.tr('z_report'),
+                    'phone': context.tr('phone'),
+                    'cashier': context.tr('cashier'),
+                    'shift_ID': context.tr('shift_ID'),
+                    'cashbox_number': context.tr('cashbox_number'),
+                    'inn': context.tr('inn'),
+                    'date': context.tr('date'),
+                    'shift_duration': context.tr('shift_duration'),
+                    'number_of_receipts': context.tr('number_of_receipts'),
+                    'number_of_returned_receipts': context.tr('number_of_returned_receipts'),
+                    'number_of_returned_products': context.tr('number_of_returned_products'),
+                    'deleted': context.tr('deleted'),
+                    'sales_amount': context.tr('sales_amount'),
+                    'discount_amount': context.tr('discount_amount'),
+                    'return_amount': context.tr('return_amount'),
+                    'income': context.tr('income'),
+                    'expense': context.tr('expense'),
+                    'cashbox_balance': context.tr('cashbox_balance'),
+                    'total_cash': context.tr('total_cash'),
+                    'total_bank': context.tr('total_bank'),
+                    'number_of_x_reports': context.tr('number_of_x_reports'),
+                  };
+
+                  LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+                  loadingModel.showLoader(num: 2);
+                  await Future.delayed(Duration(milliseconds: 100));
+                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
+
+                  if (context.mounted) await printerModel.printXReport(report, cashbox, labels);
+                  loadingModel.hideLoader();
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(context.tr('PRINT')),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  openModal();
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: danger,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(context.tr('close_shift')),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -229,6 +348,97 @@ class _XReportState extends State<XReport> {
         overflow: TextOverflow.clip,
         maxLines: 1,
         softWrap: false,
+      ),
+    );
+  }
+
+  openModal() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        backgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(21),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          padding: const EdgeInsets.only(
+            top: 15,
+            right: 15,
+            left: 15,
+            bottom: 10,
+          ),
+          decoration: BoxDecoration(
+            color: CustomTheme.of(context).bgColor,
+            borderRadius: BorderRadius.circular(21),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr('are_you_sure_you_want_to_close_your_shift'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Text(
+              //   context.tr('are_you_sure_you_want_to_close_your_shift'),
+              //   style: const TextStyle(
+              //     fontSize: 14,
+              //   ),
+              // ),
+              // const SizedBox(height: 20),
+              Row(
+                spacing: 10,
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: CustomTheme.of(context).cardColor,
+                          foregroundColor: CustomTheme.of(context).textColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          context.tr('cancel'),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          context.pop();
+                          closeShift();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          context.tr('confirm'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

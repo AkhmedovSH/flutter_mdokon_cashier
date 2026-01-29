@@ -88,11 +88,32 @@ class _PaymentState extends State<Payment> {
                                     },
                                     decoration: InputDecoration(
                                       contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                      suffixIcon: IconButton(
-                                        onPressed: () {
-                                          model.exactAmount(index);
-                                        },
-                                        icon: Icon(UniconsLine.money_bill),
+                                      suffixIcon: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (customIf(item['amount']))
+                                            SizedBox(
+                                              width: 40,
+                                              child: IconButton(
+                                                onPressed: () {
+                                                  model.clearInput(index);
+                                                },
+                                                padding: EdgeInsets.zero,
+                                                icon: Icon(UniconsLine.times_circle),
+                                              ),
+                                            ),
+                                          SizedBox(
+                                            width: 40,
+                                            child: IconButton(
+                                              onPressed: () {
+                                                model.exactAmount(index);
+                                              },
+                                              padding: EdgeInsets.zero,
+                                              icon: Icon(UniconsLine.money_bill),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       enabledBorder: inputBorder,
                                       focusedBorder: inputFocusBorder,

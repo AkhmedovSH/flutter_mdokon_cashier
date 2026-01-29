@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vibration/vibration.dart';
 import '/models/data_model.dart';
 import '/models/loading_model.dart';
 import '/widgets/custom_app_bar.dart';
@@ -79,7 +80,7 @@ class _SearchState extends State<Search> {
         backgroundColor: mainColor,
       ),
     );
-
+    Vibration.vibrate(amplitude: 10, duration: 30);
     Provider.of<DataModel>(context, listen: false).setProductList(productsList);
     setState(() {});
   }
@@ -93,8 +94,9 @@ class _SearchState extends State<Search> {
       Provider.of<LoadingModel>(context, listen: false).showLoader(num: 1);
       if (value.length >= 1) {
         var arr = [];
-        var response =
-            await get('/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${widget.arguments!['currencyId']}?search=$value');
+        var response = await get(
+          '/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${widget.arguments!['currencyId']}?search=$value',
+        );
         if (response != null && response.length > 0) {
           if (response.length > 50) {
             response = response.sublist(0, 50);
@@ -211,17 +213,21 @@ class _SearchState extends State<Search> {
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      getQrCode();
-                    },
-                    child: Container(
-                      height: 45,
-                      width: 45,
-                      margin: EdgeInsets.only(left: 15),
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: mainColor),
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                  Container(
+                    height: 45,
+                    width: 45,
+                    margin: EdgeInsets.only(left: 15),
+                    decoration: BoxDecoration(),
+                    child: TextButton(
+                      onPressed: () {
+                        getQrCode();
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(width: 1, color: mainColor),
+                          borderRadius: BorderRadius.all(Radius.circular(50)),
+                        ),
                       ),
                       child: Icon(
                         UniconsLine.qrcode_scan,
@@ -229,7 +235,7 @@ class _SearchState extends State<Search> {
                         size: 24,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -301,19 +307,24 @@ class _SearchState extends State<Search> {
                   itemBuilder: (context, i) {
                     final item = products[i];
 
-                    return GestureDetector(
-                      onTap: () {
-                        addProductToList(i);
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                        margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
-                        decoration: BoxDecoration(
-                          color: CustomTheme.of(context).cardColor,
-                          border: Border.all(color: borderColor),
-                          borderRadius: const BorderRadius.all(Radius.circular(16)),
-                          boxShadow: [boxShadow],
+                    return Container(
+                      width: MediaQuery.of(context).size.width,
+                      margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        boxShadow: [boxShadow],
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          addProductToList(i);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                          backgroundColor: CustomTheme.of(context).cardColor,
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(color: borderColor),
+                            borderRadius: const BorderRadius.all(Radius.circular(16)),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,7 +352,11 @@ class _SearchState extends State<Search> {
                                       SizedBox(
                                         width: MediaQuery.of(context).size.width * 0.5,
                                         child: Text(
-                                          '${formatMoney(widget.arguments!['activePrice'] == 1 ? item['wholesalePrice'] : widget.arguments!['activePrice'] == 2 ? item['bankPrice'] : item['salePrice']) ?? 0} ${widget.arguments!['currencyName']}',
+                                          '${formatMoney(widget.arguments!['activePrice'] == 1
+                                                  ? item['wholesalePrice']
+                                                  : widget.arguments!['activePrice'] == 2
+                                                  ? item['bankPrice']
+                                                  : item['salePrice']) ?? 0} ${widget.arguments!['currencyName']}',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -401,10 +416,10 @@ class _SearchState extends State<Search> {
                                             ),
                                           ),
                                         ],
-                                      )
+                                      ),
                                     ],
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           ],

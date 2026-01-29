@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -85,6 +83,17 @@ class CashboxModel extends ChangeNotifier {
   setDataKey(key, value) {
     data[key] = value;
     notifyListeners();
+  }
+
+  void clearInput(int index) {
+    Map<String, dynamic> dataCopy = Map.from(data);
+    dataCopy['paymentTypes'] = List.from(data['paymentTypes'].map((e) => Map.from(e)));
+
+    dataCopy['paymentTypes'][index]['amount'] = '';
+    dataCopy['paymentTypes'][index]['controller'].text = '';
+    data = dataCopy;
+
+    calculateChange();
   }
 
   void exactAmount(int index) {
@@ -293,10 +302,11 @@ class CashboxModel extends ChangeNotifier {
     // }
     if (currentIndex == 0) {
       print(data['change'] < 0);
-      return data['change'] >= 0;
+    return data['change'] >= 0;
     }
     if (currentIndex == 1) {
-      return (data['clientId'] ?? 0) == 0;
+      print(data['clientId']);
+      return !((data['clientId'] ?? 0) == 0);
     }
     if (currentIndex == 2) {
       bool validClient = data['loyaltyClientName'] != null && data['clientCode'] != null;
@@ -317,7 +327,7 @@ class CashboxModel extends ChangeNotifier {
       final ownerLogin = user['ownerLogin'] ?? '';
       final cashierLogin = user['login'] ?? '';
 
-      if (ownerLogin == "aksiya_market") {
+      if (ownerLogin == "aksiya_market" || ownerLogin == "hp") {
         const requestIdValue = 1;
         const signatureValue = 'a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4';
 
@@ -414,7 +424,6 @@ class CashboxModel extends ChangeNotifier {
       for (var i = 0; i < (dataCopy['itemsList']?.length ?? 0); i++) {
         dataCopy['itemsList'][i]['scrollKey'] = null;
       }
-      print(currentIndex);
 
       if (currentIndex == 2) {
         dataCopy['clientId'] = 0;
@@ -445,9 +454,6 @@ class CashboxModel extends ChangeNotifier {
         dataCopy['clientAmount'] = change;
       }
 
-      log(jsonEncode(dataCopy));
-      log(jsonEncode(dataCopy['itemsList']));
-
       // Отправка основного запроса
       final response = await post('/services/desktop/api/cheque-v2', dataCopy);
 
@@ -477,8 +483,8 @@ class CashboxModel extends ChangeNotifier {
 
       // Printer Logic (Commented out in original, kept here for reference)
       // if (settings['printAfterSale']) { ... }
-      print(response);
       isLoading = false;
+      data = dataCopy;
       notifyListeners();
 
       if (httpOk(response) && response['success']) {

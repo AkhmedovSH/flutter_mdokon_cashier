@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -17,6 +18,7 @@ class UserModel extends ChangeNotifier {
   String localVersion = '';
   Map _user = {};
   Map _cashbox = {};
+  Map cashboxSettings = {};
   List paymentTypes = [];
 
   UserModel(this._user, this._cashbox, this.paymentTypes);
@@ -37,10 +39,27 @@ class UserModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPaymentTypes(List payload) {
-    paymentTypes = payload;
-    storage.write('paymentTypes', payload);
-    notifyListeners();
+  Future getPaymentTypes(posId) async {
+    final response = await get("/services/desktop/api/payment-type-helper/$posId");
+    try {
+      if (httpOk(response) && response.length > 0) {
+        paymentTypes = response;
+        storage.write('paymentTypes', response);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future getCashboxSettings(posId) async {
+    final response = await get("/services/desktop/api/cashbox-settings/$posId");
+    response['cashboxSettings'] = jsonDecode(response['cashboxSettings']);
+    response['chequeSettings'] = jsonDecode(response['chequeSettings']);
+    response['userSettings'] = jsonDecode(response['userSettings']);
+    cashboxSettings = response;
+    storage.write('cashboxSettings', response);
   }
 
   setVersion(String version) async {
