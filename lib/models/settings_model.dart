@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
 class SettingsModel with ChangeNotifier {
-  final GetStorage box = GetStorage();
+  final GetStorage storage = GetStorage();
 
   bool _theme = false;
   bool _showChequeProducts = false;
@@ -12,18 +12,20 @@ class SettingsModel with ChangeNotifier {
   bool _offlineDeferment = false;
   bool _additionalInfo = false;
   bool _language = false;
+  bool changeCurrencyOnSale = false;
   double _decimalDigits = 0;
 
   SettingsModel() {
-    _theme = box.read('theme') ?? false;
-    _showChequeProducts = box.read('showChequeProducts') ?? false;
-    _searchGroupProducts = box.read('searchGroupProducts') ?? false;
-    _printAfterSale = box.read('printAfterSale') ?? false;
-    _selectUserAftersale = box.read('selectUserAftersale') ?? false;
-    _offlineDeferment = box.read('offlineDeferment') ?? false;
-    _additionalInfo = box.read('additionalInfo') ?? false;
-    _language = box.read('language') ?? false;
-    _decimalDigits = box.read('decimalDigits') ?? 0;
+    _theme = storage.read('theme') ?? false;
+    _showChequeProducts = storage.read('showChequeProducts') ?? false;
+    _searchGroupProducts = storage.read('searchGroupProducts') ?? false;
+    _printAfterSale = storage.read('printAfterSale') ?? false;
+    _selectUserAftersale = storage.read('selectUserAftersale') ?? false;
+    _offlineDeferment = storage.read('offlineDeferment') ?? false;
+    _additionalInfo = storage.read('additionalInfo') ?? false;
+    _language = storage.read('language') ?? false;
+    _decimalDigits = storage.read('decimalDigits') ?? 0;
+    changeCurrencyOnSale = storage.read('changeCurrencyOnSale') ?? false;
   }
 
   bool get theme => _theme;
@@ -65,8 +67,14 @@ class SettingsModel with ChangeNotifier {
       case 'decimalDigits':
         _decimalDigits = value;
         break;
+      case 'changeCurrencyOnSale':
+        changeCurrencyOnSale = value;
+        break;
     }
-    box.write(key, value);
+    storage.write(key, value);
+    var settings = storage.read('settings');
+    settings[key] = value;
+    storage.write('settings', settings);
     notifyListeners();
   }
 }

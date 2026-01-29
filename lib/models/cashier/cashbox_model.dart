@@ -64,6 +64,7 @@ class CashboxModel extends ChangeNotifier {
     data['login'] = username;
     data['cashierLogin'] = username;
     data['cashboxId'] = cashbox['cashboxId'];
+    data['saleCurrencyId'] = data['currencyId'];
     data['device'] = 'android';
     data['cashboxVersion'] = version;
     data['chequeDate'] = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -74,6 +75,7 @@ class CashboxModel extends ChangeNotifier {
     for (var i = 0; i < data['paymentTypes'].length; i++) {
       data['paymentTypes'][i]['controller'] = TextEditingController();
     }
+    data['paymentTypes'][0]['amount'] = (data['totalPrice']).round();
     data['paymentTypes'][0]['controller'].text = (data['totalPrice']).round().toString();
 
     data['change'] = 0.0;
@@ -306,12 +308,101 @@ class CashboxModel extends ChangeNotifier {
 
   Future<bool> createCheque() async {
     // isLoading = true;
-    notifyListeners();
+    // notifyListeners();
 
     try {
-      // var settings = jsonDecode(storage.read('settings'));
-
       Map<String, dynamic> dataCopy = Map.from(data);
+
+      final user = storage.read('user') ?? {};
+      final ownerLogin = user['ownerLogin'] ?? '';
+      final cashierLogin = user['login'] ?? '';
+
+      if (ownerLogin == "aksiya_market") {
+        const requestIdValue = 1;
+        const signatureValue = 'a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4';
+
+        List<Map<String, dynamic>> productsList = [];
+        List items = dataCopy['itemsList'] ?? [];
+
+        // Разворачиваем список товаров по количеству (quantity)
+        for (int i = 0; i < items.length; i++) {
+          final item = items[i];
+          // Преобразуем quantity в int, на случай если придет double
+          int quantity = (double.tryParse(item['quantity'].toString()) ?? 1).toInt();
+
+          for (int j = 0; j < quantity; j++) {
+            productsList.add({
+              "product_id": "${item['id']}",
+              "amount": item['salePrice'],
+            });
+          }
+        }
+
+        final requestBody = {
+          "receipt_id": dataCopy['transactionId'], // Убедитесь, что transactionId существует
+          "total_amount": dataCopy['totalPrice'],
+          "sold_at": DateTime.now().toString(), // Аналог responseDate.localDateTime
+          "branch_id": "${dataCopy['posId']}",
+          "cashier_id": "$cashierLogin",
+          "items": productsList,
+          "requestIdValue": requestIdValue,
+          "signatureValue": signatureValue,
+        };
+
+        try {
+          final promoResponse = await post("/services/desktop/api/promogo-generate", requestBody);
+
+          if (!httpOk(promoResponse)) {
+            return false;
+          }
+
+          if (promoResponse['result'] == null && promoResponse['message'] != null) {
+            showDangerToast('${promoResponse['message']}');
+            return false;
+          }
+
+          final result = promoResponse['result'];
+          if (result != null && result['codes'] != null) {
+            List codes = result['codes'];
+
+            Map<String, List<String>> codesByProductId = {};
+
+            for (var codeItem in codes) {
+              String productIdKey = "${codeItem['product_id']}";
+              if (!codesByProductId.containsKey(productIdKey)) {
+                codesByProductId[productIdKey] = [];
+              }
+              codesByProductId[productIdKey]!.add(codeItem['code'].toString());
+            }
+
+            List newItemsList = [];
+            for (var item in items) {
+              Map<String, dynamic> newItem = Map.from(item);
+              String productIdKey = "${newItem['id']}";
+
+              if (codesByProductId.containsKey(productIdKey)) {
+                // Берем список кодов
+                List<String>? availableCodes = codesByProductId[productIdKey];
+
+                if (availableCodes != null && availableCodes.isNotEmpty) {
+                  newItem['promoCodes'] = availableCodes;
+                  // (Опционально) Если нужно распределять коды по 1 штуке на развернутые товары,
+                  // логика будет сложнее, но согласно JS коду мы просто присваиваем массив.
+                }
+              }
+              newItemsList.add(newItem);
+            }
+            dataCopy['itemsList'] = newItemsList;
+          }
+        } catch (err) {
+          isLoading = false;
+          notifyListeners();
+          print("Error in promogo-generate: $err");
+
+          return false;
+        }
+      }
+
       double paid = 0.0;
 
       for (var i = 0; i < dataCopy['paymentTypes'].length; i++) {
@@ -323,6 +414,7 @@ class CashboxModel extends ChangeNotifier {
       for (var i = 0; i < (dataCopy['itemsList']?.length ?? 0); i++) {
         dataCopy['itemsList'][i]['scrollKey'] = null;
       }
+      print(currentIndex);
 
       if (currentIndex == 2) {
         dataCopy['clientId'] = 0;
@@ -348,8 +440,7 @@ class CashboxModel extends ChangeNotifier {
       }
       dataCopy['discountAmount'] ??= 0;
 
-      // Credit specific logic for amounts
-      if (currentIndex == 1) {
+      if (currentIndex == 0 || currentIndex == 1) {
         dataCopy['paid'] = paid;
         dataCopy['clientAmount'] = change;
       }
@@ -357,6 +448,7 @@ class CashboxModel extends ChangeNotifier {
       log(jsonEncode(dataCopy));
       log(jsonEncode(dataCopy['itemsList']));
 
+      // Отправка основного запроса
       final response = await post('/services/desktop/api/cheque-v2', dataCopy);
 
       if (currentIndex == 2) {

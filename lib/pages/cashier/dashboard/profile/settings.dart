@@ -78,7 +78,7 @@ class _SettingsState extends State<Settings> {
 
   getData() {
     if (storage.read('settings') != null) {
-      settings = {...settings, ...jsonDecode(storage.read('settings'))};
+      settings = {...settings, ...(storage.read('settings') ?? {})};
     }
     if (storage.read('printImage') != null) {
       List<int> intList = storage.read('printImage').cast<int>().toList();
@@ -162,6 +162,15 @@ class _SettingsState extends State<Settings> {
                 value: settingsModel.selectUserAftersale,
                 onChanged: (value) {
                   settingsModel.updateSetting('selectUserAftersale', value);
+                },
+              ),
+              SizedBox(height: 15),
+              CardItem(
+                title: 'settings_title_12',
+                description: 'settings_description_12',
+                value: settingsModel.changeCurrencyOnSale,
+                onChanged: (value) {
+                  settingsModel.updateSetting('changeCurrencyOnSale', value);
                 },
               ),
               SizedBox(height: 15),
@@ -494,59 +503,61 @@ class _SettingsState extends State<Settings> {
         ),
       ),
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, newSetState) {
-          return Container(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+        return StatefulBuilder(
+          builder: (context, newSetState) {
+            return Container(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
                 ),
-              ),
-              child: SingleChildScrollView(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        constraints: BoxConstraints(maxHeight: 500),
-                        child: ListView.builder(
-                          itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              onTap: () {
-                                // String select = availableBluetoothDevices[index];
-                                // List list = select.split("#");
-                                // String mac = list[1];
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(maxHeight: 500),
+                          child: ListView.builder(
+                            itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                onTap: () {
+                                  // String select = availableBluetoothDevices[index];
+                                  // List list = select.split("#");
+                                  // String mac = list[1];
 
-                                // setConnect(mac, newSetState);
-                              },
-                              title: Text(
-                                '${availableBluetoothDevices[index]}',
-                                style: TextStyle(
-                                  color: activeIndex == index ? mainColor : black,
+                                  // setConnect(mac, newSetState);
+                                },
+                                title: Text(
+                                  '${availableBluetoothDevices[index]}',
+                                  style: TextStyle(
+                                    color: activeIndex == index ? mainColor : black,
+                                  ),
                                 ),
-                              ),
-                              subtitle: Text(activeIndex == index ? context.tr("connected_device") : context.tr("click_to_connect")),
-                            );
-                          },
+                                subtitle: Text(activeIndex == index ? context.tr("connected_device") : context.tr("click_to_connect")),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                      ),
-                    ],
+                        const SizedBox(height: 15),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        });
+            );
+          },
+        );
       },
     );
     setState(() {
@@ -640,7 +651,7 @@ class CardItem extends StatelessWidget {
                   value: value,
                   activeColor: mainColor,
                   onChanged: onChanged,
-                )
+                ),
               ],
             ),
             if (soon)

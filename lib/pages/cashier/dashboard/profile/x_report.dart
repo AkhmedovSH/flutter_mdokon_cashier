@@ -24,7 +24,8 @@ class _XReportState extends State<XReport> {
   Map cashbox = {};
 
   getReport() async {
-    final prefsCashbox = (storage.read('cashbox')!);
+    final prefsCashbox = storage.read('cashbox');
+    print(prefsCashbox);
     int cashboxId = 0;
     if (prefsCashbox['id'] != null) {
       cashboxId = prefsCashbox['id'];
@@ -34,16 +35,10 @@ class _XReportState extends State<XReport> {
       cashboxId = shift['id'];
       cashbox = shift;
     }
-    dynamic response = await get('/services/desktop/api/shift-xreport/$cashboxId');
-
+    final response = await get('/services/desktop/api/shift-xreport-v2/$cashboxId');
+    print(response);
     setState(() {
       report = response;
-      reportList = report['xReportList'];
-      report['shiftOpenDate'] = DateFormat('dd.MM.yyyy HH:ss').format(
-        DateTime.parse(
-          response['shiftOpenDate'],
-        ),
-      );
     });
   }
 
@@ -53,13 +48,16 @@ class _XReportState extends State<XReport> {
     getReport();
   }
 
-  buildRow(String text, text2, {fz = 16.0}) {
+  buildRow(String text, text2, {fz = 16.0, leftPadding = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          context.tr(text),
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
+        Padding(
+          padding: EdgeInsets.only(left: leftPadding ? 16 : 0),
+          child: Text(
+            context.tr(text),
+            style: TextStyle(fontSize: fz),
+          ),
         ),
         Text(
           '${text2 ?? ''}',
@@ -79,7 +77,9 @@ class _XReportState extends State<XReport> {
               flex: 6,
               child: Text(
                 text,
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
+                style: TextStyle(
+                  fontSize: fz,
+                ),
               ),
             ),
             Expanded(
@@ -102,7 +102,7 @@ class _XReportState extends State<XReport> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: CustomAppBar(
-        title: 'X_report',
+        title: context.tr('X_report'), // Добавлена локализация заголовка
         leading: true,
       ),
       body: SafeArea(
@@ -118,110 +118,117 @@ class _XReportState extends State<XReport> {
                     width: 200,
                   ),
                 ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    context.tr('DUPLICATE'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${report['posName']}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${context.tr('phone')}: ${cashbox['posPhone'] != null ? formatPhone(cashbox['posPhone']) : ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                // Тип отчета (X или Z)
+                _buildCenterText(report['isZReport'] == true ? context.tr('z_report') : context.tr('x_report')),
+                _buildCenterText('${report['posName'] ?? ''}'),
+                _buildCenterText('${context.tr('phone')}: ${cashbox['posPhone'] ?? ''}'),
+
+                const SizedBox(height: 10),
+
+                buildRow('pos', report['posName']),
                 buildRow('cashier', report['cashierName']),
-                buildRow('${context.tr('cashbox')} №', report['shiftNumber']),
-                report['tin'] != null ? buildRow('ИНН', report['tin'] ?? '') : Container(),
+                buildRow('shift_ID', report['shiftId']),
+                buildRow('cashbox_number', report['shiftNumber']),
+                if (report['tin'] != null) buildRow('inn', report['tin']),
                 buildRow('date', report['shiftOpenDate']),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                for (var i = 0; i < reportList.length; i++)
-                  reportList[i]['amountIn'] != 0
-                      ? buildRow2(
-                          '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Приход (${reportList[i]['currencyName']}) ',
-                          reportList[i]['amountIn'],
-                        )
-                      : buildRow2(
-                          '${reportList[i]['paymentTypeName']} ${reportList[i]['paymentPurposeName']} Расход (${reportList[i]['currencyName']}) ',
-                          reportList[i]['amountOut'],
-                        ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                buildRow('sold_on_credit', report['debt']),
-                buildRow('discount_amount', report['discountAmount']),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                buildRow('cash_balance', formatMoney(report['cashboxTotalAmount'])),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                buildRow('NUMBER_X_OF_REPORTS', report['countRequest']),
-                SizedBox(height: 20),
+                buildRow('shift_duration', report['shiftDuration']),
+
+                _buildDivider(),
+
+                buildRow('number_of_receipts', report['totalCountCheque']),
+                buildRow('number_of_returned_receipts', report['countReturnedCheque']),
+                buildRow('number_of_returned_products', report['countReturnedProducts']),
+
+                if ((report['countDeletedCheque'] ?? 0) > 0)
+                  buildRow('${context.tr('number_of_receipts')} [${context.tr('deleted')}]', report['countDeletedCheque']),
+
+                _buildDivider(),
+
+                if (report['salesList'] != null)
+                  for (var item in report['salesList']) ...[
+                    buildRow('${context.tr('sales_amount')} (${item['currencyName']})', formatMoney(item['salesAmount'])),
+                    buildRow('${context.tr('discount_amount')} (${item['currencyName']})', formatMoney(item['discountAmount'])),
+                    buildRow('${context.tr('return_amount')} (${item['currencyName']})', formatMoney(item['returnAmount'])),
+                    const SizedBox(height: 10),
+                  ],
+
+                _buildDivider(),
+
+                if (report['amountInList'] != null && report['amountInList'].isNotEmpty) ...[
+                  _buildSectionTitle(context.tr('income')),
+                  for (var item in report['amountInList'])
+                    buildRow(
+                      '${item['paymentTypeName']} ${item['paymentPurposeName']}',
+                      '${formatMoney(item['amountIn'])} ${item['currencyName']}',
+                      leftPadding: true,
+                    ),
+                ],
+
+                if (report['amountOutList'] != null && report['amountOutList'].isNotEmpty) ...[
+                  _buildSectionTitle(context.tr('expense')),
+                  for (var item in report['amountOutList'])
+                    buildRow('${item['paymentTypeName']} ${item['paymentPurposeName']}', '${formatMoney(item['amountOut'])} ${item['currencyName']}'),
+                ],
+
+                // Баланс кассы (balanceList)
+                if (report['balanceList'] != null)
+                  for (var item in report['balanceList']) buildRow('cashbox_balance', '${formatMoney(item['balance'])} ${item['currencyName']}'),
+
+                _buildDivider(),
+
+                // Итоговые данные (totalList)
+                if (report['totalList'] != null)
+                  for (var item in report['totalList']) ...[
+                    if ((item['totalCash'] ?? 0) > 0)
+                      buildRow('${context.tr('total_cash')} (${item['currencyName']})', formatMoney(item['totalCash'])),
+                    if ((item['totalBank'] ?? 0) > 0)
+                      buildRow('${context.tr('total_bank')} (${item['currencyName']})', formatMoney(item['totalBank'])),
+                  ],
+
+                if ((report['countRequest'] ?? 0) > 0) buildRow('number_of_x_reports', report['countRequest']),
+
+                const SizedBox(height: 30),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Вспомогательные виджеты для чистоты кода
+  Widget _buildCenterText(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 16),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        '*****************************************************************************************',
+        overflow: TextOverflow.clip,
+        maxLines: 1,
+        softWrap: false,
       ),
     );
   }

@@ -1,13 +1,10 @@
-import 'dart:convert';
-import 'dart:developer';
-
 // import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
+import 'package:flutter_mdokon/models/loading_model.dart';
 
 import 'package:get_storage/get_storage.dart';
-import '/models/loading_model.dart';
 import '/widgets/custom_app_bar.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
@@ -211,7 +208,10 @@ class _PaymentSampleState extends State<PaymentSample> {
               child: ElevatedButton(
                 onPressed: model.isSubmitDisabled
                     ? () async {
+                        LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+                        loadingModel.showLoader(num: 2);
                         var result = await model.createCheque();
+                        loadingModel.hideLoader();
                         if (customIf(result) && context.mounted) {
                           Navigator.pop(context, result);
                         }
@@ -266,6 +266,8 @@ class _PaymentSampleState extends State<PaymentSample> {
   }
 
   showSelectUserDialog() async {
+    CashboxModel model = Provider.of<CashboxModel>(context, listen: false);
+
     await getClients();
     final result = await showDialog(
       context: context,
@@ -372,9 +374,9 @@ class _PaymentSampleState extends State<PaymentSample> {
     if (result != null) {
       for (var i = 0; i < result.length; i++) {
         if (result[i]['selected'] == true) {
-          data['clientName'] = result[i]['name'].toString();
-          data['clientId'] = result[i]['id'];
-          data['clientComment'] = result[i]['comment'];
+          model.setDataKey('clientName', result[i]['name'].toString());
+          model.setDataKey('clientId', result[i]['id']);
+          model.setDataKey('clientComment', result[i]['comment']);
           setState(() {});
         }
       }

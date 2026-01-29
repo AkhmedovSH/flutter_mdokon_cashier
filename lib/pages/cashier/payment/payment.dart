@@ -1,8 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
-import 'package:flutter_mdokon/models/user_model.dart';
-import 'package:provider/provider.dart'; // Импорт провайдера
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 import '/helpers/helper.dart';
@@ -46,70 +45,71 @@ class _PaymentState extends State<Payment> {
                   ),
                 ),
               ),
-              Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var entry in model.data['paymentTypes'].asMap().entries)
-                      Builder(
-                        builder: (context) {
-                          int index = entry.key;
-                          var item = entry.value;
+              if (customIf(model.data['paymentTypes']))
+                Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var entry in model.data['paymentTypes'].asMap().entries)
+                        Builder(
+                          builder: (context) {
+                            int index = entry.key;
+                            var item = entry.value;
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  '${item['customPaymentTypeName']}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 15),
-                                child: TextFormField(
-                                  controller: item['controller'],
-                                  keyboardType: TextInputType.number,
-                                  onTapOutside: (PointerDownEvent event) {
-                                    FocusManager.instance.primaryFocus?.unfocus();
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return context.tr('required_field');
-                                    }
-                                    return null;
-                                  },
-                                  onChanged: (value) {
-                                    model.updateInputs(index, value);
-                                  },
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                    suffixIcon: IconButton(
-                                      onPressed: () {
-                                        model.exactAmount(index);
-                                      },
-                                      icon: Icon(UniconsLine.money_bill),
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    '${item['customPaymentTypeName']}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    enabledBorder: inputBorder,
-                                    focusedBorder: inputFocusBorder,
-                                    errorBorder: inputErrorBorder,
-                                    focusedErrorBorder: inputErrorBorder,
-                                    hintText: '0.00 ${model.data['currencyName'] ?? ''}',
-                                    hintStyle: TextStyle(color: a2),
                                   ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                  ],
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 15),
+                                  child: TextFormField(
+                                    controller: item['controller'],
+                                    keyboardType: TextInputType.number,
+                                    onTapOutside: (PointerDownEvent event) {
+                                      FocusManager.instance.primaryFocus?.unfocus();
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return context.tr('required_field');
+                                      }
+                                      return null;
+                                    },
+                                    onChanged: (value) {
+                                      model.updateInputs(index, value);
+                                    },
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          model.exactAmount(index);
+                                        },
+                                        icon: Icon(UniconsLine.money_bill),
+                                      ),
+                                      enabledBorder: inputBorder,
+                                      focusedBorder: inputFocusBorder,
+                                      errorBorder: inputErrorBorder,
+                                      focusedErrorBorder: inputErrorBorder,
+                                      hintText: '0.00 ${model.data['currencyName'] ?? ''}',
+                                      hintStyle: TextStyle(color: a2),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                 ),
-              ),
               Text(
                 '${context.tr('change')}:',
                 style: TextStyle(

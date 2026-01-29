@@ -450,7 +450,7 @@ class _CheqDetailState extends State<CheqDetail> {
                 cheque['clientAmount'] > 0 ? buildRow('Должник', cheque['clientName'] + ' ') : Container(),
                 (cheque['clientAmount'] == 0 && cheque['clientName'] != null) ? buildRow('Клиент', cheque['clientName']) : Container(),
                 (cheque['loyaltyClientName'] != null) ? buildRow('Клиент', cheque['loyaltyClientName']) : Container(),
-                cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${context.tr('bonus')}', formatMoney(cheque['loyaltyBonus'])) : Container(),
+                // cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${context.tr('bonus')}', formatMoney(cheque['loyaltyBonus'])) : Container(),
                 buildRow(context.tr('change'), formatMoney(cheque['change'])),
                 Container(
                   margin: EdgeInsets.only(top: 15, bottom: 10),

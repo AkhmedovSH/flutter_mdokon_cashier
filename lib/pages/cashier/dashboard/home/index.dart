@@ -45,7 +45,7 @@ class _IndexState extends State<Index> {
   TextEditingController packagingController = TextEditingController();
   TextEditingController pieceController = TextEditingController();
 
-  Map data = {
+  static final initData = {
     "cashboxVersion": "",
     "login": "",
     "loyaltyBonus": 0,
@@ -77,6 +77,8 @@ class _IndexState extends State<Index> {
     "transactionsList": [],
     "activePrice": 0,
   };
+
+  Map data = Map.from(initData);
 
   Map productWithParams = {
     "selectedUnit": {"name": "", "quantity": ""},
@@ -843,42 +845,43 @@ class _IndexState extends State<Index> {
         bottomOpacity: 0.0,
         centerTitle: false,
         title: Row(
+          spacing: 10,
           children: [
             Text(
               context.tr('sale'),
               style: TextStyle(color: white),
             ),
-            SizedBox(width: 10),
-            SizedBox(
-              width: 55,
-              height: 32,
-              child: ElevatedButton(
-                onPressed: data['itemsList'].length == 0
-                    ? () {
-                        if (data['currencyId'] == 1) {
-                          data['currencyId'] = 2;
-                          data['currencyName'] = 'USD';
-                        } else {
-                          data['currencyId'] = 1;
-                          data['currencyName'] = 'So\'m';
+            if (storage.read('changeCurrencyOnSale') ?? false)
+              SizedBox(
+                width: 55,
+                height: 32,
+                child: ElevatedButton(
+                  onPressed: data['itemsList'].length == 0
+                      ? () {
+                          if (data['currencyId'] == 1) {
+                            data['currencyId'] = 2;
+                            data['currencyName'] = 'USD';
+                          } else {
+                            data['currencyId'] = 1;
+                            data['currencyName'] = 'So\'m';
+                          }
+                          setState(() {});
                         }
-                        setState(() {});
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  backgroundColor: white,
-                  foregroundColor: mainColor,
-                  disabledForegroundColor: white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: white,
+                    foregroundColor: mainColor,
+                    disabledForegroundColor: white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    '${data['currencyName']}',
                   ),
                 ),
-                child: Text(
-                  '${data['currencyName']}',
-                ),
               ),
-            ),
           ],
         ),
         backgroundColor: mainColor,

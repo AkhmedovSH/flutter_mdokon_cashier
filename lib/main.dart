@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -48,6 +50,9 @@ void main() async {
     Locale('ru', ''),
     Locale('uz', 'Latn'),
   ];
+  if (storage.read('settings') is String) {
+    storage.write('settings', jsonDecode(storage.read('settings')));
+  }
 
   runApp(
     EasyLocalization(
