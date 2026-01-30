@@ -67,7 +67,7 @@ class _ProfileState extends State<Profile> {
                 context.go('/cashier/profile/settings');
               }
               if (title == 'close_shift') {
-                openModal('close_shift');
+                context.go('/cashier/profile/x-report');
               }
               if (title == 'logout') {
                 openModal('logout');
@@ -187,7 +187,7 @@ class _ProfileState extends State<Profile> {
           if (checkRole('CASHBOX_BRANCH_BALANCE')) buildRow(UniconsLine.box, 'balance'),
           buildRow(UniconsLine.question_circle, 'info'),
           if (cashbox['isAgent'] != true) buildRow(UniconsLine.cog, 'settings'),
-          if (cashbox['isAgent'] != true) buildRow(UniconsLine.sign_out_alt, 'close_shift'),
+          // if (cashbox['isAgent'] != true) buildRow(UniconsLine.sign_out_alt, 'close_shift'),
           buildRow(UniconsLine.sign_out_alt, 'logout'),
           buildRow(UniconsLine.calling, 'support'),
         ],

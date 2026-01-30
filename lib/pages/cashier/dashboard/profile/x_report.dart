@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/dashboard_model.dart';
 import 'package:flutter_mdokon/models/cashier/print_model.dart';
 import 'package:flutter_mdokon/models/loading_model.dart';
+import 'package:flutter_mdokon/widgets/loading_layout.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -28,31 +29,68 @@ class _XReportState extends State<XReport> {
   List reportList = [];
   Map cashbox = {};
 
+  printXReport({bool zReport = false}) async {
+    final labels = {
+      'x_report': context.tr('x_report'),
+      'z_report': context.tr('z_report'),
+      'phone': context.tr('phone'),
+      'cashier': context.tr('cashier'),
+      'shift_ID': context.tr('shift_ID'),
+      'cashbox_number': context.tr('cashbox_number'),
+      'inn': context.tr('inn'),
+      'date': context.tr('date'),
+      'shift_duration': context.tr('shift_duration'),
+      'number_of_receipts': context.tr('number_of_receipts'),
+      'number_of_returned_receipts': context.tr('number_of_returned_receipts'),
+      'number_of_returned_products': context.tr('number_of_returned_products'),
+      'deleted': context.tr('deleted'),
+      'sales_amount': context.tr('sales_amount'),
+      'discount_amount': context.tr('discount_amount'),
+      'return_amount': context.tr('return_amount'),
+      'income': context.tr('income'),
+      'expense': context.tr('expense'),
+      'cashbox_balance': context.tr('cashbox_balance'),
+      'total_cash': context.tr('total_cash'),
+      'total_bank': context.tr('total_bank'),
+      'number_of_x_reports': context.tr('number_of_x_reports'),
+    };
+
+    LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+    PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
+    loadingModel.showLoader(num: 2);
+    await Future.delayed(Duration(milliseconds: 100));
+    report['isZReport'] = zReport;
+    if (context.mounted) await printerModel.printXReport(report, cashbox, labels);
+    loadingModel.hideLoader();
+  }
+
   void closeShift() async {
+    LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+    loadingModel.showLoader(num: 2);
+
     int id = 0;
     dynamic shift = {'id': null};
     Map response = {
       'success': true,
     };
-    if (cashbox['isAgent'] != true) {
-      if (storage.read('shift') != null) {
-        shift = (storage.read('shift')!);
-      }
-      if (shift['id'] != null) {
-        id = shift['id'];
-      } else {
-        id = cashbox['id'];
-      }
-      response = await post('/services/desktop/api/close-shift', {
-        'cashboxId': cashbox['cashboxId'],
-        'posId': cashbox['posId'],
-        'offline': false,
-        'id': id,
-      });
+    if (storage.read('shift') != null) {
+      shift = (storage.read('shift')!);
     }
+    if (shift['id'] != null) {
+      id = shift['id'];
+    } else {
+      id = cashbox['id'];
+    }
+    response = await post('/services/desktop/api/close-shift', {
+      'cashboxId': cashbox['cashboxId'],
+      'posId': cashbox['posId'],
+      'offline': false,
+      'id': id,
+    });
 
     storage.remove('user');
     if (response['success'] && mounted) {
+      printXReport(zReport: true);
       Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
       context.pushReplacement('/auth');
     }
@@ -60,8 +98,11 @@ class _XReportState extends State<XReport> {
   }
 
   getReport() async {
+    LoadingModel loaderModel = Provider.of<LoadingModel>(context, listen: false);
+
+    loaderModel.showLoader(num: 2);
+
     final prefsCashbox = storage.read('cashbox');
-    print(prefsCashbox);
     int cashboxId = 0;
     if (prefsCashbox['id'] != null) {
       cashboxId = prefsCashbox['id'];
@@ -72,16 +113,19 @@ class _XReportState extends State<XReport> {
       cashbox = shift;
     }
     final response = await get('/services/desktop/api/shift-xreport-v2/$cashboxId');
-    print(response);
-    setState(() {
-      report = response;
-    });
+    loaderModel.hideLoader();
+
+    report = response;
+    setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    getReport();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getReport();
+    });
   }
 
   buildRow(String text, text2, {fz = 16.0, leftPadding = false}) {
@@ -135,181 +179,152 @@ class _XReportState extends State<XReport> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: CustomAppBar(
-        title: 'X_report', // Добавлена локализация заголовка
-        leading: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              children: [
-                Center(
-                  child: Image.asset(
-                    'images/splash_logo.png',
-                    height: 64,
-                    width: 200,
+    return LoadingLayout(
+      body: Scaffold(
+        key: _scaffoldKey,
+        appBar: CustomAppBar(
+          title: 'X_report', // Добавлена локализация заголовка
+          leading: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  Center(
+                    child: Image.asset(
+                      'images/splash_logo.png',
+                      height: 64,
+                      width: 200,
+                    ),
                   ),
-                ),
-                // Тип отчета (X или Z)
-                _buildCenterText(report['isZReport'] == true ? context.tr('z_report') : context.tr('x_report')),
-                _buildCenterText('${report['posName'] ?? ''}'),
-                _buildCenterText('${context.tr('phone')}: ${cashbox['posPhone'] ?? ''}'),
+                  // Тип отчета (X или Z)
+                  _buildCenterText(report['isZReport'] == true ? context.tr('z_report') : context.tr('x_report')),
+                  _buildCenterText('${report['posName'] ?? ''}'),
+                  _buildCenterText('${context.tr('phone')}: ${cashbox['posPhone'] ?? ''}'),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                buildRow('pos', report['posName']),
-                buildRow('cashier', report['cashierName']),
-                buildRow('shift_ID', report['shiftId']),
-                buildRow('cashbox_number', report['shiftNumber']),
-                if (report['tin'] != null) buildRow('inn', report['tin']),
-                buildRow('date', report['shiftOpenDate']),
-                buildRow('shift_duration', report['shiftDuration']),
+                  buildRow('pos', report['posName']),
+                  buildRow('cashier', report['cashierName']),
+                  buildRow('shift_ID', report['shiftId']),
+                  buildRow('cashbox_number', report['shiftNumber']),
+                  if (report['tin'] != null) buildRow('inn', report['tin']),
+                  buildRow('date', report['shiftOpenDate']),
+                  buildRow('shift_duration', report['shiftDuration']),
 
-                _buildDivider(),
+                  _buildDivider(),
 
-                buildRow('number_of_receipts', report['totalCountCheque']),
-                buildRow('number_of_returned_receipts', report['countReturnedCheque']),
-                buildRow('number_of_returned_products', report['countReturnedProducts']),
+                  buildRow('number_of_receipts', report['totalCountCheque']),
+                  buildRow('number_of_returned_receipts', report['countReturnedCheque']),
+                  buildRow('number_of_returned_products', report['countReturnedProducts']),
 
-                if ((report['countDeletedCheque'] ?? 0) > 0)
-                  buildRow('${context.tr('number_of_receipts')} [${context.tr('deleted')}]', report['countDeletedCheque']),
+                  if ((report['countDeletedCheque'] ?? 0) > 0)
+                    buildRow('${context.tr('number_of_receipts')} [${context.tr('deleted')}]', report['countDeletedCheque']),
 
-                _buildDivider(),
+                  _buildDivider(),
 
-                if (report['salesList'] != null)
-                  for (var item in report['salesList']) ...[
-                    buildRow('${context.tr('sales_amount')} (${item['currencyName']})', formatMoney(item['salesAmount'])),
-                    buildRow('${context.tr('discount_amount')} (${item['currencyName']})', formatMoney(item['discountAmount'])),
-                    buildRow('${context.tr('return_amount')} (${item['currencyName']})', formatMoney(item['returnAmount'])),
-                    const SizedBox(height: 10),
+                  if (report['salesList'] != null)
+                    for (var item in report['salesList']) ...[
+                      buildRow('${context.tr('sales_amount')} (${item['currencyName']})', formatMoney(item['salesAmount'])),
+                      buildRow('${context.tr('discount_amount')} (${item['currencyName']})', formatMoney(item['discountAmount'])),
+                      buildRow('${context.tr('return_amount')} (${item['currencyName']})', formatMoney(item['returnAmount'])),
+                      const SizedBox(height: 10),
+                    ],
+
+                  _buildDivider(),
+
+                  // Итоговые данные (totalList)
+                  if (report['totalList'] != null)
+                    for (var item in report['totalList']) ...[
+                      if ((item['totalCash'] ?? 0) > 0)
+                        buildRow('${context.tr('total_cash')} (${item['currencyName']})', formatMoney(item['totalCash'])),
+                      if ((item['totalBank'] ?? 0) > 0)
+                        buildRow('${context.tr('total_bank')} (${item['currencyName']})', formatMoney(item['totalBank'])),
+                    ],
+
+                  if ((report['countRequest'] ?? 0) > 0) buildRow('number_of_x_reports', report['countRequest']),
+
+                  _buildDivider(),
+
+                  if (report['amountInList'] != null && report['amountInList'].isNotEmpty) ...[
+                    _buildSectionTitle(context.tr('income')),
+                    for (var item in report['amountInList'])
+                      buildRow(
+                        '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+                        '${formatMoney(item['amountIn'])} ${item['currencyName']}',
+                        leftPadding: true,
+                      ),
                   ],
 
-                _buildDivider(),
-
-                if (report['amountInList'] != null && report['amountInList'].isNotEmpty) ...[
-                  _buildSectionTitle(context.tr('income')),
-                  for (var item in report['amountInList'])
-                    buildRow(
-                      '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
-                      '${formatMoney(item['amountIn'])} ${item['currencyName']}',
-                      leftPadding: true,
-                    ),
-                ],
-
-                if (report['amountOutList'] != null && report['amountOutList'].isNotEmpty) ...[
-                  _buildSectionTitle(context.tr('expense')),
-                  for (var item in report['amountOutList'])
-                    buildRow(
-                      '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
-                      '${formatMoney(item['amountOut'])} ${item['currencyName']}',
-                      leftPadding: true,
-                    ),
-                ],
-
-                // Баланс кассы (balanceList)
-                if (report['balanceList'] != null)
-                  for (var item in report['balanceList']) buildRow('cashbox_balance', '${formatMoney(item['balance'])} ${item['currencyName']}'),
-
-                _buildDivider(),
-
-                // Итоговые данные (totalList)
-                if (report['totalList'] != null)
-                  for (var item in report['totalList']) ...[
-                    if ((item['totalCash'] ?? 0) > 0)
-                      buildRow('${context.tr('total_cash')} (${item['currencyName']})', formatMoney(item['totalCash'])),
-                    if ((item['totalBank'] ?? 0) > 0)
-                      buildRow('${context.tr('total_bank')} (${item['currencyName']})', formatMoney(item['totalBank'])),
+                  if (report['amountOutList'] != null && report['amountOutList'].isNotEmpty) ...[
+                    _buildSectionTitle(context.tr('expense')),
+                    for (var item in report['amountOutList'])
+                      buildRow(
+                        '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+                        '${formatMoney(item['amountOut'])} ${item['currencyName']}',
+                        leftPadding: true,
+                      ),
                   ],
 
-                if ((report['countRequest'] ?? 0) > 0) buildRow('number_of_x_reports', report['countRequest']),
+                  // Баланс кассы (balanceList)
+                  if (report['balanceList'] != null)
+                    for (var item in report['balanceList']) buildRow('cashbox_balance', '${formatMoney(item['balance'])} ${item['currencyName']}'),
 
-                const SizedBox(height: 80),
-              ],
+                  const SizedBox(height: 80),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-      bottomSheet: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          spacing: 10,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final labels = {
-                    'x_report': context.tr('x_report'),
-                    'z_report': context.tr('z_report'),
-                    'phone': context.tr('phone'),
-                    'cashier': context.tr('cashier'),
-                    'shift_ID': context.tr('shift_ID'),
-                    'cashbox_number': context.tr('cashbox_number'),
-                    'inn': context.tr('inn'),
-                    'date': context.tr('date'),
-                    'shift_duration': context.tr('shift_duration'),
-                    'number_of_receipts': context.tr('number_of_receipts'),
-                    'number_of_returned_receipts': context.tr('number_of_returned_receipts'),
-                    'number_of_returned_products': context.tr('number_of_returned_products'),
-                    'deleted': context.tr('deleted'),
-                    'sales_amount': context.tr('sales_amount'),
-                    'discount_amount': context.tr('discount_amount'),
-                    'return_amount': context.tr('return_amount'),
-                    'income': context.tr('income'),
-                    'expense': context.tr('expense'),
-                    'cashbox_balance': context.tr('cashbox_balance'),
-                    'total_cash': context.tr('total_cash'),
-                    'total_bank': context.tr('total_bank'),
-                    'number_of_x_reports': context.tr('number_of_x_reports'),
-                  };
-
-                  LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
-                  loadingModel.showLoader(num: 2);
-                  await Future.delayed(Duration(milliseconds: 100));
-                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
-
-                  if (context.mounted) await printerModel.printXReport(report, cashbox, labels);
-                  loadingModel.hideLoader();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+        bottomSheet: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            spacing: 10,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    printXReport();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(context.tr('PRINT')),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(context.tr('PRINT')),
-                  ],
-                ),
               ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  openModal();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: danger,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    openModal();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: danger,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(context.tr('close_shift')),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(context.tr('close_shift')),
-                  ],
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

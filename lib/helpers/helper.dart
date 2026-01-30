@@ -171,7 +171,7 @@ formatUnixTime(unixTime) {
     return '';
   }
   var dt = DateTime.fromMillisecondsSinceEpoch(unixTime);
-  return DateFormat('dd.MM.yyyy HH:mm').format(dt);
+  return DateFormat('dd.MM.yyyy HH:mm:ss').format(dt);
 }
 
 formatPhone(phone) {

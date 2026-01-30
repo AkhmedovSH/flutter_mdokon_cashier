@@ -8,6 +8,7 @@ import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter_mdokon/helpers/helper.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
 
 class PrinterModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
@@ -95,13 +96,18 @@ class PrinterModel extends ChangeNotifier {
     List<int> bytes = [];
     final settings = storage.read('settings');
     final cashboxSettings = storage.read('cashboxSettings');
-    print(cashboxSettings);
+    final chequeSettings = cashboxSettings['chequeSettings'];
+    // print(cashboxSettings);
+    // return;
     bytes += generator.reset();
     bytes += generator.setGlobalCodeTable('CP866');
 
     // 1. Логотип (если есть в хранилище)
-    if (storage.read('printImage') != null) {
-      final img.Image? logo = await _decodeImage(storage.read('printImage'));
+    if (customIf(chequeSettings['show_logo'])) {
+      String logoUrl = "https://cabinet.mdokon.uz${chequeSettings['logoUrl']}";
+
+      final img.Image? logo = await _decodeNetworkImage(logoUrl);
+
       if (logo != null) {
         bytes += generator.image(logo);
       }
@@ -122,10 +128,9 @@ class PrinterModel extends ChangeNotifier {
     }
 
     // 3. Инфо о чеке
-    // bytes += await textCyrillic(generator, 'Кассир: Иванов', styles: const PosStyles(align: PosAlign.left));
     bytes += _getChequeRow(generator, 'Kassir', '${cheque['cashierName'] ?? ''}');
-    bytes += _getChequeRow(generator, '# Tekshirish', '${cheque['chequeNumber'] ?? ''}');
-    bytes += _getChequeRow(generator, 'Sana', '${cheque['chequeDate'] ?? ''}');
+    bytes += _getChequeRow(generator, 'Chek ID', '${cheque['chequeNumber'] ?? ''}');
+    bytes += _getChequeRow(generator, 'Sana', '${formatUnixTime(cheque['chequeDate'])}');
     bytes += generator.hr(ch: '*');
 
     if (customIf(storage.read('showChequeProducts'))) {
@@ -136,9 +141,9 @@ class PrinterModel extends ChangeNotifier {
       bytes += await tableLine(
         generator,
         cfg,
-        'Товар',
-        'Кол-во',
-        'Сумма',
+        'Mahsulot',
+        'Miqdor',
+        'Summa',
         bold: true,
       );
       bytes += await tableDivider(generator, cfg);
@@ -184,17 +189,26 @@ class PrinterModel extends ChangeNotifier {
     bytes += _getChequeRow(
       generator,
       'Tolash uchun',
-      '${formatMoney(cheque['to_pay'] ?? 0)}',
+      '${formatMoney(customNumber(cheque['totalPrice']) - customNumber(cheque['discountAmount']))}',
       bold: true,
     );
 
     bytes += _getChequeRow(generator, 'Tolangan', '${formatMoney(cheque['paid'] ?? 0)}');
-    bytes += _getChequeRow(generator, 'QQS %', '${formatMoney(cheque['totalVatAmount'] ?? 0)}');
+    for (var i = 0; i < cheque['paymentTypes'].length; i++) {
+      if (customNumber(cheque['paymentTypes'][i]['amount']) > 0) {
+        bytes += _getChequeRow(
+          generator,
+          '${cheque['paymentTypes'][i]['customPaymentTypeName']}',
+          '${formatMoney(cheque['paymentTypes'][i]['amount'] ?? 0)}',
+        );
+      }
+    }
+    // bytes += _getChequeRow(generator, 'QQS %', '${formatMoney(cheque['totalVatAmount'] ?? 0)}');
     bytes += generator.hr(ch: '*', linesAfter: 1);
 
     // 6. Подвал
-    if (settings?['additionalInfo'] == true) {
-      bytes += generator.text("Xaridingiz uchun rahmat", styles: const PosStyles(align: PosAlign.center));
+    if (customIf(chequeSettings['show_promo_text_cheque'])) {
+      bytes += generator.text("${chequeSettings['promo_text_cheque']}", styles: const PosStyles(align: PosAlign.center));
     }
 
     bytes += generator.feed(1);
@@ -203,14 +217,25 @@ class PrinterModel extends ChangeNotifier {
     await _sendBytesToDevice(bytes);
   }
 
-  Future<img.Image?> _decodeImage(dynamic dynamicList) async {
+  Future<img.Image?> _decodeNetworkImage(String url) async {
     try {
-      List<int> intList = dynamicList.cast<int>().toList();
-      var imageBytes = Uint8List.fromList(intList);
-      final img.Image? image = img.decodeImage(imageBytes);
-      if (image == null) return null;
-      return img.copyResize(image, width: 200, height: 200);
+      // 1. Скачиваем изображение по ссылке
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        // 2. Получаем байты
+        Uint8List imageBytes = response.bodyBytes;
+
+        // 3. Декодируем
+        final img.Image? image = img.decodeImage(imageBytes);
+        if (image == null) return null;
+
+        // 4. Масштабируем (как в вашем примере)
+        return img.copyResize(image, width: 200, height: 200);
+      }
+      return null;
     } catch (e) {
+      print('Ошибка загрузки изображения: $e');
       return null;
     }
   }
@@ -436,6 +461,36 @@ class PrinterModel extends ChangeNotifier {
 
     bytes += generator.hr();
 
+    // ---------- ИТОГИ ----------
+    if (report['totalList'] != null) {
+      for (final item in report['totalList']) {
+        if ((item['totalCash'] ?? 0) > 0) {
+          bytes += await _row(
+            generator,
+            '${labels['total_cash']} (${item['currencyName']})',
+            formatMoney(item['totalCash']),
+          );
+        }
+        if ((item['totalBank'] ?? 0) > 0) {
+          bytes += await _row(
+            generator,
+            '${labels['total_bank']} (${item['currencyName']})',
+            formatMoney(item['totalBank']),
+          );
+        }
+      }
+    }
+
+    if ((report['countRequest'] ?? 0) > 0) {
+      bytes += await _row(
+        generator,
+        labels['number_of_x_reports']!,
+        '${report['countRequest']}',
+      );
+    }
+
+    bytes += generator.hr();
+
     // ---------- ПРИХОД ----------
     if (report['amountInList'] != null && report['amountInList'].isNotEmpty) {
       bytes += await _text(generator, labels['income']!, bold: true);
@@ -471,34 +526,6 @@ class PrinterModel extends ChangeNotifier {
           '${formatMoney(item['balance'])} ${item['currencyName']}',
         );
       }
-    }
-
-    // ---------- ИТОГИ ----------
-    if (report['totalList'] != null) {
-      for (final item in report['totalList']) {
-        if ((item['totalCash'] ?? 0) > 0) {
-          bytes += await _row(
-            generator,
-            '${labels['total_cash']} (${item['currencyName']})',
-            formatMoney(item['totalCash']),
-          );
-        }
-        if ((item['totalBank'] ?? 0) > 0) {
-          bytes += await _row(
-            generator,
-            '${labels['total_bank']} (${item['currencyName']})',
-            formatMoney(item['totalBank']),
-          );
-        }
-      }
-    }
-
-    if ((report['countRequest'] ?? 0) > 0) {
-      bytes += await _row(
-        generator,
-        labels['number_of_x_reports']!,
-        '${report['countRequest']}',
-      );
     }
 
     bytes += generator.feed(2);
@@ -564,34 +591,48 @@ class PrinterModel extends ChangeNotifier {
   Future<void> _sendBytesToDevice(List<int> bytes) async {
     if (selectedDevice == null) return;
 
-    // 1. Подключаемся, если еще не подключены
-    await selectedDevice!.connect(license: License.free);
-
-    // 2. MTU уже настроен в логах, но для уверенности оставим
     try {
+      // Check if already connected to avoid "Connection Failed" errors
+      var state = await selectedDevice!.connectionState.first;
+      if (state != BluetoothConnectionState.connected) {
+        await selectedDevice!.connect(
+          license: License.free,
+          timeout: const Duration(seconds: 5),
+          autoConnect: false, // Set to false for manual connection attempts
+        );
+      }
+
+      // Discovery and MTU...
       await selectedDevice!.requestMtu(247);
-    } catch (_) {}
+      final services = await selectedDevice!.discoverServices();
 
-    final services = await selectedDevice!.discoverServices();
-    for (var service in services) {
-      for (var char in service.characteristics) {
-        if (char.properties.write || char.properties.writeWithoutResponse) {
-          // --- РЕШЕНИЕ ПРОБЛЕМЫ: Нарезка на чанки ---
-          const int chunkSize = 200; // Берем чуть меньше MTU для стабильности
-          for (int i = 0; i < bytes.length; i += chunkSize) {
-            int end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+      BluetoothCharacteristic? writeChar;
 
-            // Отправляем кусочек данных
-            await char.write(bytes.sublist(i, end), withoutResponse: true);
-
-            // Маленькая пауза, чтобы принтер успел обработать пакет
-            await Future.delayed(const Duration(milliseconds: 50));
+      for (var service in services) {
+        for (var char in service.characteristics) {
+          if (char.properties.write || char.properties.writeWithoutResponse) {
+            writeChar = char;
+            break;
           }
-
-          debugPrint("Печать завершена успешно");
-          return;
         }
       }
+
+      if (writeChar != null) {
+        const int chunkSize = 200;
+        for (int i = 0; i < bytes.length; i += chunkSize) {
+          int end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+          await writeChar.write(bytes.sublist(i, end), withoutResponse: true);
+          await Future.delayed(const Duration(milliseconds: 20)); // Reduced delay
+        }
+        debugPrint("Печать завершена успешно");
+      }
+
+      // Optional: Only disconnect if you want to allow other apps to use the printer
+      // await selectedDevice!.disconnect();
+    } catch (e) {
+      debugPrint("Bluetooth Error: $e");
+      // If it fails, try to disconnect to reset the stack for the next attempt
+      await selectedDevice!.disconnect().catchError((_) {});
     }
   }
 

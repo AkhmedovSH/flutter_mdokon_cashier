@@ -844,6 +844,7 @@ class _IndexState extends State<Index> {
         ),
         bottomOpacity: 0.0,
         centerTitle: false,
+        titleSpacing: 12,
         title: Row(
           spacing: 10,
           children: [
@@ -969,6 +970,7 @@ class _IndexState extends State<Index> {
                   alignedDropdown: false,
                   child: DropdownButton2(
                     value: data['activePrice'].toString(),
+                    
                     customButton: SizedBox(
                       child: Icon(
                         Icons.more_vert,
@@ -976,22 +978,26 @@ class _IndexState extends State<Index> {
                         color: white,
                       ),
                     ),
+                    buttonStyleData: const ButtonStyleData(
+                      padding: EdgeInsets.only(right: 16), // Отступ контента от правого края
+                      height: 40,
+                      width: 40,
+                    ),
                     dropdownStyleData: DropdownStyleData(
-                      width: 250,
+                      width: 260,
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
                         color: white,
                       ),
-                      offset: const Offset(-140, -10),
+                      offset: const Offset(-240, -10),
+                    ),
+                    menuItemStyleData: MenuItemStyleData(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
                     underline: Container(),
-                    isExpanded: true,
+                    // isExpanded: true,
                     // hint: Text('${expenses[0]['name']}'),
-                    iconStyleData: IconStyleData(
-                      icon: const Icon(UniconsLine.angle_down),
-                      iconSize: 24,
-                      iconEnabledColor: mainColor,
-                    ),
                     onChanged: (newValue) {
                       data['activePrice'] = int.parse(newValue!);
                       setState(() {});
@@ -1000,15 +1006,16 @@ class _IndexState extends State<Index> {
                       return DropdownMenuItem<String>(
                         value: '${item['id']}',
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Text(
+                              context.tr(item['name']),
+                            ),
                             if (item['id'] == data['activePrice'])
                               Icon(
                                 UniconsLine.check,
                                 color: CustomTheme.of(context).textColor,
                               ),
-                            Text(
-                              context.tr(item['name']),
-                            ),
                           ],
                         ),
                       );
@@ -1018,6 +1025,7 @@ class _IndexState extends State<Index> {
               ),
             ),
           ),
+          SizedBox(width: 12),
           // SizedBox(
           //   child: Tooltip(
           //     message: context.tr('wholesale_price'),

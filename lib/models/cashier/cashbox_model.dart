@@ -43,7 +43,7 @@ class CashboxModel extends ChangeNotifier {
   Future<void> initializeDataFields() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
-
+    print(storage.read('cashboxSettings')['chequeSettings']);
     final username = storage.read('user')['username'];
 
     if (storage.read('shift') != null) {
@@ -62,6 +62,7 @@ class CashboxModel extends ChangeNotifier {
     data['login'] = username;
     data['cashierLogin'] = username;
     data['cashboxId'] = cashbox['cashboxId'];
+    data['posName'] = cashbox['posName'];
     data['saleCurrencyId'] = data['currencyId'];
     data['device'] = 'android';
     data['cashboxVersion'] = version;
@@ -302,7 +303,7 @@ class CashboxModel extends ChangeNotifier {
     // }
     if (currentIndex == 0) {
       print(data['change'] < 0);
-    return data['change'] >= 0;
+      return data['change'] >= 0;
     }
     if (currentIndex == 1) {
       print(data['clientId']);
@@ -376,28 +377,32 @@ class CashboxModel extends ChangeNotifier {
             List codes = result['codes'];
 
             Map<String, List<String>> codesByProductId = {};
-
             for (var codeItem in codes) {
               String productIdKey = "${codeItem['product_id']}";
-              if (!codesByProductId.containsKey(productIdKey)) {
-                codesByProductId[productIdKey] = [];
-              }
-              codesByProductId[productIdKey]!.add(codeItem['code'].toString());
+              codesByProductId.putIfAbsent(productIdKey, () => []).add(codeItem['code'].toString());
             }
 
             List newItemsList = [];
+
             for (var item in items) {
               Map<String, dynamic> newItem = Map.from(item);
               String productIdKey = "${newItem['id']}";
 
-              if (codesByProductId.containsKey(productIdKey)) {
-                // Берем список кодов
-                List<String>? availableCodes = codesByProductId[productIdKey];
+              int quantity = (double.tryParse(newItem['quantity'].toString()) ?? 1).toInt();
 
-                if (availableCodes != null && availableCodes.isNotEmpty) {
-                  newItem['promoCodes'] = availableCodes;
-                  // (Опционально) Если нужно распределять коды по 1 штуке на развернутые товары,
-                  // логика будет сложнее, но согласно JS коду мы просто присваиваем массив.
+              if (codesByProductId.containsKey(productIdKey)) {
+                List<String> availableCodes = codesByProductId[productIdKey]!;
+
+                List<String> assignedCodes = [];
+
+                for (int q = 0; q < quantity; q++) {
+                  if (availableCodes.isNotEmpty) {
+                    assignedCodes.add(availableCodes.removeAt(0));
+                  }
+                }
+
+                if (assignedCodes.isNotEmpty) {
+                  newItem['promoCodes'] = assignedCodes;
                 }
               }
               newItemsList.add(newItem);
