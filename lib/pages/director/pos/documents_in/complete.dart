@@ -5,6 +5,7 @@ import '/helpers/helper.dart';
 import '/models/data_model.dart';
 import '/models/director/documents_in_model.dart';
 import '/widgets/custom_app_bar.dart';
+import '/widgets/dropdown_value.dart';
 import '/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -72,7 +73,7 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
                   value: '${formatMoney(documentsInModel.data['totalSale'])} ${documentsInModel.data['currencyName']}',
                 ),
                 SizedBox(height: 20),
-                DropdownItem(
+                DropdownField(
                   items: paymentTypes,
                   label: 'choose_payment_type',
                   dataKey: 'paymentTypeId',
@@ -80,7 +81,7 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
                   itemValue: 'id',
                 ),
                 if (documentsInModel.data['paymentTypeId'] == '1')
-                  DropdownItem(
+                  DropdownField(
                     items: dataModel.wallets,
                     label: 'safe',
                     dataKey: 'walletId',
@@ -88,7 +89,7 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
                     itemValue: 'walletId',
                   )
                 else
-                  DropdownItem(
+                  DropdownField(
                     items: dataModel.banks,
                     label: 'bank',
                     dataKey: 'bankId',
@@ -178,7 +179,7 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            documentsInModel.data['debtPaymentDate'] != null ? '${formatDateMonth(documentsInModel.data['debtPaymentDate'])}' : '',
+                            documentsInModel.data['debtPaymentDate'] != null ? formatDateMonth(documentsInModel.data['debtPaymentDate']) : '',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -254,14 +255,14 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
   }
 }
 
-class DropdownItem extends StatelessWidget {
+class DropdownField extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final String label;
   final String dataKey;
   final String itemValue;
   final String itemName;
 
-  const DropdownItem({
+  const DropdownField({
     super.key,
     required this.items,
     required this.label,
@@ -287,36 +288,39 @@ class DropdownItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   color: CustomTheme.of(context).cardColor,
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton2<String>(
-                    value: documentsInModel.data[dataKey].toString(),
-                    buttonStyleData: const ButtonStyleData(),
-                    iconStyleData: const IconStyleData(
-                      icon: Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(UniconsLine.angle_down),
+                child: DropdownValue<String>(
+                  value: documentsInModel.data[dataKey].toString(),
+                  builder: (context, selected) => DropdownButtonHideUnderline(
+                    child: DropdownButton2<String>(
+                      valueListenable: selected,
+                      buttonStyleData: const ButtonStyleData(),
+                      iconStyleData: const IconStyleData(
+                        icon: Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(UniconsLine.angle_down),
+                        ),
                       ),
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomTheme.of(context).cardColor,
+                        ),
+                        maxHeight: 300,
+                        offset: const Offset(0, -10),
                       ),
-                      maxHeight: 300,
-                      offset: const Offset(0, -10),
-                    ),
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      documentsInModel.setDataValue(dataKey, newValue);
-                    },
-                    items: items.map(
-                      (Map<String, dynamic> item) {
-                        return DropdownMenuItem<String>(
-                          value: item[itemValue].toString(),
-                          child: Text(context.tr(item[itemName] ?? '-')),
-                        );
+                      isDense: true,
+                      onChanged: (String? newValue) {
+                        documentsInModel.setDataValue(dataKey, newValue);
                       },
-                    ).toList(),
+                      items: items.map(
+                        (Map<String, dynamic> item) {
+                          return DropdownItem<String>(
+                            value: item[itemValue].toString(),
+                            child: Text(context.tr(item[itemName] ?? '-')),
+                          );
+                        },
+                      ).toList(),
+                    ),
                   ),
                 ),
               );

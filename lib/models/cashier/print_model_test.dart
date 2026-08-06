@@ -255,7 +255,7 @@ class PrinterModel extends ChangeNotifier {
     if (selectedDevice == null) return;
 
     // 1. Подключаемся, если еще не подключены
-    await selectedDevice!.connect(license: License.free);
+    await selectedDevice!.connect(license: License.nonprofit);
 
     // 2. MTU уже настроен в логах, но для уверенности оставим
     try {

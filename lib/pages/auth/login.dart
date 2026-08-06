@@ -17,7 +17,7 @@ import '../../helpers/api.dart';
 import '../../widgets/loading_layout.dart';
 
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+  const Login({super.key});
 
   @override
   State<Login> createState() => _LoginState();
@@ -40,7 +40,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   bool showPassword = false;
   bool loading = false;
 
-  login() async {
+  Future<void> login() async {
     FocusScope.of(context).unfocus();
     LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
     loadingModel.showLoader(num: 2);
@@ -72,7 +72,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     if (!await launchUrl(Uri.parse("tel://+998555000089"))) throw 'Could not launch';
   }
 
-  verifyOtp() async {
+  Future<void> verifyOtp() async {
     smsData['sendSms'] = false;
     smsData['otpController'] = '';
     setState(() {});
@@ -84,7 +84,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     }
   }
 
-  getAccount() async {
+  Future<void> getAccount() async {
     UserModel userModel = Provider.of<UserModel>(context, listen: false);
 
     final Map account = await get('/services/desktop/api/account');
@@ -136,7 +136,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     }
   }
 
-  getAgentPosId() async {
+  Future<void> getAgentPosId() async {
     final response = await get('/services/desktop/api/get-access-pos');
     response['isAgent'] = true;
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
@@ -146,7 +146,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     }
   }
 
-  getAccessPos() async {
+  Future<void> getAccessPos() async {
     UserModel userModel = Provider.of<UserModel>(context, listen: false);
     final response = await get('/services/desktop/api/get-access-pos');
     if (response['openShift']) {
@@ -162,7 +162,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     }
   }
 
-  getData() async {
+  Future<void> getData() async {
     if (storage.read('user') != null) {
       var user = storage.read('user');
       if (user['rememberMe'] != null && user['rememberMe']) {

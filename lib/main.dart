@@ -88,14 +88,14 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  setInitData() async {
+  Future<void> setInitData() async {
     // initializeNotifications(context);
     Provider.of<PrinterModel>(context, listen: false).autoConnectSavedPrinter();
   }

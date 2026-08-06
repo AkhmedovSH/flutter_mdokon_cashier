@@ -74,7 +74,7 @@ const systemOverlayStyleDark = SystemUiOverlayStyle(
 );
 
 BoxShadow boxShadow = BoxShadow(
-  color: Colors.black.withOpacity(0.15),
+  color: Colors.black.withValues(alpha: 0.15),
   spreadRadius: 0,
   blurRadius: 3,
   offset: const Offset(0, 0),
@@ -115,36 +115,36 @@ final List<Map<String, dynamic>> languages = [
   },
 ];
 
-getUnixTime() {
+int getUnixTime() {
   return DateTime.now().toUtc().millisecondsSinceEpoch;
 }
 
-generateChequeNumber() {
+String generateChequeNumber() {
   return getUnixTime().toString().substring(getUnixTime().toString().length - 8);
 }
 
-generateTransactionId(posId, cashboxId, shiftId) {
+String generateTransactionId(dynamic posId, dynamic cashboxId, dynamic shiftId) {
   var random = Random();
   return posId.toString() + cashboxId.toString() + shiftId.toString() + getUnixTime().toString() + (random.nextInt(999999).floor().toString());
 }
 
-int daysBetween(from, DateTime to) {
+int daysBetween(dynamic from, DateTime to) {
   from = DateTime(from['year'], from['month'], from['day']);
   to = DateTime(to.year, to.month, to.day);
   return (to.difference(from).inHours / 24).round();
 }
 
-int minutesBetween(from, DateTime to) {
+int minutesBetween(dynamic from, DateTime to) {
   from = DateTime(from['year'], from['month'], from['day'], from['hour'], from['minute']);
   to = DateTime(to.year, to.month, to.day, to.hour, to.minute);
   return to.difference(from).inMinutes;
 }
 
-String formatDateTime(date, {format = "yyyy-MM-dd"}) {
+String formatDateTime(dynamic date, {dynamic format = "yyyy-MM-dd"}) {
   return DateFormat(format).format(date);
 }
 
-formatDate(date) {
+String formatDate(dynamic date) {
   if (date == null) {
     return '';
   }
@@ -152,21 +152,21 @@ formatDate(date) {
   return DateFormat("dd.MM.yy HH:mm").format(rawDate);
 }
 
-String formatDateBackend(date, {format = "yyyy-MM-dd"}) {
+String formatDateBackend(dynamic date, {dynamic format = "yyyy-MM-dd"}) {
   return DateFormat(format).format(date);
 }
 
-formatDateMonth(date, {format = "dd.MM.yyyy"}) {
+String formatDateMonth(dynamic date, {dynamic format = "dd.MM.yyyy"}) {
   DateTime rawDate = DateTime.parse(date);
   return DateFormat(format).format(rawDate);
 }
 
-formatDateHour(date) {
+String formatDateHour(dynamic date) {
   DateTime rawDate = DateTime.parse(date);
   return DateFormat("HH:mm").format(rawDate);
 }
 
-formatUnixTime(unixTime) {
+String formatUnixTime(dynamic unixTime) {
   if (unixTime == null) {
     return '';
   }
@@ -174,7 +174,7 @@ formatUnixTime(unixTime) {
   return DateFormat('dd.MM.yyyy HH:mm:ss').format(dt);
 }
 
-formatPhone(phone) {
+dynamic formatPhone(dynamic phone) {
   if (phone.length >= 12) {
     var x = phone.substring(0, 3);
     var y = phone.substring(3, 5);
@@ -187,7 +187,7 @@ formatPhone(phone) {
   }
 }
 
-formatMoney(amount, {decimalDigits = 0}) {
+String formatMoney(dynamic amount, {dynamic decimalDigits = 0}) {
   if (decimalDigits == 0) {
     GetStorage storage = GetStorage();
     decimalDigits = ((storage.read('decimalDigits') ?? 0).round());
@@ -231,7 +231,7 @@ String findFromArrayById(List<Map<String, dynamic>> array, dynamic id) {
   return '';
 }
 
-bool checkRole(role) {
+bool checkRole(dynamic role) {
   GetStorage storage = GetStorage();
   List<dynamic> roles = storage.read<List<dynamic>>('user_roles') ?? [];
   return roles.contains(role);
@@ -256,14 +256,14 @@ bool customIf(dynamic value) {
   return true;
 }
 
-double customNumber(value) {
+double customNumber(dynamic value) {
   if (customIf(value)) {
     return double.parse(value.toString());
   }
   return 0;
 }
 
-showSuccessToast(message, {String description = ""}) {
+void showSuccessToast(dynamic message, {String description = ""}) {
   toastification.show(
     title: Text(
       '$message',
@@ -291,7 +291,7 @@ showSuccessToast(message, {String description = ""}) {
   );
 }
 
-showDangerToast(message, {description = ""}) {
+void showDangerToast(dynamic message, {dynamic description = ""}) {
   toastification.show(
     title: Text(
       '$message',
@@ -320,7 +320,7 @@ showDangerToast(message, {description = ""}) {
   );
 }
 
-showWarningToast(message, {description = ""}) {
+void showWarningToast(dynamic message, {dynamic description = ""}) {
   toastification.show(
     title: Text(
       '$message',
@@ -349,12 +349,12 @@ showWarningToast(message, {description = ""}) {
   );
 }
 
-showFilterModal(BuildContext context, {required List<Widget> children}) async {
+Future<Object?>? showFilterModal(BuildContext context, {required List<Widget> children}) async {
   return await showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black.withOpacity(0.5),
+    barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
       return Scaffold(

@@ -81,7 +81,7 @@ class CashboxModel extends ChangeNotifier {
     data['paid'] = 0.0;
   }
 
-  setDataKey(key, value) {
+  void setDataKey(dynamic key, dynamic value) {
     data[key] = value;
     notifyListeners();
   }
@@ -120,7 +120,7 @@ class CashboxModel extends ChangeNotifier {
     calculateChange();
   }
 
-  void updateInputs(index, value) {
+  void updateInputs(dynamic index, dynamic value) {
     data['paymentTypes'][index]['amount'] = value.toString();
     data['paymentTypes'][index]['controller'].text = value.toString();
 

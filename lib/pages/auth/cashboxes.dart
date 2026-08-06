@@ -13,12 +13,12 @@ import '../../helpers/api.dart';
 class CashBoxes extends StatefulWidget {
   final List poses;
   const CashBoxes({
-    Key? key,
+    super.key,
     required this.poses,
-  }) : super(key: key);
+  });
 
   @override
-  _CashBoxesState createState() => _CashBoxesState();
+  State<CashBoxes> createState() => _CashBoxesState();
 }
 
 class _CashBoxesState extends State<CashBoxes> {
@@ -26,7 +26,7 @@ class _CashBoxesState extends State<CashBoxes> {
 
   List poses = [];
 
-  selectCashbox(pos, cashbox) async {
+  Future<void> selectCashbox(dynamic pos, dynamic cashbox) async {
     UserModel userModel = Provider.of<UserModel>(context, listen: false);
 
     final prepareprefs = {

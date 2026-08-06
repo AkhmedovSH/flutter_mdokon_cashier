@@ -20,11 +20,11 @@ import './payment.dart';
 
 class PaymentSample extends StatefulWidget {
   const PaymentSample({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
-  _PaymentSampleState createState() => _PaymentSampleState();
+  State<PaymentSample> createState() => _PaymentSampleState();
 }
 
 class _PaymentSampleState extends State<PaymentSample> {
@@ -144,7 +144,7 @@ class _PaymentSampleState extends State<PaymentSample> {
 
   List clients = [];
 
-  getClients() async {
+  Future<void> getClients() async {
     final response = await get('/services/desktop/api/clients-helper');
     //print(response);
     for (var i = 0; i < response.length; i++) {
@@ -155,7 +155,7 @@ class _PaymentSampleState extends State<PaymentSample> {
     });
   }
 
-  selectDebtorClient(Function setDebtorState, index) {
+  void selectDebtorClient(Function setDebtorState, index) {
     dynamic clientsCopy = clients;
     for (var i = 0; i < clientsCopy.length; i++) {
       clientsCopy[i]['selected'] = false;
@@ -166,10 +166,11 @@ class _PaymentSampleState extends State<PaymentSample> {
     });
   }
 
-  showSelectUserDialog() async {
+  Future<void> showSelectUserDialog() async {
     CashboxModel model = Provider.of<CashboxModel>(context, listen: false);
 
     await getClients();
+    if (!mounted) return;
     final result = await showDialog(
       context: context,
       useSafeArea: true,

@@ -7,10 +7,10 @@ import 'package:unicons/unicons.dart';
 import '/helpers/helper.dart';
 
 class OnCredit extends StatefulWidget {
-  const OnCredit({Key? key}) : super(key: key);
+  const OnCredit({super.key});
 
   @override
-  _OnCreditState createState() => _OnCreditState();
+  State<OnCredit> createState() => _OnCreditState();
 }
 
 class _OnCreditState extends State<OnCredit> {
@@ -23,7 +23,7 @@ class _OnCreditState extends State<OnCredit> {
   Future<void> _showSelectUserDialog(BuildContext context, CashboxModel model) async {
     await model.fetchClients();
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     showDialog(
       context: context,
@@ -87,7 +87,7 @@ class _OnCreditState extends State<OnCredit> {
                 ),
               ),
               actions: [
-                Container(
+                SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: ElevatedButton(
                     onPressed: () {
@@ -183,6 +183,7 @@ class _OnCreditState extends State<OnCredit> {
                 onPressed: () async {
                   if (_addClientFormKey.currentState!.validate()) {
                     await model.createNewClient(_newClientData);
+                    if (!context.mounted) return;
                     Navigator.pop(context);
                     _showSelectUserDialog(context, model); // Сразу открываем выбор после создания
                   }

@@ -13,10 +13,10 @@ import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Cheques extends StatefulWidget {
-  const Cheques({Key? key}) : super(key: key);
+  const Cheques({super.key});
 
   @override
-  _ChequesState createState() => _ChequesState();
+  State<Cheques> createState() => _ChequesState();
 }
 
 class _ChequesState extends State<Cheques> {
@@ -70,7 +70,7 @@ class _ChequesState extends State<Cheques> {
     if (mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
-  getStatus(status) {
+  String getStatus(dynamic status) {
     if (status == 0) {
       return context.tr('successful');
     } else if (status == 1) {
@@ -78,9 +78,10 @@ class _ChequesState extends State<Cheques> {
     } else if (status == 2) {
       return context.tr('item_returned');
     }
+    return '';
   }
 
-  getColor(status) {
+  Color getColor(dynamic status) {
     if (status == 0) {
       return success;
     } else if (status == 1) {
@@ -88,6 +89,7 @@ class _ChequesState extends State<Cheques> {
     } else if (status == 2) {
       return danger;
     }
+    return grey;
   }
 
   @override
@@ -224,7 +226,7 @@ class _ChequesState extends State<Cheques> {
                               child: Container(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text(
-                                  '${formatUnixTime(cheques[i]['chequeDate'])}',
+                                  formatUnixTime(cheques[i]['chequeDate']),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -242,7 +244,7 @@ class _ChequesState extends State<Cheques> {
     );
   }
 
-  selectDate(BuildContext context, date) async {
+  Future<void> selectDate(BuildContext context, date) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
@@ -268,7 +270,7 @@ class _ChequesState extends State<Cheques> {
     }
   }
 
-  showFilterDialog() {
+  void showFilterDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

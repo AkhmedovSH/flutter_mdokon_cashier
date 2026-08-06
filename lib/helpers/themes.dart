@@ -85,8 +85,6 @@ final ThemeData lightTheme = ThemeData(
     ),
   ),
 
-  dialogBackgroundColor: white,
-
   // iconTheme: IconThemeData(
   //   color: white,
   // ),
@@ -157,8 +155,8 @@ class LightThemeColors {
   static const Color inputColor = Color(0xFFFFFFFF);
   static LinearGradient gradient = LinearGradient(
     colors: [
-      const Color(0xFF004999).withOpacity(0.05),
-      const Color(0xFF007AFF).withOpacity(0.25),
+      const Color(0xFF004999).withValues(alpha: 0.05),
+      const Color(0xFF007AFF).withValues(alpha: 0.25),
     ],
     stops: const [0.3, 1],
     begin: Alignment.bottomLeft,
@@ -167,7 +165,7 @@ class LightThemeColors {
   static LinearGradient secondGradient = LinearGradient(
     colors: [
       const Color(0xFF004999),
-      const Color(0xFF007AFF).withOpacity(0.2),
+      const Color(0xFF007AFF).withValues(alpha: 0.2),
     ],
     stops: const [0.2, 1],
     begin: Alignment.bottomLeft,
@@ -183,8 +181,8 @@ class DarkThemeColors {
   static const Color inputColor = Color(0xFF171717);
   static LinearGradient gradient = LinearGradient(
     colors: [
-      Colors.white.withOpacity(0.05),
-      Colors.white.withOpacity(0.3),
+      Colors.white.withValues(alpha: 0.05),
+      Colors.white.withValues(alpha: 0.3),
     ],
     stops: const [0.3, 1],
     begin: Alignment.bottomLeft,
@@ -193,7 +191,7 @@ class DarkThemeColors {
   static LinearGradient secondGradient = LinearGradient(
     colors: [
       Colors.white,
-      Colors.white.withOpacity(0.2),
+      Colors.white.withValues(alpha: 0.2),
     ],
     stops: const [0.2, 1],
     begin: Alignment.bottomLeft,

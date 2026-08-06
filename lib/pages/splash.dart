@@ -13,10 +13,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../helpers/api.dart';
 
 class Splash extends StatefulWidget {
-  const Splash({Key? key}) : super(key: key);
+  const Splash({super.key});
 
   @override
-  _SplashState createState() => _SplashState();
+  State<Splash> createState() => _SplashState();
 }
 
 class _SplashState extends State<Splash> {
@@ -24,7 +24,7 @@ class _SplashState extends State<Splash> {
   Uri url = Uri.parse('https://play.google.com/store/apps/details?id=com.mdokon.cabinet');
   bool isRequired = false;
 
-  checkVersion() async {
+  Future<void> checkVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String localVersion = packageInfo.version;
 
@@ -52,12 +52,12 @@ class _SplashState extends State<Splash> {
     }
   }
 
-  startTimer() {
-    var _duration = const Duration(milliseconds: 1500);
-    return Timer(_duration, navigate);
+  Timer startTimer() {
+    var duration = const Duration(milliseconds: 1500);
+    return Timer(duration, navigate);
   }
 
-  navigate() async {
+  Future<void> navigate() async {
     if (storage.read('lastLogin') != null && storage.read('user') != null) {
       var lastLogin = (storage.read('lastLogin'));
       if (minutesBetween(lastLogin, DateTime.now()) < 55) {
@@ -124,7 +124,7 @@ class _SplashState extends State<Splash> {
     );
   }
 
-  showUpdateDialog() async {
+  Future<void> showUpdateDialog() async {
     await showDialog(
         context: context,
         // barrierDismissible: !isRequired,

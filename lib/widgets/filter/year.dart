@@ -2,6 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import '/helpers/helper.dart';
 import '/models/filter_model.dart';
+import '/widgets/dropdown_value.dart';
 import '/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
@@ -38,37 +39,40 @@ class _YearState extends State<Year> {
           ),
           child: Consumer<FilterModel>(
             builder: (context, filterModel, chilld) {
-              return DropdownButtonHideUnderline(
-                child: DropdownButton2<String>(
-                  value: filterModel.currentFilterData['start_date'].toString(),
-                  iconStyleData: const IconStyleData(
-                    icon: Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(UniconsLine.angle_down),
+              return DropdownValue<String>(
+                value: filterModel.currentFilterData['start_date'].toString(),
+                builder: (context, selected) => DropdownButtonHideUnderline(
+                  child: DropdownButton2<String>(
+                    valueListenable: selected,
+                    iconStyleData: const IconStyleData(
+                      icon: Padding(
+                        padding: EdgeInsets.only(right: 5),
+                        child: Icon(UniconsLine.angle_down),
+                      ),
                     ),
-                  ),
-                  dropdownStyleData: DropdownStyleData(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: CustomTheme.of(context).cardColor,
+                    dropdownStyleData: DropdownStyleData(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: CustomTheme.of(context).cardColor,
+                      ),
+                      maxHeight: 300,
+                      offset: const Offset(0, -10),
                     ),
-                    maxHeight: 300,
-                    offset: const Offset(0, -10),
-                  ),
-                  isDense: true,
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      filterModel.setFilterData('start_date', newValue);
-                    }
-                  },
-                  items: years.map(
-                    (item) {
-                      return DropdownMenuItem<String>(
-                        value: '$item-01-01',
-                        child: Text('$item'),
-                      );
+                    isDense: true,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        filterModel.setFilterData('start_date', newValue);
+                      }
                     },
-                  ).toList(),
+                    items: years.map(
+                      (item) {
+                        return DropdownItem<String>(
+                          value: '$item-01-01',
+                          child: Text('$item'),
+                        );
+                      },
+                    ).toList(),
+                  ),
                 ),
               );
             },

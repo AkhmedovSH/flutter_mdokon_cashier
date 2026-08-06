@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/models/cashier/print_model.dart';
 import 'package:provider/provider.dart';
 
-showPrinterPicker(context) async {
+Future<dynamic> showPrinterPicker(dynamic context) async {
   return await showModalBottomSheet(
     context: context,
     isScrollControlled: true, // Позволяет BottomSheet адаптироваться под контент

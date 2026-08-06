@@ -10,6 +10,7 @@ import '/models/locale_model.dart';
 import '/models/settings_model.dart';
 import '/models/theme_model.dart';
 import '/models/user_model.dart';
+import '/widgets/dropdown_value.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -83,7 +84,7 @@ class Settings extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
-                                  color: CustomTheme.of(context).textColor.withOpacity(0.5),
+                                  color: CustomTheme.of(context).textColor.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
@@ -100,7 +101,7 @@ class Settings extends StatelessWidget {
                                 ),
                               ),
                               TextSpan(
-                                text: '${formatMoney(userModel.user['posBalance'])}',
+                                text: formatMoney(userModel.user['posBalance']),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 18,
@@ -147,44 +148,47 @@ class Settings extends StatelessWidget {
                       width: 115,
                       child: Consumer<LocaleModel>(
                         builder: (context, localeModel, chilld) {
-                          return DropdownButtonHideUnderline(
-                            child: DropdownButton2<String>(
-                              value: localeModel.localeName,
-                              buttonStyleData: const ButtonStyleData(width: 125),
-                              dropdownStyleData: DropdownStyleData(
-                                width: 125,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: CustomTheme.of(context).cardColor,
+                          return DropdownValue<String>(
+                            value: localeModel.localeName,
+                            builder: (context, selected) => DropdownButtonHideUnderline(
+                              child: DropdownButton2<String>(
+                                valueListenable: selected,
+                                buttonStyleData: const ButtonStyleData(width: 125),
+                                dropdownStyleData: DropdownStyleData(
+                                  width: 125,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: CustomTheme.of(context).cardColor,
+                                  ),
+                                  offset: const Offset(-10, -10),
                                 ),
-                                offset: const Offset(-10, -10),
-                              ),
-                              isDense: true,
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  Locale locale = const Locale('ru', '');
-                                  if (newValue == 'ru') {
-                                    locale = const Locale('ru', '');
+                                isDense: true,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    Locale locale = const Locale('ru', '');
+                                    if (newValue == 'ru') {
+                                      locale = const Locale('ru', '');
+                                    }
+                                    if (newValue == 'uz') {
+                                      locale = const Locale('uz', 'Latn');
+                                    }
+                                    context.setLocale(locale);
+                                    localeModel.setLocale(locale);
                                   }
-                                  if (newValue == 'uz') {
-                                    locale = const Locale('uz', 'Latn');
-                                  }
-                                  context.setLocale(locale);
-                                  localeModel.setLocale(locale);
-                                }
-                              },
-                              items: languages.map(
-                                (Map<String, dynamic> language) {
-                                  return DropdownMenuItem<String>(
-                                    value: language['locale'],
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                      child: Text(language['name']!),
-                                    ),
-                                  );
                                 },
-                              ).toList(),
+                                items: languages.map(
+                                  (Map<String, dynamic> language) {
+                                    return DropdownItem<String>(
+                                      value: language['locale'],
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        child: Text(language['name']!),
+                                      ),
+                                    );
+                                  },
+                                ).toList(),
+                              ),
                             ),
                           );
                         },
@@ -272,7 +276,7 @@ class CardItemSwitch extends StatelessWidget {
                         triggerMode: TooltipTriggerMode.tap,
                         showDuration: const Duration(seconds: 3),
                         decoration: BoxDecoration(
-                          color: CustomTheme.of(context).textColor.withOpacity(0.7),
+                          color: CustomTheme.of(context).textColor.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         textAlign: TextAlign.center,

@@ -66,11 +66,13 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         _controller!.reverse();
         await Future.delayed(const Duration(milliseconds: 150));
-        return true;
+        if (context.mounted) Navigator.of(context).pop(result);
       },
       child: SlideTransition(
         position: _offsetAnimation!,

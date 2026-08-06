@@ -4,10 +4,10 @@ import '/widgets/custom_app_bar.dart';
 import '../../helpers/helper.dart';
 
 class SalesOnCredit extends StatefulWidget {
-  const SalesOnCredit({Key? key}) : super(key: key);
+  const SalesOnCredit({super.key});
 
   @override
-  _SalesOnCreditState createState() => _SalesOnCreditState();
+  State<SalesOnCredit> createState() => _SalesOnCreditState();
 }
 
 class _SalesOnCreditState extends State<SalesOnCredit> {

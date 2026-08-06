@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Return extends StatefulWidget {
-  const Return({Key? key}) : super(key: key);
+  const Return({super.key});
 
   @override
   State<Return> createState() => _ReturnState();
@@ -47,7 +47,7 @@ class _ReturnState extends State<Return> {
   int focusedFieldIndex = 0;
   bool scrollMargin = false;
 
-  searchCheque(id) async {
+  Future<void> searchCheque(dynamic id) async {
     dynamic response;
     if (id != null) {
       response = await get('/services/desktop/api/cheque-byNumber/$id/${sendData['posId']}');
@@ -74,7 +74,7 @@ class _ReturnState extends State<Return> {
     }
   }
 
-  addToReturnList(item, index) {
+  void addToReturnList(dynamic item, dynamic index) {
     if (item['returned'] == 0) {
       item['initialQuantity'] = item['quantity'];
     }
@@ -110,7 +110,7 @@ class _ReturnState extends State<Return> {
     });
   }
 
-  addToItemsList(item, index) {
+  void addToItemsList(dynamic item, dynamic index) {
     item['quantity'] = item['initialQuantity'];
 
     setState(() {
@@ -129,7 +129,7 @@ class _ReturnState extends State<Return> {
     });
   }
 
-  setQuantity(item, i, value) {
+  void setQuantity(dynamic item, dynamic i, dynamic value) {
     var itemCopy = Map.from(item);
 
     if (value == '' || value == 0) {
@@ -179,7 +179,7 @@ class _ReturnState extends State<Return> {
     return;
   }
 
-  isValid() {
+  bool isValid() {
     dynamic error = false;
     if (sendData['itemsList'].length == 0) {
       return false;
@@ -199,7 +199,7 @@ class _ReturnState extends State<Return> {
     }
   }
 
-  returnCheque() async {
+  Future<void> returnCheque() async {
     if (!isValid()) {
       showDangerToast(context.tr('check_quantity'));
       return;
@@ -232,13 +232,13 @@ class _ReturnState extends State<Return> {
       }
     });
     final response = await post('/services/desktop/api/cheque-returned', sendData);
-    if (response['success']) {
+    if (response['success'] && mounted) {
       showSuccessToast(context.tr('return_completed_successfully'));
       setInitState();
     }
   }
 
-  setInitState() async {
+  Future<void> setInitState() async {
     setState(() {
       cashbox = (storage.read('cashbox')!);
       if (storage.read('shift') != null) {
@@ -273,7 +273,7 @@ class _ReturnState extends State<Return> {
     });
   }
 
-  getData() async {
+  Future<void> getData() async {
     setState(() {
       cashbox = storage.read('cashbox');
       if (storage.read('shift') != null) {
@@ -410,7 +410,7 @@ class _ReturnState extends State<Return> {
                         child: Row(
                           children: [
                             Text(
-                              context.tr('date') + ': ',
+                              '${context.tr('date')}: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: grey,
@@ -419,7 +419,7 @@ class _ReturnState extends State<Return> {
                             Container(
                               margin: EdgeInsets.only(right: 20),
                               child: Text(
-                                '${data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00'}',
+                                data['chequeDate'] != null ? formatUnixTime(data['chequeDate']) : '00.00.0000 - 00:00',
                               ),
                             ),
                             Text(
@@ -519,7 +519,7 @@ class _ReturnState extends State<Return> {
                                             textAlign: TextAlign.center,
                                           )
                                         : Text(
-                                            '${formatMoney(itemsList[i]['salePrice'])}',
+                                            formatMoney(itemsList[i]['salePrice']),
                                             textAlign: TextAlign.center,
                                           ),
                                   ),
@@ -543,7 +543,7 @@ class _ReturnState extends State<Return> {
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 8),
                                     child: Text(
-                                      '${formatMoney(itemsList[i]['totalPrice'])}',
+                                      formatMoney(itemsList[i]['totalPrice']),
                                       textAlign: TextAlign.end,
                                     ),
                                   ),
@@ -670,7 +670,7 @@ class _ReturnState extends State<Return> {
                                           height: 30,
                                           alignment: Alignment.center,
                                           child: Text(
-                                            '${formatMoney(sendData['itemsList'][i]['salePrice'])}',
+                                            formatMoney(sendData['itemsList'][i]['salePrice']),
                                             style: TextStyle(color: Color(0xFF495057)),
                                             textAlign: TextAlign.center,
                                           ),
@@ -731,7 +731,7 @@ class _ReturnState extends State<Return> {
                                     height: 30,
                                     alignment: Alignment.centerRight,
                                     child: Text(
-                                      '${formatMoney(sendData['itemsList'][i]['totalPrice'])}',
+                                      formatMoney(sendData['itemsList'][i]['totalPrice']),
                                       style: TextStyle(color: Color(0xFF495057)),
                                       textAlign: TextAlign.end,
                                     ),
@@ -769,7 +769,7 @@ class _ReturnState extends State<Return> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${formatMoney(sendData['totalAmount'])}',
+                      formatMoney(sendData['totalAmount']),
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -799,7 +799,7 @@ class _ReturnState extends State<Return> {
                   elevation: 0,
                   padding: EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: danger,
-                  disabledBackgroundColor: danger.withOpacity(0.65),
+                  disabledBackgroundColor: danger.withValues(alpha: 0.65),
                   disabledForegroundColor: white,
                 ),
                 child: Text(

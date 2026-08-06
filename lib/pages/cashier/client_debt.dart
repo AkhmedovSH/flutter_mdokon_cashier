@@ -5,10 +5,10 @@ import '/widgets/custom_app_bar.dart';
 import '../../helpers/helper.dart';
 
 class ClientDebt extends StatefulWidget {
-  const ClientDebt({Key? key}) : super(key: key);
+  const ClientDebt({super.key});
 
   @override
-  _ClientDebtState createState() => _ClientDebtState();
+  State<ClientDebt> createState() => _ClientDebtState();
 }
 
 class _ClientDebtState extends State<ClientDebt> {

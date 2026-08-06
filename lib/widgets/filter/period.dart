@@ -13,7 +13,7 @@ class Period extends StatefulWidget {
 }
 
 class _PeriodState extends State<Period> {
-  selectDate(BuildContext context, int date) async {
+  Future<void> selectDate(BuildContext context, int date) async {
     FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
     DateTime startDate = DateTime.parse(filterModel.currentFilterData['startDate']);
     DateTime endDate = DateTime.parse(filterModel.currentFilterData['endDate']);
@@ -65,7 +65,7 @@ class _PeriodState extends State<Period> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${formatDateMonth(filterModel.currentFilterData['startDate'])}',
+                              formatDateMonth(filterModel.currentFilterData['startDate']),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -96,7 +96,7 @@ class _PeriodState extends State<Period> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${formatDateMonth(filterModel.currentFilterData['endDate'])}',
+                              formatDateMonth(filterModel.currentFilterData['endDate']),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

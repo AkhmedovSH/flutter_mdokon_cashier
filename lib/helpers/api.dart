@@ -21,7 +21,7 @@ BaseOptions options = BaseOptions(
 );
 var dio = Dio(options);
 
-checkToken() async {
+Future<bool> checkToken() async {
   if (storage.read('lastLogin') != null) {
     var lastLogin = (storage.read('lastLogin'));
     if (minutesBetween(lastLogin, DateTime.now()) >= 55) {
@@ -47,6 +47,7 @@ checkToken() async {
       }
     }
   }
+  return false;
 }
 
 Future get(String url, {payload, isGuest = false}) async {
@@ -135,14 +136,14 @@ Future put(String url, dynamic payload) async {
   return false;
 }
 
-bool httpOk(response) {
+bool httpOk(dynamic response) {
   if (response != null && response != false && response != {} && response != "") {
     return true;
   }
   return false;
 }
 
-statuscheker(e) async {
+Future<void> statuscheker(dynamic e) async {
   print(e);
   if (e.response != null && e.response.statusCode != null) {
     log(jsonEncode(e.response.toString()));
@@ -182,7 +183,7 @@ Future lPost(String url, dynamic payload) async {
   try {
     dio.options.headers["authorization"] = "";
     final response = await dio.post(
-      'https://cabinet.cashbek.uz' + url,
+      'https://cabinet.cashbek.uz$url',
       data: payload,
     );
     return response.data;

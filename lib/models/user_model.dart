@@ -39,7 +39,7 @@ class UserModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future getPaymentTypes(posId) async {
+  Future getPaymentTypes(dynamic posId) async {
     final response = await get("/services/desktop/api/payment-type-helper/$posId");
     try {
       if (httpOk(response) && response.length > 0) {
@@ -53,7 +53,7 @@ class UserModel extends ChangeNotifier {
     }
   }
 
-  Future getCashboxSettings(posId) async {
+  Future getCashboxSettings(dynamic posId) async {
     final response = await get("/services/desktop/api/cashbox-settings/$posId");
     response['cashboxSettings'] = jsonDecode(response['cashboxSettings']);
     response['chequeSettings'] = jsonDecode(response['chequeSettings']);
@@ -62,7 +62,7 @@ class UserModel extends ChangeNotifier {
     storage.write('cashboxSettings', response);
   }
 
-  setVersion(String version) async {
+  Future<void> setVersion(String version) async {
     localVersion = version;
     notifyListeners();
   }

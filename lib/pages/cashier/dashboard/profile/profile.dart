@@ -14,7 +14,7 @@ import '/helpers/api.dart';
 import '../../../../helpers/helper.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({Key? key}) : super(key: key);
+  const Profile({super.key});
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -42,7 +42,7 @@ class _ProfileState extends State<Profile> {
     getCashboxInfo();
   }
 
-  buildRow(IconData icon, String title) {
+  Container buildRow(IconData icon, String title) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
       margin: EdgeInsets.only(bottom: 16),
@@ -220,7 +220,7 @@ class _ProfileState extends State<Profile> {
 
     storage.remove('user');
     storage.remove('access_token');
-    if (response['success']) {
+    if (response['success'] && mounted) {
       context.go('/auth');
     }
     //print(response);
@@ -236,7 +236,7 @@ class _ProfileState extends State<Profile> {
     //print(response);
   }
 
-  openModal(type) {
+  void openModal(dynamic type) {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(

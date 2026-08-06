@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get_storage/get_storage.dart';
-import 'package:go_router/go_router.dart';
 import 'package:vibration/vibration.dart';
 import '/models/data_model.dart';
 import '/models/loading_model.dart';
@@ -22,12 +21,12 @@ import 'package:unicons/unicons.dart';
 class Search extends StatefulWidget {
   final Map<String, dynamic>? arguments;
   const Search({
-    Key? key,
+    super.key,
     required this.arguments,
-  }) : super(key: key);
+  });
 
   @override
-  _SearchState createState() => _SearchState();
+  State<Search> createState() => _SearchState();
 }
 
 class _SearchState extends State<Search> {
@@ -42,7 +41,7 @@ class _SearchState extends State<Search> {
   Map cashbox = {};
   // Map arguments = {};
 
-  addProductToList(i) {
+  void addProductToList(dynamic i) {
     products[i]['selected'] = false;
     if (products[i]['quantity'] == null) {
       products[i]['quantity'] = '1';
@@ -72,7 +71,7 @@ class _SearchState extends State<Search> {
           ),
         ),
         content: Text(
-          products[i]['productName'] + ' - ' + products[i]['quantity'].toString() + ' ' + context.tr('added'),
+          '${products[i]['productName']} - ${products[i]['quantity']} ${context.tr('added')}',
           style: TextStyle(
             color: white,
           ),
@@ -85,7 +84,7 @@ class _SearchState extends State<Search> {
     setState(() {});
   }
 
-  searchProducts(value) {
+  void searchProducts(dynamic value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       setState(() {
@@ -121,11 +120,11 @@ class _SearchState extends State<Search> {
           products = [];
         });
       }
-      Provider.of<LoadingModel>(context, listen: false).hideLoader();
+      if (mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
     });
   }
 
-  getQrCode() async {
+  Future<void> getQrCode() async {
     await Permission.camera.request();
     var status = await Permission.camera.status;
 
@@ -156,7 +155,7 @@ class _SearchState extends State<Search> {
     }
   }
 
-  getCashbox() async {}
+  Future<void> getCashbox() async {}
 
   @override
   void initState() {
@@ -166,11 +165,10 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
         ScaffoldMessenger.of(context).clearSnackBars();
-        context.pop();
-        return true;
       },
       child: Scaffold(
         appBar: CustomAppBar(
@@ -356,7 +354,7 @@ class _SearchState extends State<Search> {
                                                   ? item['wholesalePrice']
                                                   : widget.arguments!['activePrice'] == 2
                                                   ? item['bankPrice']
-                                                  : item['salePrice']) ?? 0} ${widget.arguments!['currencyName']}',
+                                                  : item['salePrice'])} ${widget.arguments!['currencyName']}',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -365,7 +363,7 @@ class _SearchState extends State<Search> {
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
-                                        '${context.tr('balance')}: ${formatMoney(item['balance']) ?? 0}',
+                                        '${context.tr('balance')}: ${formatMoney(item['balance'])}',
                                         style: TextStyle(color: grey),
                                       ),
                                     ],

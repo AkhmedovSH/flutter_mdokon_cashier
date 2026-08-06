@@ -5,6 +5,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
+import '/widgets/dropdown_value.dart';
 import '/widgets/filter/label.dart';
 
 import '/models/filter_model.dart';
@@ -46,38 +47,41 @@ class Dropdown extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   color: CustomTheme.of(context).cardColor,
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton2<String>(
-                    value: filterModel.currentFilterData[filterKey].toString(),
-                    buttonStyleData: const ButtonStyleData(),
-                    iconStyleData: const IconStyleData(
-                      icon: Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(UniconsLine.angle_down),
+                child: DropdownValue<String>(
+                  value: filterModel.currentFilterData[filterKey].toString(),
+                  builder: (context, selected) => DropdownButtonHideUnderline(
+                    child: DropdownButton2<String>(
+                      valueListenable: selected,
+                      buttonStyleData: const ButtonStyleData(),
+                      iconStyleData: const IconStyleData(
+                        icon: Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(UniconsLine.angle_down),
+                        ),
                       ),
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomTheme.of(context).cardColor,
+                        ),
+                        maxHeight: 300,
+                        offset: const Offset(0, -10),
                       ),
-                      maxHeight: 300,
-                      offset: const Offset(0, -10),
-                    ),
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        filterModel.setFilterData(filterKey, newValue);
-                      }
-                    },
-                    items: items.map(
-                      (Map<String, dynamic> item) {
-                        return DropdownMenuItem<String>(
-                          value: item[itemValue].toString(),
-                          child: Text(translate ? context.tr(item[itemName] ?? '') : (item[itemName] ?? '')),
-                        );
+                      isDense: true,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          filterModel.setFilterData(filterKey, newValue);
+                        }
                       },
-                    ).toList(),
+                      items: items.map(
+                        (Map<String, dynamic> item) {
+                          return DropdownItem<String>(
+                            value: item[itemValue].toString(),
+                            child: Text(translate ? context.tr(item[itemName] ?? '') : (item[itemName] ?? '')),
+                          );
+                        },
+                      ).toList(),
+                    ),
                   ),
                 ),
               );

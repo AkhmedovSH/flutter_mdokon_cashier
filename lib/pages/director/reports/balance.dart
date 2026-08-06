@@ -18,7 +18,7 @@ class PosBalance extends StatefulWidget {
   const PosBalance({super.key});
 
   @override
-  _PosBalanceState createState() => _PosBalanceState();
+  State<PosBalance> createState() => _PosBalanceState();
 }
 
 class _PosBalanceState extends State<PosBalance> {
@@ -189,7 +189,7 @@ class _PosBalanceState extends State<PosBalance> {
                         SizedBox(
                           width: 100,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
+                            formatMoney(data[i]['totalAmount']),
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -204,7 +204,7 @@ class _PosBalanceState extends State<PosBalance> {
     );
   }
 
-  showFilterDialog() async {
+  Future<dynamic> showFilterDialog() async {
     return await showFilterModal(
       context,
       children: [

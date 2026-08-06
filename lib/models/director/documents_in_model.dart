@@ -66,7 +66,7 @@ class DocumentsInModel extends ChangeNotifier {
 
   Map get currentItem => data;
 
-  getProductOums() async {
+  Future<void> getProductOums() async {
     final response = await get('/services/web/api/product-uom-helper');
     if (httpOk(response)) {
       uoms = response;
@@ -74,7 +74,7 @@ class DocumentsInModel extends ChangeNotifier {
     }
   }
 
-  createProduct(BuildContext context) async {
+  Future<void> createProduct(BuildContext context) async {
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
     var productCopy = Map.from(product);
@@ -92,17 +92,17 @@ class DocumentsInModel extends ChangeNotifier {
       newProduct['focus'] = FocusNode();
       data['productList'].insert(0, newProduct);
       clearProduct();
-      context.pop();
+      if (context.mounted) context.pop();
       Timer(Duration(milliseconds: 300), () {
         data['productList'][0]['focus'].requestFocus();
       });
     }
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    if (context.mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
 
     notifyListeners();
   }
 
-  clearProduct() {
+  void clearProduct() {
     productControllers['name']?.text = '';
     productControllers['barcode']?.text = '';
     productControllers['gtin']?.text = '';
@@ -111,18 +111,18 @@ class DocumentsInModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  setProductValue(String key, value) {
+  void setProductValue(String key, value) {
     product[key] = value;
     notifyListeners();
   }
 
-  generateBarcode() {
+  void generateBarcode() {
     final random = Random();
     int barcode = 100000 + random.nextInt(900000);
     productControllers['barcode']?.text = '$barcode';
   }
 
-  getOfdProduct() async {
+  Future<void> getOfdProduct() async {
     final response = await get('services/web/api/get-ofd-product?barcode=${productControllers['barcode']?.text}');
     if (httpOk(response)) {
       productControllers['name']?.text = response['name'];
@@ -131,12 +131,12 @@ class DocumentsInModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  setDataValue(String key, dynamic value) {
+  void setDataValue(String key, dynamic value) {
     data[key] = value;
     notifyListeners();
   }
 
-  setProductListValue(int index, String key, dynamic value) {
+  void setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
     if (data['productList'][index]['controller'] != null && key == 'quantity') {
       data['productList'][index]['controller'].text = value.toString();
@@ -144,13 +144,13 @@ class DocumentsInModel extends ChangeNotifier {
     countTotalAmount();
   }
 
-  setPaidAmount(String key, dynamic value) {
+  void setPaidAmount(String key, dynamic value) {
     data[key] = value;
     paidAmountController.text = value.toString();
     notifyListeners();
   }
 
-  clearControllers() {
+  void clearControllers() {
     for (var i = 0; i < data['productList'].length; i++) {
       data['productList'][i]['controller'] = null;
       data['productList'][i]['focus'] = null;
@@ -172,8 +172,8 @@ class DocumentsInModel extends ChangeNotifier {
       response = await post('/services/web/api/documents-in-draft', sendData);
     }
     if (httpOk(response)) {
-      await getPageList(context);
-      context.go('/director/documents-in');
+      if (context.mounted) await getPageList(context);
+      if (context.mounted) context.go('/director/documents-in');
 
       data = {
         "productList": [],
@@ -202,7 +202,7 @@ class DocumentsInModel extends ChangeNotifier {
     }
     notifyListeners();
 
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    if (context.mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
   }
 
   Future<void> save(BuildContext context) async {
@@ -239,12 +239,12 @@ class DocumentsInModel extends ChangeNotifier {
           "totalIncome": 0,
           "totalSale": 0,
         };
-        await getPageList(context);
-        context.go('/director/documents-in');
+        if (context.mounted) await getPageList(context);
+        if (context.mounted) context.go('/director/documents-in');
       }
     }
 
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    if (context.mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
     notifyListeners();
   }
 
@@ -267,7 +267,7 @@ class DocumentsInModel extends ChangeNotifier {
     return !error;
   }
 
-  redirect(BuildContext context) async {
+  Future<void> redirect(BuildContext context) async {
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
     final dataModel = Provider.of<DataModel>(context, listen: false);
@@ -276,11 +276,12 @@ class DocumentsInModel extends ChangeNotifier {
       dataModel.fetchBanks(data['currencyId']),
       dataModel.fetchWallets(data['currencyId']),
     ]);
+    if (!context.mounted) return;
     Provider.of<LoadingModel>(context, listen: false).hideLoader();
     context.go('/director/documents-in/create/complete');
   }
 
-  countTotalAmount() {
+  void countTotalAmount() {
     double temporaryTotalQuantity = 0;
     double temporaryTotalIncome = 0;
     double temporaryTotalSale = 0;
@@ -363,7 +364,7 @@ class DocumentsInModel extends ChangeNotifier {
     notifyListeners(); // Уведомляем слушателей об изменении
   }
 
-  Future<void> getData(context, id) async {
+  Future<void> getData(dynamic context, dynamic id) async {
     Provider.of<LoadingModel>(context, listen: false).showLoader(num: 2);
 
     final response = await get('/services/web/api/documents-in/$id');

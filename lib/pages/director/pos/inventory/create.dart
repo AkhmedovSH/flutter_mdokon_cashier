@@ -9,6 +9,7 @@ import '/models/data_model.dart';
 import '/models/director/inventory_model.dart';
 
 import '/widgets/custom_app_bar.dart';
+import '/widgets/dropdown_value.dart';
 import '/widgets/filter/label.dart';
 import '/widgets/table/table.dart';
 
@@ -36,7 +37,7 @@ class InventoryCreate extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DropdownItem(
+                    DropdownField(
                       label: 'pos',
                       items: dataModel.poses,
                       dataKey: 'posId',
@@ -219,12 +220,12 @@ class InventoryCreate extends StatelessWidget {
   }
 }
 
-class DropdownItem extends StatelessWidget {
+class DropdownField extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final String label;
   final String dataKey;
 
-  const DropdownItem({
+  const DropdownField({
     super.key,
     required this.items,
     required this.label,
@@ -248,36 +249,39 @@ class DropdownItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   color: CustomTheme.of(context).cardColor,
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton2<String>(
-                    value: inventoryModel.data[dataKey].toString(),
-                    buttonStyleData: const ButtonStyleData(),
-                    iconStyleData: const IconStyleData(
-                      icon: Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(UniconsLine.angle_down),
+                child: DropdownValue<String>(
+                  value: inventoryModel.data[dataKey].toString(),
+                  builder: (context, selected) => DropdownButtonHideUnderline(
+                    child: DropdownButton2<String>(
+                      valueListenable: selected,
+                      buttonStyleData: const ButtonStyleData(),
+                      iconStyleData: const IconStyleData(
+                        icon: Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(UniconsLine.angle_down),
+                        ),
                       ),
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomTheme.of(context).cardColor,
+                        ),
+                        maxHeight: 300,
+                        offset: const Offset(0, -10),
                       ),
-                      maxHeight: 300,
-                      offset: const Offset(0, -10),
-                    ),
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      inventoryModel.setDataValue(dataKey, newValue);
-                    },
-                    items: items.map(
-                      (Map<String, dynamic> item) {
-                        return DropdownMenuItem<String>(
-                          value: item['id'].toString(),
-                          child: Text(item['name']),
-                        );
+                      isDense: true,
+                      onChanged: (String? newValue) {
+                        inventoryModel.setDataValue(dataKey, newValue);
                       },
-                    ).toList(),
+                      items: items.map(
+                        (Map<String, dynamic> item) {
+                          return DropdownItem<String>(
+                            value: item['id'].toString(),
+                            child: Text(item['name']),
+                          );
+                        },
+                      ).toList(),
+                    ),
                   ),
                 ),
               );

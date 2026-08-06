@@ -15,6 +15,7 @@ import '/models/settings_model.dart';
 import '/models/theme_model.dart';
 
 import '/widgets/custom_app_bar.dart';
+import '/widgets/dropdown_value.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:unicons/unicons.dart';
@@ -24,7 +25,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../helpers/helper.dart';
 
 class Settings extends StatefulWidget {
-  const Settings({Key? key}) : super(key: key);
+  const Settings({super.key});
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -69,7 +70,7 @@ class _SettingsState extends State<Settings> {
   //   getData();
   // }
 
-  getData() {
+  void getData() {
     if (storage.read('settings') != null) {
       settings = {...settings, ...(storage.read('settings') ?? {})};
     }
@@ -80,7 +81,7 @@ class _SettingsState extends State<Settings> {
     setState(() {});
   }
 
-  checkStatus() async {
+  Future<void> checkStatus() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.bluetooth,
       Permission.bluetoothScan,
@@ -165,44 +166,47 @@ class _SettingsState extends State<Settings> {
                       width: 115,
                       child: Consumer<LocaleModel>(
                         builder: (context, localeModel, chilld) {
-                          return DropdownButtonHideUnderline(
-                            child: DropdownButton2<String>(
-                              value: localeModel.localeName,
-                              buttonStyleData: const ButtonStyleData(width: 125),
-                              dropdownStyleData: DropdownStyleData(
-                                width: 125,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: CustomTheme.of(context).cardColor,
+                          return DropdownValue<String>(
+                            value: localeModel.localeName,
+                            builder: (context, selected) => DropdownButtonHideUnderline(
+                              child: DropdownButton2<String>(
+                                valueListenable: selected,
+                                buttonStyleData: const ButtonStyleData(width: 125),
+                                dropdownStyleData: DropdownStyleData(
+                                  width: 125,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: CustomTheme.of(context).cardColor,
+                                  ),
+                                  offset: const Offset(-10, -10),
                                 ),
-                                offset: const Offset(-10, -10),
-                              ),
-                              isDense: true,
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  Locale locale = const Locale('ru', '');
-                                  if (newValue == 'ru') {
-                                    locale = const Locale('ru', '');
+                                isDense: true,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    Locale locale = const Locale('ru', '');
+                                    if (newValue == 'ru') {
+                                      locale = const Locale('ru', '');
+                                    }
+                                    if (newValue == 'uz') {
+                                      locale = const Locale('uz', 'Latn');
+                                    }
+                                    context.setLocale(locale);
+                                    localeModel.setLocale(locale);
                                   }
-                                  if (newValue == 'uz') {
-                                    locale = const Locale('uz', 'Latn');
-                                  }
-                                  context.setLocale(locale);
-                                  localeModel.setLocale(locale);
-                                }
-                              },
-                              items: languages.map(
-                                (Map<String, dynamic> language) {
-                                  return DropdownMenuItem<String>(
-                                    value: language['locale'],
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                      child: Text(language['name']!),
-                                    ),
-                                  );
                                 },
-                              ).toList(),
+                                items: languages.map(
+                                  (Map<String, dynamic> language) {
+                                    return DropdownItem<String>(
+                                      value: language['locale'],
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        child: Text(language['name']!),
+                                      ),
+                                    );
+                                  },
+                                ).toList(),
+                              ),
                             ),
                           );
                         },
@@ -241,7 +245,7 @@ class _SettingsState extends State<Settings> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      context.tr('settings_description_11', args: ['${formatMoney(500.99999)}']),
+                      context.tr('settings_description_11', args: [(formatMoney(500.99999))]),
                       style: TextStyle(
                         fontSize: 12,
                       ),
@@ -348,34 +352,37 @@ class _SettingsState extends State<Settings> {
                       width: 115,
                       child: Consumer<PrinterModel>(
                         builder: (context, model, chilld) {
-                          return DropdownButtonHideUnderline(
-                            child: DropdownButton2<String>(
-                              value: model.printerSize,
-                              buttonStyleData: const ButtonStyleData(width: 125),
-                              dropdownStyleData: DropdownStyleData(
-                                width: 125,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: CustomTheme.of(context).cardColor,
+                          return DropdownValue<String>(
+                            value: model.printerSize,
+                            builder: (context, selected) => DropdownButtonHideUnderline(
+                              child: DropdownButton2<String>(
+                                valueListenable: selected,
+                                buttonStyleData: const ButtonStyleData(width: 125),
+                                dropdownStyleData: DropdownStyleData(
+                                  width: 125,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: CustomTheme.of(context).cardColor,
+                                  ),
+                                  offset: const Offset(-10, -10),
                                 ),
-                                offset: const Offset(-10, -10),
-                              ),
-                              isDense: true,
-                              onChanged: (String? newValue) {
-                                model.setPrinterSize(newValue);
-                              },
-                              items: sizes.map(
-                                (Map<String, dynamic> item) {
-                                  return DropdownMenuItem<String>(
-                                    value: item['id'],
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                      child: Text(item['name']!),
-                                    ),
-                                  );
+                                isDense: true,
+                                onChanged: (String? newValue) {
+                                  model.setPrinterSize(newValue);
                                 },
-                              ).toList(),
+                                items: sizes.map(
+                                  (Map<String, dynamic> item) {
+                                    return DropdownItem<String>(
+                                      value: item['id'],
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        child: Text(item['name']!),
+                                      ),
+                                    );
+                                  },
+                                ).toList(),
+                              ),
                             ),
                           );
                         },
@@ -564,9 +571,9 @@ class _SettingsState extends State<Settings> {
   //   }
   // }
 
-  saveDefaultPrinter() {}
+  void saveDefaultPrinter() {}
 
-  openBluetoothDevices() async {
+  Future<void> openBluetoothDevices() async {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -718,7 +725,7 @@ class CardItem extends StatelessWidget {
                 ),
                 CupertinoSwitch(
                   value: value,
-                  activeColor: mainColor,
+                  activeTrackColor: mainColor,
                   onChanged: onChanged,
                 ),
               ],
@@ -727,7 +734,7 @@ class CardItem extends StatelessWidget {
               Positioned.fill(
                 top: 0,
                 child: Container(
-                  color: CustomTheme.of(context).cardColor.withOpacity(0.8),
+                  color: CustomTheme.of(context).cardColor.withValues(alpha: 0.8),
                   width: MediaQuery.of(context).size.width,
                   alignment: Alignment.center,
                   height: double.infinity,

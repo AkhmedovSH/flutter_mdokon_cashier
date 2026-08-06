@@ -16,9 +16,9 @@ import '../../helpers/helper.dart';
 class AgentDashboard extends StatefulWidget {
   final int initialPage;
   const AgentDashboard({
-    Key? key,
+    super.key,
     this.initialPage = 0,
-  }) : super(key: key);
+  });
 
   @override
   State<AgentDashboard> createState() => _AgentDashboardState();
@@ -34,7 +34,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
   int currentIndex = 0;
   bool expanded = true;
 
-  closeApp() async {
+  Future<void> closeApp() async {
     if (storage.read('account') != null) {
       storage.remove('access_token');
       storage.remove('username');
@@ -44,7 +44,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
     SystemNavigator.pop();
   }
 
-  changeExpanded() {
+  void changeExpanded() {
     setState(() {});
   }
 
@@ -60,7 +60,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
     super.dispose();
   }
 
-  getDashBoardItem(IconData icon, String text) {
+  BottomNavigationBarItem getDashBoardItem(IconData icon, String text) {
     return BottomNavigationBarItem(
       icon: Icon(icon),
       label: context.tr(text),
@@ -73,10 +73,11 @@ class _AgentDashboardState extends State<AgentDashboard> {
 
     print(dashboardModel.currentIndex);
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         showSecondModalConfirm();
-        return false;
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -151,7 +152,7 @@ class _AgentDashboardState extends State<AgentDashboard> {
     );
   }
 
-  showSecondModalConfirm() {
+  void showSecondModalConfirm() {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(

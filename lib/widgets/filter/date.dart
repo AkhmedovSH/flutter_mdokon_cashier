@@ -19,7 +19,7 @@ class Date extends StatefulWidget {
 }
 
 class _DateState extends State<Date> {
-  selectDate(BuildContext context) async {
+  Future<void> selectDate(BuildContext context) async {
     FilterModel filterModel = Provider.of<FilterModel>(context, listen: false);
     DateTime date =
         filterModel.currentFilterData[widget.filterKey] != '' ? DateTime.parse(filterModel.currentFilterData[widget.filterKey]) : DateTime.now();
@@ -67,7 +67,7 @@ class _DateState extends State<Date> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        format ? '${formatDateMonth(filterModel.currentFilterData[widget.filterKey])}' : '',
+                        format ? formatDateMonth(filterModel.currentFilterData[widget.filterKey]) : '',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

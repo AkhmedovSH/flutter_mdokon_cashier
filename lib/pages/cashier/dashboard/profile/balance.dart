@@ -5,7 +5,7 @@ import '/helpers/api.dart';
 import '/widgets/custom_app_bar.dart';
 
 class Balance extends StatefulWidget {
-  const Balance({Key? key}) : super(key: key);
+  const Balance({super.key});
 
   @override
   State<Balance> createState() => _BalanceState();
@@ -14,7 +14,7 @@ class Balance extends StatefulWidget {
 class _BalanceState extends State<Balance> {
   List data = [];
 
-  getData() async {
+  Future<void> getData() async {
     final response = await get('/services/desktop/api/get-all-balance-product-list');
     if (response != null) {
       setState(() {

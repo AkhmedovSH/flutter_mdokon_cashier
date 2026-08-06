@@ -5,7 +5,7 @@ import '/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
 
 class Info extends StatelessWidget {
-  const Info({Key? key}) : super(key: key);
+  const Info({super.key});
 
   static List shortCutList = [
     {

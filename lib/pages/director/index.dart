@@ -13,9 +13,9 @@ import '../../../helpers/helper.dart';
 class DirectorDashboard extends StatefulWidget {
   final int initialPage;
   const DirectorDashboard({
-    Key? key,
+    super.key,
     this.initialPage = 0,
-  }) : super(key: key);
+  });
 
   @override
   State<DirectorDashboard> createState() => _DashboardState();
@@ -30,7 +30,7 @@ class _DashboardState extends State<DirectorDashboard> {
   int currentIndex = 0;
   bool expanded = true;
 
-  closeApp() async {
+  Future<void> closeApp() async {
     if (storage.read('account') != null) {
       storage.remove('access_token');
       storage.remove('username');
@@ -40,11 +40,11 @@ class _DashboardState extends State<DirectorDashboard> {
     SystemNavigator.pop();
   }
 
-  changeExpanded() {
+  void changeExpanded() {
     setState(() {});
   }
 
-  changeIndex(int index) {
+  void changeIndex(int index) {
     setState(() {
       currentIndex = index;
     });
@@ -63,10 +63,11 @@ class _DashboardState extends State<DirectorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         showSecondModalConfirm();
-        return false;
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -88,7 +89,7 @@ class _DashboardState extends State<DirectorDashboard> {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: black.withOpacity(0.3),
+                color: black.withValues(alpha: 0.3),
                 width: 0.33,
               ),
             ),
@@ -142,7 +143,7 @@ class _DashboardState extends State<DirectorDashboard> {
     );
   }
 
-  showSecondModalConfirm() {
+  void showSecondModalConfirm() {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(

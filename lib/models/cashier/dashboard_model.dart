@@ -6,16 +6,16 @@ class DashboardModel extends ChangeNotifier {
 
   Map returnCheque = {};
 
-  setCurrentIndex(int index) {
+  void setCurrentIndex(int index) {
     currentIndex = index;
     notifyListeners();
   }
 
-  setCurrentCheque(Map cheque) {
+  void setCurrentCheque(Map cheque) {
     returnCheque = cheque;
   }
 
-  closeApp() async {
+  Future<void> closeApp() async {
     SystemNavigator.pop();
   }
 }

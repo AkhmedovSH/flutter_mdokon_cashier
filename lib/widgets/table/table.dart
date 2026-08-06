@@ -27,7 +27,7 @@ class TableWidget extends StatefulWidget {
   });
 
   @override
-  _TableWidgetState createState() => _TableWidgetState();
+  State<TableWidget> createState() => _TableWidgetState();
 }
 
 class _TableWidgetState extends State<TableWidget> {

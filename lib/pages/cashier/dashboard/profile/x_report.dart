@@ -15,10 +15,10 @@ import '/helpers/api.dart';
 import '/helpers/helper.dart';
 
 class XReport extends StatefulWidget {
-  const XReport({Key? key}) : super(key: key);
+  const XReport({super.key});
 
   @override
-  _XReportState createState() => _XReportState();
+  State<XReport> createState() => _XReportState();
 }
 
 class _XReportState extends State<XReport> {
@@ -29,7 +29,7 @@ class _XReportState extends State<XReport> {
   List reportList = [];
   Map cashbox = {};
 
-  printXReport({bool zReport = false}) async {
+  Future<void> printXReport({bool zReport = false}) async {
     final labels = {
       'x_report': context.tr('x_report'),
       'z_report': context.tr('z_report'),
@@ -97,7 +97,7 @@ class _XReportState extends State<XReport> {
     //print(response);
   }
 
-  getReport() async {
+  Future<void> getReport() async {
     LoadingModel loaderModel = Provider.of<LoadingModel>(context, listen: false);
 
     loaderModel.showLoader(num: 2);
@@ -128,7 +128,7 @@ class _XReportState extends State<XReport> {
     });
   }
 
-  buildRow(String text, text2, {fz = 16.0, leftPadding = false}) {
+  Row buildRow(String text, text2, {fz = 16.0, leftPadding = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -147,7 +147,7 @@ class _XReportState extends State<XReport> {
     );
   }
 
-  buildRow2(text, text2, {fz = 16.0}) {
+  Column buildRow2(dynamic text, dynamic text2, {dynamic fz = 16.0}) {
     return Column(
       children: [
         Row(
@@ -165,7 +165,7 @@ class _XReportState extends State<XReport> {
             Expanded(
               flex: 3,
               child: Text(
-                '${formatMoney(text2)}',
+                formatMoney(text2),
                 textAlign: TextAlign.end,
                 style: TextStyle(fontSize: fz),
               ),
@@ -367,7 +367,7 @@ class _XReportState extends State<XReport> {
     );
   }
 
-  openModal() {
+  void openModal() {
     showDialog(
       context: context,
       builder: (BuildContext context) => Dialog(

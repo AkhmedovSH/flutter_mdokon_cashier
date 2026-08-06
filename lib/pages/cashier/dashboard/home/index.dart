@@ -16,14 +16,15 @@ import '/helpers/api.dart';
 import '/helpers/helper.dart';
 import '/models/cashier/dashboard_model.dart';
 import '/models/data_model.dart';
+import '/widgets/dropdown_value.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class Index extends StatefulWidget {
-  const Index({Key? key}) : super(key: key);
+  const Index({super.key});
 
   @override
-  _IndexState createState() => _IndexState();
+  State<Index> createState() => _IndexState();
 }
 
 // class ProductWithParamsUnit {
@@ -155,7 +156,7 @@ class _IndexState extends State<Index> {
   bool isDeviceConnected = false;
   bool isEdit = false;
 
-  sendToCashbox() async {
+  Future<void> sendToCashbox() async {
     var dataCopy = {...data};
     if (dataCopy['currencyId'] == "") {
       dataCopy['currencyId'] = cashbox['defaultCurrency'];
@@ -200,7 +201,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  getClients() async {
+  Future<void> getClients() async {
     final cashbox = (storage.read('cashbox')!);
     final response = await get('/services/desktop/api/client-debt-list/${cashbox['posId']}');
     for (var i = 0; i < response.length; i++) {
@@ -219,7 +220,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  redirectToSearch() async {
+  Future<void> redirectToSearch() async {
     if (data['discount'] > 0) {
       showDangerToast(context.tr('discount_has_been_applied'));
       return;
@@ -232,6 +233,7 @@ class _IndexState extends State<Index> {
         'currencyName': data['currencyName'],
       },
     );
+    if (!mounted) return;
     List<Map<String, dynamic>> products = Provider.of<DataModel>(context, listen: false).currentProductList;
     Provider.of<DataModel>(context, listen: false).setProductList([]);
     if (products.isEmpty) {
@@ -282,7 +284,7 @@ class _IndexState extends State<Index> {
     }
   }
 
-  addToList(response, {weight = 0, unit = false}) {
+  void addToList(dynamic response, {dynamic weight = 0, dynamic unit = false}) {
     dynamic dataCopy = data;
     dataCopy['totalPrice'] = 0;
     dynamic index = dataCopy['itemsList'].indexWhere((e) => e['balanceId'] == response['balanceId']);
@@ -365,14 +367,14 @@ class _IndexState extends State<Index> {
     }
   }
 
-  addToListUnit() {
+  void addToListUnit() {
     setState(() {
       productWithParams['quantity'] = productWithParamsUnit['quantity'];
     });
     addToList(productWithParams, unit: true);
   }
 
-  deleteProduct(i) {
+  void deleteProduct(dynamic i) {
     if (data["itemsList"].length == 1) {
       deleteAllProducts();
       return;
@@ -399,7 +401,7 @@ class _IndexState extends State<Index> {
     setState(() {});
   }
 
-  deleteAllProducts({type = false}) {
+  void deleteAllProducts({dynamic type = false}) {
     data = {
       "cashboxVersion": "",
       "login": "",
@@ -439,7 +441,7 @@ class _IndexState extends State<Index> {
     }
   }
 
-  handleShortCut(type) {
+  void handleShortCut(dynamic type) {
     if (shortcutController.text.isEmpty && type != "/") return;
     dynamic productsCopy = data["itemsList"];
     var inputData = shortcutController.text;
@@ -560,7 +562,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  calculateTotalPrice(productsCopy) {
+  void calculateTotalPrice(dynamic productsCopy) {
     dynamic totalPrice = 0;
     for (var i = 0; i < productsCopy.length; i++) {
       productsCopy[i]['totalPrice'] = double.parse(productsCopy[i]['quantity'].toString()) * double.parse(productsCopy[i]['salePrice'].toString());
@@ -572,7 +574,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  calculateDiscount(key, value) {
+  void calculateDiscount(dynamic key, dynamic value) {
     value = double.parse(value);
     dynamic dataCopy = data;
     if (key != 's') {
@@ -665,7 +667,7 @@ class _IndexState extends State<Index> {
     setState(() {});
   }
 
-  calculateProductWithParamsUnit(Function setDialogState) {
+  void calculateProductWithParamsUnit(Function setDialogState) {
     //debugger();
     dynamic quantity = 0;
     dynamic totalPrice = 0;
@@ -733,7 +735,7 @@ class _IndexState extends State<Index> {
     }
   }
 
-  selectProduct(index) {
+  void selectProduct(dynamic index) {
     dynamic productsCopy = data["itemsList"];
     for (var i = 0; i < productsCopy.length; i++) {
       productsCopy[i]['selected'] = false;
@@ -744,7 +746,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  getCashbox() async {
+  Future<void> getCashbox() async {
     cashbox = storage.read('cashbox');
     data['currencyId'] = cashbox['defaultCurrency'];
     data['currencyName'] = cashbox['defaultCurrency'] == 1 ? 'So\'m' : 'USD';
@@ -757,7 +759,7 @@ class _IndexState extends State<Index> {
     setState(() {});
   }
 
-  selectDebtorClient(Function setDebtorState, index) {
+  void selectDebtorClient(Function setDebtorState, index) {
     dynamic clientsCopy = clients;
     for (var i = 0; i < clientsCopy.length; i++) {
       clientsCopy[i]['selected'] = false;
@@ -771,7 +773,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  getExpenses() async {
+  Future<void> getExpenses() async {
     final response = await get('/services/desktop/api/expense-helper');
     if (response != null) {
       setState(() {
@@ -795,7 +797,7 @@ class _IndexState extends State<Index> {
     // }
   }
 
-  buildTextField(label, icon, item, index, setDialogState, {scrollPadding, enabled}) {
+  Column buildTextField(dynamic label, dynamic icon, dynamic item, dynamic index, dynamic setDialogState, {dynamic scrollPadding, dynamic enabled}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -968,58 +970,60 @@ class _IndexState extends State<Index> {
               child: DropdownButtonHideUnderline(
                 child: ButtonTheme(
                   alignedDropdown: false,
-                  child: DropdownButton2(
+                  child: DropdownValue<String>(
                     value: data['activePrice'].toString(),
-                    
-                    customButton: SizedBox(
-                      child: Icon(
-                        Icons.more_vert,
-                        size: 24,
-                        color: white,
-                      ),
-                    ),
-                    buttonStyleData: const ButtonStyleData(
-                      padding: EdgeInsets.only(right: 16), // Отступ контента от правого края
-                      height: 40,
-                      width: 40,
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      width: 260,
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: white,
-                      ),
-                      offset: const Offset(-240, -10),
-                    ),
-                    menuItemStyleData: MenuItemStyleData(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    ),
-                    underline: Container(),
-                    // isExpanded: true,
-                    // hint: Text('${expenses[0]['name']}'),
-                    onChanged: (newValue) {
-                      data['activePrice'] = int.parse(newValue!);
-                      setState(() {});
-                    },
-                    items: prices.map((item) {
-                      return DropdownMenuItem<String>(
-                        value: '${item['id']}',
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              context.tr(item['name']),
-                            ),
-                            if (item['id'] == data['activePrice'])
-                              Icon(
-                                UniconsLine.check,
-                                color: CustomTheme.of(context).textColor,
-                              ),
-                          ],
+                    builder: (context, selected) => DropdownButton2<String>(
+                      valueListenable: selected,
+                      customButton: SizedBox(
+                        child: Icon(
+                          Icons.more_vert,
+                          size: 24,
+                          color: white,
                         ),
-                      );
-                    }).toList(),
+                      ),
+                      buttonStyleData: const ButtonStyleData(
+                        padding: EdgeInsets.only(right: 16), // Отступ контента от правого края
+                        height: 40,
+                        width: 40,
+                      ),
+                      dropdownStyleData: DropdownStyleData(
+                        width: 260,
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: white,
+                        ),
+                        offset: const Offset(-240, -10),
+                      ),
+                      menuItemStyleData: MenuItemStyleData(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      ),
+                      underline: Container(),
+                      // isExpanded: true,
+                      // hint: Text('${expenses[0]['name']}'),
+                      onChanged: (newValue) {
+                        data['activePrice'] = int.parse(newValue!);
+                        setState(() {});
+                      },
+                      items: prices.map((item) {
+                        return DropdownItem<String>(
+                          value: '${item['id']}',
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr(item['name']),
+                              ),
+                              if (item['id'] == data['activePrice'])
+                                Icon(
+                                  UniconsLine.check,
+                                  color: CustomTheme.of(context).textColor,
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
@@ -1145,8 +1149,8 @@ class _IndexState extends State<Index> {
                       children: [
                         Text(context.tr('total'), style: TextStyle(fontSize: 16)),
                         data['discount'] == 0
-                            ? Text(formatMoney(data['totalPrice']) + ' ${data['currencyName']}', style: TextStyle(fontSize: 16))
-                            : Text(formatMoney(data['totalPriceBeforeDiscount']) + ' ${data['currencyName']}', style: TextStyle(fontSize: 16)),
+                            ? Text('${formatMoney(data['totalPrice'])} ${data['currencyName']}', style: TextStyle(fontSize: 16))
+                            : Text('${formatMoney(data['totalPriceBeforeDiscount'])} ${data['currencyName']}', style: TextStyle(fontSize: 16)),
                       ],
                     ),
                   ),
@@ -1200,7 +1204,7 @@ class _IndexState extends State<Index> {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          formatMoney(data['totalPrice']) + ' ${data['currencyName']}',
+                          '${formatMoney(data['totalPrice'])} ${data['currencyName']}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1217,8 +1221,8 @@ class _IndexState extends State<Index> {
                       },
                       onLongPress: () {},
                       // borderRadius: BorderRadius.circular(16),
-                      highlightColor: mainColor.withOpacity(0.1),
-                      splashColor: mainColor.withOpacity(0.5),
+                      highlightColor: mainColor.withValues(alpha: 0.1),
+                      splashColor: mainColor.withValues(alpha: 0.5),
                       child: Slidable(
                         key: UniqueKey(),
                         closeOnScroll: false,
@@ -1369,7 +1373,7 @@ class _IndexState extends State<Index> {
     );
   }
 
-  openConfirmModal() {
+  void openConfirmModal() {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -1435,7 +1439,7 @@ class _IndexState extends State<Index> {
 
   bool loading = false;
 
-  createDebtorOut(setState) async {
+  Future<void> createDebtorOut(dynamic setState) async {
     setState(() {
       loading = true;
     });
@@ -1452,7 +1456,7 @@ class _IndexState extends State<Index> {
       }
     });
     final response = await post('/services/desktop/api/expense-out', expenseOut);
-    if (response['success']) {
+    if (response['success'] && mounted) {
       Navigator.pop(context);
     }
     setState(() {
@@ -1460,7 +1464,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  showModalExpense() async {
+  Future<void> showModalExpense() async {
     await showDialog(
       context: context,
       useSafeArea: true,
@@ -1492,33 +1496,36 @@ class _IndexState extends State<Index> {
                       child: DropdownButtonHideUnderline(
                         child: ButtonTheme(
                           alignedDropdown: false,
-                          child: DropdownButton2(
+                          child: DropdownValue<String>(
                             value: expenseOut['expenseId'],
-                            dropdownStyleData: DropdownStyleData(
-                              decoration: BoxDecoration(
-                                color: CustomTheme.of(context).cardColor,
+                            builder: (context, selected) => DropdownButton2<String>(
+                              valueListenable: selected,
+                              dropdownStyleData: DropdownStyleData(
+                                decoration: BoxDecoration(
+                                  color: CustomTheme.of(context).cardColor,
+                                ),
+                                maxHeight: 400,
                               ),
-                              maxHeight: 400,
+                              underline: Container(),
+                              isExpanded: true,
+                              hint: Text('${expenses[0]['name']}'),
+                              iconStyleData: IconStyleData(
+                                icon: const Icon(UniconsLine.angle_down),
+                                iconSize: 24,
+                                iconEnabledColor: mainColor,
+                              ),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  expenseOut['expenseId'] = newValue;
+                                });
+                              },
+                              items: expenses.map((item) {
+                                return DropdownItem<String>(
+                                  value: '${item['id']}',
+                                  child: Text(item['name']),
+                                );
+                              }).toList(),
                             ),
-                            underline: Container(),
-                            isExpanded: true,
-                            hint: Text('${expenses[0]['name']}'),
-                            iconStyleData: IconStyleData(
-                              icon: const Icon(UniconsLine.angle_down),
-                              iconSize: 24,
-                              iconEnabledColor: mainColor,
-                            ),
-                            onChanged: (newValue) {
-                              setState(() {
-                                expenseOut['expenseId'] = newValue;
-                              });
-                            },
-                            items: expenses.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: '${item['id']}',
-                                child: Text(item['name']),
-                              );
-                            }).toList(),
                           ),
                         ),
                       ),
@@ -1613,7 +1620,7 @@ class _IndexState extends State<Index> {
     );
   }
 
-  createClientDebt(setState) async {
+  Future<void> createClientDebt(dynamic setState) async {
     setState(() {
       loading = true;
     });
@@ -1645,13 +1652,13 @@ class _IndexState extends State<Index> {
         "transactionsList": [],
       };
     });
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
     setState(() {
       loading = false;
     });
   }
 
-  showModalDebtor() async {
+  Future<void> showModalDebtor() async {
     await getClients();
     if (mounted) {
       var closed = await showDialog(
@@ -1750,7 +1757,7 @@ class _IndexState extends State<Index> {
                                         padding: EdgeInsets.fromLTRB(0, 8, 5, 8),
                                         color: clients[i]['selected'] ? Color(0xFF91a0e7) : Colors.transparent,
                                         child: Text(
-                                          '${formatMoney(clients[i]['balance'])}',
+                                          formatMoney(clients[i]['balance']),
                                           textAlign: TextAlign.end,
                                         ),
                                       ),
@@ -1821,7 +1828,7 @@ class _IndexState extends State<Index> {
     }
   }
 
-  showProductsWithParams() async {
+  Future<void> showProductsWithParams() async {
     var closed = await showDialog(
       context: context,
       useSafeArea: true,
@@ -1971,15 +1978,15 @@ class _IndexState extends State<Index> {
     {'name': 'comment', 'value': '', 'icon': UniconsLine.comment_lines, 'keyboardType': TextInputType.text},
   ];
 
-  createClient() async {
+  Future<void> createClient() async {
     final response = await post('/services/desktop/api/clients', sendData);
-    if (response != null && response['success']) {
+    if (response != null && response['success'] && mounted) {
       context.pop();
       showSelectUserDialog();
     }
   }
 
-  showCreateUserModal() {
+  void showCreateUserModal() {
     showDialog(
       context: context,
       useSafeArea: true,
@@ -2095,7 +2102,7 @@ class _IndexState extends State<Index> {
 
   Timer? debounce;
 
-  searchUsers(value, setState) {
+  void searchUsers(dynamic value, dynamic setState) {
     if (debounce?.isActive ?? false) debounce!.cancel();
     debounce = Timer(const Duration(milliseconds: 500), () async {
       final response = await get('/services/desktop/api/clients-helper?search=$value');
@@ -2110,7 +2117,7 @@ class _IndexState extends State<Index> {
     });
   }
 
-  showSelectUserDialog() async {
+  Future<void> showSelectUserDialog() async {
     final response = await get('/services/desktop/api/clients-helper');
     //print(response);
     for (var i = 0; i < response.length; i++) {
@@ -2119,6 +2126,7 @@ class _IndexState extends State<Index> {
     setState(() {
       clients = response;
     });
+    if (!mounted) return;
     final result = await showDialog(
       context: context,
       useSafeArea: true,

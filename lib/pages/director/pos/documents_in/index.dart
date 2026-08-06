@@ -18,14 +18,14 @@ class DocumentsIn extends StatefulWidget {
   const DocumentsIn({super.key});
 
   @override
-  _DocumentsInState createState() => _DocumentsInState();
+  State<DocumentsIn> createState() => _DocumentsInState();
 }
 
 class _DocumentsInState extends State<DocumentsIn> {
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month - 1, DateTime.now().day);
   DateTime endDate = DateTime.now();
 
-  getData() {
+  void getData() {
     Provider.of<DocumentsInModel>(context, listen: false).getPageList(context);
   }
 
@@ -70,7 +70,7 @@ class _DocumentsInState extends State<DocumentsIn> {
               tooltip: context.tr('filter'),
               onPressed: () async {
                 var result = await showFilterDialog();
-                if (mounted) {
+                if (context.mounted) {
                   if (result == true) {
                     Provider.of<DocumentsInModel>(context, listen: false).getPageList(context);
                   }
@@ -184,7 +184,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                               SizedBox(
                                 width: 120,
                                 child: Text(
-                                  '${formatMoney(model.pageList[i]['totalAmount'])}',
+                                  formatMoney(model.pageList[i]['totalAmount']),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
@@ -193,7 +193,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                               SizedBox(
                                 width: 120,
                                 child: Text(
-                                  '${formatMoney(model.pageList[i]['totalAmount'])}',
+                                  formatMoney(model.pageList[i]['totalAmount']),
                                   textAlign: TextAlign.end,
                                 ),
                               ),
@@ -208,7 +208,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                               SizedBox(
                                 width: 140,
                                 child: Text(
-                                  '${formatDate(model.pageList[i]['createdDate'])}',
+                                  formatDate(model.pageList[i]['createdDate']),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -233,6 +233,7 @@ class _DocumentsInState extends State<DocumentsIn> {
                                           IconButton(
                                             onPressed: () async {
                                               await Provider.of<DocumentsInModel>(context, listen: false).getData(context, model.pageList[i]['id']);
+                                              if (!context.mounted) return;
                                               context.push('/director/documents-in/create');
                                             },
                                             icon: Icon(UniconsLine.edit_alt),
@@ -258,7 +259,7 @@ class _DocumentsInState extends State<DocumentsIn> {
     );
   }
 
-  showFilterDialog() async {
+  Future<dynamic> showFilterDialog() async {
     return await showFilterModal(
       context,
       children: [

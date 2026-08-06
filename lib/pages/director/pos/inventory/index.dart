@@ -17,14 +17,14 @@ class Inventory extends StatefulWidget {
   const Inventory({super.key});
 
   @override
-  _InventoryState createState() => _InventoryState();
+  State<Inventory> createState() => _InventoryState();
 }
 
 class _InventoryState extends State<Inventory> {
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month - 1, DateTime.now().day);
   DateTime endDate = DateTime.now();
 
-  getData() {
+  void getData() {
     Provider.of<InventoryModel>(context, listen: false).getPageList(context);
   }
 
@@ -65,7 +65,7 @@ class _InventoryState extends State<Inventory> {
             tooltip: context.tr('filter'),
             onPressed: () async {
               var result = await showFilterDialog();
-              if (mounted) {
+              if (context.mounted) {
                 if (result == true) {
                   Provider.of<InventoryModel>(context, listen: false).getPageList(context);
                 }
@@ -181,7 +181,7 @@ class _InventoryState extends State<Inventory> {
                             SizedBox(
                               width: 120,
                               child: Text(
-                                '${formatDate(model.pageList[i]['beginDate'])}',
+                                formatDate(model.pageList[i]['beginDate']),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -190,7 +190,7 @@ class _InventoryState extends State<Inventory> {
                             SizedBox(
                               width: 120,
                               child: Text(
-                                '${formatDate(model.pageList[i]['endDate'])}',
+                                formatDate(model.pageList[i]['endDate']),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -279,7 +279,7 @@ class _InventoryState extends State<Inventory> {
     );
   }
 
-  showFilterDialog() async {
+  Future<dynamic> showFilterDialog() async {
     return await showFilterModal(
       context,
       children: [

@@ -14,10 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 class AgentHistory extends StatefulWidget {
-  const AgentHistory({Key? key}) : super(key: key);
+  const AgentHistory({super.key});
 
   @override
-  _AgentHistoryState createState() => _AgentHistoryState();
+  State<AgentHistory> createState() => _AgentHistoryState();
 }
 
 class _AgentHistoryState extends State<AgentHistory> {
@@ -47,7 +47,7 @@ class _AgentHistoryState extends State<AgentHistory> {
     'size': 2000,
   };
 
-  getCheques() async {
+  Future<void> getCheques() async {
     loading = true;
     setState(() {});
 
@@ -187,7 +187,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text(
                                       //cheques[i]['totalPrice']
-                                      '${formatMoney(jsonDecode(cheques[i]['cheque'])['totalPrice'])}',
+                                      formatMoney(jsonDecode(cheques[i]['cheque'])['totalPrice']),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -200,7 +200,7 @@ class _AgentHistoryState extends State<AgentHistory> {
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text(
-                                      '${formatDate(cheques[i]['createdDate'])}',
+                                      formatDate(cheques[i]['createdDate']),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -217,7 +217,7 @@ class _AgentHistoryState extends State<AgentHistory> {
     );
   }
 
-  selectDate(BuildContext context, date) async {
+  Future<void> selectDate(BuildContext context, date) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
@@ -243,7 +243,7 @@ class _AgentHistoryState extends State<AgentHistory> {
     }
   }
 
-  showFilterDialog() {
+  void showFilterDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

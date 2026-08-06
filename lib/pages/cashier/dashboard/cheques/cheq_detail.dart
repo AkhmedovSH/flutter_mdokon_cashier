@@ -23,12 +23,12 @@ import '../../../../helpers/helper.dart';
 class CheqDetail extends StatefulWidget {
   final String id;
   const CheqDetail({
-    Key? key,
+    super.key,
     required this.id,
-  }) : super(key: key);
+  });
 
   @override
-  _CheqDetailState createState() => _CheqDetailState();
+  State<CheqDetail> createState() => _CheqDetailState();
 }
 
 class _CheqDetailState extends State<CheqDetail> {
@@ -153,7 +153,7 @@ class _CheqDetailState extends State<CheqDetail> {
   //   }
   // }
 
-  getCheque() async {
+  Future<void> getCheque() async {
     dynamic response = await get('/services/desktop/api/cheque-byId-v2/${widget.id}');
     //print(response);
     setState(() {
@@ -169,7 +169,7 @@ class _CheqDetailState extends State<CheqDetail> {
     //print(cheque);
   }
 
-  getColor(status) {
+  Color? getColor(dynamic status) {
     if (status == 0) {
       return null;
     } else if (status == 1) {
@@ -177,9 +177,10 @@ class _CheqDetailState extends State<CheqDetail> {
     } else if (status == 2) {
       return Colors.red;
     }
+    return null;
   }
 
-  checkStatus() async {
+  Future<void> checkStatus() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.bluetooth,
       Permission.bluetoothScan,
@@ -216,7 +217,7 @@ class _CheqDetailState extends State<CheqDetail> {
     }
   }
 
-  buildRow(text, text2, {fz = 16.0}) {
+  Row buildRow(dynamic text, dynamic text2, {dynamic fz = 16.0}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -394,7 +395,7 @@ class _CheqDetailState extends State<CheqDetail> {
                                   ? Container(
                                       padding: EdgeInsets.symmetric(vertical: 4),
                                       child: Text(
-                                        '${formatMoney(itemsList[i]['totalPrice'])}',
+                                        formatMoney(itemsList[i]['totalPrice']),
                                         textAlign: TextAlign.end,
                                       ),
                                     )
@@ -403,7 +404,7 @@ class _CheqDetailState extends State<CheqDetail> {
                                   ? Container(
                                       padding: EdgeInsets.symmetric(vertical: 4),
                                       child: Text(
-                                        '${formatMoney(itemsList[i]['returnedPrice'])}',
+                                        formatMoney(itemsList[i]['returnedPrice']),
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
@@ -431,7 +432,7 @@ class _CheqDetailState extends State<CheqDetail> {
                 buildRow(context.tr('discount'), formatMoney((customNumber(cheque['totalPrice']) * customNumber(cheque['discount'])) / 100)),
                 buildRow(context.tr('to_pay'), formatMoney(cheque['to_pay']), fz: 20.0),
                 buildRow(context.tr('paid'), formatMoney(cheque['paid'])),
-                buildRow('${context.tr('VAT')} %', formatMoney(cheque['totalVatAmount']) ?? formatMoney(0)),
+                buildRow('${context.tr('VAT')} %', formatMoney(cheque['totalVatAmount'])),
                 cheque['saleCurrencyId'] == 1 ? buildRow('Валюта', 'Сум ') : Container(),
                 cheque['saleCurrencyId'] == 2 ? buildRow('Валюта', 'USD ') : Container(),
                 for (var i = 0; i < transactionsList.length; i++)
@@ -443,7 +444,7 @@ class _CheqDetailState extends State<CheqDetail> {
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
                       Text(
-                        '${formatMoney(transactionsList[i]['amountIn'])}',
+                        formatMoney(transactionsList[i]['amountIn']),
                         style: TextStyle(fontSize: 16),
                       ),
                     ],
@@ -493,9 +494,9 @@ class _CheqDetailState extends State<CheqDetail> {
               child: ElevatedButton(
                 onPressed: () async {
                   LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
+                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
                   loadingModel.showLoader(num: 2);
                   await Future.delayed(Duration.zero);
-                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
                   await printerModel.printFullCheque(cheque, itemsList);
                   loadingModel.hideLoader();
                 },

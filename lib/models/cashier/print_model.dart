@@ -30,7 +30,7 @@ class PrinterModel extends ChangeNotifier {
     });
   }
 
-  setPrinterSize(value) {
+  void setPrinterSize(dynamic value) {
     storage.write('printerSize', value);
     notifyListeners();
   }
@@ -94,7 +94,6 @@ class PrinterModel extends ChangeNotifier {
     }
     final generator = Generator(paperSize, profile);
     List<int> bytes = [];
-    final settings = storage.read('settings');
     final cashboxSettings = storage.read('cashboxSettings');
     final chequeSettings = cashboxSettings['chequeSettings'];
     // print(cashboxSettings);
@@ -130,7 +129,7 @@ class PrinterModel extends ChangeNotifier {
     // 3. Инфо о чеке
     bytes += _getChequeRow(generator, 'Kassir', '${cheque['cashierName'] ?? ''}');
     bytes += _getChequeRow(generator, 'Chek ID', '${cheque['chequeNumber'] ?? ''}');
-    bytes += _getChequeRow(generator, 'Sana', '${formatUnixTime(cheque['chequeDate'])}');
+    bytes += _getChequeRow(generator, 'Sana', formatUnixTime(cheque['chequeDate']));
     bytes += generator.hr(ch: '*');
 
     if (customIf(storage.read('showChequeProducts'))) {
@@ -183,23 +182,23 @@ class PrinterModel extends ChangeNotifier {
     }
 
     // 5. Итоги
-    bytes += _getChequeRow(generator, 'Sotish miqdori', '${formatMoney(cheque['totalPrice'] ?? 0)}');
-    bytes += _getChequeRow(generator, 'Chegirma', '${formatMoney(cheque['discountAmount'] ?? 0)}');
+    bytes += _getChequeRow(generator, 'Sotish miqdori', formatMoney(cheque['totalPrice'] ?? 0));
+    bytes += _getChequeRow(generator, 'Chegirma', formatMoney(cheque['discountAmount'] ?? 0));
 
     bytes += _getChequeRow(
       generator,
       'Tolash uchun',
-      '${formatMoney(customNumber(cheque['totalPrice']) - customNumber(cheque['discountAmount']))}',
+      formatMoney(customNumber(cheque['totalPrice']) - customNumber(cheque['discountAmount'])),
       bold: true,
     );
 
-    bytes += _getChequeRow(generator, 'Tolangan', '${formatMoney(cheque['paid'] ?? 0)}');
+    bytes += _getChequeRow(generator, 'Tolangan', formatMoney(cheque['paid'] ?? 0));
     for (var i = 0; i < cheque['paymentTypes'].length; i++) {
       if (customNumber(cheque['paymentTypes'][i]['amount']) > 0) {
         bytes += _getChequeRow(
           generator,
           '${cheque['paymentTypes'][i]['customPaymentTypeName']}',
-          '${formatMoney(cheque['paymentTypes'][i]['amount'] ?? 0)}',
+          formatMoney(cheque['paymentTypes'][i]['amount'] ?? 0),
         );
       }
     }
@@ -260,11 +259,7 @@ class PrinterModel extends ChangeNotifier {
 
     for (int i = 0; i < nameLines.length; i++) {
       final rawLine =
-          cell(nameLines[i], cfg.name) +
-          '|' +
-          cell(i == 0 ? qty : '', cfg.qty, align: 'center') +
-          '|' +
-          cell(i == 0 ? sum : '', cfg.sum, align: 'right');
+          '${cell(nameLines[i], cfg.name)}|${cell(i == 0 ? qty : '', cfg.qty, align: 'center')}|${cell(i == 0 ? sum : '', cfg.sum, align: 'right')}';
 
       final line = padToTableWidth(rawLine, cfg.total);
 
@@ -285,7 +280,7 @@ class PrinterModel extends ChangeNotifier {
     TableConfig cfg,
     String promoCode,
   ) async {
-    final rawLine = cell('Промокод', cfg.name) + '|' + cell('', cfg.qty, align: 'center') + '|' + cell(promoCode, cfg.sum, align: 'right');
+    final rawLine = '${cell('Промокод', cfg.name)}|${cell('', cfg.qty, align: 'center')}|${cell(promoCode, cfg.sum, align: 'right')}';
 
     final line = padToTableWidth(rawLine, cfg.total);
 
@@ -596,7 +591,7 @@ class PrinterModel extends ChangeNotifier {
       var state = await selectedDevice!.connectionState.first;
       if (state != BluetoothConnectionState.connected) {
         await selectedDevice!.connect(
-          license: License.free,
+          license: License.nonprofit,
           timeout: const Duration(seconds: 5),
           autoConnect: false, // Set to false for manual connection attempts
         );

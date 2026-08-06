@@ -35,17 +35,17 @@ class InventoryModel extends ChangeNotifier {
         response['productList'][i]['controller'] = TextEditingController(text: response['productList'][i]['actualBalance'].round().toString());
       }
       data = response;
-      context.go('/director/inventory/create');
+      if (context.mounted) context.go('/director/inventory/create');
     }
     notifyListeners();
   }
 
-  setDataValue(String key, dynamic value) {
+  void setDataValue(String key, dynamic value) {
     data[key] = value;
     notifyListeners();
   }
 
-  setProductListValue(int index, String key, dynamic value) {
+  void setProductListValue(int index, String key, dynamic value) {
     data['productList'][index][key] = value;
     data['productList'][index]['controller'].text = value.toString();
     notifyListeners();
@@ -77,11 +77,11 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
-        await getPageList(context, showLoader: false);
-        context.go('/director/inventory');
+        if (context.mounted) await getPageList(context, showLoader: false);
+        if (context.mounted) context.go('/director/inventory');
       }
     }
-    Provider.of<LoadingModel>(context, listen: false).hideLoader();
+    if (context.mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
     notifyListeners();
   }
 
@@ -107,11 +107,11 @@ class InventoryModel extends ChangeNotifier {
           "productList": [],
           "posId": storage.read('user')['posId'],
         };
-        await getPageList(context, showLoader: false);
-        context.go('/director/inventory');
+        if (context.mounted) await getPageList(context, showLoader: false);
+        if (context.mounted) context.go('/director/inventory');
       }
 
-      Provider.of<LoadingModel>(context, listen: false).hideLoader();
+      if (context.mounted) Provider.of<LoadingModel>(context, listen: false).hideLoader();
       notifyListeners();
     }
   }

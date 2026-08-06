@@ -21,7 +21,7 @@ class PosSales extends StatefulWidget {
   const PosSales({super.key});
 
   @override
-  _PosSalesState createState() => _PosSalesState();
+  State<PosSales> createState() => _PosSalesState();
 }
 
 class _PosSalesState extends State<PosSales> {
@@ -263,7 +263,7 @@ class _PosSalesState extends State<PosSales> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatMoney(data[i]['salePrice'])}',
+                            formatMoney(data[i]['salePrice']),
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -281,7 +281,7 @@ class _PosSalesState extends State<PosSales> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatDate(data[i]['chequeDate'])}',
+                            formatDate(data[i]['chequeDate']),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -290,7 +290,7 @@ class _PosSalesState extends State<PosSales> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${formatMoney(data[i]['totalAmount'])}',
+                            formatMoney(data[i]['totalAmount']),
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -305,7 +305,7 @@ class _PosSalesState extends State<PosSales> {
     );
   }
 
-  showFilterDialog() async {
+  Future<dynamic> showFilterDialog() async {
     return await showFilterModal(
       context,
       children: [

@@ -6,7 +6,7 @@ import '/models/cashier/cashbox_model.dart';
 import '/helpers/helper.dart';
 
 class Loyalty extends StatelessWidget {
-  const Loyalty({Key? key}) : super(key: key);
+  const Loyalty({super.key});
 
   @override
   Widget build(BuildContext context) {

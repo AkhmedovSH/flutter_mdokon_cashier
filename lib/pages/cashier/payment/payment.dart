@@ -7,10 +7,10 @@ import 'package:unicons/unicons.dart';
 import '/helpers/helper.dart';
 
 class Payment extends StatefulWidget {
-  const Payment({Key? key}) : super(key: key);
+  const Payment({super.key});
 
   @override
-  _PaymentState createState() => _PaymentState();
+  State<Payment> createState() => _PaymentState();
 }
 
 class _PaymentState extends State<Payment> {

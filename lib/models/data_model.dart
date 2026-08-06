@@ -90,7 +90,7 @@ class DataModel extends ChangeNotifier {
     agents = mapList;
   }
 
-  Future<void> fetchWallets(currencyId) async {
+  Future<void> fetchWallets(dynamic currencyId) async {
     final response = await get('/services/web/api/wallet-helper', payload: {'currencyId': currencyId});
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
     mapList.insert(0, {'walletId': '', 'walletName': '-'});
@@ -98,7 +98,7 @@ class DataModel extends ChangeNotifier {
     wallets = mapList;
   }
 
-  Future<void> fetchBanks(currencyId) async {
+  Future<void> fetchBanks(dynamic currencyId) async {
     final response = await get('/services/web/api/bank-helper', payload: {'currencyId': currencyId});
     final List<Map<String, dynamic>> mapList = List<Map<String, dynamic>>.from(response);
     mapList.insert(0, {'bankId': '', 'bankName': '-'});

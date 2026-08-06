@@ -6,6 +6,7 @@ import '/models/data_model.dart';
 import '/models/director/documents_in_model.dart';
 
 import '/widgets/custom_app_bar.dart';
+import '/widgets/dropdown_value.dart';
 import '/widgets/filter/label.dart';
 import '/widgets/loading_layout.dart';
 import '/widgets/table/table.dart';
@@ -33,17 +34,17 @@ class DocumentsInCreate extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DropdownItem(
+                  DropdownField(
                     label: 'pos',
                     items: dataModel.poses,
                     dataKey: 'posId',
                   ),
-                  DropdownItem(
+                  DropdownField(
                     label: 'supplier',
                     items: dataModel.organizations,
                     dataKey: 'organizationId',
                   ),
-                  DropdownItem(
+                  DropdownField(
                     label: 'currency',
                     items: dataModel.currencies,
                     dataKey: 'currencyId',
@@ -252,7 +253,7 @@ class DocumentsInCreate extends StatelessWidget {
                                     SizedBox(
                                       width: 100,
                                       child: Text(
-                                        '${formatMoney(documentsInModel.data['productList'][i]['totalAmount'])}',
+                                        formatMoney(documentsInModel.data['productList'][i]['totalAmount']),
                                         textAlign: TextAlign.end,
                                       ),
                                     ),
@@ -299,12 +300,12 @@ class DocumentsInCreate extends StatelessWidget {
   }
 }
 
-class DropdownItem extends StatelessWidget {
+class DropdownField extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final String label;
   final String dataKey;
 
-  const DropdownItem({
+  const DropdownField({
     super.key,
     required this.items,
     required this.label,
@@ -328,36 +329,39 @@ class DropdownItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   color: CustomTheme.of(context).cardColor,
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton2<String>(
-                    value: documentsInModel.data[dataKey].toString(),
-                    buttonStyleData: const ButtonStyleData(),
-                    iconStyleData: const IconStyleData(
-                      icon: Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Icon(UniconsLine.angle_down),
+                child: DropdownValue<String>(
+                  value: documentsInModel.data[dataKey].toString(),
+                  builder: (context, selected) => DropdownButtonHideUnderline(
+                    child: DropdownButton2<String>(
+                      valueListenable: selected,
+                      buttonStyleData: const ButtonStyleData(),
+                      iconStyleData: const IconStyleData(
+                        icon: Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Icon(UniconsLine.angle_down),
+                        ),
                       ),
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomTheme.of(context).cardColor,
+                        ),
+                        maxHeight: 300,
+                        offset: const Offset(0, -10),
                       ),
-                      maxHeight: 300,
-                      offset: const Offset(0, -10),
-                    ),
-                    isDense: true,
-                    onChanged: (String? newValue) {
-                      documentsInModel.setDataValue(dataKey, newValue);
-                    },
-                    items: items.map(
-                      (Map<String, dynamic> item) {
-                        return DropdownMenuItem<String>(
-                          value: item['id'].toString(),
-                          child: Text(item['name']),
-                        );
+                      isDense: true,
+                      onChanged: (String? newValue) {
+                        documentsInModel.setDataValue(dataKey, newValue);
                       },
-                    ).toList(),
+                      items: items.map(
+                        (Map<String, dynamic> item) {
+                          return DropdownItem<String>(
+                            value: item['id'].toString(),
+                            child: Text(item['name']),
+                          );
+                        },
+                      ).toList(),
+                    ),
                   ),
                 ),
               );
@@ -575,7 +579,7 @@ class TotalAmountItem extends StatelessWidget {
                   Consumer<DocumentsInModel>(
                     builder: (context, documentsInModel, child) {
                       return Text(
-                        '${formatMoney(documentsInModel.data['totalQuantity'])}',
+                        formatMoney(documentsInModel.data['totalQuantity']),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -598,7 +602,7 @@ class TotalAmountItem extends StatelessWidget {
                   Consumer<DocumentsInModel>(
                     builder: (context, documentsInModel, child) {
                       return Text(
-                        '${formatMoney(documentsInModel.data['totalIncome'])}',
+                        formatMoney(documentsInModel.data['totalIncome']),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -621,7 +625,7 @@ class TotalAmountItem extends StatelessWidget {
                   Consumer<DocumentsInModel>(
                     builder: (context, documentsInModel, child) {
                       return Text(
-                        '${formatMoney(documentsInModel.data['totalSale'])}',
+                        formatMoney(documentsInModel.data['totalSale']),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -656,12 +660,12 @@ class TotalAmountItem extends StatelessWidget {
   }
 }
 
-showProductDialog(BuildContext context) {
+void showProductDialog(BuildContext context) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black.withOpacity(0.5),
+    barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
       DataModel dataModel = Provider.of<DataModel>(context, listen: false);
@@ -699,38 +703,41 @@ showProductDialog(BuildContext context) {
                               borderRadius: BorderRadius.circular(12),
                               color: CustomTheme.of(context).cardColor,
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton2<String>(
-                                value: model.product['uomId'].toString(),
-                                buttonStyleData: const ButtonStyleData(),
-                                iconStyleData: const IconStyleData(
-                                  icon: Padding(
-                                    padding: EdgeInsets.only(right: 5),
-                                    child: Icon(UniconsLine.angle_down),
+                            child: DropdownValue<String>(
+                              value: model.product['uomId'].toString(),
+                              builder: (context, selected) => DropdownButtonHideUnderline(
+                                child: DropdownButton2<String>(
+                                  valueListenable: selected,
+                                  buttonStyleData: const ButtonStyleData(),
+                                  iconStyleData: const IconStyleData(
+                                    icon: Padding(
+                                      padding: EdgeInsets.only(right: 5),
+                                      child: Icon(UniconsLine.angle_down),
+                                    ),
                                   ),
-                                ),
-                                dropdownStyleData: DropdownStyleData(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: CustomTheme.of(context).cardColor,
+                                  dropdownStyleData: DropdownStyleData(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: CustomTheme.of(context).cardColor,
+                                    ),
+                                    maxHeight: 300,
+                                    offset: const Offset(0, -10),
                                   ),
-                                  maxHeight: 300,
-                                  offset: const Offset(0, -10),
-                                ),
-                                isDense: true,
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    model.setProductValue('uomId', newValue);
-                                  }
-                                },
-                                items: dataModel.uoms.map(
-                                  (Map<String, dynamic> item) {
-                                    return DropdownMenuItem<String>(
-                                      value: item['id'].toString(),
-                                      child: Text(item['name']),
-                                    );
+                                  isDense: true,
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      model.setProductValue('uomId', newValue);
+                                    }
                                   },
-                                ).toList(),
+                                  items: dataModel.uoms.map(
+                                    (Map<String, dynamic> item) {
+                                      return DropdownItem<String>(
+                                        value: item['id'].toString(),
+                                        child: Text(item['name']),
+                                      );
+                                    },
+                                  ).toList(),
+                                ),
                               ),
                             ),
                           );

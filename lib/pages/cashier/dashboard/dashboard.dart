@@ -14,8 +14,8 @@ import '../../../helpers/helper.dart';
 
 class CashierDashboard extends StatefulWidget {
   const CashierDashboard({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<CashierDashboard> createState() => _DashboardState();
@@ -24,10 +24,11 @@ class CashierDashboard extends StatefulWidget {
 class _DashboardState extends State<CashierDashboard> {
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         showSecondModalConfirm();
-        return false;
       },
       child: Consumer<DashboardModel>(
         builder: (context, dashboardModel, child) {
@@ -48,7 +49,7 @@ class _DashboardState extends State<CashierDashboard> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: black.withOpacity(0.3),
+                    color: black.withValues(alpha: 0.3),
                     width: 0.33,
                   ),
                 ),
@@ -150,7 +151,7 @@ class _DashboardState extends State<CashierDashboard> {
     );
   }
 
-  showSecondModalConfirm() {
+  void showSecondModalConfirm() {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
