@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-import '/pages/director/pos/documents_in/create.dart';
-import '/pages/director/pos/documents_in/index.dart';
-import '/pages/director/pos/documents_in/complete.dart';
-import '/pages/director/pos/inventory/complete.dart';
-import '/pages/director/pos/inventory/create.dart';
-import '/pages/director/pos/inventory/index.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/documents_in/create.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/documents_in/documents_in.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/documents_in/complete.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/inventory/complete.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/inventory/create.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/inventory/inventory.dart';
 
-import '/pages/director/reports/balance.dart';
-import '/pages/director/reports/sales.dart';
+import 'package:flutter_mdokon/features/director/pages/reports/balance.dart';
+import 'package:flutter_mdokon/features/director/pages/reports/sales.dart';
 
 Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widget child) {
   return CupertinoPage(

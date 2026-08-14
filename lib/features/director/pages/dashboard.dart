@@ -4,11 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:unicons/unicons.dart';
 
-import 'pos/index.dart';
-import './reports/index.dart';
-import './settings.dart';
+import 'package:flutter_mdokon/features/director/pages/pos/pos_home.dart';
+import 'package:flutter_mdokon/features/director/pages/reports/reports.dart';
+import 'package:flutter_mdokon/features/director/pages/settings.dart';
 
-import '../../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class DirectorDashboard extends StatefulWidget {
   final int initialPage;
@@ -18,10 +18,10 @@ class DirectorDashboard extends StatefulWidget {
   });
 
   @override
-  State<DirectorDashboard> createState() => _DashboardState();
+  State<DirectorDashboard> createState() => _DirectorDashboardState();
 }
 
-class _DashboardState extends State<DirectorDashboard> {
+class _DirectorDashboardState extends State<DirectorDashboard> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   GetStorage storage = GetStorage();
 
@@ -79,8 +79,8 @@ class _DashboardState extends State<DirectorDashboard> {
             //   setState(() => currentIndex = index);
             // },
             children: [
-              Home(),
-              if (storage.read('role') == 'ROLE_OWNER') Report(),
+              PosHome(),
+              if (storage.read('role') == 'ROLE_OWNER') Reports(),
               Settings(),
             ],
           ),

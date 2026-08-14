@@ -1,18 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/models/cashier/dashboard_model.dart';
-import 'package:flutter_mdokon/models/cashier/print_model.dart';
-import 'package:flutter_mdokon/models/loading_model.dart';
-import 'package:flutter_mdokon/widgets/loading_layout.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
+import 'package:flutter_mdokon/core/state/loading_model.dart';
+import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 
-import '/helpers/api.dart';
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class XReport extends StatefulWidget {
   const XReport({super.key});

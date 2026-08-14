@@ -1,19 +1,19 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '/widgets/loading_layout.dart';
+import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-import '/models/data_model.dart';
-import '/models/director/inventory_model.dart';
+import 'package:flutter_mdokon/core/state/data_model.dart';
+import 'package:flutter_mdokon/features/director/models/inventory_model.dart';
 
-import '/widgets/custom_app_bar.dart';
-import '/widgets/dropdown_value.dart';
-import '/widgets/filter/label.dart';
-import '/widgets/table/table.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
+import 'package:flutter_mdokon/shared/widgets/table/table_widget.dart';
 
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class InventoryCreate extends StatelessWidget {
   const InventoryCreate({super.key});
@@ -43,11 +43,11 @@ class InventoryCreate extends StatelessWidget {
                       dataKey: 'posId',
                     ),
                     if (MediaQuery.of(context).size.width > 320) ...[
-                      TextFielItem(
+                      TextFieldItem(
                         label: '${context.tr('inventory')} №',
                         dataKey: 'inventoryNumber',
                       ),
-                      TextFielItem(
+                      TextFieldItem(
                         label: 'note',
                         dataKey: 'note',
                       ),
@@ -347,11 +347,11 @@ class SearchItem extends StatelessWidget {
   }
 }
 
-class TextFielItem extends StatelessWidget {
+class TextFieldItem extends StatelessWidget {
   final String label;
   final String dataKey;
 
-  const TextFielItem({
+  const TextFieldItem({
     super.key,
     required this.label,
     required this.dataKey,

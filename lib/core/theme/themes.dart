@@ -1,162 +1,283 @@
 import 'package:flutter/material.dart';
-import 'helper.dart';
 
-// Light Theme
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
+import 'package:flutter_mdokon/core/theme/app_typography.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+
+// Light Theme — базовая тема дизайн-системы mDokon POS.
 final ThemeData lightTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
-  primaryColor: mainColor,
-  primaryColorLight: mainColor,
-  scaffoldBackgroundColor: Colors.white,
-  textSelectionTheme: TextSelectionThemeData(
-    cursorColor: mainColor,
-    selectionHandleColor: mainColor,
+  primaryColor: AppColors.primary,
+  primaryColorLight: AppColors.primarySoft,
+  scaffoldBackgroundColor: AppColors.canvas,
+  canvasColor: AppColors.canvas,
+  dividerColor: AppColors.border,
+  colorScheme: const ColorScheme.light(
+    primary: AppColors.primary,
+    onPrimary: AppColors.onPrimary,
+    primaryContainer: AppColors.primarySoft,
+    onPrimaryContainer: AppColors.primary,
+    secondary: AppColors.primary,
+    onSecondary: AppColors.onPrimary,
+    surface: AppColors.surface,
+    onSurface: AppColors.textPrimary,
+    surfaceContainerHighest: AppColors.canvas,
+    error: AppColors.danger,
+    onError: AppColors.onPrimary,
+    outline: AppColors.border,
+    outlineVariant: AppColors.divider,
+  ),
+  textTheme: const TextTheme(
+    displayLarge: AppText.display,
+    headlineMedium: AppText.amount,
+    titleLarge: AppText.h1,
+    titleMedium: AppText.h2,
+    bodyLarge: AppText.body,
+    bodyMedium: AppText.secondary,
+    bodySmall: AppText.small,
+    labelLarge: AppText.button,
+    labelSmall: AppText.caption,
+  ),
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: AppColors.primary,
+    selectionColor: AppColors.selection,
+    selectionHandleColor: AppColors.primary,
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: white,
+    fillColor: AppColors.canvas,
+    hintStyle: AppText.body.copyWith(color: AppColors.iconMuted),
+    labelStyle: AppText.caption,
+    errorStyle: AppText.small.copyWith(color: AppColors.dangerText),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppDimens.gap16,
+      vertical: AppDimens.gap12,
+    ),
     border: inputBorder,
     enabledBorder: inputBorder,
+    disabledBorder: inputBorder,
+    errorBorder: inputErrorBorder,
     focusedErrorBorder: inputErrorBorder,
     focusedBorder: inputFocusBorder,
   ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: AppColors.surface,
+    surfaceTintColor: AppColors.surface,
+    foregroundColor: AppColors.textPrimary,
+    elevation: 0,
+    centerTitle: false,
+    titleTextStyle: AppText.h1,
+    iconTheme: IconThemeData(color: AppColors.textPrimary),
+  ),
   datePickerTheme: DatePickerThemeData(
-    backgroundColor: Colors.white,
-    headerBackgroundColor: mainColor,
-    headerForegroundColor: Colors.white,
-    rangePickerBackgroundColor: Colors.grey[200],
-    rangePickerHeaderBackgroundColor: mainColor,
-    rangePickerHeaderForegroundColor: Colors.white,
+    backgroundColor: AppColors.surface,
+    headerBackgroundColor: AppColors.primary,
+    headerForegroundColor: AppColors.onPrimary,
+    rangePickerBackgroundColor: AppColors.canvas,
+    rangePickerHeaderBackgroundColor: AppColors.primary,
+    rangePickerHeaderForegroundColor: AppColors.onPrimary,
     cancelButtonStyle: ButtonStyle(
-      foregroundColor: WidgetStateProperty.all(mainColor),
+      foregroundColor: WidgetStateProperty.all(AppColors.textSecondary),
     ),
     confirmButtonStyle: ButtonStyle(
-      foregroundColor: WidgetStateProperty.all(mainColor),
+      foregroundColor: WidgetStateProperty.all(AppColors.primary),
     ),
-    todayBackgroundColor: WidgetStateProperty.all(mainColor),
-  ),
-
-  // Цвета для кнопок
-  buttonTheme: const ButtonThemeData(
-    buttonColor: Colors.blue, // цвет кнопок
-    textTheme: ButtonTextTheme.primary, // стиль текста кнопок
+    todayBackgroundColor: WidgetStateProperty.all(AppColors.primary),
+    shape: const RoundedRectangleBorder(borderRadius: AppDimens.card),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: mainColor,
-      foregroundColor: white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.onPrimary,
+      disabledBackgroundColor: AppColors.disabledSurface,
+      disabledForegroundColor: AppColors.disabledText,
+      minimumSize: const Size(0, AppDimens.heightLarge),
+      elevation: 0,
+      textStyle: AppText.button,
+      shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
     ),
   ),
-  dialogTheme: DialogThemeData(
-    backgroundColor: Colors.white,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(
-        Radius.circular(20),
-      ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
+      minimumSize: const Size(0, AppDimens.heightMedium),
+      side: const BorderSide(color: AppColors.border),
+      textStyle: AppText.secondaryBold,
+      shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
     ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColors.primary,
+      iconColor: AppColors.primary,
+      textStyle: AppText.secondaryBold,
+      minimumSize: const Size(0, AppDimens.tapTarget),
+      shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
+    ),
+  ),
+  iconButtonTheme: IconButtonThemeData(
+    style: IconButton.styleFrom(
+      foregroundColor: AppColors.textPrimary,
+      minimumSize: const Size(AppDimens.tapTarget, AppDimens.tapTarget),
+    ),
+  ),
+  cardTheme: const CardThemeData(
+    color: AppColors.surface,
+    surfaceTintColor: AppColors.surface,
+    elevation: 0,
+    margin: EdgeInsets.zero,
+    shape: RoundedRectangleBorder(
+      borderRadius: AppDimens.card,
+      side: BorderSide(color: AppColors.border),
+    ),
+  ),
+  dialogTheme: const DialogThemeData(
+    backgroundColor: AppColors.surface,
+    surfaceTintColor: AppColors.surface,
+    elevation: 0,
+    titleTextStyle: AppText.h2,
+    contentTextStyle: AppText.secondary,
+    shape: RoundedRectangleBorder(borderRadius: AppDimens.card),
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: AppColors.surface,
+    surfaceTintColor: AppColors.surface,
+    modalBackgroundColor: AppColors.surface,
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: AppDimens.sheet),
   ),
   dataTableTheme: DataTableThemeData(
     columnSpacing: 10,
     horizontalMargin: 10,
-    headingRowColor: WidgetStateProperty.all(Color(0xFFF5F5F5)),
-    headingTextStyle: TextStyle(
-      color: black,
-      fontWeight: FontWeight.bold,
+    dividerThickness: 1,
+    headingRowColor: WidgetStateProperty.all(AppColors.canvas),
+    headingTextStyle: AppText.caption,
+    dataRowColor: WidgetStateProperty.all(AppColors.surface),
+    dataTextStyle: AppText.secondaryBold,
+  ),
+  chipTheme: ChipThemeData(
+    backgroundColor: AppColors.surface,
+    selectedColor: AppColors.primary,
+    labelStyle: AppText.secondaryBold,
+    side: const BorderSide(color: AppColors.border),
+    shape: const RoundedRectangleBorder(borderRadius: AppDimens.pill),
+  ),
+  progressIndicatorTheme: const ProgressIndicatorThemeData(
+    color: AppColors.primary,
+    circularTrackColor: AppColors.primarySoft,
+  ),
+  switchTheme: SwitchThemeData(
+    thumbColor: WidgetStateProperty.all(AppColors.surface),
+    trackColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? AppColors.primary : AppColors.border,
     ),
-    dataRowColor: WidgetStateProperty.all(white),
-    dataTextStyle: TextStyle(
-      color: black,
-    ),
+    trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
   ),
-  progressIndicatorTheme: ProgressIndicatorThemeData(
-    color: mainColor,
+  dividerTheme: const DividerThemeData(
+    color: AppColors.border,
+    thickness: 1,
+    space: 1,
   ),
-  bottomSheetTheme: BottomSheetThemeData(
-    backgroundColor: Colors.white,
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: AppColors.surface,
+    selectedItemColor: AppColors.primary,
+    unselectedItemColor: AppColors.textSecondary,
+    selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+    unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+    type: BottomNavigationBarType.fixed,
+    elevation: 0,
   ),
-  textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(
-      overlayColor: Colors.black,
-      foregroundColor: black,
-      iconColor: black,
-    ),
-  ),
-
-  // iconTheme: IconThemeData(
-  //   color: white,
-  // ),
-  // iconButtonTheme: IconButtonThemeData(
-  //   style: ButtonStyle(
-  //     iconColor: WidgetStateProperty.all(Colors.white),
-  //   ),
-  // ),
 );
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Dark Theme
+// Dark Theme — тёмная инверсия тех же токенов.
 final ThemeData darkTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  primaryColor: Colors.grey[900], // основной цвет
+  primaryColor: AppColors.primary,
   fontFamily: 'SFPro',
-
-  // Цвета для фона
-  scaffoldBackgroundColor: const Color(0xFF0D0D0D), // цвет заднего фона
-  // Цвета для инпутов
+  scaffoldBackgroundColor: DarkThemeColors.bgColor,
+  canvasColor: DarkThemeColors.bgColor,
+  colorScheme: const ColorScheme.dark(
+    primary: AppColors.primary,
+    onPrimary: AppColors.onPrimary,
+    surface: DarkThemeColors.cardColor,
+    onSurface: DarkThemeColors.textColor,
+    error: AppColors.danger,
+  ),
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: AppColors.primary,
+    selectionHandleColor: AppColors.primary,
+  ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: Colors.grey[800], // цвет для заполненных инпутов
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
+    fillColor: DarkThemeColors.inputColor,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppDimens.gap16,
+      vertical: AppDimens.gap12,
+    ),
+    border: const OutlineInputBorder(
+      borderRadius: AppDimens.control,
       borderSide: BorderSide.none,
     ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
-      borderSide: const BorderSide(color: Colors.redAccent),
+    enabledBorder: const OutlineInputBorder(
+      borderRadius: AppDimens.control,
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: const OutlineInputBorder(
+      borderRadius: AppDimens.control,
+      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+    ),
+    errorBorder: const OutlineInputBorder(
+      borderRadius: AppDimens.control,
+      borderSide: BorderSide(color: AppColors.danger, width: 1.5),
+    ),
+    focusedErrorBorder: const OutlineInputBorder(
+      borderRadius: AppDimens.control,
+      borderSide: BorderSide(color: AppColors.danger, width: 1.5),
     ),
   ),
-
-  dialogTheme: DialogThemeData(
-    backgroundColor: Color(0xFF171717),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(
-        Radius.circular(20),
-      ),
-    ),
-  ),
-  // Цвета для кнопок
-  buttonTheme: const ButtonThemeData(
-    buttonColor: Colors.redAccent, // цвет кнопок
-    textTheme: ButtonTextTheme.primary, // стиль текста кнопок
+  dialogTheme: const DialogThemeData(
+    backgroundColor: DarkThemeColors.cardColor,
+    surfaceTintColor: DarkThemeColors.cardColor,
+    shape: RoundedRectangleBorder(borderRadius: AppDimens.card),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: mainColor,
-      foregroundColor: white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.onPrimary,
+      disabledBackgroundColor: DarkThemeColors.cardColor,
+      disabledForegroundColor: AppColors.textSecondary,
+      minimumSize: const Size(0, AppDimens.heightLarge),
+      elevation: 0,
+      textStyle: AppText.button,
+      shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
     ),
   ),
-  bottomSheetTheme: BottomSheetThemeData(
-    backgroundColor: Colors.black,
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: DarkThemeColors.cardColor,
+    surfaceTintColor: DarkThemeColors.cardColor,
+    modalBackgroundColor: DarkThemeColors.cardColor,
+    shape: RoundedRectangleBorder(borderRadius: AppDimens.sheet),
+  ),
+  progressIndicatorTheme: const ProgressIndicatorThemeData(
+    color: AppColors.primary,
   ),
 );
 
 class LightThemeColors {
-  static const Color bgColor = Color(0xFFFFFFFF);
-  static const Color textColor = Color(0xFF000000);
-  static const Color textColorSecond = Color(0xFF000000);
-  static const Color cardColor = Color(0xFFF5F5F5);
-  static const Color inputColor = Color(0xFFFFFFFF);
+  static const Color bgColor = AppColors.surface;
+  static const Color textColor = AppColors.textPrimary;
+  static const Color textColorSecond = AppColors.textSecondary;
+  static const Color cardColor = AppColors.canvas;
+  static const Color inputColor = AppColors.surface;
   static LinearGradient gradient = LinearGradient(
     colors: [
-      const Color(0xFF004999).withValues(alpha: 0.05),
-      const Color(0xFF007AFF).withValues(alpha: 0.25),
+      AppColors.primary.withValues(alpha: 0.05),
+      AppColors.primary.withValues(alpha: 0.25),
     ],
     stops: const [0.3, 1],
     begin: Alignment.bottomLeft,
@@ -164,8 +285,8 @@ class LightThemeColors {
   );
   static LinearGradient secondGradient = LinearGradient(
     colors: [
-      const Color(0xFF004999),
-      const Color(0xFF007AFF).withValues(alpha: 0.2),
+      AppColors.primaryDark,
+      AppColors.primary.withValues(alpha: 0.2),
     ],
     stops: const [0.2, 1],
     begin: Alignment.bottomLeft,

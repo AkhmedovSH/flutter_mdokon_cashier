@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import '/models/cashier/dashboard_model.dart';
-import '/models/user_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/auth/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '/helpers/api.dart';
-import '../../../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});

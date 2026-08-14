@@ -5,22 +5,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '/models/cashier/dashboard_model.dart';
-import '/widgets/loading_layout.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 
-import '/helpers/api.dart';
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-class AgentHistory extends StatefulWidget {
-  const AgentHistory({super.key});
+class AgentCheques extends StatefulWidget {
+  const AgentCheques({super.key});
 
   @override
-  State<AgentHistory> createState() => _AgentHistoryState();
+  State<AgentCheques> createState() => _AgentChequesState();
 }
 
-class _AgentHistoryState extends State<AgentHistory> {
+class _AgentChequesState extends State<AgentCheques> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime selectedDate = DateTime.now();
   dynamic cheques = [];

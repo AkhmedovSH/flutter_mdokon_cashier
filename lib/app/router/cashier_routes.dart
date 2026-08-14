@@ -1,19 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-import '/pages/cashier/dashboard/cheques/cheq_detail.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_detail.dart';
 
-import '/pages/cashier/dashboard/return.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/return.dart';
 
-import '/pages/cashier/dashboard/home/search.dart';
-import '/pages/cashier/payment/payment_sample.dart';
-import '/pages/cashier/dashboard/profile/x_report.dart';
-import '/pages/cashier/dashboard/profile/balance.dart';
-import '/pages/cashier/dashboard/profile/info.dart';
-import '/pages/cashier/dashboard/profile/settings.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/search.dart';
+import 'package:flutter_mdokon/features/cashier/pages/payment/payment_sample.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/x_report.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/balance.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/info.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/settings.dart';
 
-// import '/pages/cashier/client_debt.dart';
-// import '/pages/cashier/sales_on_credit.dart';
+// import 'package:flutter_mdokon/features/cashier/pages/client_debt.dart';
+// import 'package:flutter_mdokon/features/cashier/pages/sales_on_credit.dart';
 
 Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widget child) {
   return CupertinoPage(
@@ -37,7 +37,7 @@ List<RouteBase> cashiers = [
     path: '/cheque/detail/:id',
     pageBuilder: (context, state) {
       final String id = state.pathParameters['id']!;
-      return cupertinoPageBuilder(context, state, CheqDetail(id: id));
+      return cupertinoPageBuilder(context, state, ChequeDetail(id: id));
     },
   ),
   GoRoute(

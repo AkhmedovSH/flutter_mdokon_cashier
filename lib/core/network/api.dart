@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import 'helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 const hostUrl = "https://cabinet.mdokon.uz";
 

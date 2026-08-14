@@ -3,7 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unicons/unicons.dart';
 
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 const list = [];
 

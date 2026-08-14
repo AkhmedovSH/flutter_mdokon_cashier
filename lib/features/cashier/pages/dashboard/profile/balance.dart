@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import '/helpers/api.dart';
-import '/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 
 class Balance extends StatefulWidget {
   const Balance({super.key});

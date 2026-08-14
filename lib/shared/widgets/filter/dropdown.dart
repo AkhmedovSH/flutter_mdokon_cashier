@@ -5,12 +5,12 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-import '/widgets/dropdown_value.dart';
-import '/widgets/filter/label.dart';
+import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 
-import '/models/filter_model.dart';
+import 'package:flutter_mdokon/core/state/filter_model.dart';
 
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class Dropdown extends StatelessWidget {
   final String label;

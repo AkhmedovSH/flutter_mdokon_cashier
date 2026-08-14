@@ -2,11 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/widgets/filter/label.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 
-import '/models/filter_model.dart';
+import 'package:flutter_mdokon/core/state/filter_model.dart';
 
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class Search extends StatelessWidget {
   const Search({super.key});

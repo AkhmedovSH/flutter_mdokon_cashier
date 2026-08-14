@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
-import '/helpers/themes.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 
 class ThemeModel with ChangeNotifier {
   ThemeData _themeData;

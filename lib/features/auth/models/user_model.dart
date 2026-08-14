@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/helpers/api.dart';
-import 'package:flutter_mdokon/helpers/helper.dart';
-import 'package:flutter_mdokon/widgets/complete.dart';
-import 'package:flutter_mdokon/widgets/update.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/shared/widgets/complete_dialog.dart';
+import 'package:flutter_mdokon/shared/widgets/update.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';

@@ -1,20 +1,20 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_mdokon/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import '/pages/cashier/dashboard/profile/balance.dart';
-import '/pages/page_not_found.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/balance.dart';
+import 'package:flutter_mdokon/shared/pages/page_not_found.dart';
 
 // auth
-import '/pages/auth/login.dart';
-import '/pages/auth/cashboxes.dart';
+import 'package:flutter_mdokon/features/auth/pages/login.dart';
+import 'package:flutter_mdokon/features/auth/pages/cashboxes.dart';
 
-import '/pages/cashier/dashboard/dashboard.dart';
-import '/pages/director/index.dart';
-import '/pages/agent/dashboard.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/dashboard.dart';
+import 'package:flutter_mdokon/features/director/pages/dashboard.dart';
+import 'package:flutter_mdokon/features/agent/pages/dashboard.dart';
 
-import 'cashier.dart';
-import 'director.dart';
+import 'package:flutter_mdokon/app/router/cashier_routes.dart';
+import 'package:flutter_mdokon/app/router/director_routes.dart';
 
 GetStorage storage = GetStorage();
 

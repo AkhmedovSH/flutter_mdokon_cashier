@@ -1,16 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import '/models/cashier/dashboard_model.dart';
-import '/pages/cashier/dashboard/profile/profile.dart';
-import '/pages/cashier/dashboard/return.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/profile.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/return.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_nav_bar.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
 
-import 'home/index.dart';
-import 'cheques/cheques.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/home.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheques.dart';
 
-import '../../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class CashierDashboard extends StatefulWidget {
   const CashierDashboard({
@@ -18,10 +20,10 @@ class CashierDashboard extends StatefulWidget {
   });
 
   @override
-  State<CashierDashboard> createState() => _DashboardState();
+  State<CashierDashboard> createState() => _CashierDashboardState();
 }
 
-class _DashboardState extends State<CashierDashboard> {
+class _CashierDashboardState extends State<CashierDashboard> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -38,113 +40,27 @@ class _DashboardState extends State<CashierDashboard> {
               child: IndexedStack(
                 index: dashboardModel.currentIndex,
                 children: [
-                  Index(),
+                  CashierHome(),
                   dashboardModel.currentIndex == 1 ? Cheques() : SizedBox(),
                   dashboardModel.currentIndex == 2 ? Return() : SizedBox(),
                   Profile(),
                 ],
               ),
             ),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: black.withValues(alpha: 0.3),
-                    width: 0.33,
-                  ),
+            bottomNavigationBar: CashierNavBar(
+              currentIndex: dashboardModel.currentIndex,
+              onTap: dashboardModel.setCurrentIndex,
+              items: [
+                CashierNavItem(
+                  icon: UniconsLine.shopping_cart,
+                  labelKey: 'sale',
+                  badge: context.watch<SaleModel>().lineCount,
                 ),
-              ),
-              child: BottomAppBar(
-                padding: const EdgeInsets.all(0),
-                elevation: 0,
-                color: Colors.transparent,
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    splashFactory: NoSplash.splashFactory,
-                  ),
-                  child: BottomNavigationBar(
-                    onTap: (index) => dashboardModel.setCurrentIndex(index),
-                    backgroundColor: Colors.transparent,
-                    selectedItemColor: mainColor,
-                    currentIndex: dashboardModel.currentIndex,
-                    type: BottomNavigationBarType.fixed,
-                    selectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                    unselectedLabelStyle: TextStyle(
-                      color: grey,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                    elevation: 0,
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: Icon(UniconsLine.monitor),
-                        label: context.tr('sale'),
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(UniconsLine.receipt),
-                        label: context.tr('checks'),
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(UniconsLine.backward),
-                        label: context.tr('return'),
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(UniconsLine.user),
-                        label: context.tr('profile'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                const CashierNavItem(icon: UniconsLine.receipt, labelKey: 'checks'),
+                const CashierNavItem(icon: UniconsLine.backward, labelKey: 'return'),
+                const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),
+              ],
             ),
-
-            // bottomNavigationBar: Container(
-            //   decoration: BoxDecoration(
-            //     color: const Color(0xFFFEFEFE),
-            //     borderRadius: BorderRadius.circular(20),
-            //     boxShadow: [boxShadow],
-            //   ),
-            //   child: ClipRRect(
-            //     borderRadius: const BorderRadius.only(
-            //       topLeft: Radius.circular(20.0),
-            //       topRight: Radius.circular(20.0),
-            //     ),
-            //     child: BottomAppBar(
-            //       padding: EdgeInsets.all(5),
-            //       elevation: 0,
-            //       child: BottomNavigationBar(
-            //         onTap: (index) => setState(() {
-            //           currentIndex = index;
-            //         }),
-            //         backgroundColor: Colors.transparent,
-            //         selectedItemColor: blue,
-            //         currentIndex: currentIndex,
-            //         type: BottomNavigationBarType.fixed,
-            //         selectedFontSize: 10,
-            //         unselectedFontSize: 10,
-            //         selectedLabelStyle: TextStyle(
-            //           fontWeight: FontWeight.w600,
-            //           color: blue,
-            //           fontSize: 14,
-            //         ),
-            //         unselectedLabelStyle: TextStyle(
-            //           color: black,
-            //           fontWeight: FontWeight.w400,
-            //         ),
-            //         elevation: 0,
-            //         items: [
-            //           getDashBoardItem(UniconsLine.monitor, 'sale'),
-            //           getDashBoardItem(UniconsLine.receipt, 'checks'),
-            //           getDashBoardItem(UniconsLine.backward, 'return'),
-            //           getDashBoardItem(UniconsLine.user, 'profile'),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            // ),
           );
         },
       ),

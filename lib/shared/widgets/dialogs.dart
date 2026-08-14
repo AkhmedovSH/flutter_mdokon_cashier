@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/models/cashier/print_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:provider/provider.dart';
 
 Future<dynamic> showPrinterPicker(dynamic context) async {

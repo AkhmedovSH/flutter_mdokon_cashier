@@ -2,11 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get_storage/get_storage.dart';
-import '/helpers/api.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
 
-import '/helpers/helper.dart';
-import '/models/cashier/dashboard_model.dart';
-import '/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

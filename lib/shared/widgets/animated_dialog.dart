@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:go_router/go_router.dart';
 
 class AnimatedDialog extends StatefulWidget {

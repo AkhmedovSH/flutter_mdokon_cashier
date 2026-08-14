@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import '/helpers/helper.dart';
-import '/models/data_model.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/state/data_model.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../helpers/api.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});

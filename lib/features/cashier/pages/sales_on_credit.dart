@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 
-import '../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class SalesOnCredit extends StatefulWidget {
   const SalesOnCredit({super.key});

@@ -1,174 +1,182 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/models/user_model.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
-import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '/widgets/custom_app_bar.dart';
 
-import '../../helpers/helper.dart';
-import '../../helpers/api.dart';
+import 'package:flutter_mdokon/features/auth/models/auth_model.dart';
+import 'package:flutter_mdokon/features/auth/widgets/auth_background.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
-class CashBoxes extends StatefulWidget {
+/// Выбор кассы после входа. Оформление повторяет экран [Login]:
+/// фирменный фон, логотип-хедер и белая карточка со списком касс.
+class CashBoxes extends StatelessWidget {
   final List poses;
-  const CashBoxes({
-    super.key,
-    required this.poses,
-  });
 
-  @override
-  State<CashBoxes> createState() => _CashBoxesState();
-}
+  const CashBoxes({super.key, required this.poses});
 
-class _CashBoxesState extends State<CashBoxes> {
-  final storage = GetStorage();
-
-  List poses = [];
-
-  Future<void> selectCashbox(dynamic pos, dynamic cashbox) async {
-    UserModel userModel = Provider.of<UserModel>(context, listen: false);
-
-    final prepareprefs = {
-      'defaultCurrency': cashbox['defaultCurrency'],
-      'defaultCurrencyName': cashbox['defaultCurrency'] == 2 ? 'USD' : 'So\'m',
-      'hidePriceIn': pos['hidePriceIn'],
-      'loyaltyApi': pos['loyaltyApi'],
-      'saleMinus': pos['saleMinus'],
-      'posId': pos['posId'],
-      'posName': pos['posName'],
-      'posAddress': pos['posAddress'],
-      'posPhone': pos['posPhone'],
-      'cashboxId': cashbox['id'],
-      'cashboxName': cashbox['name'],
-    };
-    storage.write('cashbox', prepareprefs);
-    final response = await post('/services/desktop/api/open-shift', {
-      'posId': pos['posId'],
-      'cashboxId': cashbox['id'],
-      'offline': false,
-    });
-    bool success = await userModel.getPaymentTypes(pos['posId']);
-    await userModel.getCashboxSettings(pos['posId']);
-
-    storage.write('shift', response);
-    if (response['success'] && success && mounted) {
-      context.go('/cashier');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    print(widget.poses);
-    poses = widget.poses;
+  Future<void> _select(BuildContext context, Map pos, Map cashbox) async {
+    final redirect = await context.read<AuthModel>().selectCashbox(
+          pos: Map.from(pos),
+          cashbox: Map.from(cashbox),
+        );
+    if (redirect == null || !context.mounted) return;
+    context.go(redirect.path, extra: redirect.extra);
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthModel>();
+
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Свободные кассы',
-        leading: true,
-      ),
-      body: Container(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Stack(
+      backgroundColor: AppColors.primary,
+      body: AuthBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimens.gutter,
+              AppDimens.gap24,
+              AppDimens.gutter,
+              AppDimens.gap24,
+            ),
+            child: Column(
               children: [
-                SvgPicture.asset(
-                  'images/icons/cashbox.svg',
-                  width: MediaQuery.of(context).size.width,
-                ),
-                Positioned(
-                  bottom: -10,
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: MediaQuery.of(context).size.width,
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 5),
-                          padding: const EdgeInsets.only(bottom: 2),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: white, width: 1),
-                            ),
-                          ),
-                          child: Text(
-                            '',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            'Выберите кассу для входа',
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                const AuthLogoHeader(subtitle: 'Выберите кассу, чтобы открыть смену'),
+                const SizedBox(height: AppDimens.gap24),
+                Expanded(child: _CashboxCard(poses: poses, auth: auth, onSelect: _select)),
               ],
             ),
-            SizedBox(height: 10),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    for (var i = 0; i < poses.length; i++) ...[
-                      Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              poses[i]['posName'],
-                              style: TextStyle(
-                                color: black,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          for (var j = 0; j < poses[i]['cashboxList'].length; j++)
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              width: MediaQuery.of(context).size.width * 0.6,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: blue,
-                                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                                  side: const BorderSide(
-                                    color: Color.fromARGB(0, 0, 100, 1),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  selectCashbox(poses[i], poses[i]['cashboxList'][j]);
-                                },
-                                child: Text(
-                                  poses[i]['cashboxList'][j]['name'],
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Белая карточка со списком точек и их касс.
+class _CashboxCard extends StatelessWidget {
+  final List poses;
+  final AuthModel auth;
+  final Future<void> Function(BuildContext, Map, Map) onSelect;
+
+  const _CashboxCard({
+    required this.poses,
+    required this.auth,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        AppDimens.gap24,
+        AppDimens.gutter,
+        AppDimens.gap16,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppDimens.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Свободные кассы', style: AppText.h1),
+          const SizedBox(height: AppDimens.gap4),
+          Text('Смена откроется сразу после выбора', style: AppText.secondary),
+          const SizedBox(height: AppDimens.gap16),
+          if (auth.error != null) ...[
+            AppBanner.danger(title: auth.error!),
+            const SizedBox(height: AppDimens.gap12),
+          ],
+          Expanded(child: _list(context)),
+          const SizedBox(height: AppDimens.gap12),
+          AppButton.secondary(
+            label: '← Выйти',
+            onPressed: auth.submitting ? null : () => context.go('/auth'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _list(BuildContext context) {
+    if (poses.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.point_of_sale_outlined,
+        title: 'Свободных касс нет',
+        text: 'Все кассы точки заняты. Дождитесь закрытия смены или обратитесь к директору.',
+      );
+    }
+
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: poses.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppDimens.gap16),
+      itemBuilder: (context, i) {
+        final pos = poses[i] as Map;
+        final cashboxes = (pos['cashboxList'] as List?) ?? const [];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppSectionLabel('${pos['posName'] ?? ''}'),
+            const SizedBox(height: AppDimens.gap8),
+            for (var j = 0; j < cashboxes.length; j++) ...[
+              if (j > 0) const SizedBox(height: AppDimens.gap8),
+              _CashboxTile(
+                name: '${cashboxes[j]['name'] ?? ''}',
+                enabled: !auth.submitting,
+                onTap: () => onSelect(context, pos, cashboxes[j] as Map),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Строка кассы: иконка, название и стрелка.
+class _CashboxTile extends StatelessWidget {
+  final String name;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _CashboxTile({
+    required this.name,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimens.gap12,
+          vertical: AppDimens.gap8,
+        ),
+        onTap: enabled ? onTap : null,
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: AppColors.canvas,
+                borderRadius: AppDimens.control,
+              ),
+              child: const Icon(
+                Icons.point_of_sale_outlined,
+                size: 20,
+                color: AppColors.iconMuted,
               ),
             ),
+            const SizedBox(width: AppDimens.gap12),
+            Expanded(child: Text(name, style: AppText.bodyMedium)),
+            const Icon(Icons.chevron_right, size: 20, color: AppColors.iconMuted),
           ],
         ),
       ),

@@ -2,16 +2,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import '/models/cashier/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
 
-import '../cashier/dashboard/home/index.dart';
-import 'cheques.dart';
-import '/pages/cashier/dashboard/profile/profile.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/home.dart';
+import 'package:flutter_mdokon/features/agent/pages/cheques.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/profile.dart';
 
-import '../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class AgentDashboard extends StatefulWidget {
   final int initialPage;
@@ -89,8 +89,8 @@ class _AgentDashboardState extends State<AgentDashboard> {
             //   setState(() => currentIndex = index);
             // },
             children: [
-              dashboardModel.currentIndex == 0 ? Index() : Container(),
-              dashboardModel.currentIndex == 1 ? AgentHistory() : Container(),
+              dashboardModel.currentIndex == 0 ? CashierHome() : Container(),
+              dashboardModel.currentIndex == 1 ? AgentCheques() : Container(),
               Profile(),
             ],
           ),

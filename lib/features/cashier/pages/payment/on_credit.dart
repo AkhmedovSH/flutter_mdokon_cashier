@@ -1,10 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/models/cashier/cashbox_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class OnCredit extends StatefulWidget {
   const OnCredit({super.key});

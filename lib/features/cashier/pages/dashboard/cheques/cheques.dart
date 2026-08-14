@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import '/models/loading_model.dart';
-import '/widgets/loading_layout.dart';
+import 'package:flutter_mdokon/core/state/loading_model.dart';
+import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 
-import '/helpers/api.dart';
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

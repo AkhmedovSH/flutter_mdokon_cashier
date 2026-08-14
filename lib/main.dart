@@ -4,29 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter_mdokon/models/cashier/print_model.dart';
 import 'package:get_storage/get_storage.dart';
-import '/models/cashier/dashboard_model.dart';
-
-import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
 
-import 'models/locale_model.dart';
-import 'models/theme_model.dart';
-import 'models/loading_model.dart';
-import 'models/settings_model.dart';
-import 'models/user_model.dart';
-import 'models/data_model.dart';
-import 'models/filter_model.dart';
-
-import '/models/cashier/cashbox_model.dart';
-import '/models/cashier/payment_model.dart';
-
-import '/models/director/documents_in_model.dart';
-import '/models/director/inventory_model.dart';
-
-import 'helpers/routes/index.dart';
-import 'helpers/themes.dart';
+import 'package:flutter_mdokon/app/app.dart';
+import 'package:flutter_mdokon/app/providers.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,69 +43,9 @@ void main() async {
       path: 'assets/i18n',
       fallbackLocale: const Locale('ru', ''),
       child: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => ThemeModel(theme)),
-          ChangeNotifierProvider(create: (_) => LocaleModel(locale)),
-          ChangeNotifierProvider(create: (_) => LoadingModel()),
-          ChangeNotifierProvider(create: (_) => SettingsModel()),
-          ChangeNotifierProvider(
-            create: (_) => UserModel(
-              storage.read('user') ?? {},
-              storage.read('cashbox') ?? {},
-              storage.read('paymentTypes') ?? [],
-            ),
-          ),
-          ChangeNotifierProvider(create: (_) => DataModel()),
-          ChangeNotifierProvider(create: (_) => FilterModel()),
-          ChangeNotifierProvider(create: (_) => DocumentsInModel()),
-          ChangeNotifierProvider(create: (_) => InventoryModel()),
-          ChangeNotifierProvider(create: (_) => DashboardModel()),
-          ChangeNotifierProvider(create: (_) => CashboxModel()),
-          ChangeNotifierProvider(create: (_) => PaymentModel()),
-          ChangeNotifierProvider(create: (_) => PrinterModel()),
-        ],
-        child: const MyApp(),
+        providers: appProviders(storage: storage, theme: theme, locale: locale),
+        child: const App(),
       ),
     ),
   );
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  Future<void> setInitData() async {
-    // initializeNotifications(context);
-    Provider.of<PrinterModel>(context, listen: false).autoConnectSavedPrinter();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    setInitData();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ToastificationWrapper(
-      child: Consumer2<ThemeModel, LocaleModel>(
-        builder: (context, themeModel, localeModel, child) {
-          context.setLocale(localeModel.locale);
-          return MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: localeModel.locale,
-            themeMode: ThemeMode.system,
-            theme: themeModel.themeData,
-            routerConfig: globalRouter,
-          );
-        },
-      ),
-    );
-  }
 }

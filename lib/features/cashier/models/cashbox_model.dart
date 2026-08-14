@@ -5,8 +5,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 // Assuming these are your existing imports based on the files provided
-import '/helpers/api.dart';
-import '/helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class CashboxModel extends ChangeNotifier {
   final GetStorage storage = GetStorage();

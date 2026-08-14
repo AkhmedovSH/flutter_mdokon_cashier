@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/models/cashier/print_model.dart';
-import 'package:flutter_mdokon/models/loading_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
+import 'package:flutter_mdokon/core/state/loading_model.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import '/models/cashier/dashboard_model.dart';
-import '/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 //
@@ -17,21 +17,21 @@ import 'package:permission_handler/permission_handler.dart';
 // import 'package:screenshot/screenshot.dart';
 import 'package:unicons/unicons.dart';
 
-import '/helpers/api.dart';
-import '../../../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
-class CheqDetail extends StatefulWidget {
+class ChequeDetail extends StatefulWidget {
   final String id;
-  const CheqDetail({
+  const ChequeDetail({
     super.key,
     required this.id,
   });
 
   @override
-  State<CheqDetail> createState() => _CheqDetailState();
+  State<ChequeDetail> createState() => _ChequeDetailState();
 }
 
-class _CheqDetailState extends State<CheqDetail> {
+class _ChequeDetailState extends State<ChequeDetail> {
   Timer? timer;
   // ScreenshotController screenshotController = ScreenshotController();
   GetStorage storage = GetStorage();

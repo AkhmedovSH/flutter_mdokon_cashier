@@ -1,21 +1,17 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
-import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import '/models/data_model.dart';
-import '/models/loading_model.dart';
-import '/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/state/data_model.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/auth/models/auth_model.dart';
+import 'package:flutter_mdokon/features/auth/models/user_model.dart';
+import 'package:flutter_mdokon/features/auth/widgets/auth_background.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
-import '../../helpers/helper.dart';
-import '../../helpers/api.dart';
-import '../../widgets/loading_layout.dart';
-
+/// Экран входа. Вся логика живёт в [AuthModel] — страница только рисует
+/// состояние и выполняет переход по маршруту, который вернула модель.
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -23,497 +19,346 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> with TickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final storage = GetStorage();
-
-  Map payload = {'username': '', 'password': '', 'rememberMe': false};
-  Map data = {
-    'username': TextEditingController(),
-    'password': TextEditingController(),
-  };
-  Map smsData = {
-    'otpController': TextEditingController(),
-    'sendSms': false,
-  };
-
-  bool showPassword = false;
-  bool loading = false;
-
-  Future<void> login() async {
-    FocusScope.of(context).unfocus();
-    LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
-    loadingModel.showLoader(num: 2);
-    try {
-      final data = await post('/auth/login', payload, isGuest: true);
-      if (data == null) {
-        loadingModel.hideLoader();
-        return;
-      }
-      storage.write('access_token', data['access_token']);
-
-      final checkOtp = await get('/services/desktop/api/check-otp');
-      if (httpOk(checkOtp)) {
-        print(checkOtp);
-        if (customIf(checkOtp['sendSms'])) {
-          smsData = checkOtp;
-          setState(() {});
-        } else {
-          getAccount();
-        }
-      }
-    } catch (e) {
-      print(e);
-    }
-    loadingModel.hideLoader();
-  }
-
-  void openPhoneCall() async {
-    if (!await launchUrl(Uri.parse("tel://+998555000089"))) throw 'Could not launch';
-  }
-
-  Future<void> verifyOtp() async {
-    smsData['sendSms'] = false;
-    smsData['otpController'] = '';
-    setState(() {});
-    final response = await post('/services/desktop/api/verify-otp', smsData);
-    if (httpOk(response)) {
-      if (response['success']) {
-        getAccount();
-      }
-    }
-  }
-
-  Future<void> getAccount() async {
-    UserModel userModel = Provider.of<UserModel>(context, listen: false);
-
-    final Map account = await get('/services/desktop/api/account');
-    userModel.setUser({...payload, ...account});
-    var lastLogin = {
-      'year': DateTime.now().year,
-      'month': DateTime.now().month,
-      'day': DateTime.now().day,
-      'hour': DateTime.now().hour,
-      'minute': DateTime.now().minute,
-    };
-    storage.write('lastLogin', (lastLogin));
-
-    var checker = '';
-    for (var i = 0; i < account['authorities'].length; i++) {
-      if (account['authorities'][i] == "ROLE_CASHIER") {
-        checker = 'ROLE_CASHIER';
-      }
-      if (account['authorities'][i] == "ROLE_AGENT") {
-        checker = 'ROLE_AGENT';
-      }
-      if (account['authorities'][i] == "ROLE_OWNER") {
-        checker = 'ROLE_OWNER';
-      }
-      if (account['authorities'][i] == "ROLE_MERCHANDISER") {
-        checker = 'ROLE_MERCHANDISER';
-      }
-    }
-    storage.write('user_roles', (account['authorities']));
-    storage.write('role', checker);
-    if (checker == 'ROLE_CASHIER') {
-      await getAccessPos();
-    } else if (checker == 'ROLE_AGENT') {
-      await getAgentPosId();
-    } else if (checker == 'ROLE_OWNER' || checker == 'ROLE_MERCHANDISER') {
-      // final userSettings = await get("/services/web/api/user-settings");
-      final posBalance = await get("/services/web/api/pos-balance");
-      userModel.setUser({
-        ...storage.read('user'),
-        'posId': data['posId'],
-        'posBalance': posBalance,
-      });
-      if (mounted) {
-        Provider.of<DataModel>(context, listen: false).getData();
-        context.pushReplacement('/director');
-      }
-    } else {
-      showDangerToast('error', description: 'Нет доступа');
-    }
-  }
-
-  Future<void> getAgentPosId() async {
-    final response = await get('/services/desktop/api/get-access-pos');
-    response['isAgent'] = true;
-    response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-    if (mounted) {
-      Provider.of<UserModel>(context, listen: false).setCashbox(response);
-      context.go('/agent');
-    }
-  }
-
-  Future<void> getAccessPos() async {
-    UserModel userModel = Provider.of<UserModel>(context, listen: false);
-    final response = await get('/services/desktop/api/get-access-pos');
-    if (response['openShift']) {
-      storage.remove('shift');
-      response['shift']['defaultCurrencyName'] = response['shift']['defaultCurrency'] == 2 ? 'USD' : 'So\'m';
-      userModel.setCashbox(response['shift']);
-      bool success = await userModel.getPaymentTypes(response['shift']['posId']);
-      await userModel.getCashboxSettings(response['shift']['posId']);
-
-      if (mounted && success) context.go('/cashier');
-    } else {
-      if (mounted) context.go('/auth/cashboxes', extra: {'posList': response['posList']});
-    }
-  }
-
-  Future<void> getData() async {
-    if (storage.read('user') != null) {
-      var user = storage.read('user');
-      if (user['rememberMe'] != null && user['rememberMe']) {
-        payload['username'] = user['username'];
-        payload['password'] = user['password'];
-        payload['rememberMe'] = user['rememberMe'];
-        data['username'].text = user['username'];
-        data['password'].text = user['password'];
-        setState(() {});
-      }
-    }
-    if (storage.read('settings') == null) {
-      storage.write(
-        'settings',
-        {
-          'showChequeProducts': false,
-          'printAfterSale': false,
-          'searchGroupProducts': false,
-          'selectUserAftersale': false,
-          'offlineDeferment': false,
-          'additionalInfo': false,
-          'language': false,
-          'theme': false,
-        },
-      );
-    }
-  }
+class _LoginState extends State<Login> {
+  final _loginController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _otpController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    getData();
+    final auth = context.read<AuthModel>();
+    auth.ensureDefaultSettings();
+    auth.restoreSavedCredentials();
+    _loginController.text = auth.username;
+    _passwordController.text = auth.password;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserModel>(context, listen: false).checkVersion(context);
+      if (mounted) context.read<UserModel>().checkVersion(context);
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return LoadingLayout(
-      body: Scaffold(
-        body: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                if (MediaQuery.of(context).size.width > 320)
-                  Center(
-                    child: SvgPicture.asset(
-                      'images/icons/login_bg.svg',
-                      height: 270,
-                      width: MediaQuery.of(context).size.width,
-                    ),
-                  ),
-                Text(
-                  'Авторизация',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Container(
-                  height: 4,
-                  width: 130,
-                  color: mainColor,
-                  margin: const EdgeInsets.only(bottom: 15),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(20, 10, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: smsData['sendSms']
-                              ? [
-                                  if (smsData['sendSms'])
-                                    Container(
-                                      margin: EdgeInsets.only(bottom: 10),
-                                      child: Text('${smsData['offer']}'),
-                                    ),
+  void dispose() {
+    _loginController.dispose();
+    _passwordController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
 
-                                  TextFormField(
-                                    controller: smsData['otpController'],
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return context.tr('required_field');
-                                      }
-                                      return null;
-                                    },
-                                    onChanged: (value) {
-                                      smsData['otp'] = value;
-                                      setState(() {});
-                                    },
-                                    onTapOutside: (PointerDownEvent event) {
-                                      FocusManager.instance.primaryFocus?.unfocus();
-                                    },
-                                    cursorColor: mainColor,
-                                    textInputAction: TextInputAction.next,
-                                    scrollPadding: EdgeInsets.only(bottom: 200),
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(16),
-                                      prefixIcon: Icon(
-                                        customIf(smsData['otp']) ? UniconsLine.comment_dots : UniconsLine.comment,
-                                        size: 24,
-                                        color: mainColor,
-                                      ),
-                                      border: inputBorder,
-                                      enabledBorder: inputBorder,
-                                      focusedBorder: inputFocusBorder,
-                                      errorBorder: inputErrorBorder,
-                                      focusedErrorBorder: inputErrorBorder,
-                                      hintText: 'Введите смс',
-                                      hintStyle: TextStyle(color: mainColor),
-                                    ),
-                                  ),
-                                ]
-                              : [
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 10),
-                                    child: TextFormField(
-                                      controller: data['username'],
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return context.tr('required_field');
-                                        }
-                                        return null;
-                                      },
-                                      onChanged: (value) {
-                                        setState(() {
-                                          payload['username'] = value;
-                                        });
-                                      },
-                                      onTapOutside: (PointerDownEvent event) {
-                                        FocusManager.instance.primaryFocus?.unfocus();
-                                      },
-                                      cursorColor: mainColor,
-                                      textInputAction: TextInputAction.next,
-                                      scrollPadding: EdgeInsets.only(bottom: 200),
-                                      decoration: InputDecoration(
-                                        contentPadding: const EdgeInsets.all(16),
-                                        prefixIcon: Icon(
-                                          payload['username'].length > 0 ? UniconsLine.user_check : UniconsLine.user,
-                                          size: 24,
-                                          color: mainColor,
-                                        ),
-                                        border: inputBorder,
-                                        enabledBorder: inputBorder,
-                                        focusedBorder: inputFocusBorder,
-                                        errorBorder: inputErrorBorder,
-                                        focusedErrorBorder: inputErrorBorder,
-                                        hintText: 'Логин',
-                                        hintStyle: TextStyle(color: mainColor),
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 10),
-                                    child: TextFormField(
-                                      controller: data['password'],
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return context.tr('required_field');
-                                        }
-                                        return null;
-                                      },
-                                      onChanged: (value) {
-                                        setState(() {
-                                          payload['password'] = value;
-                                        });
-                                      },
-                                      onTapOutside: (PointerDownEvent event) {
-                                        FocusManager.instance.primaryFocus?.unfocus();
-                                      },
-                                      // onFieldSubmitted: (val) {
-                                      //   if (_formKey.currentState!.validate()) {
-                                      //     login();
-                                      //   }
-                                      // },
-                                      cursorColor: mainColor,
-                                      obscureText: !showPassword,
-                                      scrollPadding: EdgeInsets.only(bottom: 100),
-                                      decoration: InputDecoration(
-                                        contentPadding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                                        prefixIcon: Icon(
-                                          showPassword ? UniconsLine.unlock_alt : UniconsLine.lock_alt,
-                                          size: 30,
-                                          color: mainColor,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              showPassword = !showPassword;
-                                            });
-                                          },
-                                          icon: Icon(
-                                            showPassword ? UniconsLine.eye : UniconsLine.eye_slash,
-                                            size: 24,
-                                            color: grey,
-                                          ),
-                                        ),
-                                        border: inputBorder,
-                                        enabledBorder: inputBorder,
-                                        focusedBorder: inputFocusBorder,
-                                        errorBorder: inputErrorBorder,
-                                        focusedErrorBorder: inputErrorBorder,
-                                        focusColor: mainColor,
-                                        hintText: 'Пароль',
-                                        hintStyle: TextStyle(color: mainColor),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                        ),
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
+    final redirect = await context.read<AuthModel>().submit();
+    if (redirect == null || !mounted) return;
+
+    // Справочники директора грузим фоном, чтобы дашборд открылся сразу.
+    if (redirect.path == '/director') context.read<DataModel>().getData();
+    context.go(redirect.path, extra: redirect.extra);
+  }
+
+  Future<void> _callSupport() async {
+    final uri = Uri.parse('tel://+998555000089');
+    if (!await launchUrl(uri)) showDangerToast('Не удалось открыть звонок');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthModel>();
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      resizeToAvoidBottomInset: false,
+      body: AuthBackground(
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  AppDimens.gutter,
+                  AppDimens.gap24,
+                  AppDimens.gutter,
+                  AppDimens.gap24 + viewInsets,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - AppDimens.gap24 * 2),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AuthLogoHeader(
+                        subtitle: auth.isOtpStep
+                            ? 'Подтверждение по SMS'
+                            : 'Вход по логину и паролю',
                       ),
-                      Row(
-                        children: [
-                          Transform.scale(
-                            scale: 0.9,
-                            child: Checkbox(
-                              value: payload['rememberMe'],
-                              activeColor: mainColor,
-                              onChanged: (value) {
-                                setState(() {
-                                  payload['rememberMe'] = !payload['rememberMe'];
-                                });
-                              },
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                payload['rememberMe'] = !payload['rememberMe'];
-                              });
-                            },
-                            child: Text(
-                              'Запомнить меня',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: AppDimens.gap24),
+                      _AuthCard(
+                        auth: auth,
+                        loginController: _loginController,
+                        passwordController: _passwordController,
+                        otpController: _otpController,
+                        onSubmit: _submit,
                       ),
-                      SizedBox(
-                        height: 100,
-                      ),
+                      const SizedBox(height: AppDimens.gap16),
+                      _SupportRow(onTap: _callSupport),
                     ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
-        floatingActionButton: Container(
-          color: CustomTheme.of(context).bgColor,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
+      ),
+    );
+  }
+}
+
+/// Белая карточка формы: поля, ошибка, кнопка, демо-подсказка.
+class _AuthCard extends StatelessWidget {
+  final AuthModel auth;
+  final TextEditingController loginController;
+  final TextEditingController passwordController;
+  final TextEditingController otpController;
+  final VoidCallback onSubmit;
+
+  const _AuthCard({
+    required this.auth,
+    required this.loginController,
+    required this.passwordController,
+    required this.otpController,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        AppDimens.gap24,
+        AppDimens.gutter,
+        AppDimens.gap24,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppDimens.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (auth.isOtpStep)
+            ..._otpFields(context)
+          else
+            ..._credentialFields(context),
+          if (auth.error != null) ...[
+            const SizedBox(height: AppDimens.gap12),
+            _ErrorBanner(message: auth.error!),
+          ],
+          const SizedBox(height: AppDimens.gap16),
+          Row(
             children: [
-              SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${context.tr('no_account')}?',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(width: 5),
-                  GestureDetector(
-                    onTap: () {
-                      openPhoneCall();
-                    },
-                    child: Text(
-                      context.tr('contact_us'),
-                      style: TextStyle(
-                        color: mainColor,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              Container(
-                margin: EdgeInsets.only(left: 32),
-                child: Row(
-                  spacing: 10,
-                  children: [
-                    if (smsData['sendSms'])
-                      SizedBox(
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: white,
-                            overlayColor: grey,
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              side: BorderSide(color: grey),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              smsData['sendSms'] = false;
-                            });
-                          },
-                          child: Icon(
-                            UniconsLine.arrow_left,
-                            color: grey,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-                    Expanded(
-                      child: SizedBox(
-                        height: 55,
-                        width: MediaQuery.of(context).size.width,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: Size(150, 50),
-                            backgroundColor: mainColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              if (smsData['sendSms']) {
-                                verifyOtp();
-                              } else {
-                                login();
-                              }
-                            }
-                          },
-                          child: Text(
-                            'ВОЙТИ',
-                            style: TextStyle(color: white, fontSize: 18, letterSpacing: 2.0),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              if (auth.isOtpStep) ...[
+                AppIconButton(
+                  icon: Icons.arrow_back,
+                  background: AppColors.canvas,
+                  foreground: AppColors.textSecondary,
+                  size: AppDimens.heightLarge,
+                  onPressed: auth.submitting ? null : auth.backToCredentials,
+                ),
+                const SizedBox(width: AppDimens.gap12),
+              ],
+              Expanded(
+                child: AppButton(
+                  label: auth.isOtpStep ? 'Подтвердить' : 'Войти',
+                  loading: auth.submitting,
+                  onPressed: auth.canSubmit ? onSubmit : null,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: AppDimens.gap12),
+          Text(
+            'Демо-доступ: 710 / 1234',
+            textAlign: TextAlign.center,
+            style: AppText.small,
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _credentialFields(BuildContext context) => [
+        AppInput(
+          label: 'Логин',
+          hint: 'ID кассира или логин',
+          controller: loginController,
+          onChanged: auth.setUsername,
+          enabled: !auth.submitting,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: AppDimens.gap12),
+        AppInput(
+          label: 'Пароль',
+          hint: 'Пароль',
+          controller: passwordController,
+          onChanged: auth.setPassword,
+          obscureText: !auth.showPassword,
+          enabled: !auth.submitting,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => auth.canSubmit ? onSubmit() : null,
+          suffix: _TextAction(
+            label: auth.showPassword ? 'Скрыть' : 'Показать',
+            onTap: auth.togglePasswordVisibility,
+          ),
+        ),
+        const SizedBox(height: AppDimens.gap8),
+        _RememberMe(
+          value: auth.rememberMe,
+          onChanged: auth.submitting ? null : auth.toggleRememberMe,
+        ),
+      ];
+
+  List<Widget> _otpFields(BuildContext context) => [
+        if (auth.otpOffer.isNotEmpty) ...[
+          Text(auth.otpOffer, style: AppText.secondary),
+          const SizedBox(height: AppDimens.gap12),
+        ],
+        AppInput(
+          label: 'Код из SMS',
+          hint: 'Введите код',
+          controller: otpController,
+          onChanged: auth.setOtp,
+          enabled: !auth.submitting,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => auth.canSubmit ? onSubmit() : null,
+        ),
+      ];
+}
+
+class _RememberMe extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  const _RememberMe({required this.value, this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: AppDimens.control,
+      onTap: onChanged == null ? null : () => onChanged!(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: value,
+                activeColor: AppColors.primary,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                onChanged: onChanged == null ? null : (v) => onChanged!(v ?? false),
+              ),
+            ),
+            const SizedBox(width: AppDimens.gap12),
+            Text('Запомнить меня', style: AppText.body),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _ErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimens.gap12,
+        vertical: 10,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.dangerSoft,
+        borderRadius: AppDimens.control,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, size: 16, color: AppColors.dangerText),
+          const SizedBox(width: AppDimens.gap8),
+          Expanded(
+            child: Text(
+              message,
+              style: AppText.secondary.copyWith(color: AppColors.dangerText),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TextAction extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _TextAction({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: AppDimens.control,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppDimens.control,
+        child: Container(
+          height: AppDimens.heightMedium,
+          padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: AppText.small.copyWith(
+              color: AppColors.iconMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SupportRow extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SupportRow({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final onDark = AppColors.onPrimary.withValues(alpha: 0.85);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Нет аккаунта?', style: TextStyle(fontSize: 14, color: onDark)),
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: onTap,
+          child: const Text(
+            'Свяжитесь с нами',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.onPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

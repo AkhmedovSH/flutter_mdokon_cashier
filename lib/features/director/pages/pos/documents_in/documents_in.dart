@@ -1,16 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '/helpers/helper.dart';
-import '/models/data_model.dart';
-import '/models/director/documents_in_model.dart';
-import '/models/filter_model.dart';
-import '/widgets/custom_app_bar.dart';
-import '/widgets/filter/dropdown.dart';
-import '/widgets/filter/period.dart';
-import '/widgets/loading_layout.dart';
-import '/widgets/table/pagination.dart';
-import '/widgets/table/table.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/state/data_model.dart';
+import 'package:flutter_mdokon/features/director/models/documents_in_model.dart';
+import 'package:flutter_mdokon/core/state/filter_model.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/dropdown.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/period.dart';
+import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
+import 'package:flutter_mdokon/shared/widgets/table/pagination.dart';
+import 'package:flutter_mdokon/shared/widgets/table/table_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

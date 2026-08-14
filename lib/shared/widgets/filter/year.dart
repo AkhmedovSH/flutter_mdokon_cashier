@@ -1,9 +1,9 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import '/helpers/helper.dart';
-import '/models/filter_model.dart';
-import '/widgets/dropdown_value.dart';
-import '/widgets/filter/label.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/state/filter_model.dart';
+import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

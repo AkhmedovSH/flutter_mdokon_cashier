@@ -8,10 +8,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 
-import '/models/filter_model.dart';
-import '../widgets/custom_app_bar.dart';
-import 'themes.dart';
-import '/models/theme_model.dart';
+import 'package:flutter_mdokon/core/state/filter_model.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
+import 'package:flutter_mdokon/core/theme/app_typography.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/theme/theme_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:toastification/toastification.dart';
@@ -36,32 +38,35 @@ class CustomTheme {
   LinearGradient get secondGradient => isDarkMode ? DarkThemeColors.secondGradient : LightThemeColors.secondGradient;
 }
 
-Color mainColor = const Color(0xFF5b73e8);
+// Глобальные цвета — алиасы токенов дизайн-системы (AppColors).
+// Новые экраны используют AppColors напрямую, эти константы оставлены
+// для совместимости с уже написанными экранами.
+Color mainColor = AppColors.primary;
 
-Color bgColor = const Color(0xFFF3F8FE);
+Color bgColor = AppColors.canvas;
 
-Color blue = const Color(0xFF5b73e8);
-Color grey = const Color(0xFF999999);
-Color black = const Color(0xFF000000);
-Color darkGrey = const Color(0xFF626262);
-Color lightGrey = const Color(0xFF9C9C9C);
-Color green = const Color(0xFF28C56F);
-Color red = const Color(0xFFE32F45);
-Color orange = const Color(0xFFFE9D42);
-Color white = const Color(0xFFFFFFFF);
-Color inputColor = const Color(0xFFF3F7FA);
-Color yellow = const Color(0xFFF3A919);
-Color borderColor = const Color(0xFFF8F8F8);
+Color blue = AppColors.primary;
+Color grey = AppColors.textSecondary;
+Color black = AppColors.textPrimary;
+Color darkGrey = AppColors.textSecondary;
+Color lightGrey = AppColors.iconMuted;
+Color green = AppColors.success;
+Color red = AppColors.danger;
+Color orange = AppColors.warning;
+Color white = AppColors.surface;
+Color inputColor = AppColors.canvas;
+Color yellow = AppColors.warning;
+Color borderColor = AppColors.border;
 
-Color tableBorderColor = const Color(0xFFDADADa);
-Color disabledColor = const Color(0xFFd3d3d3);
+Color tableBorderColor = AppColors.border;
+Color disabledColor = AppColors.disabledSurface;
 
-Color success = const Color(0xFF34c38f);
-Color warning = const Color(0xFFf1b44c);
-Color danger = const Color(0xFFf46a6a);
+Color success = AppColors.success;
+Color warning = AppColors.warning;
+Color danger = AppColors.danger;
 
-Color a2 = const Color(0xFFA2A2A2);
-Color b8 = const Color(0xFF7b8190);
+Color a2 = AppColors.iconMuted;
+Color b8 = AppColors.textSecondary;
 
 const systemOverlayStyleLight = SystemUiOverlayStyle(
   statusBarIconBrightness: Brightness.light,
@@ -73,33 +78,26 @@ const systemOverlayStyleDark = SystemUiOverlayStyle(
   statusBarColor: Colors.transparent,
 );
 
-BoxShadow boxShadow = BoxShadow(
-  color: Colors.black.withValues(alpha: 0.15),
-  spreadRadius: 0,
-  blurRadius: 3,
-  offset: const Offset(0, 0),
-);
+BoxShadow boxShadow = AppDimens.cardShadow.first;
 
 BoxDecoration border = BoxDecoration(
-  border: Border.all(
-    color: const Color.fromARGB(255, 209, 209, 209),
-  ),
-  borderRadius: BorderRadius.circular(16),
+  border: Border.all(color: AppColors.border),
+  borderRadius: AppDimens.card,
 );
 
-OutlineInputBorder inputBorder = OutlineInputBorder(
-  borderSide: const BorderSide(color: Color(0xFFdddddd)),
-  borderRadius: BorderRadius.circular(16),
+OutlineInputBorder inputBorder = const OutlineInputBorder(
+  borderSide: BorderSide(color: AppColors.border),
+  borderRadius: AppDimens.control,
 );
 
-OutlineInputBorder inputFocusBorder = OutlineInputBorder(
-  borderSide: BorderSide(color: mainColor),
-  borderRadius: BorderRadius.circular(16),
+OutlineInputBorder inputFocusBorder = const OutlineInputBorder(
+  borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+  borderRadius: AppDimens.control,
 );
 
-OutlineInputBorder inputErrorBorder = OutlineInputBorder(
-  borderSide: BorderSide(color: danger),
-  borderRadius: BorderRadius.circular(16),
+OutlineInputBorder inputErrorBorder = const OutlineInputBorder(
+  borderSide: BorderSide(color: AppColors.danger, width: 1.5),
+  borderRadius: AppDimens.control,
 );
 
 final List<Map<String, dynamic>> languages = [
@@ -263,89 +261,76 @@ double customNumber(dynamic value) {
   return 0;
 }
 
-void showSuccessToast(dynamic message, {String description = ""}) {
+/// Тост дизайн-системы: тёмная плашка #1B2138 (для ошибки/предупреждения —
+/// dangerText / warningText), белый текст, радиус 12, высота 48, снизу.
+void _showToast(
+  dynamic message, {
+  required Color background,
+  required IconData icon,
+  required ToastificationType type,
+  dynamic description = "",
+  Duration duration = const Duration(seconds: 3),
+}) {
   toastification.show(
     title: Text(
       '$message',
-      style: TextStyle(color: black),
+      style: AppText.body.copyWith(color: AppColors.onPrimary),
     ),
-    description: description.isNotEmpty
+    description: '$description'.isNotEmpty
         ? Text(
-            description,
-            style: TextStyle(color: black),
+            '$description',
+            style: AppText.small.copyWith(color: AppColors.onPrimary.withValues(alpha: 0.72)),
           )
         : null,
-    icon: Icon(
-      UniconsLine.check_circle,
-      color: success,
-    ),
-    animationDuration: const Duration(milliseconds: 200),
-    autoCloseDuration: const Duration(seconds: 3),
-    type: ToastificationType.success,
-    style: ToastificationStyle.flatColored,
-    padding: const EdgeInsets.symmetric(horizontal: 12),
+    icon: Icon(icon, color: AppColors.onPrimary),
+    primaryColor: background,
+    backgroundColor: background,
+    foregroundColor: AppColors.onPrimary,
+    animationDuration: AppDimens.fast,
+    autoCloseDuration: duration,
+    type: type,
+    style: ToastificationStyle.flat,
+    padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: AppDimens.gap12),
+    margin: const EdgeInsets.symmetric(horizontal: AppDimens.gutter),
     alignment: Alignment.bottomCenter,
-    borderRadius: BorderRadius.circular(12),
+    borderRadius: AppDimens.control,
+    borderSide: BorderSide.none,
+    boxShadow: AppDimens.toastShadow,
     closeOnClick: true,
     showProgressBar: false,
+    closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
+  );
+}
+
+void showSuccessToast(dynamic message, {String description = ""}) {
+  _showToast(
+    message,
+    description: description,
+    background: AppColors.toast,
+    icon: UniconsLine.check_circle,
+    type: ToastificationType.success,
   );
 }
 
 void showDangerToast(dynamic message, {dynamic description = ""}) {
-  toastification.show(
-    title: Text(
-      '$message',
-      style: TextStyle(color: black),
-    ),
-    description: description.isNotEmpty
-        ? Text(
-            '$description',
-            style: TextStyle(color: black),
-          )
-        : null,
-    icon: Icon(
-      UniconsLine.exclamation_triangle,
-      color: danger,
-    ),
-    animationDuration: const Duration(milliseconds: 200),
-    autoCloseDuration: const Duration(seconds: 4),
+  _showToast(
+    message,
+    description: description,
+    background: AppColors.dangerText,
+    icon: UniconsLine.exclamation_triangle,
     type: ToastificationType.error,
-    style: ToastificationStyle.flatColored,
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    margin: const EdgeInsets.only(top: 45, right: 10, left: 10),
-    alignment: Alignment.topCenter,
-    borderRadius: BorderRadius.circular(21),
-    closeOnClick: true,
-    showProgressBar: false,
+    duration: const Duration(seconds: 4),
   );
 }
 
 void showWarningToast(dynamic message, {dynamic description = ""}) {
-  toastification.show(
-    title: Text(
-      '$message',
-      style: TextStyle(color: black),
-    ),
-    description: description.isNotEmpty
-        ? Text(
-            '$description',
-            style: TextStyle(color: black),
-          )
-        : null,
-    icon: Icon(
-      UniconsLine.exclamation_triangle,
-      color: warning,
-    ),
-    animationDuration: const Duration(milliseconds: 200),
-    autoCloseDuration: const Duration(seconds: 4),
+  _showToast(
+    message,
+    description: description,
+    background: AppColors.warningText,
+    icon: UniconsLine.exclamation_triangle,
     type: ToastificationType.warning,
-    style: ToastificationStyle.flatColored,
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    margin: const EdgeInsets.only(top: 45, right: 10, left: 10),
-    alignment: Alignment.topCenter,
-    borderRadius: BorderRadius.circular(21),
-    closeOnClick: true,
-    showProgressBar: false,
+    duration: const Duration(seconds: 4),
   );
 }
 

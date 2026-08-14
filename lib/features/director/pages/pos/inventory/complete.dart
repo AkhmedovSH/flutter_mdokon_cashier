@@ -1,12 +1,12 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import '/helpers/helper.dart';
-import '/models/data_model.dart';
-import '/models/director/documents_in_model.dart';
-import '/widgets/custom_app_bar.dart';
-import '/widgets/dropdown_value.dart';
-import '/widgets/filter/label.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/state/data_model.dart';
+import 'package:flutter_mdokon/features/director/models/documents_in_model.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
+import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 

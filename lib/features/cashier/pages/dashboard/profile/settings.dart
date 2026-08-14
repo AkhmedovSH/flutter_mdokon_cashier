@@ -5,24 +5,24 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mdokon/models/cashier/print_model.dart';
-import 'package:flutter_mdokon/models/locale_model.dart';
-import 'package:flutter_mdokon/widgets/dialogs.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
+import 'package:flutter_mdokon/core/localization/locale_model.dart';
+import 'package:flutter_mdokon/shared/widgets/dialogs.dart';
 
 import 'package:get_storage/get_storage.dart';
-import '/helpers/themes.dart';
-import '/models/settings_model.dart';
-import '/models/theme_model.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/state/settings_model.dart';
+import 'package:flutter_mdokon/core/theme/theme_model.dart';
 
-import '/widgets/custom_app_bar.dart';
-import '/widgets/dropdown_value.dart';
+import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:unicons/unicons.dart';
 // import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../helpers/helper.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -126,7 +126,7 @@ class _SettingsState extends State<Settings> {
             spacing: 15,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Title(title: 'general'),
+              SectionTitle(title: 'general'),
 
               CardItem(
                 title: 'settings_title_1',
@@ -215,7 +215,7 @@ class _SettingsState extends State<Settings> {
                   ],
                 ),
               ),
-              Title(title: 'cashbox'),
+              SectionTitle(title: 'cashbox'),
 
               CardItem(
                 title: 'settings_title_12',
@@ -271,7 +271,7 @@ class _SettingsState extends State<Settings> {
                 ),
               ),
 
-              Title(title: 'print'),
+              SectionTitle(title: 'print'),
 
               GestureDetector(
                 onTap: () async {
@@ -646,10 +646,10 @@ class _SettingsState extends State<Settings> {
   }
 }
 
-class Title extends StatelessWidget {
+class SectionTitle extends StatelessWidget {
   final String title;
 
-  const Title({
+  const SectionTitle({
     super.key,
     required this.title,
   });
