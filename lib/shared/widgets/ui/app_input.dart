@@ -198,8 +198,10 @@ class _AppInputState extends State<AppInput> {
                         ),
                   decoration: InputDecoration(
                     hintText: widget.hint,
-                    hintStyle: (widget.moneyStyle ? AppText.money : AppText.body)
-                        .copyWith(color: AppColors.iconMuted),
+                    // Подсказку держим на размере основного текста даже в
+                    // денежном поле: 22px плейсхолдер не помещается в поле
+                    // и читается как введённое значение.
+                    hintStyle: AppText.body.copyWith(color: AppColors.iconMuted),
                     filled: false,
                     isDense: true,
                     border: InputBorder.none,

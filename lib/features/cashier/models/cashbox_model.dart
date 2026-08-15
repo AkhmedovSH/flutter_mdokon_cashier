@@ -33,8 +33,10 @@ class CashboxModel extends ChangeNotifier {
   final TextEditingController loyaltyAwardController = TextEditingController();
 
   Future<void> init(Map initialData) async {
-    data = Map.from(initialData);
-    cashbox = storage.read('cashbox') ?? {};
+    data = Map<String, dynamic>.from(initialData);
+
+    final storedCashbox = storage.read('cashbox');
+    cashbox = storedCashbox is Map ? Map<String, dynamic>.from(storedCashbox) : {};
 
     await initializeDataFields();
     notifyListeners();
@@ -43,8 +45,7 @@ class CashboxModel extends ChangeNotifier {
   Future<void> initializeDataFields() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
-    print(storage.read('cashboxSettings')['chequeSettings']);
-    final username = storage.read('user')['username'];
+    final username = (storage.read('user') ?? {})['username'];
 
     if (storage.read('shift') != null) {
       final shift = storage.read('shift');
@@ -70,12 +71,18 @@ class CashboxModel extends ChangeNotifier {
     data['posId'] = cashbox['posId'];
     data['chequeNumber'] = generateChequeNumber();
     data['transactionId'] = transactionId;
-    data['paymentTypes'] = [...storage.read('paymentTypes')];
+    final storedPaymentTypes = storage.read('paymentTypes');
+    data['paymentTypes'] = storedPaymentTypes is List
+        ? storedPaymentTypes.map((e) => Map<String, dynamic>.from(e as Map)).toList()
+        : <Map<String, dynamic>>[];
+
     for (var i = 0; i < data['paymentTypes'].length; i++) {
       data['paymentTypes'][i]['controller'] = TextEditingController();
     }
-    data['paymentTypes'][0]['amount'] = (data['totalPrice']).round();
-    data['paymentTypes'][0]['controller'].text = (data['totalPrice']).round().toString();
+    if (data['paymentTypes'].isNotEmpty) {
+      data['paymentTypes'][0]['amount'] = (data['totalPrice']).round();
+      data['paymentTypes'][0]['controller'].text = (data['totalPrice']).round().toString();
+    }
 
     data['change'] = 0.0;
     data['paid'] = 0.0;
@@ -147,9 +154,14 @@ class CashboxModel extends ChangeNotifier {
     loyaltyAwardController.clear();
     data['writeOff'] = 0;
 
-    for (var i = 0; i < data['paymentTypes'].length; i++) {
-      data['paymentTypes'][i]['amount'] = '';
-      data['paymentTypes'][i]['controller'].text = '';
+    final paymentTypes = (data['paymentTypes'] as List?) ?? const [];
+    for (var i = 0; i < paymentTypes.length; i++) {
+      paymentTypes[i]['amount'] = '';
+      paymentTypes[i]['controller'].text = '';
+    }
+
+    if (paymentTypes.isEmpty) {
+      return;
     }
 
     if (currentIndex == 0) {
@@ -170,8 +182,9 @@ class CashboxModel extends ChangeNotifier {
   void calculateChange() {
     double paid = 0.0;
 
-    for (var i = 0; i < data['paymentTypes'].length; i++) {
-      paid += customNumber(data['paymentTypes'][i]['amount']);
+    final paymentTypes = (data['paymentTypes'] as List?) ?? const [];
+    for (var i = 0; i < paymentTypes.length; i++) {
+      paid += customNumber(paymentTypes[i]['amount']);
     }
 
     double totalPrice = double.parse(data['totalPrice'].toString());

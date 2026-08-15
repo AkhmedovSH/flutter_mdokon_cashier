@@ -33,7 +33,7 @@ class _BalanceState extends State<Balance> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'balance',
+        title: 'residues',
         leading: true,
       ),
       body: Padding(
@@ -57,7 +57,7 @@ class _BalanceState extends State<Balance> {
                   Expanded(
                     flex: 1,
                     child: Text(
-                      context.tr('balance'),
+                      context.tr('residue'),
                       textAlign: TextAlign.end,
                     ),
                   ),

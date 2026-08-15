@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/catalog.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/profile.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/return.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_nav_bar.dart';
@@ -30,6 +31,12 @@ class _CashierDashboardState extends State<CashierDashboard> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        // С любой вкладки «назад» возвращает к продаже, и только с неё — выход.
+        final dashboard = context.read<DashboardModel>();
+        if (dashboard.currentIndex != 0) {
+          dashboard.setCurrentIndex(0);
+          return;
+        }
         showSecondModalConfirm();
       },
       child: Consumer<DashboardModel>(
@@ -41,8 +48,9 @@ class _CashierDashboardState extends State<CashierDashboard> {
                 index: dashboardModel.currentIndex,
                 children: [
                   CashierHome(),
-                  dashboardModel.currentIndex == 1 ? Cheques() : SizedBox(),
-                  dashboardModel.currentIndex == 2 ? Return() : SizedBox(),
+                  Catalog(),
+                  dashboardModel.currentIndex == 2 ? Cheques() : SizedBox(),
+                  dashboardModel.currentIndex == 3 ? Return() : SizedBox(),
                   Profile(),
                 ],
               ),
@@ -56,6 +64,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
                   labelKey: 'sale',
                   badge: context.watch<SaleModel>().lineCount,
                 ),
+                const CashierNavItem(icon: UniconsLine.search, labelKey: 'products'),
                 const CashierNavItem(icon: UniconsLine.receipt, labelKey: 'checks'),
                 const CashierNavItem(icon: UniconsLine.backward, labelKey: 'return'),
                 const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),

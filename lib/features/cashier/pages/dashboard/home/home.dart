@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
-import 'package:flutter_mdokon/core/state/data_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
@@ -56,29 +55,14 @@ class _CashierHomeState extends State<CashierHome> {
 
   // --- Действия ----------------------------------------------------------
 
-  /// Каталог товаров. Скидка на чек блокирует добавление позиций.
-  Future<void> _openCatalog() async {
-    final model = _model;
-    if (model.discountPercent > 0) {
+  /// Каталог — вкладка нижней навигации. Скидка на чек блокирует добавление
+  /// позиций, поэтому туда же и не пускаем.
+  void _openCatalog() {
+    if (_model.discountPercent > 0) {
       showDangerToast(context.tr('discount_has_been_applied'));
       return;
     }
-
-    await context.push('/cashier/search', extra: {
-      'activePrice': model.data['activePrice'],
-      'currencyId': model.data['currencyId'],
-      'currencyName': model.data['currencyName'],
-    });
-    if (!mounted) return;
-
-    final dataModel = context.read<DataModel>();
-    final products = List.from(dataModel.currentProductList);
-    dataModel.setProductList([]);
-    if (products.isEmpty) return;
-
-    if (model.addScannedProducts(products)) {
-      await SaleSheets.unit(context, model);
-    }
+    context.read<DashboardModel>().setCurrentIndex(1);
   }
 
   /// Быстрая операция над выбранной позицией: сначала спрашиваем значение
@@ -214,7 +198,9 @@ class _CashierHomeState extends State<CashierHome> {
             payLabel: model.isAgent ? context.tr('send_to_cashbox') : context.tr('sell'),
             busy: model.busy,
             onPay: model.isEmpty ? null : (model.isAgent ? _sendToCashbox : _openPayment),
-            onMore: _openChequeActions,
+            // На пустом чеке меню нечего показывать — кроме агента, у которого
+            // остаётся выбор клиента.
+            onMore: model.isEmpty && !model.isAgent ? null : _openChequeActions,
           ),
         ],
       ),

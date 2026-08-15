@@ -206,6 +206,20 @@ String formatMoney(dynamic amount, {dynamic decimalDigits = 0}) {
   }
 }
 
+/// Количество товара: целое — без дробной части, дробное (весовой товар) —
+/// без хвостовых нулей. [formatMoney] здесь не подходит: он округляет до
+/// настроенной точности сумм и 2,5 кг показывает как «3».
+String formatQuantity(dynamic quantity) {
+  final value = customNumber(quantity);
+  if (value == value.roundToDouble()) return value.round().toString();
+
+  return value
+      .toStringAsFixed(3)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'\.$'), '')
+      .replaceAll('.', ',');
+}
+
 Future<bool> hasInternetConnection() async {
   final dio = Dio();
   const url = 'https://backend.mison.uz';
@@ -290,8 +304,8 @@ void _showToast(
     autoCloseDuration: duration,
     type: type,
     style: ToastificationStyle.flat,
-    padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: AppDimens.gap12),
-    margin: const EdgeInsets.symmetric(horizontal: AppDimens.gutter),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    margin: const EdgeInsets.symmetric(horizontal: AppDimens.gutter, vertical: AppDimens.gap4),
     alignment: Alignment.bottomCenter,
     borderRadius: AppDimens.control,
     borderSide: BorderSide.none,
@@ -331,6 +345,69 @@ void showWarningToast(dynamic message, {dynamic description = ""}) {
     icon: UniconsLine.exclamation_triangle,
     type: ToastificationType.warning,
     duration: const Duration(seconds: 4),
+  );
+}
+
+/// Тост с действием: компактная плашка и кнопка отмены справа
+/// (например «Товар · добавлен» + «Убрать»).
+void showActionToast(
+  BuildContext context,
+  dynamic message, {
+  required String actionLabel,
+  required VoidCallback onAction,
+  Duration duration = const Duration(seconds: 4),
+}) {
+  toastification.showCustom(
+    context: context,
+    alignment: Alignment.bottomCenter,
+    animationDuration: AppDimens.fast,
+    autoCloseDuration: duration,
+    builder: (context, item) => Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: AppDimens.gutter, vertical: AppDimens.gap4),
+      child: Material(
+        color: AppColors.toast,
+        borderRadius: AppDimens.control,
+        clipBehavior: Clip.antiAlias,
+        elevation: 6,
+        shadowColor: Colors.black26,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppDimens.gap16, AppDimens.gap12, AppDimens.gap8, AppDimens.gap12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$message',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.body.copyWith(color: AppColors.onPrimary),
+                ),
+              ),
+              const SizedBox(width: AppDimens.gap8),
+              TextButton(
+                onPressed: () {
+                  toastification.dismiss(item);
+                  onAction();
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.onPrimary,
+                ),
+                child: Text(
+                  actionLabel,
+                  style: AppText.small.copyWith(
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
   );
 }
 

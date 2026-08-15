@@ -1,27 +1,26 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
-import 'package:flutter_mdokon/core/state/loading_model.dart';
-
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
-import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_barcodes/barcodes.dart';
-//
-// import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
-import 'package:permission_handler/permission_handler.dart';
-// import 'package:screenshot/screenshot.dart';
-import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_preview_sheet.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
+/// Дубликат чека — полный разбор одной продажи.
+///
+/// Вместо ленты «как на бумаге» — карточки: реквизиты точки, реквизиты чека,
+/// позиции и итоги. Печать и возврат вынесены в закреплённую нижнюю панель,
+/// чтобы до них не нужно было доскроллить длинный чек.
 class ChequeDetail extends StatefulWidget {
   final String id;
+
   const ChequeDetail({
     super.key,
     required this.id,
@@ -32,601 +31,541 @@ class ChequeDetail extends StatefulWidget {
 }
 
 class _ChequeDetailState extends State<ChequeDetail> {
-  Timer? timer;
-  // ScreenshotController screenshotController = ScreenshotController();
-  GetStorage storage = GetStorage();
+  final GetStorage storage = GetStorage();
 
-  bool bluetoothPermission = false;
-  bool connected = false;
+  Map cheque = {};
+  Map cashbox = {};
+  List items = [];
+  List transactions = [];
 
-  List itemsList = [];
-  List transactionsList = [];
-  List availableBluetoothDevices = [];
-
-  Map cheque = {
-    "id": 0,
-    "cashierName": "",
-    "chequeNumber": 0,
-    "chequeDate": 0,
-    "saleCurrencyId": 0,
-    "saleCurrencyName": "Сум",
-    "totalPrice": 0,
-    "discount": 0,
-    "paid": 0,
-    "change": 0,
-    "clientId": 0,
-    "clientName": "",
-    "clientAmount": 0,
-    "clientCurrencyId": 0,
-    "clientCurrencyName": "",
-    "loyaltyClientName": "",
-    "loyaltyClientAmount": 0,
-    "loyaltyBonus": 0,
-    "transactionId": "",
-    "returned": 0,
-    "returnedPrice": 0,
-    "itemsList": [],
-    "transactionsList": [],
-  };
-  Map cashbox = {
-    "posName": "",
-    "posPhone": "",
-    "posAddress": "",
-  };
-
-  dynamic tips;
-  dynamic device;
-
-  // Future<void> getBluetooth() async {
-  //   final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
-  //   if (bluetooths != null) {
-  //     availableBluetoothDevices = bluetooths;
-  //     var status = await BluetoothThermalPrinter.connectionStatus;
-  //     if (status == 'true') {
-  //       connected = true;
-  //     } else {
-  //       connected = false;
-  //     }
-  //     if (availableBluetoothDevices.isNotEmpty) {
-  //       // openBluetoothDevices();
-  //     } else {
-  //       showDangerToast(context.tr('there_are_no_active_devices_bluetooth_is_disabled'));
-  //     }
-  //     setState(() {});
-  //   }
-  // }
-
-  // Future<void> setConnect(String mac, newSetState) async {
-  //   if (timer != null) {
-  //     Get.closeCurrentSnackbar();
-  //     timer!.cancel();
-  //   }
-  //   Get.showSnackbar(
-  //     GetSnackBar(
-  //       messageText: Row(
-  //         children: [
-  //           Text(
-  //             'connection'.tr,
-  //             style: TextStyle(color: black),
-  //           ),
-  //           const SizedBox(width: 10),
-  //           SizedBox(
-  //             height: 16,
-  //             width: 16,
-  //             child: CircularProgressIndicator(
-  //               color: black,
-  //               strokeWidth: 2,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       backgroundColor: mainColor,
-  //     ),
-  //   );
-  //   try {
-  //     timer = Timer(const Duration(seconds: 5), () {
-  //       if (!connected) {
-  //         Get.closeAllSnackbars();
-  //         showErrorToast('failed_to_connect'.tr);
-  //         return;
-  //       }
-  //     });
-  //     final String? result = await BluetoothThermalPrinter.connect(mac);
-  //     Get.closeAllSnackbars();
-  //     if (result == "true") {
-  //       newSetState(() {
-  //         connected = true;
-  //       });
-  //     } else {
-  //       if (timer != null) {
-  //         timer!.cancel();
-  //       }
-  //       showErrorToast('no_connection'.tr);
-  //       newSetState(() {
-  //         connected = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     Get.closeAllSnackbars();
-  //     print(e);
-  //     showErrorToast(e);
-  //   }
-  // }
-
-  Future<void> getCheque() async {
-    dynamic response = await get('/services/desktop/api/cheque-byId-v2/${widget.id}');
-    //print(response);
-    setState(() {
-      cashbox = (storage.read('cashbox')!);
-      cheque = response;
-      print(response['itemsList']);
-      itemsList = response['itemsList'];
-      transactionsList = response['transactionsList'];
-      cheque['discount'] = cheque['discount'];
-      cheque['to_pay'] = cheque['totalPrice'] - (customNumber(cheque['totalPrice']) * customNumber(cheque['discount'])) / 100;
-      cheque['chequeDate'] = formatUnixTime(cheque['chequeDate']);
-    });
-    //print(cheque);
-  }
-
-  Color? getColor(dynamic status) {
-    if (status == 0) {
-      return null;
-    } else if (status == 1) {
-      return const Color(0xFFF3A919);
-    } else if (status == 2) {
-      return Colors.red;
-    }
-    return null;
-  }
-
-  Future<void> checkStatus() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-    if (statuses[Permission.bluetooth] == PermissionStatus.permanentlyDenied || statuses[Permission.bluetooth] == PermissionStatus.denied) {
-      return;
-    }
-    if (statuses[Permission.bluetoothConnect] == PermissionStatus.permanentlyDenied ||
-        statuses[Permission.bluetoothConnect] == PermissionStatus.denied) {
-      return;
-    }
-    if (statuses[Permission.location] == PermissionStatus.permanentlyDenied || statuses[Permission.location] == PermissionStatus.denied) {
-      return;
-    }
-    setState(() {
-      bluetoothPermission = true;
-    });
-  }
+  bool loading = true;
+  bool printing = false;
 
   @override
   void initState() {
     super.initState();
     getCheque();
-    checkStatus();
   }
 
-  @override
-  dispose() {
-    super.dispose();
-    if (timer != null) {
-      timer!.cancel();
+  Future<void> getCheque() async {
+    final response = await get('/services/desktop/api/cheque-byId-v2/${widget.id}');
+    if (!mounted) return;
+
+    setState(() {
+      final stored = storage.read('cashbox');
+      cashbox = stored is Map ? stored : {};
+
+      if (httpOk(response) && response is Map) {
+        cheque = response;
+        items = response['itemsList'] ?? [];
+        transactions = response['transactionsList'] ?? [];
+      }
+      loading = false;
+    });
+  }
+
+  // --- Расчёты -----------------------------------------------------------
+
+  /// Скидка в чеке хранится процентом — в деньги переводим здесь, чтобы
+  /// и строка «Сумма скидки», и итог считались из одного места.
+  double get _discount =>
+      customNumber(cheque['totalPrice']) * customNumber(cheque['discount']) / 100;
+
+  double get _toPay => customNumber(cheque['totalPrice']) - _discount;
+
+  String get _currency => customNumber(cheque['saleCurrencyId']) == 2 ? 'USD' : context.tr('sum');
+
+  String get _number => '${cheque['chequeNumber'] ?? widget.id}';
+
+  /// Возврат уже оформленного возврата не предлагаем.
+  bool get _refundable =>
+      cheque.isNotEmpty && cheque['status'] != 2 && customNumber(cheque['returned']).round() != 2;
+
+  // --- Действия ----------------------------------------------------------
+
+  Future<void> _print() async {
+    if (cheque.isEmpty || printing) return;
+
+    setState(() => printing = true);
+    await Provider.of<PrinterModel>(context, listen: false).printFullCheque(cheque, items);
+    if (mounted) setState(() => printing = false);
+  }
+
+  void _refund() {
+    Provider.of<DashboardModel>(context, listen: false).setCurrentCheque(cheque);
+    // 3 — вкладка «Возврат»: она подхватит переданный чек и откроет его позиции.
+    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(3);
+    context.go('/cashier');
+  }
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/cashier');
     }
   }
 
-  Row buildRow(dynamic text, dynamic text2, {dynamic fz = 16.0}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          text,
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fz),
-        ),
-        Text(
-          '$text2',
-          style: TextStyle(fontSize: fz),
-        ),
-      ],
-    );
-  }
+  // --- UI ----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: '',
-        leading: true,
+      backgroundColor: AppColors.canvas,
+      body: Column(
+        children: [
+          _header(),
+          Expanded(
+            child: loading
+                ? const Center(child: AppLoader())
+                : cheque.isEmpty
+                    ? AppEmptyState(
+                        icon: Icons.receipt_long,
+                        title: context.tr('NOT_FOUND'),
+                      )
+                    : _content(),
+          ),
+        ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
+      bottomNavigationBar: loading || cheque.isEmpty ? null : _actions(),
+    );
+  }
+
+  /// Шапка: возврат назад, номер чека и его статус одной строкой.
+  Widget _header() {
+    final (_, statusColor, statusLabel) = cheque.isEmpty
+        ? (AppColors.canvas, AppColors.textSecondary, '')
+        : chequeStatusStyle(context, cheque);
+
+    final meta = [
+      if (cheque['chequeDate'] != null) formatUnixTime(cheque['chequeDate']),
+      statusLabel,
+    ].where((e) => e.isNotEmpty).join(' · ');
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: AppColors.surface,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(bottom: BorderSide(color: AppColors.border)),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimens.gap8,
+              AppDimens.gap8,
+              AppDimens.gutter,
+              AppDimens.gap12,
+            ),
+            child: Row(
               children: [
-                Center(
-                  child: Image.asset(
-                    'images/splash_logo.png',
-                    height: 64,
-                    width: 200,
-                  ),
+                AppIconButton(
+                  icon: Icons.arrow_back,
+                  foreground: AppColors.textPrimary,
+                  background: Colors.transparent,
+                  onPressed: _back,
                 ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    context.tr('DUPLICATE'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${cashbox['posName']}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${context.tr('phone')}: ${cashbox['posPhone'] ?? ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${context.tr('address')}: ${cashbox['posAddress'] ?? ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                buildRow(context.tr('cashier'), cheque['cashierName']),
-                buildRow('№ ${context.tr('cheque')}', cheque['chequeNumber']),
-                buildRow(context.tr('date'), cheque['chequeDate']),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(5),
-                    1: FlexColumnWidth(3),
-                    2: FlexColumnWidth(3),
-                  },
-                  children: [
-                    TableRow(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            '№ ${context.tr('product')}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            context.tr('qty'),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            context.tr('price'),
-                            textAlign: TextAlign.end,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    for (var i = 0; i < itemsList.length; i++)
-                      TableRow(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              '${i + 1} ${itemsList[i]['productName']}',
-                              style: TextStyle(
-                                decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                                decorationColor: getColor(itemsList[i]['returned']),
-                              ),
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              itemsList[i]['returnedQuantity'] != itemsList[i]['quantity']
-                                  ? Container(
-                                      padding: EdgeInsets.symmetric(vertical: 4),
-                                      child: Text(
-                                        '${formatMoney(itemsList[i]['quantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                                      ),
-                                    )
-                                  : Container(),
-                              itemsList[i]['returnedQuantity'] != 0
-                                  ? Container(
-                                      padding: EdgeInsets.symmetric(vertical: 4),
-                                      child: Text(
-                                        '${formatMoney(itemsList[i]['returnedQuantity'])}* ${formatMoney(itemsList[i]['salePrice'])}',
-                                        style: TextStyle(
-                                          decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                                          decorationColor: getColor(itemsList[i]['returned']),
-                                        ),
-                                      ),
-                                    )
-                                  : Container(),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              itemsList[i]['returnedPrice'] != itemsList[i]['totalPrice']
-                                  ? Container(
-                                      padding: EdgeInsets.symmetric(vertical: 4),
-                                      child: Text(
-                                        formatMoney(itemsList[i]['totalPrice']),
-                                        textAlign: TextAlign.end,
-                                      ),
-                                    )
-                                  : Container(),
-                              itemsList[i]['returnedPrice'] != 0
-                                  ? Container(
-                                      padding: EdgeInsets.symmetric(vertical: 4),
-                                      child: Text(
-                                        formatMoney(itemsList[i]['returnedPrice']),
-                                        textAlign: TextAlign.end,
-                                        style: TextStyle(
-                                          decoration: itemsList[i]['returned'] > 0 ? TextDecoration.lineThrough : null,
-                                          decorationColor: getColor(itemsList[i]['returned']),
-                                        ),
-                                      ),
-                                    )
-                                  : Container(),
-                            ],
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                buildRow(context.tr('sale_amount'), formatMoney(cheque['totalPrice'])),
-                buildRow(context.tr('discount'), formatMoney((customNumber(cheque['totalPrice']) * customNumber(cheque['discount'])) / 100)),
-                buildRow(context.tr('to_pay'), formatMoney(cheque['to_pay']), fz: 20.0),
-                buildRow(context.tr('paid'), formatMoney(cheque['paid'])),
-                buildRow('${context.tr('VAT')} %', formatMoney(cheque['totalVatAmount'])),
-                cheque['saleCurrencyId'] == 1 ? buildRow('Валюта', 'Сум ') : Container(),
-                cheque['saleCurrencyId'] == 2 ? buildRow('Валюта', 'USD ') : Container(),
-                for (var i = 0; i < transactionsList.length; i++)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(width: AppDimens.gap4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${transactionsList[i]['paymentTypeName']}',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                        '${context.tr('cheque')} №$_number',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.tabular(AppText.h1).copyWith(fontWeight: FontWeight.w700),
                       ),
-                      Text(
-                        formatMoney(transactionsList[i]['amountIn']),
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      if (meta.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.tabular(AppText.small).copyWith(color: statusColor),
+                        ),
+                      ],
                     ],
                   ),
-                cheque['clientAmount'] > 0 ? buildRow('Сумма долга', formatMoney(cheque['clientAmount'])) : Container(),
-                cheque['clientAmount'] > 0 ? buildRow('Должник', cheque['clientName'] + ' ') : Container(),
-                (cheque['clientAmount'] == 0 && cheque['clientName'] != null) ? buildRow('Клиент', cheque['clientName']) : Container(),
-                (cheque['loyaltyClientName'] != null) ? buildRow('Клиент', cheque['loyaltyClientName']) : Container(),
-                // cheque['loyaltyBonus'] > 0 ? buildRow('mDokon Loyalty ${context.tr('bonus')}', formatMoney(cheque['loyaltyBonus'])) : Container(),
-                buildRow(context.tr('change'), formatMoney(cheque['change'])),
-                Container(
-                  margin: EdgeInsets.only(top: 15, bottom: 10),
-                  height: 50,
-                  width: 200,
-                  child: SfBarcodeGenerator(value: '${cheque['barcode']}'),
-                ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    '*****************************************************************************************',
-                    overflow: TextOverflow.clip,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '${context.tr('thank_you_for_your_purchase')}!',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-                SizedBox(
-                  height: 70,
                 ),
               ],
             ),
           ),
         ),
       ),
-      bottomSheet: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          spacing: 10,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () async {
-                  LoadingModel loadingModel = Provider.of<LoadingModel>(context, listen: false);
-                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
-                  loadingModel.showLoader(num: 2);
-                  await Future.delayed(Duration.zero);
-                  await printerModel.printFullCheque(cheque, itemsList);
-                  loadingModel.hideLoader();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(UniconsLine.print),
-                    SizedBox(width: 10),
-                    Text(context.tr('PRINT')),
-                  ],
-                ),
-              ),
-            ),
-            if (cheque['status'] != 2) ...[
-              // SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(2);
-                    Provider.of<DashboardModel>(context, listen: false).setCurrentCheque(cheque);
-                    context.go('/cashier');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: danger,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(UniconsLine.backward),
-                      SizedBox(width: 10),
-                      Text(context.tr('RETURN')),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
+    );
+  }
+
+  Widget _content() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        AppDimens.gap12,
+        AppDimens.gutter,
+        AppDimens.gap24,
+      ),
+      children: [
+        _shopCard(),
+        const SizedBox(height: AppDimens.gap12),
+        _infoCard(),
+        const SizedBox(height: AppDimens.gap16),
+        AppSectionLabel('${context.tr('products')} · ${items.length} ${context.tr('positions_short')}'),
+        const SizedBox(height: AppDimens.gap8),
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppDimens.gap8),
+          _ItemCard(index: i + 1, item: items[i], currency: _currency),
+        ],
+        const SizedBox(height: AppDimens.gap16),
+        _totalsCard(),
+        if (customIf(cheque['barcode'])) ...[
+          const SizedBox(height: AppDimens.gap12),
+          _barcodeCard(),
+        ],
+        const SizedBox(height: AppDimens.gap16),
+        Center(
+          child: Text(
+            '${context.tr('thank_you_for_your_purchase')}!',
+            style: AppText.secondary,
+          ),
         ),
+      ],
+    );
+  }
+
+  /// Реквизиты торговой точки — шапка бумажного чека.
+  Widget _shopCard() {
+    final phone = '${cashbox['posPhone'] ?? ''}'.trim();
+    final address = '${cashbox['posAddress'] ?? ''}'.trim();
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: AppDimens.gap16),
+      child: Column(
+        children: [
+          Text(
+            '${cashbox['posName'] ?? ''}',
+            textAlign: TextAlign.center,
+            style: AppText.h2,
+          ),
+          if (phone.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              formatPhone(phone),
+              textAlign: TextAlign.center,
+              style: AppText.tabular(AppText.secondary),
+            ),
+          ],
+          if (address.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(address, textAlign: TextAlign.center, style: AppText.secondary),
+          ],
+        ],
       ),
     );
   }
 
-  // openBluetoothDevices() async {
-  //   await showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.only(
-  //         topLeft: Radius.circular(24),
-  //         topRight: Radius.circular(24),
-  //       ),
-  //     ),
-  //     builder: (BuildContext context) {
-  //       return StatefulBuilder(builder: (context, newSetState) {
-  //         return Container(
-  //           color: Colors.transparent,
-  //           child: Container(
-  //             padding: const EdgeInsets.symmetric(horizontal: 16),
-  //             decoration: BoxDecoration(
-  //               color: context.theme.cardColor,
-  //               borderRadius: const BorderRadius.only(
-  //                 topLeft: Radius.circular(24),
-  //                 topRight: Radius.circular(24),
-  //               ),
-  //             ),
-  //             child: SingleChildScrollView(
-  //               child: Container(
-  //                 padding: const EdgeInsets.symmetric(vertical: 16),
-  //                 child: Column(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   children: [
-  //                     SizedBox(
-  //                       height: 300,
-  //                       child: ListView.builder(
-  //                         itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
-  //                         itemBuilder: (context, index) {
-  //                           return ListTile(
-  //                             onTap: () {
-  //                               String select = availableBluetoothDevices[index];
-  //                               List list = select.split("#");
-  //                               String mac = list[1];
-  //                               setConnect(mac, newSetState);
-  //                             },
-  //                             title: Text('${availableBluetoothDevices[index]}'),
-  //                             subtitle: Text("click_to_connect".tr),
-  //                           );
-  //                         },
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 15),
-  //                     if (connected)
-  //                       SizedBox(
-  //                         width: Get.width,
-  //                         height: 48,
-  //                         child: ElevatedButton(
-  //                           onPressed: () {
-  //                             printCheque(cheque, itemsList);
-  //                           },
-  //                           child: Text(
-  //                             'PRINT'.tr,
-  //                             style: TextStyle(
-  //                               color: white,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     Padding(
-  //                       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         );
-  //       });
-  //     },
-  //   );
-  //   setState(() {
-  //     availableBluetoothDevices = [];
-  //   });
-  // }
+  /// Реквизиты чека: ИНН, кассир, идентификатор, тип, дата и смена.
+  Widget _infoCard() {
+    final inn = '${cheque['tin'] ?? cashbox['tin'] ?? cashbox['inn'] ?? ''}'.trim();
+    final isReturn = customNumber(cheque['returned']).round() == 2;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: 6),
+      child: Column(
+        children: [
+          if (inn.isNotEmpty) _InfoRow(label: context.tr('inn'), value: inn),
+          if (customIf(cheque['cashierName']))
+            _InfoRow(label: context.tr('cashier'), value: '${cheque['cashierName']}', tabular: false),
+          if (customIf(cheque['transactionId']))
+            _InfoRow(label: '${context.tr('cheque')} ID', value: '${cheque['transactionId']}'),
+          _InfoRow(
+            label: context.tr('cheque_type'),
+            value: context.tr(isReturn ? 'return' : 'sale'),
+            tabular: false,
+          ),
+          if (cheque['chequeDate'] != null)
+            _InfoRow(label: context.tr('date'), value: formatUnixTime(cheque['chequeDate'])),
+          if (customIf(cheque['shiftNumber']))
+            _InfoRow(label: context.tr('shift'), value: '${cheque['shiftNumber']}'),
+        ],
+      ),
+    );
+  }
+
+  /// Итоги: сначала расчёт, затем «К оплате», ниже — чем платили.
+  Widget _totalsCard() {
+    final change = customNumber(cheque['change']);
+    final debt = customNumber(cheque['clientAmount']);
+    final client = '${cheque['clientName'] ?? ''}'.trim();
+    final loyaltyClient = '${cheque['loyaltyClientName'] ?? ''}'.trim();
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: 6),
+      child: Column(
+        children: [
+          _InfoRow(
+            label: context.tr('sale_amount'),
+            value: formatMoney(cheque['totalPrice']),
+          ),
+          if (cheque['totalVatAmount'] != null)
+            _InfoRow(
+              label: context.tr('vat_amount'),
+              value: formatMoney(cheque['totalVatAmount']),
+            ),
+          _InfoRow(
+            label: context.tr('discount_amount'),
+            value: formatMoney(_discount),
+          ),
+          const _RowDivider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppDimens.gap8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: AppSectionLabel(context.tr('to_pay'))),
+                const SizedBox(width: AppDimens.gap8),
+                Text('${formatMoney(_toPay)} $_currency', style: AppText.amount),
+              ],
+            ),
+          ),
+          const _RowDivider(),
+          _InfoRow(label: context.tr('paid'), value: formatMoney(cheque['paid'])),
+          if (change > 0) _InfoRow(label: context.tr('change'), value: formatMoney(change)),
+          for (final transaction in transactions)
+            _InfoRow(
+              label: '${transaction['paymentTypeName'] ?? context.tr('payment')}',
+              value: formatMoney(transaction['amountIn']),
+              muted: true,
+            ),
+          if (debt > 0) ...[
+            const _RowDivider(),
+            _InfoRow(
+              label: context.tr('AMOUNT_OF_DEBT'),
+              value: formatMoney(debt),
+              valueColor: AppColors.warningText,
+            ),
+            if (client.isNotEmpty)
+              _InfoRow(label: context.tr('debtor'), value: client, tabular: false),
+          ] else if (client.isNotEmpty)
+            _InfoRow(label: context.tr('client'), value: client, tabular: false),
+          if (loyaltyClient.isNotEmpty)
+            _InfoRow(label: context.tr('loyalty'), value: loyaltyClient, tabular: false),
+        ],
+      ),
+    );
+  }
+
+  Widget _barcodeCard() {
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16, vertical: AppDimens.gap16),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 56,
+            child: SfBarcodeGenerator(
+              value: '${cheque['barcode']}',
+              showValue: false,
+              barColor: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppDimens.gap8),
+          Text(
+            '${cheque['barcode']}',
+            style: AppText.tabular(AppText.small),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Закреплённая панель действий — печать и возврат всегда под рукой.
+  Widget _actions() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppDimens.gutter,
+            AppDimens.gap12,
+            AppDimens.gutter,
+            AppDimens.gap12,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: context.tr('PRINT'),
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  icon: Icons.print_outlined,
+                  loading: printing,
+                  onPressed: _print,
+                ),
+              ),
+              if (_refundable) ...[
+                const SizedBox(width: AppDimens.gap8),
+                Expanded(
+                  flex: 2,
+                  child: AppButton(
+                    label: context.tr('make_return'),
+                    variant: AppButtonVariant.dangerSolid,
+                    size: AppButtonSize.medium,
+                    onPressed: _refund,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Позиция чека: номер и название сверху, расчёт и НДС — подписью.
+/// Возвращённую позицию зачёркиваем и подписываем количеством возврата.
+class _ItemCard extends StatelessWidget {
+  final int index;
+  final Map item;
+  final String currency;
+
+  const _ItemCard({required this.index, required this.item, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    final returned = customNumber(item['returned']) > 0;
+    final returnedQuantity = customNumber(item['returnedQuantity']);
+    final vat = customNumber(item['vat']);
+
+    final strike = returned ? TextDecoration.lineThrough : null;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: AppDimens.gap12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  '$index. ${item['productName'] ?? ''}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodyMedium.copyWith(decoration: strike),
+                ),
+              ),
+              const SizedBox(width: AppDimens.gap8),
+              Text(
+                '${formatMoney(item['totalPrice'])} $currency',
+                style: AppText.price.copyWith(decoration: strike),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${formatMoney(item['quantity'])} × ${formatMoney(item['salePrice'])}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.tabular(AppText.small),
+                ),
+              ),
+              const SizedBox(width: AppDimens.gap8),
+              Text(
+                '${context.tr('VAT')} ${formatMoney(vat)}%',
+                style: AppText.tabular(AppText.small),
+              ),
+            ],
+          ),
+          if (returnedQuantity > 0) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${context.tr('return')} · ${formatMoney(returnedQuantity)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.tabular(AppText.small).copyWith(color: AppColors.dangerText),
+                  ),
+                ),
+                const SizedBox(width: AppDimens.gap8),
+                Text(
+                  '${formatMoney(item['returnedPrice'])} $currency',
+                  style: AppText.tabular(AppText.small).copyWith(color: AppColors.dangerText),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Строка «подпись — значение» в карточках реквизитов и итогов.
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  /// Суммы и идентификаторы — моноширинными цифрами, имена — обычными.
+  final bool tabular;
+  final bool muted;
+  final Color? valueColor;
+
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.tabular = true,
+    this.muted = false,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = (muted ? AppText.secondary : AppText.bodyMedium).copyWith(
+      color: valueColor ?? (muted ? AppColors.textSecondary : AppColors.textPrimary),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimens.gap8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppText.secondary),
+          const SizedBox(width: AppDimens.gap12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: tabular ? AppText.tabular(style) : style,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Разделитель между группами строк внутри карточки.
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
+  }
 }

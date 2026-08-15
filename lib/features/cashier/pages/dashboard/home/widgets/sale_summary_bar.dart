@@ -20,7 +20,9 @@ class SaleSummaryBar extends StatelessWidget {
   final String payLabel;
   final bool busy;
   final VoidCallback? onPay;
-  final VoidCallback onMore;
+
+  /// `null` — меню «…» недоступно (например, в чеке нет позиций).
+  final VoidCallback? onMore;
 
   const SaleSummaryBar({
     super.key,
@@ -31,9 +33,9 @@ class SaleSummaryBar extends StatelessWidget {
     required this.total,
     required this.currency,
     required this.payLabel,
-    required this.onMore,
     this.busy = false,
     this.onPay,
+    this.onMore,
   });
 
   @override

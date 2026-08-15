@@ -209,7 +209,7 @@ class _AgentChequesState extends State<AgentCheques> {
                             ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -426,7 +426,7 @@ class _AgentChequesState extends State<AgentCheques> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 50)
+                    SizedBox(height: 50),
                   ],
                 ),
               ),
@@ -443,7 +443,7 @@ class _AgentChequesState extends State<AgentCheques> {
                     child: Text('Фильтр'),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         );

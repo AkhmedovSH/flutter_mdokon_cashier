@@ -5,11 +5,9 @@ import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_d
 
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/return.dart';
 
-import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/search.dart';
 import 'package:flutter_mdokon/features/cashier/pages/payment/payment_sample.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/x_report.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/balance.dart';
-import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/info.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/settings.dart';
 
 // import 'package:flutter_mdokon/features/cashier/pages/client_debt.dart';
@@ -25,14 +23,6 @@ Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widge
 }
 
 List<RouteBase> cashiers = [
-  GoRoute(
-    path: '/search',
-    pageBuilder: (context, state) {
-      final extraData = state.extra as Map<String, dynamic>?;
-      print(extraData);
-      return cupertinoPageBuilder(context, state, Search(arguments: extraData));
-    },
-  ),
   GoRoute(
     path: '/cheque/detail/:id',
     pageBuilder: (context, state) {
@@ -51,10 +41,6 @@ List<RouteBase> cashiers = [
   GoRoute(
     path: '/profile/balance',
     pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Balance()),
-  ),
-  GoRoute(
-    path: '/profile/info',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Info()),
   ),
   GoRoute(
     path: '/profile/settings',
