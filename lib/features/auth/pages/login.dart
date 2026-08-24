@@ -46,9 +46,14 @@ class _LoginState extends State<Login> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit() => _run(context.read<AuthModel>().submit);
+
+  /// Демо-вход: поля формы не трогаем, сценарий тот же.
+  Future<void> _submitDemo() => _run(context.read<AuthModel>().submitDemo);
+
+  Future<void> _run(Future<AuthRedirect?> Function() action) async {
     FocusScope.of(context).unfocus();
-    final redirect = await context.read<AuthModel>().submit();
+    final redirect = await action();
     if (redirect == null || !mounted) return;
 
     // Справочники директора грузим фоном, чтобы дашборд открылся сразу.
@@ -97,6 +102,7 @@ class _LoginState extends State<Login> {
                         passwordController: _passwordController,
                         otpController: _otpController,
                         onSubmit: _submit,
+                        onDemo: _submitDemo,
                       ),
                       const SizedBox(height: AppDimens.gap16),
                       _SupportRow(onTap: _callSupport),
@@ -119,6 +125,7 @@ class _AuthCard extends StatelessWidget {
   final TextEditingController passwordController;
   final TextEditingController otpController;
   final VoidCallback onSubmit;
+  final VoidCallback onDemo;
 
   const _AuthCard({
     required this.auth,
@@ -126,6 +133,7 @@ class _AuthCard extends StatelessWidget {
     required this.passwordController,
     required this.otpController,
     required this.onSubmit,
+    required this.onDemo,
   });
 
   @override
@@ -175,12 +183,10 @@ class _AuthCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppDimens.gap12),
-          Text(
-            'Демо-доступ: 710 / 1234',
-            textAlign: TextAlign.center,
-            style: AppText.small,
-          ),
+          if (!auth.isOtpStep) ...[
+            const SizedBox(height: AppDimens.gap12),
+            _DemoLink(onTap: auth.submitting ? null : onDemo),
+          ],
         ],
       ),
     );
@@ -233,6 +239,28 @@ class _AuthCard extends StatelessWidget {
           onSubmitted: (_) => auth.canSubmit ? onSubmit() : null,
         ),
       ];
+}
+
+/// Текстовая ссылка «Демо-режим» под кнопкой входа.
+class _DemoLink extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const _DemoLink({this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        'Демо-режим',
+        textAlign: TextAlign.center,
+        style: AppText.body.copyWith(
+          color: onTap == null ? AppColors.textSecondary : AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
 }
 
 class _RememberMe extends StatelessWidget {

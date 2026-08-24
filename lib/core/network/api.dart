@@ -136,6 +136,21 @@ Future put(String url, dynamic payload) async {
   return false;
 }
 
+Future del(String url) async {
+  try {
+    if (storage.read('access_token') != null) {
+      await checkToken();
+      dio.options.headers["authorization"] = "Bearer ${storage.read('access_token')}";
+      dio.options.headers["Accept"] = "application/json";
+    }
+    final response = await dio.delete(hostUrl + url);
+    return response.data ?? true;
+  } catch (e) {
+    statuscheker(e);
+  }
+  return false;
+}
+
 bool httpOk(dynamic response) {
   if (response != null && response != false && response != {} && response != "") {
     return true;

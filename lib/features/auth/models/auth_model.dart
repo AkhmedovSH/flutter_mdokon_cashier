@@ -20,6 +20,10 @@ enum AuthStep { credentials, otp }
 
 /// Состояние и сценарий входа: логин → (SMS) → аккаунт → роль → смена.
 class AuthModel extends ChangeNotifier {
+  /// Логин и пароль демо-доступа — вход по ним идёт обычным сценарием.
+  static const demoUsername = '2';
+  static const demoPassword = '2';
+
   final AuthRepository repository;
   final UserModel userModel;
   final GetStorage storage;
@@ -70,6 +74,31 @@ class AuthModel extends ChangeNotifier {
   void toggleRememberMe([bool? value]) => _update(() => rememberMe = value ?? !rememberMe);
 
   void togglePasswordVisibility() => _update(() => showPassword = !showPassword);
+
+  /// Вход демо-доступом: креды не попадают в поля формы, сценарий обычный.
+  /// Если войти не удалось — возвращаем форме то, что в ней было.
+  Future<AuthRedirect?> submitDemo() async {
+    if (_submitting) return null;
+
+    final prevUsername = username;
+    final prevPassword = password;
+    _update(() {
+      step = AuthStep.credentials;
+      username = demoUsername;
+      password = demoPassword;
+      otp = '';
+      _error = null;
+    });
+
+    final redirect = await submit();
+    if (redirect == null && step == AuthStep.credentials) {
+      _update(() {
+        username = prevUsername;
+        password = prevPassword;
+      });
+    }
+    return redirect;
+  }
 
   /// Вернуться со шага SMS к логину и паролю.
   void backToCredentials() => _update(() {

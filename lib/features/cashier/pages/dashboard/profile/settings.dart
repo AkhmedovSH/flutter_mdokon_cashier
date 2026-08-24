@@ -1,29 +1,78 @@
-import 'dart:async';
-
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
-import 'package:flutter_mdokon/core/localization/locale_model.dart';
-import 'package:flutter_mdokon/shared/widgets/dialogs.dart';
+import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+import 'package:unicons/unicons.dart';
 
-import 'package:get_storage/get_storage.dart';
-import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
-
-import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
-import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
-import 'package:unicons/unicons.dart';
-// import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
-import 'package:permission_handler/permission_handler.dart';
-
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
+import 'package:flutter_mdokon/shared/widgets/dialogs.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
+/// Раздел настроек — он же чип-фильтр в шапке.
+enum _Section { general, cashbox, print }
+
+/// Тип контрола в строке настройки.
+enum _Control {
+  /// Переключатель да/нет.
+  toggle,
+
+  /// Выбор из списка значений (язык, ширина чека).
+  select,
+
+  /// Числовое значение с шагом ±1 (знаки после запятой).
+  stepper,
+
+  /// Сегменты «Светлая / Тёмная».
+  theme,
+
+  /// Строка-действие: открывает подключение принтера.
+  printer,
+}
+
+class _Item {
+  final String key;
+
+  /// Номер вида «1.2» — как в десктопной кассе, по нему тоже ищем.
+  final String num;
+  final String titleKey;
+  final String descKey;
+  final _Section section;
+  final _Control control;
+
+  /// Варианты для [_Control.select]: значение → подпись.
+  final List<MapEntry<String, String>> options;
+
+  final double min;
+  final double max;
+
+  const _Item({
+    required this.key,
+    required this.titleKey,
+    required this.section,
+    required this.control,
+    this.num = '',
+    this.descKey = '',
+    this.options = const [],
+    this.min = 0,
+    this.max = 0,
+  });
+}
+
+/// Настройки кассы.
+///
+/// Экран работает с черновиком: переключатели меняют локальную копию, а в
+/// [SettingsModel], тему, локаль и принтер всё уезжает только по «Сохранить».
+/// Так касса не перестраивается под каждым пальцем и остаётся возможность
+/// откатить набор изменений одной кнопкой «Сбросить».
+///
+/// Исключение — выбор принтера: это подключение к устройству, а не значение,
+/// и оно применяется сразу.
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -32,443 +81,340 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  GetStorage storage = GetStorage();
+  final TextEditingController _searchController = TextEditingController();
 
-  Uint8List? image;
-  final List<Map<String, dynamic>> sizes = [
-    {
-      "id": '576',
-      "name": '80mm',
-    },
-    {
-      "id": '512',
-      "name": '72mm',
-    },
-    {
-      "id": '384',
-      "name": '58mm',
-    },
+  /// Сохранённые значения — точка отсчёта для «Сбросить» и подсветки кнопки.
+  Map<String, dynamic> _saved = {};
+
+  /// Правки, ещё не уехавшие в модели.
+  Map<String, dynamic> _draft = {};
+
+  String _query = '';
+  _Section? _activeSection;
+  bool _saving = false;
+
+  static const List<_Item> _items = [
+    _Item(
+      key: 'theme',
+      titleKey: 'appearance_theme',
+      descKey: 'settings_description_1',
+      section: _Section.general,
+      control: _Control.theme,
+    ),
+    _Item(
+      key: 'locale',
+      titleKey: 'interface_language',
+      descKey: 'settings_description_2',
+      section: _Section.general,
+      control: _Control.select,
+    ),
+    _Item(
+      key: 'changeCurrencyOnSale',
+      num: '1.1',
+      titleKey: 'settings_title_12',
+      descKey: 'settings_description_12',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'decimalDigits',
+      num: '1.2',
+      titleKey: 'settings_title_11',
+      descKey: 'settings_description_11',
+      section: _Section.cashbox,
+      control: _Control.stepper,
+      min: 0,
+      max: 5,
+    ),
+    _Item(
+      key: 'printer',
+      num: '2.1',
+      titleKey: 'settings_title_7',
+      descKey: 'settings_description_7',
+      section: _Section.print,
+      control: _Control.printer,
+    ),
+    _Item(
+      key: 'printerSize',
+      num: '2.2',
+      titleKey: 'receipt_print_width',
+      descKey: 'receipt_print_width_description',
+      section: _Section.print,
+      control: _Control.select,
+      options: [
+        MapEntry('576', '80 mm'),
+        MapEntry('512', '72 mm'),
+        MapEntry('384', '58 mm'),
+      ],
+    ),
+    _Item(
+      key: 'printAfterSale',
+      num: '2.3',
+      titleKey: 'settings_title_8',
+      descKey: 'settings_description_8',
+      section: _Section.print,
+      control: _Control.toggle,
+    ),
   ];
 
-  Map settings = {
-    'showChequeProducts': false,
-    'printAfterSale': false,
-    'searchGroupProducts': false,
-    'selectUserAftersale': false,
-    'offlineDeferment': false,
-    'additionalInfo': false,
-    'language': false,
-    'theme': false,
-  };
-
-  // uploadImage() async {
-  //   XFile? img = await ImagePicker().pickImage(source: ImageSource.gallery);
-  //   if (img == null) return;
-  //   var imageBytes = (await img.readAsBytes());
-  //   print(imageBytes);
-  //   storage.write("printImage", imageBytes);
-  //   getData();
-  // }
-
-  void getData() {
-    if (storage.read('settings') != null) {
-      settings = {...settings, ...(storage.read('settings') ?? {})};
-    }
-    if (storage.read('printImage') != null) {
-      List<int> intList = storage.read('printImage').cast<int>().toList();
-      image = Uint8List.fromList(intList);
-    }
-    setState(() {});
+  @override
+  void initState() {
+    super.initState();
+    _readCurrentValues();
+    _requestBluetoothPermissions();
   }
 
-  Future<void> checkStatus() async {
-    Map<Permission, PermissionStatus> statuses = await [
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Сканирование принтеров без этих разрешений возвращает пустой список,
+  /// поэтому спрашиваем их на входе, а не в момент нажатия.
+  Future<void> _requestBluetoothPermissions() async {
+    await [
       Permission.bluetooth,
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
       Permission.location,
     ].request();
-    if (statuses[Permission.bluetooth] == PermissionStatus.permanentlyDenied || statuses[Permission.bluetooth] == PermissionStatus.denied) {
-      return;
+  }
+
+  void _readCurrentValues() {
+    final settings = context.read<SettingsModel>();
+    final printer = context.read<PrinterModel>();
+    final locale = context.read<LocaleModel>();
+
+    _saved = {
+      'theme': settings.theme,
+      'locale': locale.localeName,
+      'changeCurrencyOnSale': settings.changeCurrencyOnSale,
+      'decimalDigits': settings.decimalDigits,
+      'printerSize': printer.printerSize,
+      'printAfterSale': settings.printAfterSale,
+    };
+    _draft = Map.of(_saved);
+  }
+
+  bool get _dirty => _saved.keys.any((key) => _saved[key] != _draft[key]);
+
+  void _set(String key, dynamic value) => setState(() => _draft[key] = value);
+
+  // --- Список -------------------------------------------------------------
+
+  /// Настройки, прошедшие поиск (но ещё не фильтр по разделу) — по ним же
+  /// считаются числа на чипах, чтобы пустых разделов в шапке не оставалось.
+  List<_Item> get _found {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return _items;
+
+    return _items.where((item) {
+      final haystack = [
+        item.num,
+        context.tr(item.titleKey),
+        if (item.descKey.isNotEmpty) _description(item),
+      ].join(' ').toLowerCase();
+
+      return haystack.contains(query);
+    }).toList();
+  }
+
+  List<_Item> get _visible {
+    final found = _found;
+    if (_activeSection == null) return found;
+
+    return found.where((item) => item.section == _activeSection).toList();
+  }
+
+  int _countIn(_Section? section) => section == null
+      ? _found.length
+      : _found.where((item) => item.section == section).length;
+
+  String _sectionTitle(_Section section) => switch (section) {
+        _Section.general => context.tr('general'),
+        _Section.cashbox => context.tr('cashbox'),
+        _Section.print => context.tr('print'),
+      };
+
+  /// Описание точности сумм показывает пример прямо с черновым значением,
+  /// иначе подсказка отстаёт от ползунка до сохранения.
+  String _description(_Item item) {
+    if (item.key == 'decimalDigits') {
+      final digits = customNumber(_draft['decimalDigits']).round();
+      final example = NumberFormat.currency(
+        symbol: '',
+        decimalDigits: digits,
+        locale: 'UZ',
+      ).format(500.99999).replaceAll(' ', ' ').replaceAll(' ', ' ').trim();
+
+      return context.tr(item.descKey, args: [example]);
     }
-    if (statuses[Permission.bluetoothConnect] == PermissionStatus.permanentlyDenied ||
-        statuses[Permission.bluetoothConnect] == PermissionStatus.denied) {
-      return;
-    }
-    if (statuses[Permission.location] == PermissionStatus.permanentlyDenied || statuses[Permission.location] == PermissionStatus.denied) {
-      return;
-    }
+
+    return context.tr(item.descKey);
+  }
+
+  // --- Действия -----------------------------------------------------------
+
+  Future<void> _pickPrinter() async {
+    final printer = context.read<PrinterModel>();
+    printer.startScan();
+    await showPrinterPicker(context);
+  }
+
+  void _reset() {
+    _searchController.clear();
     setState(() {
-      bluetoothPermission = true;
+      _draft = Map.of(_saved);
+      _query = '';
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    getData();
-    checkStatus();
+  Future<void> _save() async {
+    if (!_dirty || _saving) return;
+    setState(() => _saving = true);
+
+    final settings = context.read<SettingsModel>();
+
+    for (final key in const [
+      'changeCurrencyOnSale',
+      'decimalDigits',
+      'printAfterSale',
+    ]) {
+      if (_saved[key] != _draft[key]) settings.updateSetting(key, _draft[key]);
+    }
+
+    if (_saved['printerSize'] != _draft['printerSize']) {
+      context.read<PrinterModel>().setPrinterSize(_draft['printerSize']);
+    }
+
+    if (_saved['theme'] != _draft['theme']) {
+      final dark = _draft['theme'] == true;
+      context.read<ThemeModel>().setTheme(dark ? darkTheme : lightTheme);
+      settings.updateSetting('theme', dark);
+    }
+
+    if (_saved['locale'] != _draft['locale']) {
+      final locale = _draft['locale'] == 'uz'
+          ? const Locale('uz', 'Latn')
+          : const Locale('ru', '');
+      await context.setLocale(locale);
+      if (!mounted) return;
+      context.read<LocaleModel>().setLocale(locale);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _saved = Map.of(_draft);
+      _saving = false;
+    });
+    showSuccessToast(context.tr('settings_saved'));
   }
+
+  // --- Вёрстка ------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
-    final settingsModel = Provider.of<SettingsModel>(context);
+    final visible = _visible;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'settings',
-        leading: true,
+      backgroundColor: AppColors.canvas,
+      body: Column(
+        children: [
+          _header(),
+          Expanded(
+            child: visible.isEmpty
+                ? AppEmptyState(
+                    icon: UniconsLine.search,
+                    title: context.tr('nothing_found'),
+                    text: context.tr('settings_search_empty'),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppDimens.gutter,
+                      AppDimens.gap12,
+                      AppDimens.gutter,
+                      AppDimens.gap16,
+                    ),
+                    itemCount: visible.length + 1,
+                    separatorBuilder: (context, index) => const SizedBox(height: AppDimens.gap8),
+                    itemBuilder: (context, index) {
+                      if (index == 0) return _countLabel(visible.length);
+
+                      return _row(visible[index - 1]);
+                    },
+                  ),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(12),
-        child: SingleChildScrollView(
+      bottomNavigationBar: _footer(),
+    );
+  }
+
+  Widget _header() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppDimens.gutter,
+            0,
+            AppDimens.gutter,
+            AppDimens.gap12,
+          ),
           child: Column(
-            spacing: 15,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SectionTitle(title: 'general'),
-
-              CardItem(
-                title: 'settings_title_1',
-                description: 'settings_description_1',
-                value: settingsModel.theme,
-                onChanged: (value) {
-                  if (value) {
-                    Provider.of<ThemeModel>(context, listen: false).setTheme(darkTheme);
-                  } else {
-                    Provider.of<ThemeModel>(context, listen: false).setTheme(lightTheme);
-                  }
-
-                  settingsModel.updateSetting('theme', value);
-                },
-              ),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 50,
-                decoration: BoxDecoration(
-                  color: CustomTheme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              SizedBox(
+                height: AppDimens.heightLarge,
                 child: Row(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        context.tr('language'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppDimens.gap8),
+                      child: AppIconButton(
+                        icon: UniconsLine.arrow_left,
+                        onPressed: () => context.pop(),
                       ),
                     ),
-                    SizedBox(
-                      width: 115,
-                      child: Consumer<LocaleModel>(
-                        builder: (context, localeModel, chilld) {
-                          return DropdownValue<String>(
-                            value: localeModel.localeName,
-                            builder: (context, selected) => DropdownButtonHideUnderline(
-                              child: DropdownButton2<String>(
-                                valueListenable: selected,
-                                buttonStyleData: const ButtonStyleData(width: 125),
-                                dropdownStyleData: DropdownStyleData(
-                                  width: 125,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: CustomTheme.of(context).cardColor,
-                                  ),
-                                  offset: const Offset(-10, -10),
-                                ),
-                                isDense: true,
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    Locale locale = const Locale('ru', '');
-                                    if (newValue == 'ru') {
-                                      locale = const Locale('ru', '');
-                                    }
-                                    if (newValue == 'uz') {
-                                      locale = const Locale('uz', 'Latn');
-                                    }
-                                    context.setLocale(locale);
-                                    localeModel.setLocale(locale);
-                                  }
-                                },
-                                items: languages.map(
-                                  (Map<String, dynamic> language) {
-                                    return DropdownItem<String>(
-                                      value: language['locale'],
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
-                                        curve: Curves.easeInOut,
-                                        child: Text(language['name']!),
-                                      ),
-                                    );
-                                  },
-                                ).toList(),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    Text(context.tr('settings'), style: AppText.h1),
                   ],
                 ),
               ),
-              SectionTitle(title: 'cashbox'),
-
-              CardItem(
-                title: 'settings_title_12',
-                description: 'settings_description_12',
-                value: settingsModel.changeCurrencyOnSale,
-                onChanged: (value) {
-                  settingsModel.updateSetting('changeCurrencyOnSale', value);
-                },
+              const SizedBox(height: AppDimens.gap8),
+              AppInput(
+                controller: _searchController,
+                hint: context.tr('settings_search_hint'),
+                height: AppDimens.heightMedium,
+                prefixIcon: UniconsLine.search,
+                onChanged: (value) => setState(() => _query = value),
+                suffix: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(
+                          UniconsLine.times,
+                          size: 18,
+                          color: AppColors.iconMuted,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
               ),
-
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: CustomTheme.of(context).cardColor,
-                  boxShadow: [boxShadow],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: AppDimens.gap8),
+              SizedBox(
+                height: 34,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
                   children: [
-                    Text(
-                      context.tr('settings_title_11'),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      context.tr('settings_description_11', args: [(formatMoney(500.99999))]),
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    SfSlider(
-                      min: 0,
-                      max: 5,
-                      value: settingsModel.decimalDigits,
-                      interval: 1,
-                      showTicks: true,
-                      showLabels: true,
-                      enableTooltip: false,
-                      showDividers: true,
-                      minorTicksPerInterval: 0,
-                      stepSize: 1,
-                      activeColor: mainColor,
-                      inactiveColor: Colors.grey.shade200,
-                      onChanged: (dynamic value) {
-                        settingsModel.updateSetting('decimalDigits', value);
-                      },
-                    ),
+                    _tab(null, context.tr('all')),
+                    for (final section in _Section.values)
+                      _tab(section, _sectionTitle(section)),
                   ],
                 ),
-              ),
-
-              SectionTitle(title: 'print'),
-
-              GestureDetector(
-                onTap: () async {
-                  PrinterModel printerModel = Provider.of<PrinterModel>(context, listen: false);
-                  printerModel.startScan();
-                  await showPrinterPicker(context);
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: CustomTheme.of(context).cardColor,
-                    boxShadow: [boxShadow],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('settings_title_7'),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              context.tr('settings_description_7'),
-                              style: TextStyle(
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Consumer<PrinterModel>(
-                        builder: (context, model, child) {
-                          if (customIf(model.selectedDevice)) {
-                            return SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              child: Text(model.selectedDeviceName),
-                            );
-                          } else {
-                            return Icon(
-                              UniconsLine.print_slash,
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 50,
-                decoration: BoxDecoration(
-                  color: CustomTheme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        context.tr('receipt_print_width'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 115,
-                      child: Consumer<PrinterModel>(
-                        builder: (context, model, chilld) {
-                          return DropdownValue<String>(
-                            value: model.printerSize,
-                            builder: (context, selected) => DropdownButtonHideUnderline(
-                              child: DropdownButton2<String>(
-                                valueListenable: selected,
-                                buttonStyleData: const ButtonStyleData(width: 125),
-                                dropdownStyleData: DropdownStyleData(
-                                  width: 125,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: CustomTheme.of(context).cardColor,
-                                  ),
-                                  offset: const Offset(-10, -10),
-                                ),
-                                isDense: true,
-                                onChanged: (String? newValue) {
-                                  model.setPrinterSize(newValue);
-                                },
-                                items: sizes.map(
-                                  (Map<String, dynamic> item) {
-                                    return DropdownItem<String>(
-                                      value: item['id'],
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
-                                        curve: Curves.easeInOut,
-                                        child: Text(item['name']!),
-                                      ),
-                                    );
-                                  },
-                                ).toList(),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              //
-              // GestureDetector(
-              //   onTap: () {},
-              //   child: Container(
-              //     margin: EdgeInsets.symmetric(horizontal: 12),
-              //     padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              //     decoration: BoxDecoration(
-              //       color: CustomTheme.of(context).cardColor,
-              //       boxShadow: [boxShadow],
-              //       borderRadius: BorderRadius.circular(8),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //       children: [
-              //         SizedBox(
-              //           width: MediaQuery.of(context).size.width * 0.6,
-              //           child: Column(
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: [
-              //               Text(
-              //                 context.tr('settings_title_6'),
-              //                 style: TextStyle(
-              //                   fontSize: 18,
-              //                   fontWeight: FontWeight.w500,
-              //                 ),
-              //               ),
-              //               SizedBox(height: 5),
-              //               Text(
-              //                 context.tr('settings_description_6'),
-              //                 style: TextStyle(
-              //                   fontSize: 12,
-              //                 ),
-              //               ),
-              //             ],
-              //           ),
-              //         ),
-              //         if (storage.read('printImage') == null)
-              //           Icon(
-              //             UniconsLine.image_download,
-              //           )
-              //         else if (image != null)
-              //           SizedBox(
-              //             child: Image.memory(
-              //               image!,
-              //               height: 64,
-              //               width: 64,
-              //             ),
-              //           ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              CardItem(
-                title: 'settings_title_8',
-                description: 'settings_description_8',
-                value: settingsModel.printAfterSale,
-                onChanged: (value) {
-                  settingsModel.updateSetting('printAfterSale', value);
-                },
-              ),
-
-              CardItem(
-                title: 'settings_title_9',
-                description: 'settings_description_9',
-                value: settingsModel.showChequeProducts,
-                onChanged: (value) {
-                  settingsModel.updateSetting('showChequeProducts', value);
-                },
-              ),
-
-              CardItem(
-                title: 'settings_title_10',
-                description: 'settings_description_10',
-                value: settingsModel.additionalInfo,
-                onChanged: (value) {
-                  settingsModel.updateSetting('additionalInfo', value);
-                },
               ),
             ],
           ),
@@ -477,285 +423,438 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  Timer? timer;
-  bool bluetoothPermission = false;
-  bool connected = false;
+  Widget _tab(_Section? section, String label) {
+    final count = _countIn(section);
+    final selected = _activeSection == section;
 
-  int activeIndex = 1000;
-  List availableBluetoothDevices = [];
-
-  dynamic tips;
-  dynamic device;
-
-  Future<void> getBluetooth() async {
-    // final List? bluetooths = await BluetoothThermalPrinter.getBluetooths;
-    // if (bluetooths != null) {
-    //   for (var i = 0; i < bluetooths.length; i++) {
-    //     var item = bluetooths[i].split("#")[1];
-    //     if (storage.read('defaultPrinter') == item) {
-    //       activeIndex = i;
-    //     }
-    //   }
-    //   availableBluetoothDevices = bluetooths;
-
-    //   var status = await BluetoothThermalPrinter.connectionStatus;
-    //   if (status == 'true') {
-    //     connected = true;
-    //   } else {
-    //     connected = false;
-    //   }
-    //   setState(() {});
-    //   if (availableBluetoothDevices.isNotEmpty) {
-    //     openBluetoothDevices();
-    //   } else {
-    //     showDangerToast('there_are_no_active_devices_bluetooth_is_disabled'.tr);
-    //   }
-    // }
-  }
-
-  // Future<void> setConnect(String mac, newSetState) async {
-  //   if (timer != null) {
-  //     Get.closeCurrentSnackbar();
-  //     timer!.cancel();
-  //   }
-  //   Get.showSnackbar(
-  //     GetSnackBar(
-  //       messageText: Row(
-  //         children: [
-  //           Text(
-  //             'connection'.tr,
-  //             style: TextStyle(color: white),
-  //           ),
-  //           const SizedBox(width: 10),
-  //           SizedBox(
-  //             height: 16,
-  //             width: 16,
-  //             child: CircularProgressIndicator(
-  //               color: white,
-  //               strokeWidth: 2,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       backgroundColor: mainColor,
-  //     ),
-  //   );
-  //   try {
-  //     timer = Timer(const Duration(seconds: 5), () {
-  //       if (!connected) {
-  //         Get.closeAllSnackbars();
-  //         showDangerToast('failed_to_connect'.tr);
-  //         newSetState(() {});
-  //         return;
-  //       }
-  //     });
-  //     final String? result = await BluetoothThermalPrinter.connect(mac);
-  //     print(mac);
-  //     storage.write('defaultPrinter', mac);
-  //     Get.closeAllSnackbars();
-  //     if (result == "true") {
-  //       Get.back();
-  //     } else {
-  //       if (timer != null) {
-  //         timer!.cancel();
-  //       }
-  //       showDangerToast('no_connection'.tr);
-
-  //       connected = false;
-  //       newSetState(() {});
-  //     }
-  //   } catch (e) {
-  //     Get.closeAllSnackbars();
-  //     print(e);
-  //     showDangerToast(e);
-  //   }
-  // }
-
-  void saveDefaultPrinter() {}
-
-  Future<void> openBluetoothDevices() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: Material(
+        color: selected ? AppColors.primary : AppColors.surface,
+        borderRadius: AppDimens.control,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => setState(() => _activeSection = section),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: AppDimens.control,
+              border: Border.all(
+                color: selected ? AppColors.primary : AppColors.border,
+              ),
+            ),
+            child: Text(
+              count > 0 ? '$label  $count' : label,
+              style: AppText.secondaryBold.copyWith(
+                color: selected ? AppColors.onPrimary : AppColors.textPrimary,
+              ),
+            ),
+          ),
         ),
       ),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, newSetState) {
-            return Container(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          constraints: BoxConstraints(maxHeight: 500),
-                          child: ListView.builder(
-                            itemCount: availableBluetoothDevices.isNotEmpty ? availableBluetoothDevices.length : 0,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                onTap: () {
-                                  // String select = availableBluetoothDevices[index];
-                                  // List list = select.split("#");
-                                  // String mac = list[1];
+    );
+  }
 
-                                  // setConnect(mac, newSetState);
-                                },
-                                title: Text(
-                                  '${availableBluetoothDevices[index]}',
-                                  style: TextStyle(
-                                    color: activeIndex == index ? mainColor : black,
-                                  ),
-                                ),
-                                subtitle: Text(activeIndex == index ? context.tr("connected_device") : context.tr("click_to_connect")),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+  Widget _countLabel(int count) {
+    final section = _activeSection == null
+        ? context.tr('all')
+        : _sectionTitle(_activeSection!);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimens.gap4),
+      child: AppSectionLabel('$section · $count'),
+    );
+  }
+
+  Widget _row(_Item item) {
+    final isTheme = item.control == _Control.theme;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimens.gap12,
+        vertical: 10,
+      ),
+      onTap: item.control == _Control.toggle
+          ? () => _set(item.key, !(_draft[item.key] == true))
+          : item.control == _Control.printer
+              ? _pickPrinter
+              : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _titleBlock(item)),
+              if (!isTheme) ...[
+                const SizedBox(width: AppDimens.gap12),
+                _control(item),
+              ],
+            ],
+          ),
+          if (isTheme) ...[
+            const SizedBox(height: AppDimens.gap8),
+            _themeSwitcher(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _titleBlock(_Item item) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (item.num.isNotEmpty) ...[
+          Text(
+            item.num,
+            style: AppText.tabular(AppText.caption).copyWith(
+              color: AppColors.iconMuted,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 1),
+        ],
+        Text(
+          context.tr(item.titleKey),
+          style: AppText.bodyMedium.copyWith(fontSize: 14, height: 1.25),
+        ),
+        if (item.descKey.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            _description(item),
+            style: AppText.small.copyWith(fontSize: 11, height: 1.3),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _control(_Item item) {
+    switch (item.control) {
+      case _Control.toggle:
+        return Transform.scale(
+          scale: 0.85,
+          alignment: Alignment.centerRight,
+          child: Switch.adaptive(
+            value: _draft[item.key] == true,
+            activeThumbColor: AppColors.onPrimary,
+            activeTrackColor: AppColors.primary,
+            onChanged: (value) => _set(item.key, value),
+          ),
+        );
+
+      case _Control.select:
+        return _SelectButton(
+          label: _selectLabel(item),
+          onTap: () => _openSelect(item),
+        );
+
+      case _Control.stepper:
+        return _Stepper(
+          value: customNumber(_draft[item.key]).round(),
+          min: item.min.round(),
+          max: item.max.round(),
+          onChanged: (value) => _set(item.key, value.toDouble()),
+        );
+
+      case _Control.printer:
+        return Consumer<PrinterModel>(
+          builder: (context, model, child) {
+            final connected = customIf(model.selectedDevice);
+
+            return _SelectButton(
+              label: connected ? model.selectedDeviceName : context.tr('click_to_connect'),
+              icon: connected ? UniconsLine.print : UniconsLine.print_slash,
+              onTap: _pickPrinter,
             );
           },
         );
-      },
-    );
-    setState(() {
-      availableBluetoothDevices = [];
-    });
+
+      case _Control.theme:
+        return const SizedBox.shrink();
+    }
   }
-}
 
-class SectionTitle extends StatelessWidget {
-  final String title;
+  List<MapEntry<String, String>> _optionsOf(_Item item) {
+    if (item.key != 'locale') return item.options;
 
-  const SectionTitle({
-    super.key,
-    required this.title,
-  });
+    return [
+      for (final language in languages)
+        MapEntry('${language['locale']}', '${language['name']}'),
+    ];
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      context.tr(title),
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
+  String _selectLabel(_Item item) {
+    final value = '${_draft[item.key]}';
+
+    return _optionsOf(item)
+        .firstWhere(
+          (option) => option.key == value,
+          orElse: () => MapEntry(value, value),
+        )
+        .value;
+  }
+
+  Future<void> _openSelect(_Item item) async {
+    final options = _optionsOf(item);
+    final current = '${_draft[item.key]}';
+
+    final picked = await AppModal.sheet<String>(
+      context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(context.tr(item.titleKey), style: AppText.h2),
+          const SizedBox(height: AppDimens.gap12),
+          for (final option in options)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(option.value, style: AppText.body),
+              trailing: option.key == current
+                  ? const Icon(UniconsLine.check, color: AppColors.primary)
+                  : null,
+              onTap: () => Navigator.of(ctx).pop(option.key),
+            ),
+        ],
+      ),
+    );
+
+    if (picked != null) _set(item.key, picked);
+  }
+
+  Widget _themeSwitcher() {
+    final dark = _draft['theme'] == true;
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimens.gap4),
+      decoration: BoxDecoration(
+        color: AppColors.canvas,
+        borderRadius: AppDimens.control,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ThemeOption(
+              label: context.tr('theme_light'),
+              selected: !dark,
+              onTap: () => _set('theme', false),
+            ),
+          ),
+          const SizedBox(width: AppDimens.gap4),
+          Expanded(
+            child: _ThemeOption(
+              label: context.tr('theme_dark'),
+              selected: dark,
+              onTap: () => _set('theme', true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footer() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        10,
+        AppDimens.gutter,
+        AppDimens.gap12,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: AppButton.secondary(
+                label: context.tr('reset'),
+                size: AppButtonSize.large,
+                onPressed: _dirty || _query.isNotEmpty ? _reset : null,
+              ),
+            ),
+            const SizedBox(width: AppDimens.gap8),
+            Expanded(
+              child: AppButton(
+                label: context.tr('save'),
+                loading: _saving,
+                onPressed: _dirty ? _save : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class CardItem extends StatelessWidget {
-  final String title;
-  final String description;
-  final bool value;
-  final bool soon;
-  final ValueChanged<bool> onChanged;
+/// Кнопка-значение: текущий выбор и шеврон, открывает лист вариантов.
+class _SelectButton extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
 
-  const CardItem({
-    super.key,
-    required this.title,
-    this.description = '',
+  const _SelectButton({required this.label, required this.onTap, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 150),
+      child: Material(
+        color: AppColors.canvas,
+        borderRadius: AppDimens.control,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 34,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: AppDimens.control,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: AppColors.iconMuted),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    label,
+                    style: AppText.secondaryBold.copyWith(fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppDimens.gap8),
+                const Icon(UniconsLine.angle_down, size: 16, color: AppColors.iconMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Числовое значение с кнопками −/+ (знаки после запятой).
+class _Stepper extends StatelessWidget {
+  final int value;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  const _Stepper({
     required this.value,
-    this.soon = false,
+    required this.min,
+    required this.max,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        onChanged(!value);
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          color: CustomTheme.of(context).cardColor,
-          boxShadow: [boxShadow],
-          borderRadius: BorderRadius.circular(8),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _StepperButton(
+          icon: UniconsLine.minus,
+          onPressed: value > min ? () => onChanged(value - 1) : null,
         ),
-        child: Stack(
-          children: [
-            Row(
-              spacing: 10,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr(title),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        context.tr(description),
-                        style: TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                CupertinoSwitch(
-                  value: value,
-                  activeTrackColor: mainColor,
-                  onChanged: onChanged,
-                ),
-              ],
+        SizedBox(
+          width: 34,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.center,
+            style: AppText.tabular(AppText.bodyMedium).copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+        _StepperButton(
+          icon: UniconsLine.plus,
+          onPressed: value < max ? () => onChanged(value + 1) : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  const _StepperButton({required this.icon, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+
+    return Material(
+      color: enabled ? AppColors.canvas : AppColors.divider,
+      borderRadius: AppDimens.control,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            borderRadius: AppDimens.control,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: enabled ? AppColors.textPrimary : AppColors.iconMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Сегмент переключателя темы.
+class _ThemeOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ThemeOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.surface : Colors.transparent,
+      borderRadius: AppDimens.control,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: AppDimens.control,
+            border: Border.all(
+              color: selected ? AppColors.border : Colors.transparent,
             ),
-            if (soon)
-              Positioned.fill(
-                top: 0,
-                child: Container(
-                  color: CustomTheme.of(context).cardColor.withValues(alpha: 0.8),
-                  width: MediaQuery.of(context).size.width,
-                  alignment: Alignment.center,
-                  height: double.infinity,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(UniconsLine.clock),
-                      SizedBox(width: 10),
-                      Text(
-                        context.tr('soon'),
-                        style: TextStyle(
-                          color: grey,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
+          ),
+          child: Text(
+            label,
+            style: AppText.secondaryBold.copyWith(
+              fontSize: 14,
+              color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );

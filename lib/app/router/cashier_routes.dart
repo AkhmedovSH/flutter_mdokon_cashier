@@ -9,6 +9,8 @@ import 'package:flutter_mdokon/features/cashier/pages/payment/payment_sample.dar
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/x_report.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/balance.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/settings.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/quick_selection.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/quick_selection_picker.dart';
 
 // import 'package:flutter_mdokon/features/cashier/pages/client_debt.dart';
 // import 'package:flutter_mdokon/features/cashier/pages/sales_on_credit.dart';
@@ -41,6 +43,17 @@ List<RouteBase> cashiers = [
   GoRoute(
     path: '/profile/balance',
     pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Balance()),
+  ),
+  GoRoute(
+    path: '/profile/quick-selection',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, QuickSelection()),
+  ),
+  GoRoute(
+    path: '/profile/quick-selection/picker',
+    pageBuilder: (context, state) {
+      final added = state.extra is Set<String> ? state.extra as Set<String> : <String>{};
+      return cupertinoPageBuilder(context, state, QuickSelectionPicker(addedBarcodes: added));
+    },
   ),
   GoRoute(
     path: '/profile/settings',

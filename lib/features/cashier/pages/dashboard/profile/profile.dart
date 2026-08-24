@@ -42,7 +42,6 @@ class _ProfileState extends State<Profile> {
   bool loadingReport = false;
 
   /// Связь с сервером: `null` — ещё проверяем.
-  bool? online;
 
   String version = '';
 
@@ -70,7 +69,7 @@ class _ProfileState extends State<Profile> {
     if (!mounted) return;
     setState(_readStorage);
 
-    await Future.wait([_loadVersion(), _loadReport(), _ping()]);
+    await Future.wait([_loadVersion(), _loadReport()]);
   }
 
   Future<void> _loadVersion() async {
@@ -93,12 +92,6 @@ class _ProfileState extends State<Profile> {
       loadingReport = false;
       report = httpOk(response) && response is Map ? response : {};
     });
-  }
-
-  Future<void> _ping() async {
-    final result = await hasInternetConnection();
-    if (!mounted) return;
-    setState(() => online = result);
   }
 
   /// Продажи и остаток приходят списком по валютам — на экране показываем
@@ -234,13 +227,6 @@ class _ProfileState extends State<Profile> {
                     style: AppText.h1.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (online != null)
-                  _StatusPill(
-                    label: context.tr(online! ? 'online' : 'offline'),
-                    background: online! ? AppColors.successSoft : AppColors.warningSoft,
-                    foreground: online! ? AppColors.successText : AppColors.warningText,
-                    dotColor: online! ? AppColors.success : AppColors.warning,
-                  ),
               ],
             ),
           ),
@@ -402,14 +388,13 @@ class _ProfileState extends State<Profile> {
           value: context.tr('products'),
           onTap: () => _open(_isAgent ? '/agent/profile/balance' : '/cashier/profile/balance'),
         ),
-      // Быстрый подбор: экран ещё не сделан, поэтому строка честно говорит
-      // «Скоро» вместо перехода в пустоту — останется поменять onTap.
-      _MenuItem(
-        icon: UniconsLine.bolt,
-        title: context.tr('quick_selection'),
-        value: context.tr('soon'),
-        onTap: () => showWarningToast(context.tr('soon')),
-      ),
+      if (!_isAgent)
+        _MenuItem(
+          icon: UniconsLine.bolt,
+          title: context.tr('quick_selection'),
+          value: context.tr('products'),
+          onTap: () => _open('/cashier/profile/quick-selection'),
+        ),
       if (!_isAgent)
         _MenuItem(
           icon: UniconsLine.cog,
