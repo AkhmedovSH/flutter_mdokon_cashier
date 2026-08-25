@@ -9,6 +9,7 @@ import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/app_responsive.dart';
 
 /// Экран поиска товаров для «Быстрого подбора».
 ///
@@ -123,7 +124,7 @@ class _QuickSelectionPickerState extends State<QuickSelectionPicker> {
         children: [
           _searchField(),
           const SizedBox(height: AppDimens.gap12),
-          Expanded(child: _body()),
+          Expanded(child: ContentBox(child: _body())),
         ],
       ),
       bottomNavigationBar: _picked.isEmpty ? null : _footer(),
@@ -143,27 +144,27 @@ class _QuickSelectionPickerState extends State<QuickSelectionPicker> {
           final query = value.trim();
           if (query.isNotEmpty) _search(query);
         },
-        style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+        style: TextStyle(fontSize: 15, color: AppColors.textPrimary),
         decoration: InputDecoration(
           isDense: true,
           filled: true,
           fillColor: AppColors.surface,
           hintText: context.tr('search_by_name_or_barcode'),
-          hintStyle: const TextStyle(color: AppColors.iconMuted, fontSize: 15),
-          prefixIcon: const Icon(Icons.search, color: AppColors.iconMuted, size: 20),
+          hintStyle: TextStyle(color: AppColors.iconMuted, fontSize: 15),
+          prefixIcon: Icon(Icons.search, color: AppColors.iconMuted, size: 20),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppDimens.gap12,
             vertical: AppDimens.gap12,
           ),
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.border),
           ),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.border),
           ),
-          focusedBorder: const OutlineInputBorder(
+          focusedBorder: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.primary),
           ),
@@ -174,7 +175,7 @@ class _QuickSelectionPickerState extends State<QuickSelectionPicker> {
 
   Widget _body() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     if (!_searched) {
@@ -244,7 +245,7 @@ class _QuickSelectionPickerState extends State<QuickSelectionPicker> {
                                 : '$barcode · ${formatMoney(item['salePrice'])}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: AppColors.iconMuted),
+                            style: TextStyle(fontSize: 12, color: AppColors.iconMuted),
                           ),
                         ],
                       ),
@@ -320,7 +321,7 @@ class _EmptyHint extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
             ),
           ],
         ),

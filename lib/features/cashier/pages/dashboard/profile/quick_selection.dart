@@ -336,24 +336,26 @@ class _QuickSelectionState extends State<QuickSelection> {
               padding: const EdgeInsets.only(right: AppDimens.gutter),
               child: Text(
                 '${_visible.length} ${context.tr('in_set')}',
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ),
           ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : Column(
-              children: [
-                _chipsRow(),
-                const SizedBox(height: AppDimens.gap12),
-                _searchButton(),
-                const SizedBox(height: AppDimens.gap16),
-                _sectionHeader(),
-                const SizedBox(height: AppDimens.gap8),
-                Expanded(child: _list()),
-              ],
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : ContentBox(
+              child: Column(
+                children: [
+                  _chipsRow(),
+                  const SizedBox(height: AppDimens.gap12),
+                  _searchButton(),
+                  const SizedBox(height: AppDimens.gap16),
+                  _sectionHeader(),
+                  const SizedBox(height: AppDimens.gap8),
+                  Expanded(child: _list()),
+                ],
+              ),
             ),
       bottomNavigationBar: _loading ? null : _footer(),
     );
@@ -385,7 +387,7 @@ class _QuickSelectionState extends State<QuickSelection> {
             child: InkWell(
               borderRadius: AppDimens.pill,
               onTap: _addCategory,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 44,
                 child: Icon(Icons.add, size: 20, color: AppColors.primary),
               ),
@@ -416,14 +418,14 @@ class _QuickSelectionState extends State<QuickSelection> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.search, size: 20, color: AppColors.iconMuted),
+                Icon(Icons.search, size: 20, color: AppColors.iconMuted),
                 const SizedBox(width: AppDimens.gap8),
                 Expanded(
                   child: Text(
                     context.tr('search_by_name_or_barcode'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15, color: AppColors.iconMuted),
+                    style: TextStyle(fontSize: 15, color: AppColors.iconMuted),
                   ),
                 ),
               ],
@@ -446,7 +448,7 @@ class _QuickSelectionState extends State<QuickSelection> {
               '${context.tr('in_set_of')} «${category.name.toUpperCase()}»',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
@@ -477,11 +479,11 @@ class _QuickSelectionState extends State<QuickSelection> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.iconMuted),
+              Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.iconMuted),
               const SizedBox(height: AppDimens.gap12),
               Text(
                 context.tr('set_empty_title'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -491,7 +493,7 @@ class _QuickSelectionState extends State<QuickSelection> {
               Text(
                 context.tr('set_empty_text'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -603,7 +605,7 @@ class _SetRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppDimens.gap8),
       child: Container(
         padding: const EdgeInsets.all(AppDimens.gap12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppDimens.card,
           boxShadow: AppDimens.cardShadow,
@@ -614,13 +616,13 @@ class _SetRow extends StatelessWidget {
               width: 24,
               height: 24,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.primarySoft,
                 borderRadius: AppDimens.control,
               ),
               child: Text(
                 '$position',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary,
@@ -636,7 +638,7 @@ class _SetRow extends StatelessWidget {
                     '${item['productName'] ?? ''}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -649,7 +651,7 @@ class _SetRow extends StatelessWidget {
                         : '${item['productBarcode'] ?? ''} · ${formatMoney(price)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: AppColors.iconMuted),
+                    style: TextStyle(fontSize: 12, color: AppColors.iconMuted),
                   ),
                 ],
               ),

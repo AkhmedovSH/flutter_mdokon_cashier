@@ -152,14 +152,14 @@ class _QuantityStepper extends StatelessWidget {
             height: 34,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 _whole ? '${value.round()}' : formatMoney(value, decimalDigits: 3),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   height: 1,
                   fontWeight: FontWeight.w600,

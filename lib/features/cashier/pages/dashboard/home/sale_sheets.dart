@@ -145,7 +145,7 @@ class SaleSheets {
                 children: [
                   Expanded(child: Text(context.tr(mode.labelKey), style: AppText.bodyMedium)),
                   if (mode == model.priceMode)
-                    const Icon(UniconsLine.check, size: 20, color: AppColors.primary),
+                    Icon(UniconsLine.check, size: 20, color: AppColors.primary),
                 ],
               ),
             ),

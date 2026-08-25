@@ -24,11 +24,11 @@ import 'package:flutter_mdokon/features/director/models/inventory_model.dart';
 /// Глобальные провайдеры приложения.
 List<SingleChildWidget> appProviders({
   required GetStorage storage,
-  required ThemeData theme,
+  required bool isDarkTheme,
   required Locale locale,
 }) {
   return [
-    ChangeNotifierProvider(create: (_) => ThemeModel(theme)),
+    ChangeNotifierProvider(create: (_) => ThemeModel(isDarkTheme)),
     ChangeNotifierProvider(create: (_) => LocaleModel(locale)),
     ChangeNotifierProvider(create: (_) => LoadingModel()),
     ChangeNotifierProvider(create: (_) => SettingsModel()),

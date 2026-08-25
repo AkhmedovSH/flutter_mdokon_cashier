@@ -37,12 +37,15 @@ class CashBoxes extends StatelessWidget {
               AppDimens.gutter,
               AppDimens.gap24,
             ),
-            child: Column(
-              children: [
-                const AuthLogoHeader(subtitle: 'Выберите кассу, чтобы открыть смену'),
-                const SizedBox(height: AppDimens.gap24),
-                Expanded(child: _CashboxCard(poses: poses, auth: auth, onSelect: _select)),
-              ],
+            child: ContentBox(
+              maxWidth: 560,
+              child: Column(
+                children: [
+                  const AuthLogoHeader(subtitle: 'Выберите кассу, чтобы открыть смену'),
+                  const SizedBox(height: AppDimens.gap24),
+                  Expanded(child: _CashboxCard(poses: poses, auth: auth, onSelect: _select)),
+                ],
+              ),
             ),
           ),
         ),
@@ -164,11 +167,11 @@ class _CashboxTile extends StatelessWidget {
               width: 40,
               height: 40,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.canvas,
                 borderRadius: AppDimens.control,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.point_of_sale_outlined,
                 size: 20,
                 color: AppColors.iconMuted,
@@ -176,7 +179,7 @@ class _CashboxTile extends StatelessWidget {
             ),
             const SizedBox(width: AppDimens.gap12),
             Expanded(child: Text(name, style: AppText.bodyMedium)),
-            const Icon(Icons.chevron_right, size: 20, color: AppColors.iconMuted),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.iconMuted),
           ],
         ),
       ),

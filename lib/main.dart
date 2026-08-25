@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_mdokon/app/app.dart';
 import 'package:flutter_mdokon/app/providers.dart';
-import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +19,11 @@ void main() async {
 
   final storage = GetStorage();
 
-  var isDarkTheme = storage.read('isDarkTheme') ?? SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
-  final theme = isDarkTheme ? darkTheme : lightTheme;
+  // Пользовательский выбор темы важнее системного: системную яркость берём
+  // только при самом первом запуске, пока в хранилище ничего нет.
+  final bool isDarkTheme = storage.read('isDarkTheme') ??
+      SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+  AppColors.use(isDarkTheme);
 
   bool savedLocale = storage.read('language') ?? false;
 
@@ -43,7 +46,7 @@ void main() async {
       path: 'assets/i18n',
       fallbackLocale: const Locale('ru', ''),
       child: MultiProvider(
-        providers: appProviders(storage: storage, theme: theme, locale: locale),
+        providers: appProviders(storage: storage, isDarkTheme: isDarkTheme, locale: locale),
         child: const App(),
       ),
     ),

@@ -1,11 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
 import 'package:provider/provider.dart';
-import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/payment/widgets/payment_widgets.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
+/// Вкладка «В долг»: клиент, комментарий и частичная оплата.
+///
+/// Клиент выбирается в нижнем листе — там же, не закрывая его, можно завести
+/// нового: на телефоне переход в отдельный диалог терял контекст поиска.
 class OnCredit extends StatefulWidget {
   const OnCredit({super.key});
 
@@ -14,364 +19,364 @@ class OnCredit extends StatefulWidget {
 }
 
 class _OnCreditState extends State<OnCredit> {
-  // Контроллеры для полей ввода (инициализируются из модели)
-  final _addClientFormKey = GlobalKey<FormState>();
+  final TextEditingController _commentController = TextEditingController();
 
-  // Временные данные для формы создания клиента
-  final Map<String, dynamic> _newClientData = {'name': '', 'phone1': '', 'phone2': '', 'address': '', 'comment': ''};
+  @override
+  void initState() {
+    super.initState();
+    _commentController.text = context.read<CashboxModel>().clientComment;
+  }
 
-  Future<void> _showSelectUserDialog(BuildContext context, CashboxModel model) async {
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openClientSheet(CashboxModel model) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     await model.fetchClients();
+    if (!mounted) return;
 
-    if (!context.mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // Используем ChangeNotifierProvider.value или Consumer внутри диалога,
-        // так как диалог находится в новом контексте
-        return Consumer<CashboxModel>(
-          builder: (context, model, child) {
-            return AlertDialog(
-              title: Text(context.tr('clients')),
-              titlePadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              insetPadding: EdgeInsets.all(10),
-              scrollable: true,
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: TextField(
-                        onChanged: (value) => model.searchClients(value),
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                          hintText: context.tr('search'),
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      child: SingleChildScrollView(
-                        child: Table(
-                          border: TableBorder(
-                            horizontalInside: BorderSide(width: 1, color: tableBorderColor, style: BorderStyle.solid),
-                          ),
-                          children: [
-                            TableRow(
-                              children: [
-                                Text(context.tr('contact'), style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(context.tr('number'), style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(context.tr('comment'), style: TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            // Генерируем список клиентов из модели
-                            for (var i = 0; i < model.clients.length; i++)
-                              TableRow(
-                                children: [
-                                  _buildTableCell(model.clients[i]['name'], i, model, context),
-                                  _buildTableCell(model.clients[i]['phone1'], i, model, context),
-                                  _buildTableCell(model.clients[i]['comment'] ?? '', i, model, context),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Выбор уже произошел по клику на ячейку, кнопка просто закрывает
-                      // Если нужно подтверждение: проверить model.clients.any((c) => c['selected'])
-                      Navigator.pop(context);
-                    },
-                    child: Text(context.tr('choose')),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await AppModal.sheet(
+      context,
+      builder: (ctx) => ClientPickerSheet(model: model),
     );
   }
 
-  Widget _buildTableCell(String text, int index, CashboxModel model, BuildContext context) {
-    bool isSelected = model.clients[index]['selected'] ?? false;
-    return GestureDetector(
-      onTap: () => model.selectClient(index),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        color: isSelected ? Color(0xFF91a0e7) : Colors.transparent,
-        child: Text(
-          text,
-          style: TextStyle(overflow: TextOverflow.ellipsis),
+  // --- Срок возврата ------------------------------------------------------
+
+  /// Дата возврата долга хранится в `data['clientReturnDate']` строкой
+  /// `yyyy-MM-dd` — в этом же виде её ждёт бэкенд (как в десктопной кассе).
+  DateTime? _returnDateOf(CashboxModel model) {
+    final raw = '${model.data['clientReturnDate'] ?? ''}'.trim();
+    return raw.isEmpty ? null : DateTime.tryParse(raw);
+  }
+
+  void _setReturnDate(CashboxModel model, DateTime? date) {
+    model.setDataKey(
+      'clientReturnDate',
+      date == null ? '' : DateFormat('yyyy-MM-dd').format(date),
+    );
+  }
+
+  DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  /// Срок в днях от сегодня — по нему подсвечивается быстрый выбор.
+  int? _termDays(CashboxModel model) {
+    return _returnDateOf(model)?.difference(_today).inDays;
+  }
+
+  Future<void> _pickReturnDate(CashboxModel model) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final current = _returnDateOf(model);
+    final picked = await showDatePicker(
+      context: context,
+      // Долг возвращают в будущем — прошлые даты выбрать нельзя.
+      firstDate: _today,
+      lastDate: _today.add(const Duration(days: 365 * 3)),
+      initialDate: current != null && current.isAfter(_today) ? current : _today.add(const Duration(days: 30)),
+    );
+    if (picked != null) _setReturnDate(model, picked);
+  }
+
+  Widget _returnDate(CashboxModel model) {
+    final DateTime? date = _returnDateOf(model);
+    final int? term = _termDays(model);
+    const List<int> quickTerms = [7, 14, 30];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.tr('return_date').toUpperCase(),
+                style: AppText.caption.copyWith(color: AppColors.textPrimary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppDimens.gap8),
+            Text(
+              date == null ? context.tr('not_specified') : DateFormat('dd.MM.yyyy').format(date),
+              style: AppText.tabular(AppText.small).copyWith(
+                color: date == null ? AppColors.iconMuted : AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: AppDimens.gap8),
+        Row(
+          children: [
+            for (final days in quickTerms) ...[
+              Expanded(
+                child: AppChip(
+                  label: '$days ${context.tr('days_short')}',
+                  selected: term == days,
+                  onTap: () => _setReturnDate(model, _today.add(Duration(days: days))),
+                ),
+              ),
+              const SizedBox(width: AppDimens.gap8),
+            ],
+            Expanded(
+              child: AppChip(
+                label: context.tr('other'),
+                icon: Icons.calendar_month_outlined,
+                selected: date != null && !quickTerms.contains(term),
+                onTap: () => _pickReturnDate(model),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  void _showAddClientDialog(BuildContext context, CashboxModel model) {
-    final List<Map<String, dynamic>> formFields = [
-      {'key': 'name', 'icon': UniconsLine.user, 'type': TextInputType.text, 'label': 'contact_name'},
-      {'key': 'phone1', 'icon': UniconsLine.phone, 'type': TextInputType.number, 'label': 'phone'},
-      {'key': 'phone2', 'icon': UniconsLine.phone, 'type': TextInputType.number, 'label': 'phone'},
-      {'key': 'address', 'icon': UniconsLine.map, 'type': TextInputType.text, 'label': 'address'},
-      {'key': 'comment', 'icon': UniconsLine.comment_lines, 'type': TextInputType.text, 'label': 'comment'},
-    ];
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<CashboxModel, PaymentUiState>(
+      builder: (context, model, ui, child) {
+        // change — «внесено минус к оплате»: отрицательный остаток уходит в долг.
+        final double change = customNumber(model.data['change']);
+        final double debt = change < 0 ? -change : 0;
+        final String clientName = '${model.data['clientName'] ?? ''}'.trim();
+        final bool hasClient = customIf(model.data['clientId']);
+        final String currency = '${model.data['currencyName'] ?? ''}';
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width,
-            child: Form(
-              key: _addClientFormKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var field in formFields)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: 5),
-                            child: Text(
-                              context.tr(field['label']),
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b8),
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          TextFormField(
-                            keyboardType: field['type'],
-                            validator: (value) => (field['key'] == 'name' && (value == null || value.isEmpty)) ? context.tr('required_field') : null,
-                            onChanged: (value) => _newClientData[field['key']] = value,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                              enabledBorder: inputBorder,
-                              focusedBorder: inputFocusBorder,
-                              suffixIcon: Icon(field['icon']),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClientBar(
+              label: context.tr('client'),
+              title: hasClient && clientName.isNotEmpty ? clientName : context.tr('choose'),
+              subtitle: hasClient
+                  ? '${context.tr('AMOUNT_OF_DEBT')} ${formatMoney(debt)} $currency'
+                  : '${context.tr('clients')} · ${context.tr('search')}',
+              action: hasClient ? context.tr('edit') : context.tr('search'),
+              selected: hasClient,
+              icon: Icons.person_outline,
+              onTap: () => _openClientSheet(model),
             ),
-          ),
-          actions: [
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.all(10),
-              height: 45,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_addClientFormKey.currentState!.validate()) {
-                    await model.createNewClient(_newClientData);
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                    _showSelectUserDialog(context, model); // Сразу открываем выбор после создания
-                  }
-                },
-                child: Text(context.tr('save')),
-              ),
+            const SizedBox(height: AppDimens.gap12),
+            _returnDate(model),
+            const SizedBox(height: AppDimens.gap12),
+            Text(
+              context.tr('NOTE').toUpperCase(),
+              style: AppText.caption.copyWith(color: AppColors.textPrimary),
             ),
+            const SizedBox(height: 6),
+            AppInput(
+              hint: context.tr('comment'),
+              controller: _commentController,
+              maxLines: 2,
+              height: 68,
+              // Канва и поле в покое одного цвета — на экране оплаты поле
+              // сливалось с фоном, поэтому держим его белым.
+              fill: AppColors.surface,
+              onChanged: (value) {
+                // Как и раньше: комментарий уходит в data['comment'],
+                // а в data['clientComment'] его переносит calculateChange().
+                model.clientComment = value;
+                model.setDataKey('comment', value);
+              },
+            ),
+            const SizedBox(height: AppDimens.gap12),
+            PaymentTypeTiles(model: model, ui: ui),
+            if (!hasClient) ...[
+              const SizedBox(height: AppDimens.gap12),
+              AppBanner(
+                title: context.tr('client'),
+                text: context.tr('choose'),
+              ),
+            ],
           ],
         );
       },
     );
+  }
+}
+
+/// Лист выбора клиента: поиск, встроенная форма нового клиента и список.
+class ClientPickerSheet extends StatefulWidget {
+  final CashboxModel model;
+
+  const ClientPickerSheet({super.key, required this.model});
+
+  @override
+  State<ClientPickerSheet> createState() => _ClientPickerSheetState();
+}
+
+class _ClientPickerSheetState extends State<ClientPickerSheet> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  bool _newClientOpen = false;
+  bool _saving = false;
+  String? _nameError;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_nameController.text.trim().isEmpty) {
+      setState(() => _nameError = context.tr('required_field'));
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _nameError = null;
+    });
+    await widget.model.createNewClient({
+      'name': _nameController.text.trim(),
+      'phone1': _phoneController.text.trim(),
+      'phone2': '',
+      'address': '',
+      'comment': '',
+    });
+    if (!mounted) return;
+
+    setState(() {
+      _saving = false;
+      _newClientOpen = false;
+    });
+    _nameController.clear();
+    _phoneController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<CashboxModel>(
       builder: (context, model, child) {
-        // Данные клиента из модели
-        String clientName = model.data['clientName'] ?? 'client';
-
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: 16),
+        return SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.72,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- CLIENT SELECTION HEADER ---
-              Container(
-                margin: EdgeInsets.only(top: 20, bottom: 5),
-                child: Text(
-                  '${context.tr('client')}: $clientName',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: ElevatedButton(
-                        onPressed: () => _showSelectUserDialog(context, model),
-                        style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFf1b44c)),
-                        child: Text(context.tr('choose')),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: ElevatedButton(
-                        onPressed: () => _showAddClientDialog(context, model),
-                        child: Text(context.tr('add')),
-                      ),
-                    ),
+                  Expanded(child: Text(context.tr('clients'), style: AppText.h2)),
+                  AppButton(
+                    label: context.tr('add'),
+                    variant: _newClientOpen ? AppButtonVariant.soft : AppButtonVariant.secondary,
+                    size: AppButtonSize.small,
+                    expanded: false,
+                    pill: true,
+                    icon: _newClientOpen ? Icons.close : Icons.person_add_alt,
+                    onPressed: () => setState(() => _newClientOpen = !_newClientOpen),
                   ),
                 ],
               ),
-
-              // --- NOTE FIELD ---
-              Container(
-                margin: EdgeInsets.only(top: 10, bottom: 5),
-                child: Text(
-                  context.tr('NOTE'),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+              const SizedBox(height: AppDimens.gap12),
+              AppInput(
+                hint: context.tr('search'),
+                height: AppDimens.heightMedium,
+                prefixIcon: Icons.search,
+                onChanged: model.searchClients,
               ),
-              Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: TextFormField(
-                  initialValue: model.clientComment, // Берем из модели
-                  onChanged: (value) => model.setDataKey('comment', value),
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                    enabledBorder: inputBorder,
-                    focusedBorder: inputFocusBorder,
-                    hintText: context.tr('NOTE'),
-                    hintStyle: TextStyle(color: a2),
+              const SizedBox(height: AppDimens.gap12),
+              if (_newClientOpen) ...[
+                AppCard(
+                  selected: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(context.tr('add'), style: AppText.secondaryBold),
+                      const SizedBox(height: 10),
+                      AppInput(
+                        hint: context.tr('contact_name'),
+                        controller: _nameController,
+                        errorText: _nameError,
+                        height: AppDimens.heightMedium,
+                      ),
+                      const SizedBox(height: AppDimens.gap8),
+                      AppInput(
+                        hint: context.tr('phone'),
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        height: AppDimens.heightMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      AppButton(
+                        label: context.tr('save'),
+                        size: AppButtonSize.medium,
+                        loading: _saving,
+                        onPressed: _save,
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                const SizedBox(height: AppDimens.gap12),
+              ],
+              Expanded(
+                child: model.clients.isEmpty
+                    ? AppEmptyState(
+                        icon: Icons.person_search_outlined,
+                        title: context.tr('client_not_found'),
+                        text: context.tr('search'),
+                      )
+                    : ListView.separated(
+                        padding: EdgeInsets.zero,
+                        itemCount: model.clients.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: AppDimens.gap8),
+                        itemBuilder: (context, index) {
+                          final client = model.clients[index];
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 20),
-                    child: Text(
-                      context.tr('TO_PAY'),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      '${formatMoney(model.data['totalPrice'])} ${model.data['currencyName'] ?? ''}',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  for (var entry in model.data['paymentTypes'].asMap().entries)
-                    Builder(
-                      builder: (context) {
-                        int index = entry.key;
-                        var item = entry.value;
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                '${item['customPaymentTypeName']}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                          return AppCard(
+                            selected: client['selected'] == true,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimens.gap16,
+                              vertical: AppDimens.gap12,
                             ),
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 15),
-                              child: TextFormField(
-                                controller: item['controller'],
-                                keyboardType: TextInputType.number,
-                                onTapOutside: (PointerDownEvent event) {
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return context.tr('required_field');
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  model.updateInputs(index, value);
-                                },
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                                  suffixIcon: IconButton(
-                                    onPressed: () {
-                                      model.exactAmount(index);
-                                    },
-                                    icon: Icon(UniconsLine.money_bill),
+                            onTap: () {
+                              model.selectClient(index);
+                              Navigator.pop(context);
+                            },
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${client['name'] ?? ''}',
+                                        style: AppText.bodyMedium,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (customIf(client['phone1']))
+                                        Text(
+                                          '${client['phone1']}',
+                                          style: AppText.tabular(AppText.small),
+                                        ),
+                                    ],
                                   ),
-                                  enabledBorder: inputBorder,
-                                  focusedBorder: inputFocusBorder,
-                                  errorBorder: inputErrorBorder,
-                                  focusedErrorBorder: inputErrorBorder,
-                                  hintText: '0.00 ${model.data['currencyName'] ?? ''}',
-                                  hintStyle: TextStyle(color: a2),
                                 ),
-                              ),
+                                if (customIf(client['comment']))
+                                  Flexible(
+                                    child: Text(
+                                      '${client['comment']}',
+                                      style: AppText.small,
+                                      textAlign: TextAlign.right,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ],
-                        );
-                      },
-                    ),
-
-                  // Text(context.tr('cash'), style: TextStyle(fontWeight: FontWeight.bold)),
-                  // SizedBox(height: 5),
-                  // TextFormField(
-                  //   controller: cashController,
-                  //   keyboardType: TextInputType.number,
-                  //   onChanged: (value) => model.updateInputs(cash: value),
-                  //   decoration: InputDecoration(
-                  //     contentPadding: const EdgeInsets.fromLTRB(10, 15, 10, 10),
-                  //     suffixIcon: Icon(UniconsLine.money_bill, size: 30, color: Color(0xFF7b8190)),
-                  //     enabledBorder: inputBorder,
-                  //     focusedBorder: inputFocusBorder,
-                  //     hintText: '0.00 ${model.data['currencyName'] ?? ''}',
-                  //   ),
-                  // ),
-                  SizedBox(height: 10),
-                ],
-              ),
-
-              // --- DEBT DISPLAY ---
-              SizedBox(height: 15),
-              Text(
-                '${context.tr('AMOUNT_OF_DEBT')}:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Container(
-                margin: EdgeInsets.only(bottom: 10, top: 5),
-                child: Text(
-                  // change в режиме кредита хранит остаток долга (отрицательное число или 0)
-                  // Используем .abs() если нужно показать положительное число, или как есть
-                  '${formatMoney(model.data['change'])} ${model.data['currencyName'] ?? ''}',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),

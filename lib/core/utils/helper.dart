@@ -12,61 +12,44 @@ import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/app_typography.dart';
 import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
-import 'package:flutter_mdokon/core/theme/themes.dart';
-import 'package:flutter_mdokon/core/theme/theme_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:toastification/toastification.dart';
 import 'package:unicons/unicons.dart';
 
-class CustomTheme {
-  final BuildContext context;
-
-  CustomTheme(this.context);
-
-  static CustomTheme of(BuildContext context) => CustomTheme(context);
-
-  bool get isDarkMode => Provider.of<ThemeModel>(context).themeData == darkTheme;
-
-  Color get bgColor => isDarkMode ? DarkThemeColors.bgColor : LightThemeColors.bgColor;
-  Color get textColor => isDarkMode ? DarkThemeColors.textColor : LightThemeColors.textColor;
-  Color get textColorSecond => isDarkMode ? DarkThemeColors.textColor : LightThemeColors.textColor;
-  Color get cardColor => isDarkMode ? DarkThemeColors.cardColor : LightThemeColors.cardColor;
-  Color get inputColor => isDarkMode ? DarkThemeColors.inputColor : LightThemeColors.inputColor;
-  //
-  LinearGradient get gradient => isDarkMode ? DarkThemeColors.gradient : LightThemeColors.gradient;
-  LinearGradient get secondGradient => isDarkMode ? DarkThemeColors.secondGradient : LightThemeColors.secondGradient;
-}
-
 // Глобальные цвета — алиасы токенов дизайн-системы (AppColors).
-// Новые экраны используют AppColors напрямую, эти константы оставлены
-// для совместимости с уже написанными экранами.
-Color mainColor = AppColors.primary;
+// Новые экраны используют AppColors напрямую, эти оставлены для совместимости
+// с уже написанными экранами.
+//
+// Именно геттеры, а не переменные: глобальная переменная в Dart вычисляется
+// один раз при первом обращении и запомнила бы палитру, активную в тот момент,
+// — после переключения темы экран остался бы в старых цветах.
+Color get mainColor => AppColors.primary;
 
-Color bgColor = AppColors.canvas;
+Color get bgColor => AppColors.canvas;
 
-Color blue = AppColors.primary;
-Color grey = AppColors.textSecondary;
-Color black = AppColors.textPrimary;
-Color darkGrey = AppColors.textSecondary;
-Color lightGrey = AppColors.iconMuted;
-Color green = AppColors.success;
-Color red = AppColors.danger;
-Color orange = AppColors.warning;
-Color white = AppColors.surface;
-Color inputColor = AppColors.canvas;
-Color yellow = AppColors.warning;
-Color borderColor = AppColors.border;
+Color get blue => AppColors.primary;
+Color get grey => AppColors.textSecondary;
+Color get black => AppColors.textPrimary;
+Color get darkGrey => AppColors.textSecondary;
+Color get lightGrey => AppColors.iconMuted;
+Color get green => AppColors.success;
+Color get red => AppColors.danger;
+Color get orange => AppColors.warning;
+Color get white => AppColors.surface;
+Color get inputColor => AppColors.canvas;
+Color get yellow => AppColors.warning;
+Color get borderColor => AppColors.border;
 
-Color tableBorderColor = AppColors.border;
-Color disabledColor = AppColors.disabledSurface;
+Color get tableBorderColor => AppColors.border;
+Color get disabledColor => AppColors.disabledSurface;
 
-Color success = AppColors.success;
-Color warning = AppColors.warning;
-Color danger = AppColors.danger;
+Color get success => AppColors.success;
+Color get warning => AppColors.warning;
+Color get danger => AppColors.danger;
 
-Color a2 = AppColors.iconMuted;
-Color b8 = AppColors.textSecondary;
+Color get a2 => AppColors.iconMuted;
+Color get b8 => AppColors.textSecondary;
 
 const systemOverlayStyleLight = SystemUiOverlayStyle(
   statusBarIconBrightness: Brightness.light,
@@ -78,27 +61,27 @@ const systemOverlayStyleDark = SystemUiOverlayStyle(
   statusBarColor: Colors.transparent,
 );
 
-BoxShadow boxShadow = AppDimens.cardShadow.first;
+BoxShadow get boxShadow => AppDimens.cardShadow.first;
 
-BoxDecoration border = BoxDecoration(
-  border: Border.all(color: AppColors.border),
-  borderRadius: AppDimens.card,
-);
+BoxDecoration get border => BoxDecoration(
+      border: Border.all(color: AppColors.border),
+      borderRadius: AppDimens.card,
+    );
 
-OutlineInputBorder inputBorder = const OutlineInputBorder(
-  borderSide: BorderSide(color: AppColors.border),
-  borderRadius: AppDimens.control,
-);
+OutlineInputBorder get inputBorder => OutlineInputBorder(
+      borderSide: BorderSide(color: AppColors.border),
+      borderRadius: AppDimens.control,
+    );
 
-OutlineInputBorder inputFocusBorder = const OutlineInputBorder(
-  borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-  borderRadius: AppDimens.control,
-);
+OutlineInputBorder get inputFocusBorder => OutlineInputBorder(
+      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+      borderRadius: AppDimens.control,
+    );
 
-OutlineInputBorder inputErrorBorder = const OutlineInputBorder(
-  borderSide: BorderSide(color: AppColors.danger, width: 1.5),
-  borderRadius: AppDimens.control,
-);
+OutlineInputBorder get inputErrorBorder => OutlineInputBorder(
+      borderSide: BorderSide(color: AppColors.danger, width: 1.5),
+      borderRadius: AppDimens.control,
+    );
 
 final List<Map<String, dynamic>> languages = [
   {
@@ -426,7 +409,7 @@ Future<Object?>? showFilterModal(BuildContext context, {required List<Widget> ch
           leading: true,
         ),
         body: Container(
-          color: CustomTheme.of(context).bgColor,
+          color: AppColors.surface,
           padding: const EdgeInsets.all(20),
           child: SafeArea(
             child: Column(
@@ -459,13 +442,13 @@ Future<Object?>? showFilterModal(BuildContext context, {required List<Widget> ch
                         children: [
                           Icon(
                             UniconsLine.times,
-                            color: CustomTheme.of(context).textColor,
+                            color: AppColors.textPrimary,
                           ),
                           const SizedBox(width: 5),
                           Text(
                             context.tr('reset_filter'),
                             style: TextStyle(
-                              color: CustomTheme.of(context).textColor,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],

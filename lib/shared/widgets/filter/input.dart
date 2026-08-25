@@ -4,6 +4,7 @@ import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Input extends StatelessWidget {
   final String label;
@@ -47,7 +48,7 @@ class Input extends StatelessWidget {
                     errorBorder: inputErrorBorder,
                     focusedErrorBorder: inputErrorBorder,
                     filled: true,
-                    fillColor: CustomTheme.of(context).inputColor,
+                    fillColor: AppColors.surface,
                     // hintText: context.tr(label),
                   ),
                 ),

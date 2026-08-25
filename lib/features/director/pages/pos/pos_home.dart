@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class PosHome extends StatelessWidget {
   const PosHome({super.key});
@@ -70,8 +71,8 @@ class CardItem extends StatelessWidget {
           context.go(routeName);
         },
         style: TextButton.styleFrom(
-          backgroundColor: CustomTheme.of(context).cardColor,
-          foregroundColor: CustomTheme.of(context).textColor,
+          backgroundColor: AppColors.canvas,
+          foregroundColor: AppColors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(21),
           ),

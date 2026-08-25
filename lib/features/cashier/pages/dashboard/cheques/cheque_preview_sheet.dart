@@ -35,11 +35,21 @@ class ChequePreviewSheet extends StatefulWidget {
   final String number;
   final double total;
 
+  /// Встроенный режим: превью живёт колонкой справа от списка (планшет),
+  /// а не листом поверх экрана — крестик не нужен, высоту задаёт колонка.
+  final bool embedded;
+
+  /// Куда отдать выбор кассира во встроенном режиме. Если не задан —
+  /// результат возвращается через `Navigator.pop`, как у обычного листа.
+  final ValueChanged<ChequePreviewAction?>? onResult;
+
   const ChequePreviewSheet({
     super.key,
     required this.cheque,
     required this.number,
     required this.total,
+    this.embedded = false,
+    this.onResult,
   });
 
   @override
@@ -103,6 +113,16 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
     if (mounted) setState(() => printing = false);
   }
 
+  /// Лист закрывается через Navigator, встроенное превью — через колбэк.
+  void _finish(ChequePreviewAction? action) {
+    final onResult = widget.onResult;
+    if (onResult != null) {
+      onResult(action);
+      return;
+    }
+    Navigator.of(context).pop(action);
+  }
+
   @override
   Widget build(BuildContext context) {
     final (_, statusColor, statusLabel) = chequeStatusStyle(context, widget.cheque);
@@ -114,10 +134,10 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
     final maxHeight = (media.size.height - media.viewInsets.bottom) * 0.8;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
+      constraints: BoxConstraints(maxHeight: widget.embedded ? double.infinity : maxHeight),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: widget.embedded ? MainAxisSize.max : MainAxisSize.min,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,11 +162,12 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
                 ),
               ),
               const SizedBox(width: AppDimens.gap8),
-              AppIconButton(
-                icon: Icons.close,
-                foreground: AppColors.textSecondary,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
+              if (!widget.embedded)
+                AppIconButton(
+                  icon: Icons.close,
+                  foreground: AppColors.textSecondary,
+                  onPressed: () => _finish(null),
+                ),
             ],
           ),
           const SizedBox(height: AppDimens.gap16),
@@ -212,7 +233,7 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
             icon: Icons.receipt_long,
             trailingIcon: Icons.chevron_right,
             pill: false,
-            onPressed: () => Navigator.of(context).pop(ChequePreviewAction.details),
+            onPressed: () => _finish(ChequePreviewAction.details),
           ),
           const SizedBox(height: AppDimens.gap8),
           Row(
@@ -233,7 +254,7 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
                     label: context.tr('RETURN'),
                     variant: AppButtonVariant.danger,
                     size: AppButtonSize.medium,
-                    onPressed: () => Navigator.of(context).pop(ChequePreviewAction.refund),
+                    onPressed: () => _finish(ChequePreviewAction.refund),
                   ),
                 ),
               ],

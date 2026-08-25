@@ -7,6 +7,7 @@ import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:flutter_mdokon/core/state/filter_model.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Search extends StatelessWidget {
   const Search({super.key});
@@ -26,7 +27,7 @@ class Search extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: TextFormField(
                   onChanged: (value) {
@@ -39,7 +40,7 @@ class Search extends StatelessWidget {
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
-                    fillColor: CustomTheme.of(context).cardColor,
+                    fillColor: AppColors.canvas,
                     enabledBorder: inputBorder,
                     focusedBorder: inputFocusBorder,
                   ),

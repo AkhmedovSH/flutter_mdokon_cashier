@@ -4,16 +4,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/state/data_model.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/scanned_input.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/shared/widgets/scanner/barcode_scanner_page.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Каталог товаров: поиск по названию/штрих-коду и добавление позиций в чек.
@@ -79,11 +79,18 @@ class _SearchState extends State<Search> {
         products = [];
       });
       Provider.of<LoadingModel>(context, listen: false).showLoader(num: 1);
-      if (value.length >= 1) {
+      // Код маркировки ищем не как есть, а по GTIN: у карточки товара может
+      // стоять как GTIN-14, так и он же без ведущих нулей — пробуем по порядку.
+      final terms = parseScannedInput(value).searchTerms;
+      if (terms.isNotEmpty) {
         var arr = [];
-        var response = await get(
-          '/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${widget.arguments!['currencyId']}?search=$value',
-        );
+        dynamic response;
+        for (final term in terms) {
+          response = await get(
+            '/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${widget.arguments!['currencyId']}?search=$term',
+          );
+          if (response != null && response.length > 0) break;
+        }
         if (response != null && response.length > 0) {
           if (response.length > 50) {
             response = response.sublist(0, 50);
@@ -116,34 +123,15 @@ class _SearchState extends State<Search> {
   }
 
   Future<void> getQrCode() async {
-    await Permission.camera.request();
-    var status = await Permission.camera.status;
+    final result = await BarcodeScannerPage.scan(context);
+    if (result == null || !mounted) return;
 
-    if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
-      return;
-    }
-    if (mounted) {
-      String? result = await SimpleBarcodeScanner.scanBarcode(
-        context,
-        barcodeAppBar: const BarcodeAppBar(
-          appBarTitle: '',
-          centerTitle: false,
-          enableBackButton: true,
-          backButtonIcon: Icon(Icons.arrow_back_ios),
-        ),
-        cancelButtonText: context.tr('back'),
-        isShowFlashIcon: false,
-        delayMillis: 500,
-        cameraFace: CameraFace.back,
-        scanFormat: ScanFormat.ONLY_BARCODE,
-      );
-      if (result != null && result != '-1') {
-        setState(() {
-          searchProducts(result);
-          textEditingController.text = result;
-        });
-      }
-    }
+    final scanned = parseScannedInput(result);
+    if (scanned.raw.isEmpty) return;
+    setState(() {
+      searchProducts(scanned.raw);
+      textEditingController.text = scanned.displayTerm;
+    });
   }
 
   // --- Чек ---------------------------------------------------------------
@@ -389,7 +377,7 @@ class _SearchState extends State<Search> {
     if (productsList.isEmpty && _inCheque.isEmpty) return null;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),

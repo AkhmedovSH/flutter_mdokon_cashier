@@ -115,7 +115,6 @@ class AuthModel extends ChangeNotifier {
     username = '${saved['username'] ?? ''}';
     password = '${saved['password'] ?? ''}';
     rememberMe = true;
-    notifyListeners();
   }
 
   /// Дефолтные настройки при первом запуске.

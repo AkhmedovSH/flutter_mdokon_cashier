@@ -123,7 +123,7 @@ class _ChequeDetailState extends State<ChequeDetail> {
                         icon: Icons.receipt_long,
                         title: context.tr('NOT_FOUND'),
                       )
-                    : _content(),
+                    : ContentBox(child: _content()),
           ),
         ],
       ),
@@ -143,13 +143,13 @@ class _ChequeDetailState extends State<ChequeDetail> {
     ].where((e) => e.isNotEmpty).join(' · ');
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: AppColors.surface,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
@@ -386,7 +386,7 @@ class _ChequeDetailState extends State<ChequeDetail> {
   /// Закреплённая панель действий — печать и возврат всегда под рукой.
   Widget _actions() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -566,6 +566,6 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
+    return Divider(height: 1, thickness: 1, color: AppColors.divider);
   }
 }

@@ -37,6 +37,9 @@ class _ChequesState extends State<Cheques> {
   List cheques = [];
   List visible = [];
 
+  /// Чек, открытый в правой колонке (планшет и моноблок).
+  Map? selected;
+
   @override
   void initState() {
     super.initState();
@@ -117,7 +120,15 @@ class _ChequesState extends State<Cheques> {
 
   /// Тап по чеку открывает превью: позиции и итог видно, не уходя со списка.
   /// Полный дубликат и возврат — отдельными экранами уже из превью.
+  ///
+  /// На планшете превью не всплывает листом, а занимает колонку справа —
+  /// список и чек видно одновременно.
   Future<void> _openPreview(dynamic cheque) async {
+    if (context.layout.hasMasterDetail) {
+      setState(() => selected = cheque);
+      return;
+    }
+
     final action = await AppModal.sheet<ChequePreviewAction>(
       context,
       builder: (ctx) => ChequePreviewSheet(
@@ -126,7 +137,15 @@ class _ChequesState extends State<Cheques> {
         total: _chequeTotal(cheque),
       ),
     );
-    if (action == null || !mounted) return;
+    if (!mounted) return;
+    _runPreviewAction(action, cheque);
+  }
+
+  void _runPreviewAction(ChequePreviewAction? action, dynamic cheque) {
+    if (action == null) {
+      setState(() => selected = null);
+      return;
+    }
 
     switch (action) {
       case ChequePreviewAction.details:
@@ -226,8 +245,34 @@ class _ChequesState extends State<Cheques> {
       body: Column(
         children: [
           _topBar(),
-          Expanded(child: _content()),
+          Expanded(
+            child: MasterDetailLayout(
+              master: _content(),
+              detail: selected == null ? null : _preview(selected!),
+              placeholder: AppEmptyState(
+                icon: Icons.receipt_long,
+                title: context.tr('checks'),
+                text: context.tr('select_cheque_to_preview'),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  /// Превью выбранного чека в правой колонке.
+  Widget _preview(Map cheque) {
+    return Padding(
+      key: ValueKey('preview_${cheque['id']}'),
+      padding: EdgeInsets.all(context.layout.gutter),
+      child: ChequePreviewSheet(
+        key: ValueKey('cheque_${cheque['id']}'),
+        cheque: cheque,
+        number: _number(cheque),
+        total: _chequeTotal(cheque),
+        embedded: true,
+        onResult: (action) => _runPreviewAction(action, cheque),
       ),
     );
   }
@@ -237,13 +282,13 @@ class _ChequesState extends State<Cheques> {
     final chips = _chips;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: AppColors.surface,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
@@ -323,7 +368,7 @@ class _ChequesState extends State<Cheques> {
                     width: 18,
                     height: 18,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                     child: Text(
                       '$activeFilters',
                       style: AppText.tabular(AppText.caption).copyWith(
@@ -396,6 +441,7 @@ class _ChequesState extends State<Cheques> {
               number: _number(items[i]),
               cheque: items[i],
               total: _chequeTotal(items[i]),
+              selected: selected != null && selected!['id'] == items[i]['id'],
               onTap: () => _openPreview(items[i]),
             ),
           ),
@@ -442,11 +488,15 @@ class _ChequeTile extends StatelessWidget {
   final double total;
   final VoidCallback onTap;
 
+  /// Открытый в правой колонке чек — подсвечен, как выбранная строка чека.
+  final bool selected;
+
   const _ChequeTile({
     required this.number,
     required this.cheque,
     required this.total,
     required this.onTap,
+    this.selected = false,
   });
 
   @override
@@ -460,6 +510,7 @@ class _ChequeTile extends StatelessWidget {
 
     return AppCard(
       onTap: onTap,
+      selected: selected,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: AppDimens.gap12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,7 +612,7 @@ class _RemovableChip extends StatelessWidget {
                 style: AppText.tabular(AppText.secondaryBold).copyWith(color: AppColors.primary),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.close, size: 16, color: AppColors.primary),
+              Icon(Icons.close, size: 16, color: AppColors.primary),
             ],
           ),
         ),
@@ -944,7 +995,7 @@ class _DateField extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.calendar_today, size: 18, color: AppColors.iconMuted),
+              Icon(Icons.calendar_today, size: 18, color: AppColors.iconMuted),
               const SizedBox(width: AppDimens.gap8),
               Expanded(
                 child: Text(
@@ -1073,7 +1124,7 @@ class _CheckRow extends StatelessWidget {
                     width: value ? 1 : 1.5,
                   ),
                 ),
-                child: value ? const Icon(Icons.check, size: 15, color: AppColors.onPrimary) : null,
+                child: value ? Icon(Icons.check, size: 15, color: AppColors.onPrimary) : null,
               ),
               const SizedBox(width: AppDimens.gap12),
               Expanded(child: Text(label, style: AppText.body)),

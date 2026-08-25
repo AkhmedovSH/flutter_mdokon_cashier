@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class UpdateDialog extends StatefulWidget {
   const UpdateDialog({super.key});
@@ -91,7 +91,7 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
                 bottom: 10,
               ),
               decoration: BoxDecoration(
-                color: CustomTheme.of(context).bgColor,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(21),
               ),
               child: Column(
@@ -123,8 +123,8 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
                               closeDialog();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: CustomTheme.of(context).cardColor,
-                              foregroundColor: CustomTheme.of(context).textColor,
+                              backgroundColor: AppColors.canvas,
+                              foregroundColor: AppColors.textPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -180,7 +180,7 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
 //       child: Container(
 //         padding: const EdgeInsets.all(20),
 //         decoration: BoxDecoration(
-//           color: CustomTheme.of(context).bgColor,
+//           color: AppColors.surface,
 //           borderRadius: BorderRadius.circular(10),
 //         ),
 //         child: Column(

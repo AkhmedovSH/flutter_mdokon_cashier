@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/app_typography.dart';
+import 'package:flutter_mdokon/core/theme/responsive.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/app_button.dart';
 
 enum AppModalTone { info, danger, warning, success }
@@ -57,7 +58,7 @@ class AppModalSheet extends StatelessWidget {
       top: false,
       child: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppDimens.sheet,
         ),
@@ -68,17 +69,75 @@ class AppModalSheet extends StatelessWidget {
   }
 }
 
+/// Окно по центру экрана — планшетный вариант [AppModalSheet].
+///
+/// На 1024 и 1280 лист во всю ширину выглядит потерянным, а его содержимое
+/// уезжает от глаз вниз. Окно 520–560 держит содержимое в центре, а чек или
+/// каталог остаются видны по краям.
+class AppModalWindow extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  final double maxWidth;
+
+  const AppModalWindow({
+    super.key,
+    required this.child,
+    required this.maxWidth,
+    this.padding = const EdgeInsets.all(AppDimens.gap24),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screen = MediaQuery.sizeOf(context);
+    final insets = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(AppDimens.gap24, AppDimens.gap24, AppDimens.gap24, AppDimens.gap24 + insets),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: maxWidth,
+            maxHeight: screen.height - insets - AppDimens.gap24 * 2,
+          ),
+          child: Material(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.all(Radius.circular(AppDimens.radiusSheet)),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(padding: padding, child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Единая точка входа для модалок приложения.
 class AppModal {
   const AppModal._();
 
-  /// Нижний лист с произвольным содержимым.
+  /// Модалка с произвольным содержимым: лист снизу на телефоне и окно по
+  /// центру на планшете — вызывающий код об этом не знает.
   static Future<T?> sheet<T>(
     BuildContext context, {
     required WidgetBuilder builder,
     bool dismissible = true,
     bool scrollControlled = true,
   }) {
+    final layout = AppLayout.of(context);
+
+    if (layout.useDialogInsteadOfSheet) {
+      return showDialog<T>(
+        context: context,
+        useRootNavigator: true,
+        barrierDismissible: dismissible,
+        barrierColor: AppColors.scrim,
+        builder: (ctx) => AppModalWindow(
+          maxWidth: layout.dialogMaxWidth,
+          child: builder(ctx),
+        ),
+      );
+    }
+
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: scrollControlled,

@@ -3,7 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unicons/unicons.dart';
 
-import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 const list = [];
 
@@ -58,8 +58,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         automaticallyImplyLeading: leading,
         leadingWidth: 50,
         titleSpacing: leading ? 0 : 16,
-        backgroundColor: CustomTheme.of(context).bgColor,
-        surfaceTintColor: CustomTheme.of(context).bgColor,
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: AppColors.surface,
         elevation: 0,
         actions: actions ?? [],
         centerTitle: false,

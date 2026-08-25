@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Pagination extends StatelessWidget {
   final Function getData;
@@ -98,12 +99,12 @@ class Pagination extends StatelessWidget {
                             decoration: BoxDecoration(
                               border: Border.all(color: const Color(0xFFf0f0f0)),
                               borderRadius: BorderRadius.circular(5),
-                              color: i == filterModel.currentFilterData['page'] ? mainColor : CustomTheme.of(context).bgColor,
+                              color: i == filterModel.currentFilterData['page'] ? mainColor : AppColors.surface,
                             ),
                             child: Text(
                               '${i + 1}',
                               style: TextStyle(
-                                color: i == filterModel.currentFilterData['page'] ? white : CustomTheme.of(context).textColor,
+                                color: i == filterModel.currentFilterData['page'] ? white : AppColors.textPrimary,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -120,11 +121,11 @@ class Pagination extends StatelessWidget {
                             decoration: BoxDecoration(
                               border: Border.all(color: const Color(0xFFf0f0f0)),
                               borderRadius: BorderRadius.circular(5),
-                              color: i == filterModel.currentFilterData['page'] ? mainColor : CustomTheme.of(context).bgColor,
+                              color: i == filterModel.currentFilterData['page'] ? mainColor : AppColors.surface,
                             ),
                             child: Text(
                               '...',
-                              style: TextStyle(color: CustomTheme.of(context).textColor),
+                              style: TextStyle(color: AppColors.textPrimary),
                             ),
                           ),
                         ),

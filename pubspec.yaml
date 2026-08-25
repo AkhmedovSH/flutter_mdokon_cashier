@@ -60,7 +60,8 @@ dependencies:
   toastification: ^3.0.1
   syncfusion_flutter_sliders: ^34.2.2
   syncfusion_flutter_barcodes: ^34.2.2
-  simple_barcode_scanner: ^0.6.0
+  # Сканер камеры: DataMatrix (коды маркировки) + линейные штрих-коды.
+  mobile_scanner: ^7.4.0
   flutter_native_splash: ^2.4.1
   flutter_blue_plus: ^2.1.0
   esc_pos_utils_plus: ^2.0.4

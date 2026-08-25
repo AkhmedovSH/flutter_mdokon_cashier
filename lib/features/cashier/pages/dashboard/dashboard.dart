@@ -6,6 +6,9 @@ import 'package:flutter_mdokon/features/cashier/pages/dashboard/catalog.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/profile.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/return.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_nav_bar.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_top_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
@@ -25,6 +28,24 @@ class CashierDashboard extends StatefulWidget {
 }
 
 class _CashierDashboardState extends State<CashierDashboard> {
+  final GetStorage _storage = GetStorage();
+
+  /// Кассир для верхней навигации: имя и фамилия, иначе логин.
+  String get _cashierName {
+    final user = _storage.read('user') ?? {};
+    final full = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
+    return full.isEmpty ? '${user['login'] ?? ''}' : full;
+  }
+
+  /// Торговая точка и касса — то же, что на телефоне пишет шапка продажи.
+  String _cashierMeta(BuildContext context) {
+    final cashbox = context.read<SaleModel>().cashbox;
+    return [
+      if (customIf(cashbox['posName'])) '${cashbox['posName']}',
+      if (customIf(cashbox['cashboxName'])) '${cashbox['cashboxName']}',
+    ].join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -41,13 +62,32 @@ class _CashierDashboardState extends State<CashierDashboard> {
       },
       child: Consumer<DashboardModel>(
         builder: (context, dashboardModel, child) {
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: SizedBox.expand(
+          final items = [
+            CashierNavItem(
+              icon: UniconsLine.shopping_cart,
+              labelKey: 'sale',
+              badge: context.watch<SaleModel>().lineCount,
+            ),
+            const CashierNavItem(icon: UniconsLine.search, labelKey: 'products'),
+            const CashierNavItem(icon: UniconsLine.receipt, labelKey: 'checks'),
+            const CashierNavItem(icon: UniconsLine.backward, labelKey: 'return'),
+            const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),
+          ];
+
+          // На широком экране разделы переезжают в шапку: низ моноблока и
+          // планшета кассир руками не достаёт.
+          final topNav = context.layout.useTopNav;
+
+          // Статус-бар уже закрыла шапка навигации: если оставить отступ
+          // страницам, каждая из них добавит его второй раз.
+          final pages = MediaQuery.removePadding(
+            context: context,
+            removeTop: topNav,
+            child: SizedBox.expand(
               child: IndexedStack(
                 index: dashboardModel.currentIndex,
                 children: [
-                  CashierHome(),
+                  CashierHome(hasShellHeader: topNav),
                   Catalog(),
                   dashboardModel.currentIndex == 2 ? Cheques() : SizedBox(),
                   dashboardModel.currentIndex == 3 ? Return() : SizedBox(),
@@ -55,21 +95,32 @@ class _CashierDashboardState extends State<CashierDashboard> {
                 ],
               ),
             ),
-            bottomNavigationBar: CashierNavBar(
-              currentIndex: dashboardModel.currentIndex,
-              onTap: dashboardModel.setCurrentIndex,
-              items: [
-                CashierNavItem(
-                  icon: UniconsLine.shopping_cart,
-                  labelKey: 'sale',
-                  badge: context.watch<SaleModel>().lineCount,
-                ),
-                const CashierNavItem(icon: UniconsLine.search, labelKey: 'products'),
-                const CashierNavItem(icon: UniconsLine.receipt, labelKey: 'checks'),
-                const CashierNavItem(icon: UniconsLine.backward, labelKey: 'return'),
-                const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),
-              ],
-            ),
+          );
+
+          return Scaffold(
+            backgroundColor: AppColors.canvas,
+            resizeToAvoidBottomInset: false,
+            body: topNav
+                ? Column(
+                    children: [
+                      CashierTopBar(
+                        items: items,
+                        currentIndex: dashboardModel.currentIndex,
+                        onTap: dashboardModel.setCurrentIndex,
+                        name: _cashierName,
+                        meta: _cashierMeta(context),
+                      ),
+                      Expanded(child: pages),
+                    ],
+                  )
+                : pages,
+            bottomNavigationBar: topNav
+                ? null
+                : CashierNavBar(
+                    currentIndex: dashboardModel.currentIndex,
+                    onTap: dashboardModel.setCurrentIndex,
+                    items: items,
+                  ),
           );
         },
       ),

@@ -7,6 +7,7 @@ import 'package:toastification/toastification.dart';
 import 'package:flutter_mdokon/app/router/app_router.dart';
 import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 
 class App extends StatefulWidget {
@@ -39,8 +40,12 @@ class _AppState extends State<App> {
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: localeModel.locale,
-            themeMode: ThemeMode.system,
-            theme: themeModel.themeData,
+            // Режим всегда явный: палитра AppColors статическая, и «пусть решит
+            // система» разошлось бы с ней — Flutter взял бы одну тему, а токены
+            // в экранах остались бы от другой.
+            themeMode: themeModel.themeMode,
+            theme: lightTheme,
+            darkTheme: darkTheme,
             routerConfig: globalRouter,
           );
         },

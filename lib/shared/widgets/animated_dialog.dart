@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class AnimatedDialog extends StatefulWidget {
   final Widget child;
@@ -85,7 +85,7 @@ class _AnimatedDialogState extends State<AnimatedDialog> with SingleTickerProvid
                 bottom: 10,
               ),
               decoration: BoxDecoration(
-                color: CustomTheme.of(context).bgColor,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(21),
               ),
               child: widget.child,

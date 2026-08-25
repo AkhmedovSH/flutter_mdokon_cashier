@@ -9,6 +9,7 @@ import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
 import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class DocumentsInComplete extends StatefulWidget {
   const DocumentsInComplete({super.key});
@@ -173,7 +174,7 @@ class _DocumentsInCompleteState extends State<DocumentsInComplete> {
                       alignment: Alignment.centerLeft,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                        color: AppColors.canvas,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -286,7 +287,7 @@ class DropdownField extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: DropdownValue<String>(
                   value: documentsInModel.data[dataKey].toString(),
@@ -303,7 +304,7 @@ class DropdownField extends StatelessWidget {
                       dropdownStyleData: DropdownStyleData(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: CustomTheme.of(context).cardColor,
+                          color: AppColors.canvas,
                         ),
                         maxHeight: 300,
                         offset: const Offset(0, -10),

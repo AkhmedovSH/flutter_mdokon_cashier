@@ -82,41 +82,44 @@ class AppSectionLabel extends StatelessWidget {
   }
 }
 
+/// Семантика баннера: предупреждение, ошибка, успех.
+enum AppBannerTone { warning, danger, success }
+
 /// Информационный баннер (офлайн, превышение лимита долга и т.п.).
 class AppBanner extends StatelessWidget {
   final String title;
   final String? text;
-  final Color background;
-  final Color foreground;
-  final Color dotColor;
+
+  /// Семантика баннера. Цвета выводятся из неё в [build], а не хранятся полями:
+  /// константный конструктор запомнил бы цвета одной темы.
+  final AppBannerTone tone;
 
   const AppBanner({
     super.key,
     required this.title,
     this.text,
-    this.background = AppColors.warningSoft,
-    this.foreground = AppColors.warningText,
-    this.dotColor = AppColors.warning,
-  });
+  }) : tone = AppBannerTone.warning;
 
   const AppBanner.danger({
     super.key,
     required this.title,
     this.text,
-  })  : background = AppColors.dangerSoft,
-        foreground = AppColors.dangerText,
-        dotColor = AppColors.danger;
+  }) : tone = AppBannerTone.danger;
 
   const AppBanner.success({
     super.key,
     required this.title,
     this.text,
-  })  : background = AppColors.successSoft,
-        foreground = AppColors.successText,
-        dotColor = AppColors.success;
+  }) : tone = AppBannerTone.success;
 
   @override
   Widget build(BuildContext context) {
+    final (background, foreground, dotColor) = switch (tone) {
+      AppBannerTone.danger => (AppColors.dangerSoft, AppColors.dangerText, AppColors.danger),
+      AppBannerTone.success => (AppColors.successSoft, AppColors.successText, AppColors.success),
+      AppBannerTone.warning => (AppColors.warningSoft, AppColors.warningText, AppColors.warning),
+    };
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: AppDimens.gap12),
       decoration: BoxDecoration(
@@ -174,25 +177,30 @@ class AppEmptyState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: AppDimens.gap24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 40, color: AppColors.iconMuted),
-            const SizedBox(height: 10),
-            Text(title, style: AppText.h2, textAlign: TextAlign.center),
-            if (text != null) ...[
+        // Текст и кнопка не растягиваются на всю ширину планшета — читать
+        // строку в 1000 px неудобно, а кнопка выглядит полосой.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 40, color: AppColors.iconMuted),
               const SizedBox(height: 10),
-              Text(
-                text!,
-                style: AppText.secondary.copyWith(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
+              Text(title, style: AppText.h2, textAlign: TextAlign.center),
+              if (text != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  text!,
+                  style: AppText.secondary.copyWith(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (action != null) ...[
+                const SizedBox(height: AppDimens.gap16),
+                action!,
+              ],
             ],
-            if (action != null) ...[
-              const SizedBox(height: AppDimens.gap16),
-              action!,
-            ],
-          ],
+          ),
         ),
       ),
     );

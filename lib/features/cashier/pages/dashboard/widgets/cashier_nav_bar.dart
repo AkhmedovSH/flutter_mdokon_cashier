@@ -38,7 +38,7 @@ class CashierNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -129,13 +129,13 @@ class _Badged extends StatelessWidget {
             height: 16,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.danger,
               borderRadius: AppDimens.pill,
             ),
             child: Text(
               count > 99 ? '99+' : '$count',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 height: 1,
                 fontWeight: FontWeight.w700,

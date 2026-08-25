@@ -4,6 +4,7 @@ import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/app_responsive.dart';
 import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 
 import 'package:get_storage/get_storage.dart';
@@ -139,11 +140,13 @@ class _XReportState extends State<XReport> {
           children: [
             _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: _buildSections(),
+              child: ContentBox(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _buildSections(),
+                  ),
                 ),
               ),
             ),
@@ -158,7 +161,7 @@ class _XReportState extends State<XReport> {
 
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
@@ -171,7 +174,7 @@ class _XReportState extends State<XReport> {
             children: [
               IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(UniconsLine.arrow_left, size: 28, color: AppColors.textPrimary),
+                icon: Icon(UniconsLine.arrow_left, size: 28, color: AppColors.textPrimary),
               ),
               Expanded(
                 child: Column(
@@ -181,7 +184,7 @@ class _XReportState extends State<XReport> {
                       isZReport ? context.tr('z_report') : context.tr('x_report'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -193,7 +196,7 @@ class _XReportState extends State<XReport> {
                       _headerSubtitle(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -243,7 +246,7 @@ class _XReportState extends State<XReport> {
             label.toUpperCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -257,7 +260,7 @@ class _XReportState extends State<XReport> {
             child: Text(
               value,
               maxLines: 1,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -440,7 +443,7 @@ class _XReportState extends State<XReport> {
       padding: const EdgeInsets.only(left: 2, bottom: 6),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.6,
@@ -474,7 +477,7 @@ class _XReportState extends State<XReport> {
     for (var i = 0; i < rows.length; i++) {
       result.add(rows[i]);
       if (i != rows.length - 1) {
-        result.add(const Divider(height: 1, thickness: 1, color: AppColors.divider));
+        result.add(Divider(height: 1, thickness: 1, color: AppColors.divider));
       }
     }
     return result;
@@ -490,7 +493,7 @@ class _XReportState extends State<XReport> {
             flex: 5,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
           ),
           const SizedBox(width: 12),
@@ -527,17 +530,17 @@ class _XReportState extends State<XReport> {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             ),
           ),
           const SizedBox(width: 8),
           Text(
             amount,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
           ),
           if (currency.isNotEmpty) ...[
             const SizedBox(width: 6),
-            Text(currency, style: const TextStyle(fontSize: 11.5, color: AppColors.iconMuted)),
+            Text(currency, style: TextStyle(fontSize: 11.5, color: AppColors.iconMuted)),
           ],
         ],
       ),
@@ -550,8 +553,8 @@ class _XReportState extends State<XReport> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+          Text(label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
         ],
       ),
     );
@@ -563,9 +566,9 @@ class _XReportState extends State<XReport> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.iconMuted))),
+          Flexible(child: Text(label, style: TextStyle(fontSize: 12, color: AppColors.iconMuted))),
           const SizedBox(width: 10),
-          Text(value, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.iconMuted)),
+          Text(value, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.iconMuted)),
         ],
       ),
     );
@@ -575,7 +578,7 @@ class _XReportState extends State<XReport> {
 
   Widget _buildFooter() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -614,7 +617,7 @@ class _XReportState extends State<XReport> {
                     onPressed: () => openModal(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.dangerText,
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.border),
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -650,7 +653,7 @@ class _XReportState extends State<XReport> {
             bottom: 10,
           ),
           decoration: BoxDecoration(
-            color: CustomTheme.of(context).bgColor,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(21),
           ),
           child: Column(
@@ -676,8 +679,8 @@ class _XReportState extends State<XReport> {
                           context.pop();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomTheme.of(context).cardColor,
-                          foregroundColor: CustomTheme.of(context).textColor,
+                          backgroundColor: AppColors.canvas,
+                          foregroundColor: AppColors.textPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),

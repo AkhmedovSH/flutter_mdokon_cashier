@@ -202,7 +202,7 @@ class AppButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: radius,
           side: variant == AppButtonVariant.secondary && !_disabled
-              ? const BorderSide(color: AppColors.border)
+              ? BorderSide(color: AppColors.border)
               : BorderSide.none,
         ),
         child: InkWell(
@@ -230,53 +230,58 @@ class AppButton extends StatelessWidget {
 class AppIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
-  final Color background;
+
+  /// Цвета — необязательные: значения по умолчанию берутся из палитры в
+  /// [build], иначе константный конструктор запомнил бы цвета одной темы.
+  final Color? background;
   final Color? foreground;
   final double size;
   final double iconSize;
   final bool pill;
-  final List<BoxShadow>? shadow;
   final String? tooltip;
+
+  /// Вариант «плавающая»: свой фон и тень, см. [AppIconButton.floating].
+  final bool _floating;
 
   const AppIconButton({
     super.key,
     required this.icon,
     this.onPressed,
-    this.background = AppColors.canvas,
+    this.background,
     this.foreground,
     this.size = AppDimens.tapTarget,
     this.iconSize = 20,
     this.pill = false,
-    this.shadow,
     this.tooltip,
-  });
+  }) : _floating = false;
 
-  /// Плавающая кнопка сканера: 64×64, фон #5B60E8, тень.
+  /// Плавающая кнопка сканера: 64×64, брендовая заливка, тень.
   const AppIconButton.floating({
     super.key,
     required this.icon,
     this.onPressed,
     this.tooltip,
-  })  : background = AppColors.primary,
-        foreground = AppColors.onPrimary,
+  })  : background = null,
+        foreground = null,
         size = 64,
         iconSize = 28,
         pill = true,
-        shadow = AppDimens.floatingShadow;
+        _floating = true;
 
   @override
   Widget build(BuildContext context) {
     final radius = pill ? AppDimens.pill : AppDimens.control;
+    final fill = background ?? (_floating ? AppColors.primary : AppColors.canvas);
     final color = onPressed == null
         ? AppColors.iconMuted
-        : (foreground ?? AppColors.textPrimary);
+        : (foreground ?? (_floating ? AppColors.onPrimary : AppColors.textPrimary));
 
     final button = Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(boxShadow: shadow),
+      decoration: BoxDecoration(boxShadow: _floating ? AppDimens.floatingShadow : null),
       child: Material(
-        color: background,
+        color: fill,
         borderRadius: radius,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -333,7 +338,7 @@ class AppChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: AppDimens.pill,
         side: !selected && !soft
-            ? const BorderSide(color: AppColors.border)
+            ? BorderSide(color: AppColors.border)
             : BorderSide.none,
       ),
       child: InkWell(

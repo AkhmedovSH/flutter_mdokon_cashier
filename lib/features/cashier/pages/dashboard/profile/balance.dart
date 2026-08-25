@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/app_responsive.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 
@@ -251,7 +252,7 @@ class _BalanceState extends State<Balance> {
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     shape: const RoundedRectangleBorder(borderRadius: AppDimens.pill),
-                    side: const BorderSide(color: AppColors.primaryTint),
+                    side: BorderSide(color: AppColors.primaryTint),
                     padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap16),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -266,14 +267,16 @@ class _BalanceState extends State<Balance> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildSearchField(),
-          const SizedBox(height: AppDimens.gap12),
-          _buildFilterChips(),
-          const SizedBox(height: AppDimens.gap12),
-          Expanded(child: _buildBody()),
-        ],
+      body: ContentBox(
+        child: Column(
+          children: [
+            _buildSearchField(),
+            const SizedBox(height: AppDimens.gap12),
+            _buildFilterChips(),
+            const SizedBox(height: AppDimens.gap12),
+            Expanded(child: _buildBody()),
+          ],
+        ),
       ),
     );
   }
@@ -285,18 +288,18 @@ class _BalanceState extends State<Balance> {
         controller: _searchController,
         onChanged: _onSearchChanged,
         textInputAction: TextInputAction.search,
-        style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+        style: TextStyle(fontSize: 15, color: AppColors.textPrimary),
         decoration: InputDecoration(
           isDense: true,
           filled: true,
           fillColor: AppColors.surface,
           hintText: context.tr('search_by_name_or_barcode'),
-          hintStyle: const TextStyle(color: AppColors.iconMuted, fontSize: 15),
-          prefixIcon: const Icon(Icons.search, color: AppColors.iconMuted, size: 20),
+          hintStyle: TextStyle(color: AppColors.iconMuted, fontSize: 15),
+          prefixIcon: Icon(Icons.search, color: AppColors.iconMuted, size: 20),
           suffixIcon: !_hasQuery
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.iconMuted, size: 20),
+                  icon: Icon(Icons.close, color: AppColors.iconMuted, size: 20),
                   onPressed: () {
                     _searchController.clear();
                     _debounce?.cancel();
@@ -309,15 +312,15 @@ class _BalanceState extends State<Balance> {
             horizontal: AppDimens.gap12,
             vertical: AppDimens.gap12,
           ),
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.border),
           ),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.border),
           ),
-          focusedBorder: const OutlineInputBorder(
+          focusedBorder: OutlineInputBorder(
             borderRadius: AppDimens.control,
             borderSide: BorderSide(color: AppColors.primary),
           ),
@@ -365,7 +368,7 @@ class _BalanceState extends State<Balance> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     if (_failed) {
@@ -447,20 +450,22 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final String? suffix;
-  final Color valueColor;
+
+  /// `null` — основной цвет текста активной палитры.
+  final Color? valueColor;
 
   const _StatCard({
     required this.label,
     required this.value,
     this.suffix,
-    this.valueColor = AppColors.textPrimary,
+    this.valueColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppDimens.gap12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppDimens.card,
         boxShadow: AppDimens.cardShadow,
@@ -473,7 +478,7 @@ class _StatCard extends StatelessWidget {
             label,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimens.gap4),
           Row(
@@ -485,14 +490,14 @@ class _StatCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
-                  color: valueColor,
+                  color: valueColor ?? AppColors.textPrimary,
                 ),
               ),
               if (suffix != null) ...[
                 const SizedBox(width: AppDimens.gap4),
                 Text(
                   suffix!,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ],
             ],
@@ -577,7 +582,7 @@ class _BalanceCard extends StatelessWidget {
           horizontal: AppDimens.gap12,
           vertical: AppDimens.gap8,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppDimens.card,
           boxShadow: AppDimens.cardShadow,
@@ -594,7 +599,7 @@ class _BalanceCard extends StatelessWidget {
                     row.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -604,7 +609,7 @@ class _BalanceCard extends StatelessWidget {
                     row.barcode,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: AppColors.iconMuted),
+                    style: TextStyle(fontSize: 12, color: AppColors.iconMuted),
                   ),
                   Row(
                     children: [
@@ -622,7 +627,7 @@ class _BalanceCard extends StatelessWidget {
                           row.posName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ),
                     ],
@@ -638,7 +643,7 @@ class _BalanceCard extends StatelessWidget {
                 _StockBadge(row: row),
                 Text(
                   row.salePriceText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -646,7 +651,7 @@ class _BalanceCard extends StatelessWidget {
                 ),
                 Text(
                   '${context.tr('wholesale_short')} ${row.wholesalePriceText}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.warningText),
+                  style: TextStyle(fontSize: 12, color: AppColors.warningText),
                 ),
               ],
             ),
@@ -706,11 +711,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.inbox_outlined, size: 48, color: AppColors.iconMuted),
+          Icon(Icons.inbox_outlined, size: 48, color: AppColors.iconMuted),
           const SizedBox(height: AppDimens.gap12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -720,7 +725,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             hint,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
       ),

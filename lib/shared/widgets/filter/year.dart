@@ -1,11 +1,11 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
 import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Year extends StatefulWidget {
   const Year({super.key});
@@ -35,7 +35,7 @@ class _YearState extends State<Year> {
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: CustomTheme.of(context).cardColor,
+            color: AppColors.canvas,
           ),
           child: Consumer<FilterModel>(
             builder: (context, filterModel, chilld) {
@@ -53,7 +53,7 @@ class _YearState extends State<Year> {
                     dropdownStyleData: DropdownStyleData(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: CustomTheme.of(context).cardColor,
+                        color: AppColors.canvas,
                       ),
                       maxHeight: 300,
                       offset: const Offset(0, -10),

@@ -143,6 +143,66 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     final user = context.watch<UserModel>().user;
 
+    final layout = context.layout;
+
+    // Слева — кто работает и что в кассе, справа — операции со сменой
+    // и устройством: на широком экране это две независимые колонки.
+    final identity = <Widget>[
+      _userCard(user),
+      if (!_isAgent) ...[
+        const SizedBox(height: AppDimens.gap12),
+        _shiftCard(),
+      ],
+    ];
+    final operations = <Widget>[
+      _menuCard(),
+      const SizedBox(height: AppDimens.gap16),
+      if (!_isAgent) ...[
+        AppButton.secondary(
+          label: context.tr('close_shift'),
+          onPressed: () => _open('/cashier/profile/x-report'),
+        ),
+        const SizedBox(height: AppDimens.gap8),
+      ],
+      AppButton.danger(
+        label: context.tr('logout'),
+        onPressed: _confirmLogout,
+      ),
+      const SizedBox(height: AppDimens.gap16),
+      Text(
+        'mDokon POS${version.isEmpty ? '' : ' $version'}',
+        textAlign: TextAlign.center,
+        style: AppText.tabular(AppText.small),
+      ),
+    ];
+
+    final padding = EdgeInsets.fromLTRB(
+      layout.gutter,
+      AppDimens.gap12,
+      layout.gutter,
+      AppDimens.gap24,
+    );
+
+    final Widget body = layout.hasSideRail
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: ListView(padding: padding, children: identity)),
+              Expanded(
+                child: ListView(
+                  padding: padding.copyWith(left: 0),
+                  children: operations,
+                ),
+              ),
+            ],
+          )
+        : ContentBox(
+            child: ListView(
+              padding: padding,
+              children: [...identity, const SizedBox(height: AppDimens.gap12), ...operations],
+            ),
+          );
+
     return Scaffold(
       backgroundColor: AppColors.canvas,
       resizeToAvoidBottomInset: false,
@@ -154,41 +214,7 @@ class _ProfileState extends State<Profile> {
               onRefresh: _load,
               color: AppColors.primary,
               backgroundColor: AppColors.surface,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimens.gutter,
-                  AppDimens.gap12,
-                  AppDimens.gutter,
-                  AppDimens.gap24,
-                ),
-                children: [
-                  _userCard(user),
-                  if (!_isAgent) ...[
-                    const SizedBox(height: AppDimens.gap12),
-                    _shiftCard(),
-                  ],
-                  const SizedBox(height: AppDimens.gap12),
-                  _menuCard(),
-                  const SizedBox(height: AppDimens.gap16),
-                  if (!_isAgent) ...[
-                    AppButton.secondary(
-                      label: context.tr('close_shift'),
-                      onPressed: () => _open('/cashier/profile/x-report'),
-                    ),
-                    const SizedBox(height: AppDimens.gap8),
-                  ],
-                  AppButton.danger(
-                    label: context.tr('logout'),
-                    onPressed: _confirmLogout,
-                  ),
-                  const SizedBox(height: AppDimens.gap16),
-                  Text(
-                    'mDokon POS${version.isEmpty ? '' : ' $version'}',
-                    textAlign: TextAlign.center,
-                    style: AppText.tabular(AppText.small),
-                  ),
-                ],
-              ),
+              child: body,
             ),
           ),
         ],
@@ -200,13 +226,13 @@ class _ProfileState extends State<Profile> {
   /// заметить до того, как чек уйдёт в очередь.
   Widget _header() {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: AppColors.surface,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
@@ -420,7 +446,7 @@ class _ProfileState extends State<Profile> {
         children: [
           for (var i = 0; i < items.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, thickness: 1, color: AppColors.divider, indent: 62),
+              Divider(height: 1, thickness: 1, color: AppColors.divider, indent: 62),
             _MenuRow(item: items[i]),
           ],
         ],
@@ -463,7 +489,7 @@ class _MenuRow extends StatelessWidget {
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.primarySoft,
                   borderRadius: AppDimens.control,
                 ),
@@ -495,7 +521,7 @@ class _MenuRow extends StatelessWidget {
                 ),
               ],
               const SizedBox(width: AppDimens.gap4),
-              const Icon(Icons.chevron_right, size: 20, color: AppColors.iconMuted),
+              Icon(Icons.chevron_right, size: 20, color: AppColors.iconMuted),
             ],
           ),
         ),
@@ -614,7 +640,7 @@ class _Avatar extends StatelessWidget {
       width: 56,
       height: 56,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: AppDimens.card,
       ),

@@ -12,6 +12,7 @@ import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 import 'package:flutter_mdokon/shared/widgets/table/table_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class DocumentsInCreate extends StatelessWidget {
   const DocumentsInCreate({super.key});
@@ -327,7 +328,7 @@ class DropdownField extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: DropdownValue<String>(
                   value: documentsInModel.data[dataKey].toString(),
@@ -344,7 +345,7 @@ class DropdownField extends StatelessWidget {
                       dropdownStyleData: DropdownStyleData(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: CustomTheme.of(context).cardColor,
+                          color: AppColors.canvas,
                         ),
                         maxHeight: 300,
                         offset: const Offset(0, -10),
@@ -391,7 +392,7 @@ class SearchItem extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: TextFormField(
                   controller: documentsInModel.searchController,
@@ -414,7 +415,7 @@ class SearchItem extends StatelessWidget {
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
-                    fillColor: CustomTheme.of(context).cardColor,
+                    fillColor: AppColors.canvas,
                     enabledBorder: inputBorder,
                     focusedBorder: inputFocusBorder,
                   ),
@@ -453,7 +454,7 @@ class TextFieldItem extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: TextFormField(
                   onChanged: (value) {
@@ -466,7 +467,7 @@ class TextFieldItem extends StatelessWidget {
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
-                    fillColor: CustomTheme.of(context).cardColor,
+                    fillColor: AppColors.canvas,
                     enabledBorder: inputBorder,
                     focusedBorder: inputFocusBorder,
                   ),
@@ -562,7 +563,7 @@ class TotalAmountItem extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(color: CustomTheme.of(context).bgColor),
+          decoration: BoxDecoration(color: AppColors.surface),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -701,7 +702,7 @@ void showProductDialog(BuildContext context) {
                             height: 45,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: CustomTheme.of(context).cardColor,
+                              color: AppColors.canvas,
                             ),
                             child: DropdownValue<String>(
                               value: model.product['uomId'].toString(),
@@ -718,7 +719,7 @@ void showProductDialog(BuildContext context) {
                                   dropdownStyleData: DropdownStyleData(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(12),
-                                      color: CustomTheme.of(context).cardColor,
+                                      color: AppColors.canvas,
                                     ),
                                     maxHeight: 300,
                                     offset: const Offset(0, -10),
@@ -803,7 +804,7 @@ class ProductField extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                 ),
                 child: TextFormField(
                   controller: documentsInModel.productControllers[productKey],
@@ -835,7 +836,7 @@ class ProductField extends StatelessWidget {
                         : SizedBox(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     filled: true,
-                    fillColor: CustomTheme.of(context).cardColor,
+                    fillColor: AppColors.canvas,
                     enabledBorder: inputBorder,
                     focusedBorder: inputFocusBorder,
                   ),

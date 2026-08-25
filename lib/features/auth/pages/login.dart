@@ -70,6 +70,24 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthModel>();
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    final layout = context.layout;
+
+    final header = AuthLogoHeader(
+      subtitle: auth.isOtpStep ? 'Подтверждение по SMS' : 'Вход по логину и паролю',
+    );
+    final card = _AuthCard(
+      auth: auth,
+      loginController: _loginController,
+      passwordController: _passwordController,
+      otpController: _otpController,
+      onSubmit: _submit,
+      onDemo: _submitDemo,
+    );
+    final support = _SupportRow(onTap: _callSupport);
+
+    // На широком экране форма уезжает вправо, под руку кассира, а слева
+    // остаётся брендовый блок — растягивать поля ввода на 1280 нельзя.
+    final bool split = layout.size >= AppScreenSize.expanded;
 
     return Scaffold(
       backgroundColor: AppColors.primary,
@@ -80,33 +98,44 @@ class _LoginState extends State<Login> {
             builder: (context, constraints) {
               return SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
-                  AppDimens.gutter,
+                  layout.gutter,
                   AppDimens.gap24,
-                  AppDimens.gutter,
+                  layout.gutter,
                   AppDimens.gap24 + viewInsets,
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight - AppDimens.gap24 * 2),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AuthLogoHeader(
-                        subtitle: auth.isOtpStep
-                            ? 'Подтверждение по SMS'
-                            : 'Вход по логину и паролю',
-                      ),
-                      const SizedBox(height: AppDimens.gap24),
-                      _AuthCard(
-                        auth: auth,
-                        loginController: _loginController,
-                        passwordController: _passwordController,
-                        otpController: _otpController,
-                        onSubmit: _submit,
-                        onDemo: _submitDemo,
-                      ),
-                      const SizedBox(height: AppDimens.gap16),
-                      _SupportRow(onTap: _callSupport),
-                    ],
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: split ? 900 : 420),
+                      child: split
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      header,
+                                      const SizedBox(height: AppDimens.gap24),
+                                      support,
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: AppDimens.gap24),
+                                SizedBox(width: 420, child: card),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                header,
+                                const SizedBox(height: AppDimens.gap24),
+                                card,
+                                const SizedBox(height: AppDimens.gap16),
+                                support,
+                              ],
+                            ),
+                    ),
                   ),
                 ),
               );
@@ -311,13 +340,13 @@ class _ErrorBanner extends StatelessWidget {
         horizontal: AppDimens.gap12,
         vertical: 10,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.dangerSoft,
         borderRadius: AppDimens.control,
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, size: 16, color: AppColors.dangerText),
+          Icon(Icons.error_outline, size: 16, color: AppColors.dangerText),
           const SizedBox(width: AppDimens.gap8),
           Expanded(
             child: Text(
@@ -377,7 +406,7 @@ class _SupportRow extends StatelessWidget {
         const SizedBox(width: 6),
         GestureDetector(
           onTap: onTap,
-          child: const Text(
+          child: Text(
             'Свяжитесь с нами',
             style: TextStyle(
               fontSize: 14,

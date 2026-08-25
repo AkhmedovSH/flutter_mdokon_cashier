@@ -21,7 +21,12 @@ import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 /// Экран продажи. Вся логика чека живёт в [SaleModel] — страница только
 /// рисует состояние, открывает листы и выполняет переходы по маршрутам.
 class CashierHome extends StatefulWidget {
-  const CashierHome({super.key});
+  /// Оболочка уже показывает кассира и точку в своей шапке (верхняя навигация
+  /// планшета). Тогда фиолетовую шапку продажи здесь не рисуем — иначе имя
+  /// кассира дублируется. У агента своя оболочка без такой шапки.
+  final bool hasShellHeader;
+
+  const CashierHome({super.key, this.hasShellHeader = false});
 
   @override
   State<CashierHome> createState() => _CashierHomeState();
@@ -155,53 +160,115 @@ class _CashierHomeState extends State<CashierHome> {
   Widget build(BuildContext context) {
     final model = context.watch<SaleModel>();
     final user = _storage.read('user') ?? {};
+    final layout = context.layout;
+
+    final payLabel = model.isAgent ? context.tr('send_to_cashbox') : context.tr('sell');
+    final onPay = model.isEmpty ? null : (model.isAgent ? _sendToCashbox : _openPayment);
+    // На пустом чеке меню нечего показывать — кроме агента, у которого
+    // остаётся выбор клиента.
+    final onMore = model.isEmpty && !model.isAgent ? null : _openChequeActions;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
       resizeToAvoidBottomInset: false,
       body: Column(
         children: [
-          SaleHeader(
-            name: '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim().isEmpty
-                ? '${user['login'] ?? ''}'
-                : '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim(),
-            meta: [
-              if (customIf(model.cashbox['posId'])) 'POS ID: ${model.cashbox['posId']}',
-              if (customIf(model.cashbox['posName'])) '${model.cashbox['posName']}',
-              if (customIf(model.cashbox['cashboxName'])) '${model.cashbox['cashboxName']}',
-            ].join(' · '),
-            onActionsTap: _openCashierActions,
-          ),
+          // Кто работает на кассе, на планшете уже написано в верхней
+          // навигации — здесь остаётся узкая панель самого чека.
+          if (widget.hasShellHeader && layout.useTopNav)
+            _chequeToolbar(model)
+          else
+            SaleHeader(
+              name: '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim().isEmpty
+                  ? '${user['login'] ?? ''}'
+                  : '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim(),
+              meta: [
+                if (customIf(model.cashbox['posId'])) 'POS ID: ${model.cashbox['posId']}',
+                if (customIf(model.cashbox['posName'])) '${model.cashbox['posName']}',
+                if (customIf(model.cashbox['cashboxName'])) '${model.cashbox['cashboxName']}',
+              ].join(' · '),
+              onActionsTap: _openCashierActions,
+            ),
           Expanded(
-            child: Stack(
-              children: [
-                model.isEmpty ? _empty(context) : _cart(model),
-                Positioned(
-                  right: AppDimens.gutter,
-                  bottom: AppDimens.gutter,
-                  child: AppIconButton.floating(
-                    icon: UniconsLine.qrcode_scan,
-                    tooltip: context.tr('search'),
-                    onPressed: _openCatalog,
+            child: SideRailLayout(
+              body: Stack(
+                children: [
+                  model.isEmpty ? _empty(context) : _cart(model),
+                  Positioned(
+                    right: layout.gutter,
+                    bottom: layout.gutter,
+                    child: AppIconButton.floating(
+                      icon: UniconsLine.qrcode_scan,
+                      tooltip: context.tr('search'),
+                      onPressed: _openCatalog,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              // Широкий экран: итоги и оплата стоят колонкой справа и всегда
+              // на виду — чек из-за них не прокручивается.
+              rail: SaleSummaryPanel(
+                lineCount: model.lineCount,
+                subtotal: model.subtotal,
+                discountPercent: model.discountPercent,
+                discountSum: model.discountSum,
+                total: model.totalPrice,
+                currency: model.currencyName,
+                payLabel: payLabel,
+                busy: model.busy,
+                onPay: onPay,
+                onMore: onMore,
+                onCashierActions: _openCashierActions,
+              ),
+              bottom: SaleSummaryBar(
+                lineCount: model.lineCount,
+                subtotal: model.subtotal,
+                discountPercent: model.discountPercent,
+                discountSum: model.discountSum,
+                total: model.totalPrice,
+                currency: model.currencyName,
+                payLabel: payLabel,
+                busy: model.busy,
+                onPay: onPay,
+                onMore: onMore,
+              ),
             ),
           ),
-          SaleSummaryBar(
-            lineCount: model.lineCount,
-            subtotal: model.subtotal,
-            discountPercent: model.discountPercent,
-            discountSum: model.discountSum,
-            total: model.totalPrice,
-            currency: model.currencyName,
-            payLabel: model.isAgent ? context.tr('send_to_cashbox') : context.tr('sell'),
-            busy: model.busy,
-            onPay: model.isEmpty ? null : (model.isAgent ? _sendToCashbox : _openPayment),
-            // На пустом чеке меню нечего показывать — кроме агента, у которого
-            // остаётся выбор клиента.
-            onMore: model.isEmpty && !model.isAgent ? null : _openChequeActions,
+        ],
+      ),
+    );
+  }
+
+  /// Панель чека на планшете: сколько позиций набрано и меню кассы.
+  Widget _chequeToolbar(SaleModel model) {
+    final layout = context.layout;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: layout.gutter, vertical: AppDimens.gap8),
+      child: Row(
+        children: [
+          Text(context.tr('cheque'), style: AppText.h1),
+          const SizedBox(width: AppDimens.gap12),
+          Text(
+            '${model.lineCount} ${context.tr('pieces_short')}',
+            style: AppText.tabular(AppText.secondary),
           ),
+          const Spacer(),
+          // На широком экране колонка справа уже держит меню чека —
+          // здесь оставляем только настройки кассы.
+          if (!layout.hasSideRail)
+            AppIconButton(
+              icon: Icons.more_horiz,
+              background: AppColors.canvas,
+              foreground: AppColors.textSecondary,
+              size: layout.tapTarget,
+              iconSize: 22,
+              onPressed: _openCashierActions,
+            ),
         ],
       ),
     );
@@ -222,11 +289,13 @@ class _CashierHomeState extends State<CashierHome> {
 
   /// Панель быстрых операций и список позиций (новые сверху).
   Widget _cart(SaleModel model) {
+    final layout = context.layout;
+
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimens.gutter,
+      padding: EdgeInsets.fromLTRB(
+        layout.gutter,
         AppDimens.gap12,
-        AppDimens.gutter,
+        layout.gutter,
         96,
       ),
       itemCount: model.lineCount,

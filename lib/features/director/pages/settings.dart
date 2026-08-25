@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
-import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
@@ -14,6 +13,7 @@ import 'package:flutter_mdokon/shared/widgets/dropdown_value.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
@@ -37,7 +37,7 @@ class Settings extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(21),
-                      color: CustomTheme.of(context).cardColor,
+                      color: AppColors.canvas,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +84,7 @@ class Settings extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
-                                  color: CustomTheme.of(context).textColor.withValues(alpha: 0.5),
+                                  color: AppColors.textPrimary.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
@@ -129,7 +129,7 @@ class Settings extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 height: 50,
                 decoration: BoxDecoration(
-                  color: CustomTheme.of(context).cardColor,
+                  color: AppColors.canvas,
                   borderRadius: BorderRadius.circular(21),
                 ),
                 child: Row(
@@ -158,7 +158,7 @@ class Settings extends StatelessWidget {
                                   width: 125,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
-                                    color: CustomTheme.of(context).cardColor,
+                                    color: AppColors.canvas,
                                   ),
                                   offset: const Offset(-10, -10),
                                 ),
@@ -202,11 +202,7 @@ class Settings extends StatelessWidget {
                 value: settingsModel.theme,
                 onChanged: (value) {
                   settingsModel.updateSetting('theme', value);
-                  if (settingsModel.theme) {
-                    themeModel.setTheme(darkTheme);
-                  } else {
-                    themeModel.setTheme(lightTheme);
-                  }
+                  themeModel.setDark(settingsModel.theme);
                 },
               ),
               Text(
@@ -254,7 +250,7 @@ class CardItemSwitch extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 50,
       decoration: BoxDecoration(
-        color: CustomTheme.of(context).cardColor,
+        color: AppColors.canvas,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -276,7 +272,7 @@ class CardItemSwitch extends StatelessWidget {
                         triggerMode: TooltipTriggerMode.tap,
                         showDuration: const Duration(seconds: 3),
                         decoration: BoxDecoration(
-                          color: CustomTheme.of(context).textColor.withValues(alpha: 0.7),
+                          color: AppColors.textPrimary.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         textAlign: TextAlign.center,
@@ -332,8 +328,8 @@ class CardItem extends StatelessWidget {
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          backgroundColor: CustomTheme.of(context).cardColor,
-          foregroundColor: CustomTheme.of(context).textColor,
+          backgroundColor: AppColors.canvas,
+          foregroundColor: AppColors.textPrimary,
           elevation: 0,
         ),
         child: Row(

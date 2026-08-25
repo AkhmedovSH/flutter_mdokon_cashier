@@ -4,17 +4,17 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/scanned_input.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/sale_sheets.dart';
+import 'package:flutter_mdokon/shared/widgets/scanner/barcode_scanner_page.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Каталог товаров — вкладка нижней навигации.
@@ -66,11 +66,18 @@ class _CatalogState extends State<Catalog> {
         products = [];
       });
       Provider.of<LoadingModel>(context, listen: false).showLoader(num: 1);
-      if (value.length >= 1) {
+      // Код маркировки ищем не как есть, а по GTIN: у карточки товара может
+      // стоять как GTIN-14, так и он же без ведущих нулей — пробуем по порядку.
+      final terms = parseScannedInput(value).searchTerms;
+      if (terms.isNotEmpty) {
         var arr = [];
-        var response = await get(
-          '/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${_sale.data['currencyId']}?search=$value',
-        );
+        dynamic response;
+        for (final term in terms) {
+          response = await get(
+            '/services/desktop/api/get-balance-product-list-mobile/${cashbox['posId']}/${_sale.data['currencyId']}?search=$term',
+          );
+          if (response != null && response.length > 0) break;
+        }
         if (response != null && response.length > 0) {
           if (response.length > 50) {
             response = response.sublist(0, 50);
@@ -100,34 +107,15 @@ class _CatalogState extends State<Catalog> {
   }
 
   Future<void> getQrCode() async {
-    await Permission.camera.request();
-    var status = await Permission.camera.status;
+    final result = await BarcodeScannerPage.scan(context);
+    if (result == null || !mounted) return;
 
-    if (status == PermissionStatus.permanentlyDenied || status == PermissionStatus.denied) {
-      return;
-    }
-    if (mounted) {
-      String? result = await SimpleBarcodeScanner.scanBarcode(
-        context,
-        barcodeAppBar: const BarcodeAppBar(
-          appBarTitle: '',
-          centerTitle: false,
-          enableBackButton: true,
-          backButtonIcon: Icon(Icons.arrow_back_ios),
-        ),
-        cancelButtonText: context.tr('back'),
-        isShowFlashIcon: false,
-        delayMillis: 500,
-        cameraFace: CameraFace.back,
-        scanFormat: ScanFormat.ONLY_BARCODE,
-      );
-      if (result != null && result != '-1') {
-        setState(() {
-          searchProducts(result);
-          textEditingController.text = result;
-        });
-      }
-    }
+    final scanned = parseScannedInput(result);
+    if (scanned.raw.isEmpty) return;
+    setState(() {
+      searchProducts(scanned.raw);
+      textEditingController.text = scanned.displayTerm;
+    });
   }
 
   // --- Чек ---------------------------------------------------------------
@@ -227,10 +215,120 @@ class _CatalogState extends State<Catalog> {
         children: [
           _topBar(),
           const SizedBox(height: AppDimens.gap12),
-          Expanded(child: _content()),
-          _cartBar(),
+          Expanded(
+            child: SideRailLayout(
+              body: _content(),
+              // На широком экране каталог не уводит кассира от чека:
+              // чек виден справа и пополняется прямо здесь.
+              rail: _cartRail(),
+              bottom: _cartBar(),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  /// Колонка чека справа: позиции, итог и переход к оплате.
+  Widget _cartRail() {
+    final model = _sale;
+    final layout = context.layout;
+
+    if (model.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.all(layout.gutter),
+        child: AppEmptyState(
+          icon: Icons.shopping_cart_outlined,
+          title: context.tr('cheque_is_empty'),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(layout.gutter, layout.gutter, layout.gutter, AppDimens.gap8),
+          child: AppSectionLabel(
+            '${context.tr('cheque')} · ${model.lineCount} ${context.tr('pieces_short')}',
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.fromLTRB(layout.gutter, 0, layout.gutter, AppDimens.gap12),
+            itemCount: model.lineCount,
+            separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.divider),
+            itemBuilder: (context, position) {
+              // Свежая позиция — первой, как и в чеке на вкладке продажи.
+              final item = model.items[model.lineCount - 1 - position] as Map;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppDimens.gap8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${item['productName'] ?? ''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.body,
+                          ),
+                          Text(
+                            '${formatMoney(item['salePrice'])} × ${formatMoney(customNumber(item['quantity']), decimalDigits: 3)}',
+                            style: AppText.tabular(AppText.small),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppDimens.gap8),
+                    Text(
+                      formatMoney(item['totalPrice']),
+                      style: AppText.tabular(AppText.secondaryBold),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Divider(height: 1, color: AppColors.border),
+        Padding(
+          padding: EdgeInsets.all(layout.gutter),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(context.tr('to_pay').toUpperCase(), style: AppText.caption),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${formatMoney(model.totalPrice)} ${model.currencyName}',
+                        style: AppText.amount.copyWith(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimens.gap12),
+              SizedBox(
+                height: layout.primaryButtonHeight,
+                child: AppButton(
+                  label: context.tr('to_receipt'),
+                  onPressed: () => context.read<DashboardModel>().setCurrentIndex(0),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -240,13 +338,13 @@ class _CatalogState extends State<Catalog> {
   /// читается как закреплённая панель, а не как первый элемент ленты.
   Widget _topBar() {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: AppColors.surface,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
@@ -335,26 +433,48 @@ class _CatalogState extends State<Catalog> {
           );
         }
 
+        final layout = context.layout;
+        final padding = EdgeInsets.fromLTRB(
+          layout.gutter,
+          AppDimens.gap4,
+          layout.gutter,
+          AppDimens.gap24,
+        );
+
+        Widget tile(int i) => _ProductTile(
+              item: products[i],
+              price: _price(products[i]),
+              currency: _sale.currencyName,
+              balance: _balance(products[i]),
+              inCart: _inCart(products[i]),
+              onAdd: () => addProductToList(i),
+              onQuantityChanged: (value) => _applyQuantity(i, value),
+              onTap: () => _openQuantitySheet(i),
+            );
+
+        // На планшете карточки встают сеткой: одна колонка на 1000 px
+        // оставляла бы половину экрана пустой.
+        if (layout.isTablet) {
+          return GridView.builder(
+            padding: padding,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: layout.productTileMaxWidth,
+              mainAxisSpacing: AppDimens.gap8,
+              crossAxisSpacing: AppDimens.gap8,
+              mainAxisExtent: layout.productTileHeight,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, i) => tile(i),
+          );
+        }
+
         return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(
-            AppDimens.gutter,
-            AppDimens.gap4,
-            AppDimens.gutter,
-            AppDimens.gap24,
-          ),
+          padding: padding,
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           itemCount: products.length,
           separatorBuilder: (context, index) => const SizedBox(height: AppDimens.gap8),
-          itemBuilder: (context, i) => _ProductTile(
-            item: products[i],
-            price: _price(products[i]),
-            currency: _sale.currencyName,
-            balance: _balance(products[i]),
-            inCart: _inCart(products[i]),
-            onAdd: () => addProductToList(i),
-            onQuantityChanged: (value) => _applyQuantity(i, value),
-            onTap: () => _openQuantitySheet(i),
-          ),
+          itemBuilder: (context, i) => tile(i),
         );
       },
     );
@@ -378,7 +498,7 @@ class _CatalogState extends State<Catalog> {
     if (model.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),

@@ -61,7 +61,7 @@ class AuthLogoHeader extends StatelessWidget {
             color: AppColors.onPrimary.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Text(
+          child: Text(
             'm',
             style: TextStyle(
               fontSize: 28,
@@ -72,7 +72,7 @@ class AuthLogoHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppDimens.gap12),
-        const Text(
+        Text(
           'mDokon POS',
           style: TextStyle(
             fontSize: 20,

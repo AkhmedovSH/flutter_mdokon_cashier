@@ -86,6 +86,8 @@ class CashboxModel extends ChangeNotifier {
 
     data['change'] = 0.0;
     data['paid'] = 0.0;
+    // Срок возврата относится только к продаже в долг.
+    data['clientReturnDate'] = '';
   }
 
   void setDataKey(dynamic key, dynamic value) {

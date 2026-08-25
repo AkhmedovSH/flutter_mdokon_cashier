@@ -49,6 +49,10 @@ class AppInput extends StatefulWidget {
   /// Высота поля: 56 по умолчанию, 48 — для поиска.
   final double height;
 
+  /// Фон поля в покое. По умолчанию #F4F6FB; на канве того же цвета
+  /// поле сливается с фоном — тогда передаём [AppColors.surface].
+  final Color? fill;
+
   const AppInput({
     super.key,
     this.label,
@@ -73,6 +77,7 @@ class AppInput extends StatefulWidget {
     this.focusNode,
     this.moneyStyle = false,
     this.height = AppDimens.heightLarge,
+    this.fill,
   });
 
   /// Поле суммы: числовая клавиатура, крупный tabular-шрифт.
@@ -95,6 +100,7 @@ class AppInput extends StatefulWidget {
     this.suffix,
     this.focusNode,
     this.height = 52,
+    this.fill,
   })  : keyboardType = TextInputType.number,
         obscureText = false,
         togglePassword = false,
@@ -144,7 +150,7 @@ class _AppInputState extends State<AppInput> {
         ? AppColors.disabledSurface
         : (_focused || hasError)
             ? AppColors.surface
-            : AppColors.canvas;
+            : (widget.fill ?? AppColors.canvas);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +239,7 @@ class _AppInputState extends State<AppInput> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.error_outline, size: 16, color: AppColors.dangerText),
+              Icon(Icons.error_outline, size: 16, color: AppColors.dangerText),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -341,7 +347,7 @@ class AppIconClear extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: AppDimens.control,
-        child: const SizedBox(
+        child: SizedBox(
           width: AppDimens.heightSmall,
           height: AppDimens.heightSmall,
           child: Icon(Icons.close, size: 18, color: AppColors.iconMuted),
@@ -391,7 +397,7 @@ class AppStepper extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 34),
             height: height,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
             ),
             child: Text(

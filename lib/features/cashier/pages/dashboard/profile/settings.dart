@@ -8,7 +8,6 @@ import 'package:unicons/unicons.dart';
 import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
-import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:flutter_mdokon/shared/widgets/dialogs.dart';
@@ -290,7 +289,7 @@ class _SettingsState extends State<Settings> {
 
     if (_saved['theme'] != _draft['theme']) {
       final dark = _draft['theme'] == true;
-      context.read<ThemeModel>().setTheme(dark ? darkTheme : lightTheme);
+      context.read<ThemeModel>().setDark(dark);
       settings.updateSetting('theme', dark);
     }
 
@@ -315,35 +314,23 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    final visible = _visible;
+    // На широком экране разделы переезжают из чипов в колонку слева: чипы там
+    // терялись под поиском, а места хватает на постоянный список.
+    final split = context.layout.hasMasterDetail;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: Column(
         children: [
-          _header(),
+          _header(split: split),
           Expanded(
-            child: visible.isEmpty
-                ? AppEmptyState(
-                    icon: UniconsLine.search,
-                    title: context.tr('nothing_found'),
-                    text: context.tr('settings_search_empty'),
+            child: split
+                ? MasterDetailLayout(
+                    masterWidth: 260,
+                    master: _sectionRail(),
+                    detail: _list(),
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppDimens.gutter,
-                      AppDimens.gap12,
-                      AppDimens.gutter,
-                      AppDimens.gap16,
-                    ),
-                    itemCount: visible.length + 1,
-                    separatorBuilder: (context, index) => const SizedBox(height: AppDimens.gap8),
-                    itemBuilder: (context, index) {
-                      if (index == 0) return _countLabel(visible.length);
-
-                      return _row(visible[index - 1]);
-                    },
-                  ),
+                : ContentBox(child: _list()),
           ),
         ],
       ),
@@ -351,9 +338,95 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  Widget _header() {
+  Widget _list() {
+    final visible = _visible;
+
+    if (visible.isEmpty) {
+      return AppEmptyState(
+        icon: UniconsLine.search,
+        title: context.tr('nothing_found'),
+        text: context.tr('settings_search_empty'),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        AppDimens.gap12,
+        AppDimens.gutter,
+        AppDimens.gap16,
+      ),
+      itemCount: visible.length + 1,
+      separatorBuilder: (context, index) => const SizedBox(height: AppDimens.gap8),
+      itemBuilder: (context, index) {
+        if (index == 0) return _countLabel(visible.length);
+
+        return _row(visible[index - 1]);
+      },
+    );
+  }
+
+  /// Колонка разделов слева — замена чипам на широком экране.
+  Widget _sectionRail() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gap12,
+        AppDimens.gap12,
+        AppDimens.gap12,
+        AppDimens.gap16,
+      ),
+      children: [
+        _sectionRailItem(null, context.tr('all')),
+        for (final section in _Section.values)
+          _sectionRailItem(section, _sectionTitle(section)),
+      ],
+    );
+  }
+
+  Widget _sectionRailItem(_Section? section, String label) {
+    final count = _countIn(section);
+    final selected = _activeSection == section;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: selected ? AppColors.primarySoft : Colors.transparent,
+        borderRadius: AppDimens.control,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => setState(() => _activeSection = section),
+          child: Container(
+            height: context.layout.tapTarget,
+            padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.secondaryBold.copyWith(
+                      color: selected ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$count',
+                  style: AppText.tabular(AppText.small).copyWith(
+                    color: selected ? AppColors.primary : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header({bool split = false}) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
@@ -393,7 +466,7 @@ class _SettingsState extends State<Settings> {
                 suffix: _query.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           UniconsLine.times,
                           size: 18,
                           color: AppColors.iconMuted,
@@ -404,18 +477,20 @@ class _SettingsState extends State<Settings> {
                         },
                       ),
               ),
-              const SizedBox(height: AppDimens.gap8),
-              SizedBox(
-                height: 34,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _tab(null, context.tr('all')),
-                    for (final section in _Section.values)
-                      _tab(section, _sectionTitle(section)),
-                  ],
+              if (!split) ...[
+                const SizedBox(height: AppDimens.gap8),
+                SizedBox(
+                  height: 34,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _tab(null, context.tr('all')),
+                      for (final section in _Section.values)
+                        _tab(section, _sectionTitle(section)),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -614,7 +689,7 @@ class _SettingsState extends State<Settings> {
               contentPadding: EdgeInsets.zero,
               title: Text(option.value, style: AppText.body),
               trailing: option.key == current
-                  ? const Icon(UniconsLine.check, color: AppColors.primary)
+                  ? Icon(UniconsLine.check, color: AppColors.primary)
                   : null,
               onTap: () => Navigator.of(ctx).pop(option.key),
             ),
@@ -664,7 +739,7 @@ class _SettingsState extends State<Settings> {
         AppDimens.gutter,
         AppDimens.gap12,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -735,7 +810,7 @@ class _SelectButton extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppDimens.gap8),
-                const Icon(UniconsLine.angle_down, size: 16, color: AppColors.iconMuted),
+                Icon(UniconsLine.angle_down, size: 16, color: AppColors.iconMuted),
               ],
             ),
           ),

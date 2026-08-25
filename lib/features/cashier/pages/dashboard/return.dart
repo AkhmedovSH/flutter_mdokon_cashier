@@ -313,6 +313,10 @@ class _ReturnState extends State<Return> {
 
   @override
   Widget build(BuildContext context) {
+    // На планшете два шага телефона («выбрать чек» → «отметить позиции»)
+    // складываются в один экран: список слева, позиции справа.
+    if (context.layout.hasMasterDetail) return _splitLayout();
+
     return Scaffold(
       backgroundColor: AppColors.canvas,
       resizeToAvoidBottomInset: false,
@@ -326,24 +330,67 @@ class _ReturnState extends State<Return> {
     );
   }
 
+  /// Раскладка «чек слева — позиции справа» для планшета и моноблока.
+  Widget _splitLayout() {
+    final layout = context.layout;
+
+    return Scaffold(
+      backgroundColor: AppColors.canvas,
+      resizeToAvoidBottomInset: false,
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: layout.masterWidth,
+            child: Column(
+              children: [
+                _headerShell(_searchHeader()),
+                Expanded(child: loadingRecent ? const Center(child: AppLoader()) : _pickContent()),
+              ],
+            ),
+          ),
+          Container(width: 1, color: AppColors.border),
+          Expanded(
+            child: Column(
+              children: [
+                if (_hasCheque) _headerShell(_chequeHeader()),
+                Expanded(
+                  child: loading
+                      ? const Center(child: AppLoader())
+                      : _hasCheque
+                          ? _chequeContent()
+                          : AppEmptyState(
+                              icon: Icons.receipt_long,
+                              title: context.tr('return'),
+                              text: context.tr('return_select_cheque_hint'),
+                            ),
+                ),
+                if (_hasCheque && _hasReturnable) _bottomBar(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Шапка на белой подложке: пока чек не выбран — заголовок и поиск по номеру,
   /// после выбора — стрелка назад к списку и реквизиты открытого чека.
-  Widget _header() {
+  Widget _header() => _headerShell(_hasCheque ? _chequeHeader() : _searchHeader());
+
+  Widget _headerShell(Widget child) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: AppColors.surface,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
-        child: SafeArea(
-          bottom: false,
-          child: _hasCheque ? _chequeHeader() : _searchHeader(),
-        ),
+        child: SafeArea(bottom: false, child: child),
       ),
     );
   }
@@ -569,7 +616,7 @@ class _ReturnState extends State<Return> {
               Text(formatQuantity(_refundCount), style: AppText.tabular(AppText.bodyMedium)),
             ],
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: AppDimens.gap8),
             child: Divider(height: 1, thickness: 1, color: AppColors.divider),
           ),
@@ -600,7 +647,7 @@ class _ReturnState extends State<Return> {
 
   Widget _bottomBar() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -764,7 +811,7 @@ class _ReturnLine extends StatelessWidget {
           if (returned)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.dangerSoft,
                 borderRadius: AppDimens.pill,
               ),
@@ -830,7 +877,7 @@ class _QtyStepper extends StatelessWidget {
               height: AppDimens.tapTarget,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
               ),
               child: Text(

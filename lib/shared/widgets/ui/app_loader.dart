@@ -7,13 +7,15 @@ import 'package:flutter_mdokon/core/theme/app_typography.dart';
 class AppLoader extends StatelessWidget {
   final double size;
   final double strokeWidth;
-  final Color color;
+
+  /// `null` — брендовый цвет активной палитры.
+  final Color? color;
 
   const AppLoader({
     super.key,
     this.size = 32,
     this.strokeWidth = 3,
-    this.color = AppColors.primary,
+    this.color,
   });
 
   @override
@@ -23,7 +25,7 @@ class AppLoader extends StatelessWidget {
       height: size,
       child: CircularProgressIndicator(
         strokeWidth: strokeWidth,
-        color: color,
+        color: color ?? AppColors.primary,
         backgroundColor: AppColors.primarySoft,
       ),
     );
@@ -69,7 +71,7 @@ class AppLoaderCard extends StatelessWidget {
           horizontal: AppDimens.gap24,
           vertical: 20,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppDimens.card,
           boxShadow: AppDimens.cardShadow,

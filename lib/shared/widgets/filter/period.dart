@@ -4,6 +4,7 @@ import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:flutter_mdokon/shared/widgets/filter/label.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
+import 'package:flutter_mdokon/core/theme/app_colors.dart';
 
 class Period extends StatefulWidget {
   const Period({super.key});
@@ -59,7 +60,7 @@ class _PeriodState extends State<Period> {
                         alignment: Alignment.centerLeft,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: CustomTheme.of(context).cardColor,
+                          color: AppColors.canvas,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -90,7 +91,7 @@ class _PeriodState extends State<Period> {
                         alignment: Alignment.centerLeft,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: CustomTheme.of(context).cardColor,
+                          color: AppColors.canvas,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
