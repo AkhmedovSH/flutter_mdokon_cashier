@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Строка чека: номер, название, расчёт «цена × количество», степпер и сумма.
@@ -14,6 +15,10 @@ class CartLineTile extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<num> onQuantityChanged;
 
+  /// Маркировочная позиция: количество задаётся кодами, а не степпером.
+  /// `true` — сканировать новый код, `false` — открыть список кодов.
+  final ValueChanged<bool>? onMarkingCodes;
+
   const CartLineTile({
     super.key,
     required this.index,
@@ -21,9 +26,11 @@ class CartLineTile extends StatelessWidget {
     required this.currency,
     required this.onTap,
     required this.onQuantityChanged,
+    this.onMarkingCodes,
   });
 
   bool get _selected => item['selected'] == true;
+  bool get _marking => onMarkingCodes != null && isMarkingItem(item);
   double get _quantity => customNumber(item['quantity']);
   double get _discount => customNumber(item['discount']);
 
@@ -59,6 +66,7 @@ class CartLineTile extends StatelessWidget {
               _QuantityStepper(
                 value: _quantity,
                 onChanged: onQuantityChanged,
+                onMarkingCodes: _marking ? onMarkingCodes : null,
               ),
               const SizedBox(width: AppDimens.gap8),
               Expanded(
@@ -128,7 +136,15 @@ class _QuantityStepper extends StatelessWidget {
   final double value;
   final ValueChanged<num> onChanged;
 
-  const _QuantityStepper({required this.value, required this.onChanged});
+  /// У маркировочной позиции обе кнопки ведут к кодам: «+» — сканер,
+  /// «−» — список, где кассир выбирает, какую именно пачку убрать.
+  final ValueChanged<bool>? onMarkingCodes;
+
+  const _QuantityStepper({
+    required this.value,
+    required this.onChanged,
+    this.onMarkingCodes,
+  });
 
   bool get _whole => value == value.roundToDouble();
 
@@ -145,7 +161,10 @@ class _QuantityStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _StepButton(icon: Icons.remove, onTap: () => onChanged(value - 1)),
+          _StepButton(
+            icon: Icons.remove,
+            onTap: () => onMarkingCodes == null ? onChanged(value - 1) : onMarkingCodes!(false),
+          ),
           // Ширина фиксирована: число любой длины не двигает кнопки степпера.
           Container(
             width: 52,
@@ -169,7 +188,10 @@ class _QuantityStepper extends StatelessWidget {
               ),
             ),
           ),
-          _StepButton(icon: Icons.add, onTap: () => onChanged(value + 1)),
+          _StepButton(
+            icon: Icons.add,
+            onTap: () => onMarkingCodes == null ? onChanged(value + 1) : onMarkingCodes!(true),
+          ),
         ],
       ),
     );

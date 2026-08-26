@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 
+import 'package:flutter_mdokon/features/cashier/domain/cheque_format.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
@@ -60,7 +61,10 @@ class _PaymentSampleState extends State<PaymentSample> {
 
     if (!customIf(result)) return;
     if (customIf(storage.read('settings')['printAfterSale'])) {
-      await printerModel.printFullCheque(model.data, model.data['itemsList']);
+      // Печатаем чек в серверном формате (БРУТТО + скидка отдельной суммой):
+      // printFullCheque сам вычитает discountAmount.
+      final printable = toGrossCheque(model.data);
+      await printerModel.printFullCheque(printable, printable['itemsList']);
     }
     if (mounted) Navigator.pop(context, result);
   }
@@ -113,6 +117,7 @@ class _PaymentSampleState extends State<PaymentSample> {
           body: Consumer<CashboxModel>(
             builder: (context, model, child) {
               final layout = context.layout;
+              final online = model.onlinePayment;
 
               final body = GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -124,11 +129,19 @@ class _PaymentSampleState extends State<PaymentSample> {
                     layout.gutter,
                     AppDimens.gap16,
                   ),
-                  child: switch (model.currentIndex) {
-                    1 => const OnCredit(),
-                    2 => const Loyalty(),
-                    _ => const Payment(),
-                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      switch (model.currentIndex) {
+                        1 => const OnCredit(),
+                        2 => const Loyalty(),
+                        _ => const Payment(),
+                      },
+                      // Код с телефона покупателя нужен на любой вкладке:
+                      // онлайн-способом можно закрыть и долг, и лояльность.
+                      if (online != null) OtpCodeField(model: model, selection: online),
+                    ],
+                  ),
                 ),
               );
 

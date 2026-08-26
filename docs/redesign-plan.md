@@ -107,14 +107,26 @@
 - [x] `manualDiscount.js` → `manual_discount.dart` + 13 тестов. Чистая функция
       готова: чек хранит параметры (F5 процент / F6 сумма / F7 сумма на позицию),
       суммы раскидываются по позициям и пересчитываются после каждого изменения корзины
-- [ ] **Встроить `manual_discount.dart` в `SaleModel`** (тот самый баг с «поехавшим»
-      процентом) — не сделано осознанно. `_applyDiscount` (sale_model.dart:410) не просто
-      хранит абсолютную сумму: он пишет в `data['totalPrice']` НЕТТО (сумма минус скидка),
-      тогда как `printer_model.dart:191`, `cheques.dart:112` и `return.dart:684` считают
-      `totalPrice − discountAmount`, то есть ждут БРУТТО, как на десктопе. Перед правкой
-      нужно зафиксировать формат по `Tab.js` / cheque-v2 и проверить на живом чеке —
-      иначе легко получить двойное вычитание скидки в печати и в возврате.
-      Заодно снимается блокировка «Применена скидка» (catalog.dart:148, home.dart:66)
+- [x] **Встроить `manual_discount.dart` в `SaleModel`** — тот самый баг с «поехавшим»
+      процентом закрыт. Формат зафиксирован по `cashbox_model.dart:466`: на сервер
+      (`cheque-v2`) чек уходит в БРУТТО со скидкой отдельной суммой, поэтому
+      `cheques.dart:112` и `return.dart:684` были правы. Локально же во время
+      продажи `totalPrice` остаётся НЕТТО — на этом построен весь поток оплаты.
+      Сделано:
+      - `_applyDiscount` больше не пишет абсолютные суммы: чек хранит параметры
+        (`manualDiscountKey` = f5/f6 + `manualDiscountValue`, у позиции
+        `fixedDiscount` для F7), а суммы раскидывает `manualDiscountAmounts()`
+      - единый `_recalculate()` вместо трёх расходившихся пересчётов
+        (`_recalculateFromPriceMode`, `_recalculate`, `_recalculateTotalsOnly`) —
+        скидка переживает смену количества, цены и состава корзины
+      - `domain/cheque_format.dart` → `toGrossCheque()`: одна точка перевода
+        НЕТТО → БРУТТО. Ею пользуются и отправка на `cheque-v2`, и печать.
+        Двойное вычитание скидки при печати (`payment_sample.dart` передавал в
+        `printFullCheque` локальный НЕТТО-чек, а тот вычитал `discountAmount`
+        второй раз) устранено
+      - снята блокировка «Применена скидка» (`home/home.dart`) — со скидкой
+        теперь можно открывать каталог и добавлять позиции
+      - `test/cheque_format_test.dart` (6 тестов), всего 230 зелёных
 - [x] `debtLimit.js` (192) → `debt_limit.dart`. Локальная проверка кредитного лимита
       **до** пробития чека (сервер отвечает `error.client.debt.limit`, но чек уже напечатан)
 - [x] `smsQuota.js` (94) → `sms_quota.dart` — текст остаётся за UI: движок отдаёт
@@ -136,17 +148,48 @@
 - [x] `apiMarking.js` → `lib/features/cashier/data/marking_repository.dart`:
       `marking-check` с мягкой деградацией — недоступный сервер, отсутствующий
       эндпоинт и пустой ответ дают `MarkingStatus.unknown`, продажа не блокируется
-- [ ] Сканирование кода камерой в потоке продажи — сделана точка входа:
+- [x] Сканирование кода камерой в потоке продажи:
       `scanned_input.dart` (код маркировки → варианты GTIN для поиска товара) и
       свой экран сканера `shared/widgets/scanner/barcode_scanner_page.dart` на
       `mobile_scanner` (DataMatrix + линейные форматы, фонарик, автозум,
       разрешение и ошибка камеры с путём в настройки). `simple_barcode_scanner`
       выпилен: он умел только линейные коды. Поиск в `catalog.dart` и
       `home/search.dart` перебирает варианты GTIN.
-      Осталось: вызов `MarkingRepository.check` при добавлении позиции и показ
-      предупреждения кассиру
-- [ ] Сборка одинаковых кодов в одну позицию, `+`/`−` открывают список кодов
-- [ ] Возврат по коду маркировки
+- [x] Проверка кода при сканировании и предупреждение кассиру:
+      `domain/marking_warning.dart` (`markingWarningLevel`: ok → молчим,
+      unknown → жёлтый тост «не проверен», notRegistered/withdrawn → красный) и
+      `pages/dashboard/marking_scan.dart` → `checkScannedMarking()`. Вызывается из
+      сканера каталога (`catalog.dart`) и поиска (`home/search.dart`) сразу после
+      разбора: обычный штрих-код на сервер не уходит вовсе, продажа не блокируется
+      ни при каком статусе (касса обязана работать офлайн). Тестов 233 зелёных
+- [x] Сборка одинаковых кодов в одну позицию, `+`/`−` открывают список кодов:
+      `domain/marking_item.dart` — коды позиции (`markingNumbers`, полный код;
+      старое поле `markingNumber` читается для совместимости), количество ВСЕГДА
+      равно числу кодов, повторный код отбивается (`marking_already_scanned`),
+      остаток проверяется, если не разрешён `saleMinus`. В `SaleModel`:
+      `addScannedProducts` кладёт код в существующую строку товара
+      (`markingLineIndex`), `addMarkingCodeToLine` / `removeMarkingCodeFromLine`,
+      а `setQuantity` на маркировочной позиции отбивается — количество только
+      кодами. UI: у такой строки степпер меняет смысл — `+` сразу открывает
+      сканер, `−` показывает лист кодов с удалением поштучно
+      (`home/widgets/marking_codes_sheet.dart`). Код от сканера каталога
+      привязывается к добавляемому товару (`_pendingMarking` в `catalog.dart`).
+      Тесты: `test/marking_item_test.dart` (21), всего 254 зелёных.
+      Хвост с `home/search.dart` закрыт удалением: экран не был подключён ни к
+      роутеру, ни к дашборду, его роль давно играет `catalog.dart`. Заодно ушёл
+      мёртвый буфер `DataModel.productList` / `setProductList` / `currentProductList`
+      — единственный писатель был там, читателей не было
+- [x] Возврат по коду маркировки: `domain/return_marking.dart` — код должен быть
+      в этом чеке (`marking_not_found`), повторно не берётся, больше остатка по
+      позиции не отметить (`marking_return_limit`); частично возвращённая позиция
+      отдаёт первые `limit` кодов — какие пачки ушли в прошлый возврат, сервер не
+      сообщает. UI: `pages/dashboard/widgets/return_marking_sheet.dart` —
+      сканирование принесённой пачки или отметка кода в списке (нужно, когда код
+      затёрт и камера его не берёт). В `return.dart` у маркировочной строки
+      степпер меняет смысл: `+` открывает сканер, `−` — список отмеченных кодов,
+      `_setQty` отбивается; «вернуть всё» отмечает все доступные коды; в payload
+      уходят `markingNumbers` / `availableMarkingNumbers`, как у десктопа.
+      Тесты: `test/return_marking_test.dart` (13), всего 267 зелёных
 - [x] Ключи переводов: `marking_not_registered`, `marking_withdrawn`, `marking_not_checked`
       — в `ru.json` и `uz-Latn.json`
 
@@ -154,13 +197,45 @@
 
 ## Этап 4 — онлайн-оплата (без UzQR)
 
-- [ ] Click Pass — SHA1-подпись через пакет `crypto`, сканирование `otp_data`
+- [x] Click Pass — SHA1-подпись через пакет `crypto`, сканирование `otp_data`
       с телефона покупателя камерой
-- [ ] Payme
-- [ ] Uzum (Apelsin)
-- [ ] Оплата во вкладках «В долг» и «Лояльность», а не только в «Оплате»
+- [x] Payme
+- [x] Uzum (Apelsin)
+- [x] Оплата во вкладках «В долг» и «Лояльность», а не только в «Оплате»
       (на десктопе это сделано в 2.3.0)
-- [ ] Абонплата картой из кассы (Multicard/Rahmat)
+- [x] Абонплата картой из кассы (Multicard/Rahmat)
+
+Сделано:
+
+- `domain/online_payment.dart` — общий для трёх провайдеров чистый слой:
+  выбор онлайн-способа из `paymentTypes` (`paymentTypeId` 5/6/7), подпись
+  `id:sha1(timestamp + secret):timestamp`, payload'ы и разбор ответов.
+  Важная деталь, легко ломающаяся: `timestamp` — **миллисекунды**
+  (`getTime()` из date-fns в `electron.js:178`), не unix-секунды. Click
+  подписывается `merchant_service_user_id`, Uzum — `merchant_id`, Payme
+  подписи не использует вовсе (пара `merchant_id:secret`). Суммы: Click — в
+  сумах, Uzum и Payme — в тийинах
+- `data/online_payment_repository.dart` — прямые запросы к `api.click.uz`,
+  `checkout.paycom.uz`, `mobile.apelsin.uz` мимо `core/network/api.dart`:
+  это чужие хосты со своей авторизацией, токен кабинета туда слать нельзя.
+  Мягкой деградации, в отличие от маркировки, нет: не прошла оплата — чек не
+  пробивается. Payme — два шага (`receipts.create` → `receipts.pay`)
+- `CashboxModel._payOnline()` вызывается **до** `cheque-v2`; реквизиты
+  платежа (`clickPaymentId` / `paymePaymentId` / `uzumPaymentId`, телефон
+  покупателя, `QRPaymentProvider = 161`) уходят на сервер вместе с чеком
+- `OtpCodeField` в `payment_widgets.dart` показывается на **любой** вкладке
+  оплаты, как только в чек внесена сумма онлайн-способом: код с телефона
+  покупателя сканируется камерой (`BarcodeScannerPage`) или вводится руками
+- Абонплата: `domain/subscription_payment.dart` +
+  `data/subscription_payment_repository.dart` +
+  `pages/payment/subscription_payment_sheet.dart`, вход — строка в профиле.
+  Поток `/points → /invoice → shortLink во внешнем браузере → опрос
+  /status/{id}` каждые 5 с, не дольше 15 минут. Оплату подтверждает только
+  callback Multicard на сервере, поэтому единственный источник правды —
+  статус счёта, а не возврат из браузера
+- Тесты: `test/online_payment_test.dart` (24), `test/subscription_payment_test.dart` (13),
+  всего 304 зелёных. Ключи переводов `otp_code*`, `online_payment_*`,
+  `subscription_pay_*` — в `ru.json` и `uz-Latn.json`
 
 ---
 
@@ -216,9 +291,11 @@
 
 ## Технический долг, замеченный попутно
 
-- `SaleModel._applyDiscount` — абсолютная сумма вместо параметров скидки (чинится в этапе 2)
+- ~~`SaleModel._applyDiscount` — абсолютная сумма вместо параметров скидки~~ починено в этапе 2
 - ~~`test/widget_test.dart` — стоковый шаблонный тест Flutter про счётчик~~ удалён,
   `flutter test` зелёный целиком (224 теста) и годится как ворота для этапов 2–3
 - Крупные файлы, ещё не прошедшие редизайн: `cheques.dart` (1086),
   `return.dart` (968), `settings.dart` (862), `balance.dart` (729),
   `quick_selection.dart` (720), `x_report.dart` (719), `profile.dart` (627)
+- ~~`home/search.dart` — экран-дубль каталога, ни на что не подключённый~~ удалён
+  в этапе 3 вместе с буфером `DataModel.productList`

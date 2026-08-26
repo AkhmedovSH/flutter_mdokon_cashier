@@ -6,6 +6,9 @@ import 'package:get_storage/get_storage.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/cashier/data/sale_repository.dart';
+import 'package:flutter_mdokon/features/cashier/domain/manual_discount.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
 
 /// Режим цены продажи: розница / опт / банк.
 enum SalePriceMode {
@@ -95,6 +98,10 @@ class SaleModel extends ChangeNotifier {
         'currencyRate': 0,
         'discount': 0,
         'discountAmount': 0,
+        // Параметры ручной скидки на чек (F5 — процент, F6 — сумма). Суммы по
+        // позициям не хранятся: их пересчитывает manualDiscountAmounts().
+        'manualDiscountKey': null,
+        'manualDiscountValue': 0,
         'note': '',
         'offline': false,
         'outType': false,
@@ -192,6 +199,13 @@ class SaleModel extends ChangeNotifier {
         return true;
       }
 
+      // Маркировочный товар собирается в одну позицию: количество равно числу кодов.
+      final code = normalizeScannedCode(product['markingNumber']);
+      if (code.isNotEmpty) {
+        _addMarkingProduct(product, code);
+        continue;
+      }
+
       final index = items.indexWhere((e) => e['productId'] == product['productId']);
       if (index != -1 && !saleMinus && customNumber(items[index]['quantity']) >= customNumber(items[index]['balance'])) {
         showDangerToast('limit_exceeded'.tr());
@@ -237,20 +251,74 @@ class SaleModel extends ChangeNotifier {
     _recalculateFromPriceMode();
   }
 
+  // --- Маркировка --------------------------------------------------------
+
+  /// Строка чека с этим товаром, собирающая коды маркировки, или -1.
+  int markingLineIndex(dynamic productId) =>
+      items.indexWhere((e) => e['productId'] == productId && isMarkingItem(e as Map));
+
+  /// Отсканирован маркировочный товар: код уходит в существующую строку этого
+  /// товара, а не создаёт вторую.
+  void _addMarkingProduct(Map product, String code) {
+    final index = markingLineIndex(product['productId']);
+    if (index != -1) {
+      _applyMarkingCode(index, code);
+      return;
+    }
+    setMarkingCodes(product, [code]);
+    _addToList(product);
+  }
+
+  /// Добавить код к готовой строке чека (кнопка «+» на маркировочной позиции).
+  MarkingAddResult addMarkingCodeToLine(int index, String code) {
+    if (index < 0 || index >= items.length) return MarkingAddResult.duplicate;
+    final result = _applyMarkingCode(index, code);
+    notifyListeners();
+    return result;
+  }
+
+  MarkingAddResult _applyMarkingCode(int index, String code) {
+    final item = items[index] as Map;
+    final result = addMarkingCode(
+      item,
+      code,
+      balance: saleMinus ? null : customNumber(item['balance']),
+    );
+    switch (result) {
+      case MarkingAddResult.duplicate:
+        showDangerToast('marking_already_scanned'.tr());
+      case MarkingAddResult.limitExceeded:
+        showDangerToast('limit_exceeded'.tr());
+      case MarkingAddResult.added:
+        item['discount'] = 0;
+        _recalculate(notify: false);
+    }
+    return result;
+  }
+
+  /// Убрать код со строки чека («−» на маркировочной позиции).
+  /// Последний код удаляет саму позицию — товара без кода в чеке быть не может.
+  void removeMarkingCodeFromLine(int index, String code) {
+    if (index < 0 || index >= items.length) return;
+    final item = items[index] as Map;
+    if (!removeMarkingCode(item, code)) return;
+    if (markingCodes(item).isEmpty) {
+      deleteLine(index);
+      return;
+    }
+    _recalculate();
+  }
+
   /// Пересчёт цен по режиму (розница / опт / банк) и суммы чека.
   void _recalculateFromPriceMode() {
-    double total = 0;
     for (final item in items) {
-      final quantity = customNumber(item['quantity']);
       if (item['wholesale'] == true) {
         item['salePrice'] = customNumber(item['wholesalePrice']);
       } else if (item['bank'] == true) {
         item['salePrice'] = customNumber(item['bankPrice']);
       }
-      item['totalPrice'] = customNumber(item['salePrice']) * quantity;
-      total += item['totalPrice'] as double;
     }
-    data['totalPrice'] = total;
+    _recalculate(notify: false);
   }
 
   void selectLine(int index) {
@@ -263,6 +331,12 @@ class SaleModel extends ChangeNotifier {
   /// Ручное изменение количества степпером.
   void setQuantity(int index, num quantity) {
     if (index < 0 || index >= items.length) return;
+    // Количество маркировочной позиции задаётся кодами, а не степпером:
+    // «+» сканирует новый код, «−» открывает список и удаляет выбранный.
+    if (isMarkingItem(items[index] as Map)) {
+      showDangerToast('marking_quantity_by_codes'.tr());
+      return;
+    }
     if (quantity <= 0) {
       deleteLine(index);
       return;
@@ -298,23 +372,59 @@ class SaleModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Пересчёт итогов с учётом уже применённых скидок по позициям.
-  void _recalculate() {
-    double total = 0;
-    double beforeDiscount = 0;
+  /// Ручная скидка на чек, заданная кассиром (F5 — процент, F6 — сумма).
+  ManualDiscount? get manualDiscount {
+    final key = switch (data['manualDiscountKey']) {
+      'f5' => ManualDiscountKey.f5,
+      'f6' => ManualDiscountKey.f6,
+      _ => null,
+    };
+    if (key == null) return null;
+    final value = customNumber(data['manualDiscountValue']);
+    if (value <= 0) return null;
+    return ManualDiscount(key, value);
+  }
 
-    for (final item in items) {
-      item['totalPrice'] = customNumber(item['quantity']) * customNumber(item['salePrice']);
-      beforeDiscount += item['totalPriceOriginal'] != null
-          ? customNumber(item['totalPriceOriginal'])
-          : customNumber(item['totalPrice']);
-      total += customNumber(item['totalPrice']);
+  /// Пересчёт итогов чека.
+  ///
+  /// Скидка хранится параметрами, а суммы по позициям выводятся здесь заново —
+  /// поэтому после смены количества, цены или состава корзины процент скидки
+  /// остаётся тем, который ввёл кассир.
+  ///
+  /// Инварианты, на которые опирается остальной код:
+  /// позиция и чек хранят НЕТТО в `totalPrice`, БРУТТО — в
+  /// `totalPriceBeforeDiscount`, сумму скидки — в `discountAmount`.
+  /// В серверный формат (`totalPrice` = БРУТТО) чек переводит
+  /// `cashbox_model.dart` перед отправкой на `cheque-v2`.
+  void _recalculate({bool notify = true}) {
+    final base = items
+        .map<num>((item) => customNumber(item['quantity']) * customNumber(item['salePrice']))
+        .toList();
+    final fixed = items
+        .map<num?>((item) => item['fixedDiscount'] == null ? null : customNumber(item['fixedDiscount']))
+        .toList();
+
+    final amounts = manualDiscountAmounts(base, fixed, manualDiscount);
+
+    num gross = 0;
+    num discount = 0;
+    for (var i = 0; i < items.length; i++) {
+      final item = items[i];
+      item['totalPriceOriginal'] = base[i];
+      item['totalPriceBeforeDiscount'] = base[i];
+      item['discountAmount'] = amounts[i];
+      item['totalPrice'] = base[i] - amounts[i];
+      item['discount'] = base[i] == 0 ? 0 : amounts[i] * 100 / base[i];
+      gross += base[i];
+      discount += amounts[i];
     }
 
-    data['discount'] = beforeDiscount == 0 ? 0 : 100 - (total * 100 / beforeDiscount);
-    data['totalPriceBeforeDiscount'] = beforeDiscount;
-    data['totalPrice'] = total;
-    notifyListeners();
+    data['totalPriceBeforeDiscount'] = gross;
+    data['discountAmount'] = discount;
+    data['totalPrice'] = gross - discount;
+    data['discount'] = gross == 0 ? 0 : discount * 100 / gross;
+
+    if (notify) notifyListeners();
   }
 
   // --- Быстрые операции --------------------------------------------------
@@ -397,91 +507,42 @@ class SaleModel extends ChangeNotifier {
 
   void _clearShortcut() => shortcutValue = '';
 
-  void _recalculateTotalsOnly() {
-    double total = 0;
-    for (final item in items) {
-      item['totalPrice'] = customNumber(item['quantity']) * customNumber(item['salePrice']);
-      total += customNumber(item['totalPrice']);
-    }
-    data['totalPrice'] = total;
-  }
+  void _recalculateTotalsOnly() => _recalculate(notify: false);
 
-  /// Скидки: `%` — процент на чек, `s` — сумма на позицию, `%-` — сумма на чек.
+  /// Скидки: `%` — процент на чек (F5), `%-` — сумма на чек (F6),
+  /// `s` — сумма на выбранную позицию (F7).
+  ///
+  /// Сохраняются только параметры — суммы раскидывает `_recalculate()`.
   void _applyDiscount(String key, double value) {
-    if (key != 's' && discountPercent > 0) {
-      data['discount'] = 0;
-      data['totalPrice'] = customNumber(data['totalPriceBeforeDiscount']);
-      data['totalPriceBeforeDiscount'] = 0;
-      for (final item in items) {
-        item['discount'] = 0;
-        item['totalPrice'] = customNumber(item['salePrice']) * customNumber(item['quantity']);
-      }
-    }
-
-    if (key == '%') {
-      if (value > 100) {
-        showDangerToast('Скидка не может быть больше 100%');
+    if (key == 's') {
+      final item = selectedItem;
+      if (item == null) return;
+      final base = customNumber(item['quantity']) * customNumber(item['salePrice']);
+      if (value > base) {
+        showDangerToast('discount_exceeds_line'.tr());
         return;
       }
-      data['discount'] = value;
-      data['totalPrice'] = 0;
-      for (final item in items) {
-        data['totalPrice'] = customNumber(data['totalPrice']) + customNumber(item['salePrice']) * customNumber(item['quantity']);
-        item['discount'] = value;
-        item['discountAmount'] = customNumber(item['totalPrice']) * (value / 100);
-        item['totalPrice'] = customNumber(item['totalPrice']) - customNumber(item['totalPrice']) * (value / 100);
-      }
-      data['totalPriceBeforeDiscount'] = data['totalPrice'];
-      data['discountAmount'] = customNumber(data['totalPriceBeforeDiscount']) * (value / 100);
-      data['totalPrice'] = customNumber(data['totalPrice']) - customNumber(data['totalPrice']) * (customNumber(data['discount']) / 100);
+      item['fixedDiscount'] = value <= 0 ? null : value;
+      _recalculate(notify: false);
       return;
     }
 
-    if (key == 's') {
-      data['totalPrice'] = 0;
-      data['totalPriceBeforeDiscount'] = 0;
-      for (final item in items) {
-        if (item['selected'] == true) {
-          if (customNumber(item['discount']) == 0) {
-            item['totalPriceOriginal'] = item['totalPrice'];
-            item['totalPrice'] = customNumber(item['totalPrice']) - value;
-          } else {
-            item['totalPrice'] = customNumber(item['totalPriceOriginal']) - value;
-          }
-          final original = customNumber(item['totalPriceOriginal']);
-          item['discount'] = original == 0 ? 0 : 100 / (original / value);
-        }
-
-        data['totalPriceBeforeDiscount'] = customNumber(data['totalPriceBeforeDiscount']) +
-            (item['totalPriceOriginal'] != null
-                ? customNumber(item['totalPriceOriginal'])
-                : customNumber(item['totalPrice']));
-        data['totalPrice'] = customNumber(data['totalPrice']) + customNumber(item['totalPrice']);
-        item['discountAmount'] = customNumber(item['totalPriceOriginal']) - customNumber(item['totalPrice']);
-      }
-
-      final before = customNumber(data['totalPriceBeforeDiscount']);
-      data['discount'] = before == 0 ? 0 : 100 - (customNumber(data['totalPrice']) * 100 / before);
-      data['discountAmount'] = before - customNumber(data['totalPrice']);
+    if (key == '%' && value > 100) {
+      showDangerToast('discount_exceeds_total'.tr());
+      return;
+    }
+    if (key == '%-' && value > customNumber(data['totalPriceBeforeDiscount'])) {
+      showDangerToast('discount_exceeds_total'.tr());
       return;
     }
 
-    if (key == '%-') {
-      final total = customNumber(data['totalPrice']);
-      if (total == 0) return;
-      final percent = 100 / (total / value);
-      data['discountAmount'] = value;
-      data['discount'] = percent;
-      data['totalPriceBeforeDiscount'] = total;
-      data['totalPrice'] = total - (total * percent) / 100;
-
-      for (final item in items) {
-        item['discountAmount'] = value;
-        item['discount'] = percent;
-        item['totalPriceBeforeDiscount'] = data['totalPrice'];
-        item['totalPrice'] = customNumber(item['totalPrice']) - (customNumber(item['totalPrice']) * percent) / 100;
-      }
+    // Новая скидка на чек отменяет ранее заданные суммы по позициям (F7).
+    for (final item in items) {
+      item['fixedDiscount'] = null;
     }
+    data['manualDiscountKey'] = value <= 0 ? null : (key == '%' ? 'f5' : 'f6');
+    data['manualDiscountValue'] = value;
+    _recalculate(notify: false);
   }
 
   // --- Товар с упаковкой -------------------------------------------------

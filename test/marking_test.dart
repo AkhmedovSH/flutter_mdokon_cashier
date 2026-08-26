@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_mdokon/features/cashier/data/marking_repository.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking_warning.dart';
 
 void main() {
   group('parseMarkingCode', () {
@@ -143,6 +144,22 @@ void main() {
     test('код идентификации берётся из любого из двух полей', () {
       expect(normalizeMarkingCheck({'markingCode': 'abc'}).identificationCode, 'abc');
       expect(normalizeMarkingCheck({'identificationCode': 'xyz'}).identificationCode, 'xyz');
+    });
+  });
+
+
+  group('markingWarningLevel', () {
+    test('ok — предупреждать не о чем', () {
+      expect(markingWarningLevel(MarkingStatus.ok), MarkingWarningLevel.none);
+    });
+
+    test('непроверенный код не ошибка: касса работает офлайн', () {
+      expect(markingWarningLevel(MarkingStatus.unknown), MarkingWarningLevel.warning);
+    });
+
+    test('не зарегистрирован и выведен из оборота — ошибка', () {
+      expect(markingWarningLevel(MarkingStatus.notRegistered), MarkingWarningLevel.danger);
+      expect(markingWarningLevel(MarkingStatus.withdrawn), MarkingWarningLevel.danger);
     });
   });
 }

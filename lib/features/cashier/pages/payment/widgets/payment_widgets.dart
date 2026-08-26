@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/online_payment.dart';
 import 'package:flutter_mdokon/features/cashier/models/cashbox_model.dart';
+import 'package:flutter_mdokon/shared/widgets/scanner/barcode_scanner_page.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Общие блоки экрана оплаты.
@@ -728,6 +730,48 @@ class _ResetButton extends StatelessWidget {
               color: AppColors.dangerText,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Поле кода онлайн-оплаты (Click Pass / Payme / Uzum).
+///
+/// Показывается на любой вкладке, как только в чек внесена сумма онлайн-способом:
+/// платить с телефона покупателя можно и в долг, и по лояльности.
+///
+/// Код (`otp_data`) покупатель показывает на своём телефоне — кассир либо
+/// сканирует его камерой, либо вбивает руками, если код не читается.
+class OtpCodeField extends StatelessWidget {
+  final CashboxModel model;
+  final OnlinePaymentSelection selection;
+
+  const OtpCodeField({super.key, required this.model, required this.selection});
+
+  Future<void> _scan(BuildContext context) async {
+    final code = await BarcodeScannerPage.scan(context, title: context.tr('otp_code'));
+    if (code == null || code.isEmpty) return;
+    model.otpController.text = code.trim();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppDimens.gap12),
+      child: AppInput(
+        label: '${context.tr('otp_code')} · ${onlineProviderName(selection.provider)}',
+        hint: context.tr('otp_code_hint'),
+        controller: model.otpController,
+        fill: AppColors.surface,
+        prefixIcon: Icons.qr_code_2,
+        suffix: AppIconButton(
+          icon: Icons.photo_camera_outlined,
+          background: AppColors.primarySoft,
+          foreground: AppColors.primary,
+          size: 36,
+          iconSize: 19,
+          onPressed: () => _scan(context),
         ),
       ),
     );

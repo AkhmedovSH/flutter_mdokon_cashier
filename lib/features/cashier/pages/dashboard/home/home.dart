@@ -14,6 +14,7 @@ import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/sale_sheets.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/cart_line_tile.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/marking_codes_sheet.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/sale_header.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/sale_summary_bar.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
@@ -60,15 +61,10 @@ class _CashierHomeState extends State<CashierHome> {
 
   // --- Действия ----------------------------------------------------------
 
-  /// Каталог — вкладка нижней навигации. Скидка на чек блокирует добавление
-  /// позиций, поэтому туда же и не пускаем.
-  void _openCatalog() {
-    if (_model.discountPercent > 0) {
-      showDangerToast(context.tr('discount_has_been_applied'));
-      return;
-    }
-    context.read<DashboardModel>().setCurrentIndex(1);
-  }
+  /// Каталог — вкладка нижней навигации. Скидка добавлению позиций больше не
+  /// мешает: она хранится параметрами и пересчитывается после каждого
+  /// изменения корзины.
+  void _openCatalog() => context.read<DashboardModel>().setCurrentIndex(1);
 
   /// Быстрая операция над выбранной позицией: сначала спрашиваем значение
   /// отдельным листом, потом применяем операцию.
@@ -331,6 +327,12 @@ class _CashierHomeState extends State<CashierHome> {
             currency: model.currencyName,
             onTap: () => model.selectLine(index),
             onQuantityChanged: (value) => model.setQuantity(index, value),
+            onMarkingCodes: (scan) => showMarkingCodesSheet(
+              context,
+              model,
+              index,
+              scanImmediately: scan,
+            ),
           ),
         );
       },

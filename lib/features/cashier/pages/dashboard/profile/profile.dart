@@ -12,6 +12,7 @@ import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/auth/models/user_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/payment/subscription_payment_sheet.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Профиль — вкладка нижней навигации.
@@ -115,6 +116,13 @@ class _ProfileState extends State<Profile> {
   Future<void> _callSupport() async {
     final uri = Uri.parse('tel://+$supportPhone');
     if (!await launchUrl(uri) && mounted) showDangerToast(context.tr('error'));
+  }
+
+  /// Абонплата картой (Multicard). Успешная оплата меняет баланс точки на
+  /// сервере — поэтому после неё перечитываем данные профиля.
+  Future<void> _paySubscription() async {
+    final paid = await SubscriptionPaymentSheet.open(context);
+    if (paid && mounted) _load();
   }
 
   Future<void> _confirmLogout() async {
@@ -427,6 +435,14 @@ class _ProfileState extends State<Profile> {
           title: context.tr('settings'),
           onTap: () => _open('/cashier/profile/settings'),
         ),
+      // Абонплата картой: точку и сумму подставляет сервер, оплата уходит
+      // на страницу банка во внешнем браузере.
+      _MenuItem(
+        icon: UniconsLine.credit_card,
+        title: context.tr('subscription_pay_title'),
+        value: context.tr('subscription_pay_subtitle'),
+        onTap: _paySubscription,
+      ),
       _MenuItem(
         icon: UniconsLine.calling,
         title: context.tr('support'),

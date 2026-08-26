@@ -1,14 +1,21 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 // Assuming these are your existing imports based on the files provided
+import 'package:flutter_mdokon/features/cashier/data/online_payment_repository.dart';
+import 'package:flutter_mdokon/features/cashier/domain/cheque_format.dart';
+import 'package:flutter_mdokon/features/cashier/domain/online_payment.dart';
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class CashboxModel extends ChangeNotifier {
+  CashboxModel({OnlinePaymentRepository? onlinePayments})
+      : onlinePayments = onlinePayments ?? OnlinePaymentRepository();
+
   final GetStorage storage = GetStorage();
 
   bool isLoading = false;
@@ -25,6 +32,10 @@ class CashboxModel extends ChangeNotifier {
   List<dynamic> clients = [];
   List<dynamic> allClients = [];
   Timer? _debounce;
+
+  /// Код с телефона покупателя для Click Pass / Payme / Uzum.
+  final TextEditingController otpController = TextEditingController();
+  final OnlinePaymentRepository onlinePayments;
 
   final TextEditingController loyaltyCodeController = TextEditingController();
   final TextEditingController loyaltyPointsController = TextEditingController();
@@ -464,7 +475,7 @@ class CashboxModel extends ChangeNotifier {
       }
 
       if ((dataCopy['discount'] ?? 0) > 0) {
-        dataCopy['totalPrice'] = dataCopy['totalPriceBeforeDiscount'];
+        dataCopy = toGrossCheque(dataCopy);
         dataCopy['discount'] = 0;
       }
       dataCopy['discountAmount'] ??= 0;
@@ -472,6 +483,13 @@ class CashboxModel extends ChangeNotifier {
       if (currentIndex == 0 || currentIndex == 1) {
         dataCopy['paid'] = paid;
         dataCopy['clientAmount'] = change;
+      }
+
+      // Онлайн-оплата — до пробития чека: не прошла оплата, не пробиваем чек.
+      if (!await _payOnline(dataCopy)) {
+        isLoading = false;
+        notifyListeners();
+        return false;
       }
 
       // Отправка основного запроса
@@ -517,6 +535,105 @@ class CashboxModel extends ChangeNotifier {
       print("Error submitting cheque: $e");
       return false;
     }
+  }
+
+  // --- ОНЛАЙН-ОПЛАТА (Click Pass / Payme / Uzum) --------------------------
+
+  /// Выбран ли онлайн-способ оплаты — от этого зависит поле кода в UI.
+  OnlinePaymentSelection? get onlinePayment =>
+      detectOnlinePayment(data['paymentTypes'] as List?);
+
+  String get otpCode => otpController.text.trim();
+
+  /// Провести оплату у провайдера и дописать её реквизиты в чек.
+  ///
+  /// `true` — платить нечем (обычный чек) или оплата прошла. `false` — оплата
+  /// не прошла, кассир уже увидел сообщение провайдера.
+  Future<bool> _payOnline(Map<String, dynamic> dataCopy) async {
+    final selection = detectOnlinePayment(dataCopy['paymentTypes'] as List?);
+    if (selection == null) return true;
+
+    final provider = selection.provider;
+    dataCopy['onlaynAmount'] = selection.amount;
+    dataCopy['paymentTypeId'] = onlineProviderPaymentTypeId(provider);
+    dataCopy['otpCustomPaymentTypeId'] = selection.customPaymentTypeId;
+
+    final code = otpCode;
+    if (code.isEmpty) {
+      showDangerToast(tr('otp_code_required'));
+      return false;
+    }
+
+    final rawMerchant = cashbox[onlineProviderCashboxKey(provider)];
+    final merchant = rawMerchant is Map ? Map<String, dynamic>.from(rawMerchant) : null;
+    final auth = onlineAuthFromCashbox(
+      provider,
+      merchant,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    if (auth == null) {
+      showDangerToast(tr('online_payment_no_merchant', args: [onlineProviderName(provider)]));
+      return false;
+    }
+
+    final cashboxCode = onlineCashboxCode(
+      posId: cashbox['posId'],
+      cashboxId: cashbox['cashboxId'],
+      shiftId: dataCopy['shiftId'] ?? cashbox['id'],
+    );
+
+    final result = switch (provider) {
+      OnlineProvider.click => await onlinePayments.payClick(
+          auth: auth,
+          payload: clickPayload(
+            amount: selection.amount,
+            cashboxCode: cashboxCode,
+            otpCode: code,
+            transactionId: dataCopy['transactionId'],
+            serviceId: merchant?['merchant_service_id'],
+          ),
+        ),
+      OnlineProvider.uzum => await onlinePayments.payUzum(
+          auth: auth,
+          payload: uzumPayload(
+            amount: selection.amount,
+            cashboxCode: cashboxCode,
+            otpCode: code,
+            transactionId: dataCopy['transactionId'],
+            serviceId: merchant?['merchant_service_id'],
+          ),
+        ),
+      OnlineProvider.payme => await onlinePayments.payPayme(
+          auth: auth,
+          otpCode: code,
+          createPayload: paymeCreatePayload(
+            chequeNumber: dataCopy['chequeNumber'],
+            amount: selection.amount,
+            itemsList: (dataCopy['itemsList'] as List?) ?? const [],
+          ),
+        ),
+    };
+
+    if (!result.ok) {
+      showDangerToast(result.error ?? tr('online_payment_failed'));
+      return false;
+    }
+
+    // Реквизиты платежа уходят на сервер вместе с чеком: по ним потом сверяют
+    // выписку провайдера. Названия полей — как у десктопа.
+    switch (provider) {
+      case OnlineProvider.click:
+        dataCopy['clickPaymentId'] = result.paymentId;
+        dataCopy['clickClientPhone'] = result.clientPhone;
+      case OnlineProvider.payme:
+        dataCopy['paymePaymentId'] = result.paymentId;
+        dataCopy['paymeClientPhone'] = result.clientPhone;
+      case OnlineProvider.uzum:
+        dataCopy['uzumPaymentId'] = result.paymentId;
+        dataCopy['uzumClientPhone'] = result.clientPhone;
+    }
+    dataCopy['QRPaymentProvider'] = 161;
+    return true;
   }
 
   void _searchLoyaltyUser() {
@@ -577,6 +694,7 @@ class CashboxModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    otpController.dispose();
     loyaltyCodeController.dispose();
     loyaltyPointsController.dispose();
     loyaltyInfoController.dispose();

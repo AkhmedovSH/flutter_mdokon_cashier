@@ -6,8 +6,11 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
+import 'package:flutter_mdokon/features/cashier/domain/return_marking.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_preview_sheet.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/return_marking_sheet.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Возврат — вкладка нижней навигации.
@@ -41,6 +44,10 @@ class _ReturnState extends State<Return> {
   /// Количество к возврату по индексу позиции чека.
   /// Позиции, которых здесь нет, в возврат не попадут.
   final Map<int, double> retQty = {};
+
+  /// Коды маркировки к возврату по индексу позиции. У такой позиции количество —
+  /// это число кодов: возвращают конкретные пачки, а не «две штуки».
+  final Map<int, List<String>> retCodes = {};
 
   /// Последние чеки смены — список для выбора, когда номер вводить не хочется.
   List recent = [];
@@ -100,6 +107,7 @@ class _ReturnState extends State<Return> {
         cheque = response;
         items = response['itemsList'] ?? [];
         retQty.clear();
+        retCodes.clear();
         searchController.clear();
       }
     });
@@ -139,6 +147,7 @@ class _ReturnState extends State<Return> {
       cheque = {};
       items = [];
       retQty.clear();
+      retCodes.clear();
     });
     _loadRecent();
   }
@@ -184,7 +193,13 @@ class _ReturnState extends State<Return> {
   /// Есть ли вообще что возвращать — если нет, экран не предлагает действий.
   bool get _hasReturnable => items.any((item) => _available(item) > 0);
 
+  /// У маркировочной позиции количество задаётся кодами, а не степпером.
+  bool _isMarking(int index) => index < items.length && isMarkingItem(items[index] as Map);
+
   void _setQty(int index, double quantity) {
+    // Количество маркировочной позиции меняют только коды.
+    if (_isMarking(index)) return;
+
     final available = _available(items[index]);
     final next = quantity.clamp(0, available).toDouble();
 
@@ -200,10 +215,46 @@ class _ReturnState extends State<Return> {
   void _returnAll() {
     setState(() {
       retQty.clear();
+      retCodes.clear();
       for (var i = 0; i < items.length; i++) {
         final available = _available(items[i]);
-        if (available > 0) retQty[i] = available;
+        if (available <= 0) continue;
+
+        if (_isMarking(i)) {
+          // «Вернуть всё» отмечает все ещё не возвращённые коды позиции.
+          final codes = returnableMarkingCodes(items[i] as Map, limit: available);
+          if (codes.isEmpty) continue;
+          retCodes[i] = codes;
+          retQty[i] = codes.length.toDouble();
+          continue;
+        }
+        retQty[i] = available;
       }
+    });
+  }
+
+  /// Выбор кодов к возврату: сканирование принесённой пачки или отметка в списке.
+  Future<void> _editMarkingCodes(int index, {bool scanImmediately = false}) async {
+    final available = _available(items[index]);
+    if (available <= 0) return;
+
+    final result = await showReturnMarkingSheet(
+      context,
+      item: items[index] as Map,
+      selected: retCodes[index] ?? const [],
+      limit: available,
+      scanImmediately: scanImmediately,
+    );
+    if (result == null || !mounted) return;
+
+    setState(() {
+      if (result.isEmpty) {
+        retCodes.remove(index);
+        retQty.remove(index);
+        return;
+      }
+      retCodes[index] = result;
+      retQty[index] = result.length.toDouble();
     });
   }
 
@@ -259,6 +310,13 @@ class _ReturnState extends State<Return> {
       line['oldQuantity'] = _whole(_available(source));
       line['quantity'] = _whole(quantity);
       line['totalPrice'] = _unitPrice(source) * quantity;
+
+      // Маркировка: сервер ждёт именно коды возвращаемых пачек.
+      final codes = retCodes[index];
+      if (codes != null && codes.isNotEmpty) {
+        line['availableMarkingNumbers'] = markingCodes(source);
+        setMarkingCodes(line, codes);
+      }
       lines.add(line);
     });
 
@@ -292,6 +350,8 @@ class _ReturnState extends State<Return> {
 
   /// Ввод точного количества — для весового товара, где шага в единицу мало.
   Future<void> _editQuantity(int index) async {
+    if (_isMarking(index)) return _editMarkingCodes(index);
+
     final item = items[index];
     final available = _available(item);
     if (available <= 0) return;
@@ -574,6 +634,10 @@ class _ReturnState extends State<Return> {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
         Text(context.tr('return_qty_hint'), style: AppText.secondary),
+        if (items.any((item) => isMarkingItem(item as Map))) ...[
+          const SizedBox(height: AppDimens.gap4),
+          Text(context.tr('return_marking_hint'), style: AppText.small),
+        ],
         const SizedBox(height: AppDimens.gap12),
         AppSectionLabel(
           '${context.tr('products')} · ${items.length} ${context.tr('positions_short')}',
@@ -593,8 +657,10 @@ class _ReturnState extends State<Return> {
             available: _available(items[i]),
             quantity: retQty[i] ?? 0,
             currency: _currency,
+            marking: _isMarking(i),
             onChanged: (value) => _setQty(i, value),
             onEdit: () => _editQuantity(i),
+            onScan: () => _editMarkingCodes(i, scanImmediately: true),
           ),
         ],
         const SizedBox(height: AppDimens.gap16),
@@ -752,8 +818,12 @@ class _ReturnLine extends StatelessWidget {
   final double available;
   final double quantity;
   final String currency;
+
+  /// Маркировочная позиция: «+» ведёт в сканер, «−» — в список отмеченных кодов.
+  final bool marking;
   final ValueChanged<double> onChanged;
   final VoidCallback onEdit;
+  final VoidCallback onScan;
 
   const _ReturnLine({
     required this.item,
@@ -761,8 +831,10 @@ class _ReturnLine extends StatelessWidget {
     required this.available,
     required this.quantity,
     required this.currency,
+    required this.marking,
     required this.onChanged,
     required this.onEdit,
+    required this.onScan,
   });
 
   @override
@@ -827,8 +899,10 @@ class _ReturnLine extends StatelessWidget {
             _QtyStepper(
               value: quantity,
               max: available,
+              marking: marking,
               onChanged: onChanged,
               onTapValue: onEdit,
+              onScan: onScan,
             ),
         ],
       ),
@@ -842,14 +916,18 @@ class _ReturnLine extends StatelessWidget {
 class _QtyStepper extends StatelessWidget {
   final double value;
   final double max;
+  final bool marking;
   final ValueChanged<double> onChanged;
   final VoidCallback onTapValue;
+  final VoidCallback onScan;
 
   const _QtyStepper({
     required this.value,
     required this.max,
+    required this.marking,
     required this.onChanged,
     required this.onTapValue,
+    required this.onScan,
   });
 
   @override
@@ -868,7 +946,7 @@ class _QtyStepper extends StatelessWidget {
           _StepButton(
             icon: Icons.remove,
             enabled: value > 0,
-            onTap: () => onChanged(value - 1 > 0 ? value - 1 : 0),
+            onTap: marking ? onTapValue : () => onChanged(value - 1 > 0 ? value - 1 : 0),
           ),
           InkWell(
             onTap: onTapValue,
@@ -887,9 +965,9 @@ class _QtyStepper extends StatelessWidget {
             ),
           ),
           _StepButton(
-            icon: Icons.add,
+            icon: marking ? Icons.qr_code_scanner : Icons.add,
             enabled: value < max,
-            onTap: () => onChanged(value + 1 < max ? value + 1 : max),
+            onTap: marking ? onScan : () => onChanged(value + 1 < max ? value + 1 : max),
           ),
         ],
       ),

@@ -10,7 +10,9 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
 import 'package:flutter_mdokon/features/cashier/domain/scanned_input.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/marking_scan.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/sale_sheets.dart';
@@ -40,6 +42,10 @@ class _CatalogState extends State<Catalog> {
   List products = [];
 
   Map cashbox = {};
+
+  /// Код маркировки последнего сканирования. Живёт до добавления товара в чек:
+  /// именно он привязывается к позиции и задаёт её количество.
+  String? _pendingMarking;
 
   @override
   void initState() {
@@ -113,9 +119,13 @@ class _CatalogState extends State<Catalog> {
     final scanned = parseScannedInput(result);
     if (scanned.raw.isEmpty) return;
     setState(() {
+      _pendingMarking = scanned.marking?.code;
       searchProducts(scanned.raw);
       textEditingController.text = scanned.displayTerm;
     });
+    // Код маркировки проверяем параллельно поиску: ответ ЦРПТ на подбор товара
+    // не влияет, а предупреждение кассир должен увидеть до добавления в чек.
+    await checkScannedMarking(context, scanned, cashbox['posId']);
   }
 
   // --- Чек ---------------------------------------------------------------
@@ -143,6 +153,20 @@ class _CatalogState extends State<Catalog> {
     if (_blockedByDiscount()) return;
 
     final model = _sale;
+
+    // Маркировочный товар: код из последнего сканирования уходит в позицию,
+    // количество считается по числу кодов, а не степпером.
+    final marking = _pendingMarking;
+    if (marking != null && isMarkingItem(products[i] as Map)) {
+      final product = Map<String, dynamic>.from(products[i] as Map);
+      product['markingNumber'] = marking;
+      model.addScannedProducts([product]);
+      _pendingMarking = null;
+      Vibration.vibrate(amplitude: 10, duration: 30);
+      if (mounted) setState(() {});
+      return;
+    }
+
     final index = _lineIndex(products[i]);
 
     if (index >= 0) {
