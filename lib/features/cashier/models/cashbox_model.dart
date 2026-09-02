@@ -7,14 +7,23 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 // Assuming these are your existing imports based on the files provided
 import 'package:flutter_mdokon/features/cashier/data/online_payment_repository.dart';
+import 'package:flutter_mdokon/features/cashier/data/uds_repository.dart';
 import 'package:flutter_mdokon/features/cashier/domain/cheque_format.dart';
 import 'package:flutter_mdokon/features/cashier/domain/online_payment.dart';
+import 'package:flutter_mdokon/features/cashier/domain/uds.dart';
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class CashboxModel extends ChangeNotifier {
-  CashboxModel({OnlinePaymentRepository? onlinePayments})
-      : onlinePayments = onlinePayments ?? OnlinePaymentRepository();
+  CashboxModel({OnlinePaymentRepository? onlinePayments, UdsRepository? udsRepository})
+      : onlinePayments = onlinePayments ?? OnlinePaymentRepository(),
+        udsRepository = udsRepository ?? UdsRepository();
+
+  /// Номера вкладок оплаты: обычная, в долг, uGet, UDS.
+  static const int tabPayment = 0;
+  static const int tabOnCredit = 1;
+  static const int tabLoyalty = 2;
+  static const int tabUds = 3;
 
   final GetStorage storage = GetStorage();
 
@@ -42,6 +51,24 @@ class CashboxModel extends ChangeNotifier {
   final TextEditingController loyaltyInfoController = TextEditingController();
   final TextEditingController loyaltyBalanceController = TextEditingController();
   final TextEditingController loyaltyAwardController = TextEditingController();
+
+  // --- UDS ---------------------------------------------------------------
+
+  final UdsRepository udsRepository;
+
+  /// Состояние вкладки UDS. Меняется только целиком: половина старого расчёта
+  /// рядом с половиной нового — это чужие суммы в чеке.
+  UdsState uds = const UdsState();
+
+  final TextEditingController udsSearchController = TextEditingController();
+  final TextEditingController udsPointsController = TextEditingController();
+
+  /// Идёт расчёт: кнопка «Принять» на это время блокируется.
+  bool udsCalculating = false;
+
+  /// Пауза в вводе баллов перед пересчётом: сумму к оплате имеет право
+  /// посчитать только сервер, поэтому на каждое значение — свой запрос.
+  Timer? _udsDebounce;
 
   Future<void> init(Map initialData) async {
     data = Map<String, dynamic>.from(initialData);
@@ -157,6 +184,10 @@ class CashboxModel extends ChangeNotifier {
     loyaltyPointsInput = "";
     clientComment = "";
 
+    // В одном чеке применяется только одна программа лояльности, поэтому
+    // вкладки uGet и UDS сбрасывают состояние друг друга.
+    _resetUds();
+
     data['change'] = 0.0;
     data['paid'] = 0.0;
 
@@ -190,6 +221,8 @@ class CashboxModel extends ChangeNotifier {
       data['paymentTypes'][0]['amount'] = data['totalPrice'].toString();
       data['paymentTypes'][0]['controller'].text = data['totalPrice'].toString();
     }
+    // Вкладка UDS сумму не предзаполняет: сколько платить деньгами, скажет
+    // расчёт `uds-calc`, а до него любая цифра в поле — выдумка кассы.
   }
 
   void calculateChange() {
@@ -340,6 +373,10 @@ class CashboxModel extends ChangeNotifier {
       bool fullyPaid = (data['totalPrice'] ?? 0) == (data['paid'] ?? 0);
       return !(validClient && fullyPaid);
     }
+    if (currentIndex == tabUds) {
+      if (udsCalculating) return false;
+      return uds.isValidated(customNumber(data['paid']), customNumber(data['totalPrice']));
+    }
     return true;
   }
 
@@ -468,6 +505,23 @@ class CashboxModel extends ChangeNotifier {
         dataCopy.remove('loyaltyClientName');
       }
 
+      if (currentIndex == tabUds) {
+        // Расчёт устарел — цифры UDS в чеке уже не сойдутся с настройками
+        // лояльности, сервер отобьёт чек как error.uds.invalid_checksum.
+        if (!uds.isValidated(customNumber(dataCopy['paid']), customNumber(dataCopy['totalPrice']))) {
+          showDangerToast(tr('uds_recalculate_needed'));
+          return false;
+        }
+        dataCopy['clientId'] = 0;
+        dataCopy['clientAmount'] = 0;
+        dataCopy['clientComment'] = "";
+        // uGet и UDS в одном чеке не уживаются.
+        dataCopy.remove('loyaltyBonus');
+        dataCopy.remove('loyaltyClientAmount');
+        dataCopy.remove('loyaltyClientName');
+        dataCopy.addAll(udsChequeFields(uds));
+      }
+
       double change = double.parse(dataCopy['change'].toString());
 
       if ((dataCopy['clientId'] ?? 0) != 0) {
@@ -493,7 +547,18 @@ class CashboxModel extends ChangeNotifier {
       }
 
       // Отправка основного запроса
-      final response = await post('/services/desktop/api/cheque-v2', dataCopy);
+      final dynamic response;
+      if (currentIndex == tabUds) {
+        final udsResponse = await _createUdsCheque(dataCopy);
+        if (udsResponse == null) {
+          isLoading = false;
+          notifyListeners();
+          return false;
+        }
+        response = udsResponse;
+      } else {
+        response = await post('/services/desktop/api/cheque-v2', dataCopy);
+      }
 
       if (currentIndex == 2) {
         var sendData = {
@@ -636,6 +701,171 @@ class CashboxModel extends ChangeNotifier {
     return true;
   }
 
+  // --- UDS ---------------------------------------------------------------
+
+  /// Сумма чека вне лояльности: позиции со скидкой и подарки по акции.
+  double get udsSkipLoyaltyTotal => calcUdsSkipLoyaltyTotal(data);
+
+  /// Расчёт устарел: корзину правили после того, как UDS ответил.
+  bool get udsStale => uds.isStale(customNumber(data['totalPrice']));
+
+  void _resetUds() {
+    _udsDebounce?.cancel();
+    uds = const UdsState();
+    udsCalculating = false;
+    udsSearchController.clear();
+    udsPointsController.clear();
+  }
+
+  /// Переключить «По QR» / «По телефону». Расчёт сбрасывается: идентификатор
+  /// другой, а суммы старые.
+  void setUdsMode(UdsMode mode) {
+    if (uds.mode == mode) return;
+    _resetUds();
+    uds = uds.copyWith(mode: mode);
+    _udsApplyCash(null);
+    notifyListeners();
+  }
+
+  /// Кассир печатает или сканирует код. Запрос не шлём: код летит из сканера
+  /// по символу, а промокод одноразовый — ищем по кнопке или по Enter.
+  void udsSearchChanged(String value) {
+    uds = uds.copyWith(search: value.replaceAll(RegExp(r'[^0-9+]'), ''));
+    notifyListeners();
+  }
+
+  /// Найти клиента и посчитать покупку без списания баллов.
+  Future<void> udsSearch() async {
+    if (uds.search.trim().isEmpty) {
+      final mode = uds.mode;
+      _resetUds();
+      uds = uds.copyWith(mode: mode);
+      notifyListeners();
+      return;
+    }
+    udsPointsController.clear();
+    uds = uds.copyWith(pointsInput: '');
+    await _udsRunCalc(0);
+  }
+
+  /// Ввод баллов к списанию. Пересчёт — после паузы в вводе: каждое значение
+  /// это отдельный запрос к серверу.
+  void udsPointsChanged(String value) {
+    final clamped = uds.clampPoints(value);
+    if (clamped != value) {
+      udsPointsController.text = clamped;
+      udsPointsController.selection = TextSelection.fromPosition(
+        TextPosition(offset: clamped.length),
+      );
+    }
+    uds = uds.copyWith(pointsInput: clamped);
+    notifyListeners();
+
+    _udsDebounce?.cancel();
+    if (!uds.needsRecalc) return;
+    _udsDebounce = Timer(const Duration(milliseconds: 600), () {
+      _udsRunCalc(udsNumber(uds.pointsInput));
+    });
+  }
+
+  /// Списать максимум, который разрешил UDS.
+  void udsMaxPoints() {
+    if (uds.pointsDisabled) return;
+    final max = uds.clampPoints('${uds.calc.maxPoints}');
+    udsPointsController.text = max;
+    udsPointsChanged(max);
+  }
+
+  /// Запрос расчёта. Суммы из ответа кладём как есть — пересчитывать их нельзя.
+  Future<void> _udsRunCalc(double points) async {
+    final total = customNumber(data['totalPrice']);
+    final identifier = uds.search.trim();
+    if (total <= 0 || identifier.isEmpty) return;
+
+    final skip = udsSkipLoyaltyTotal;
+    udsCalculating = true;
+    notifyListeners();
+    try {
+      final calc = await udsRepository.calc(
+        posId: cashbox['posId'],
+        code: uds.mode == UdsMode.code ? identifier : null,
+        phone: uds.mode == UdsMode.phone ? identifier : null,
+        total: total,
+        points: points,
+        skipLoyaltyTotal: skip,
+      );
+      // Поле баллов приводим к тому, что UDS реально зачёл: кассир мог
+      // набрать больше, чем разрешено, — иначе пересчёт зациклится.
+      final applied = calc.points == 0 ? '' : udsPointsText(calc.points);
+      udsPointsController.text = applied;
+      uds = uds.copyWith(
+        found: true,
+        calculated: true,
+        calc: calc,
+        pointsInput: applied,
+        skipLoyaltyTotal: skip,
+      );
+      _udsApplyCash(calc.cash);
+    } on UdsError catch (error) {
+      showDangerToast(_udsErrorText(error));
+      if (error.unavailable) showWarningToast(tr('uds_sell_without_loyalty'));
+      final mode = uds.mode;
+      final search = uds.search;
+      _resetUds();
+      uds = uds.copyWith(mode: mode, search: search);
+      udsSearchController.text = search;
+      _udsApplyCash(null);
+    } finally {
+      udsCalculating = false;
+      notifyListeners();
+    }
+  }
+
+  String _udsErrorText(UdsError error) {
+    final key = error.i18nKey;
+    if (key != null) return tr(key);
+    final message = (error.message ?? '').trim();
+    return message.isEmpty ? tr('uds_error_generic') : message;
+  }
+
+  /// Сумма к оплате деньгами уходит в первый способ оплаты — дальше кассир
+  /// разносит её сам. `null` — очистить все способы.
+  void _udsApplyCash(double? cash) {
+    final paymentTypes = (data['paymentTypes'] as List?) ?? const [];
+    for (var i = 0; i < paymentTypes.length; i++) {
+      paymentTypes[i]['amount'] = '';
+      paymentTypes[i]['controller'].text = '';
+    }
+    if (cash != null && paymentTypes.isNotEmpty) {
+      final value = cash.round();
+      paymentTypes[0]['amount'] = value;
+      paymentTypes[0]['controller'].text = value.toString();
+    }
+    calculateChange();
+  }
+
+  /// Чек с лояльностью UDS. Операцию в UDS проводит сервер до сохранения чека,
+  /// поэтому отправляем его отдельным запросом и разбираем `errorKey`.
+  ///
+  /// `null` — чека нет, кассир уже увидел причину.
+  Future<dynamic> _createUdsCheque(Map<String, dynamic> dataCopy) async {
+    dataCopy['cashierLogin'] = dataCopy['login'];
+    try {
+      return await udsRepository.createCheque(dataCopy);
+    } on UdsError catch (error) {
+      if (error.networkFailure) {
+        // Ответа не было: сервер мог успеть создать чек и провести операцию в
+        // UDS. Локальной очереди чеков в мобильной кассе нет, поэтому молча
+        // повторять нельзя — задвоится и чек, и списание баллов.
+        showWarningToast(tr('uds_offline_check_cheque'));
+      } else {
+        showDangerToast(_udsErrorText(error));
+        if (error.unavailable) showWarningToast(tr('uds_sell_without_loyalty'));
+      }
+      return null;
+    }
+  }
+
   void _searchLoyaltyUser() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
@@ -700,6 +930,9 @@ class CashboxModel extends ChangeNotifier {
     loyaltyInfoController.dispose();
     loyaltyBalanceController.dispose();
     loyaltyAwardController.dispose();
+    udsSearchController.dispose();
+    udsPointsController.dispose();
+    _udsDebounce?.cancel();
     _debounce?.cancel();
     super.dispose();
   }

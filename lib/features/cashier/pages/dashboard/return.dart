@@ -5,10 +5,13 @@ import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
 import 'package:flutter_mdokon/features/cashier/domain/return_marking.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_preview_sheet.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/return_marking_sheet.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
@@ -279,7 +282,8 @@ class _ReturnState extends State<Return> {
     if (!confirmed || !mounted) return;
 
     setState(() => sending = true);
-    final response = await post('/services/desktop/api/cheque-returned', _payload());
+    final payload = _payload();
+    final response = await post('/services/desktop/api/cheque-returned', payload);
     if (!mounted) return;
 
     setState(() => sending = false);
@@ -289,7 +293,25 @@ class _ReturnState extends State<Return> {
     if (!ok) return;
 
     showSuccessToast(context.tr('return_completed_successfully'));
+    await _printReturn(payload);
+    if (!mounted) return;
     _reset();
+  }
+
+  /// Чек возврата печатается только по настройке: бумагу на него тратят не
+  /// все точки, а сам возврат уже подтверждён сервером.
+  Future<void> _printReturn(Map<String, dynamic> payload) async {
+    if (!context.read<SettingsModel>().printReturnCheque) return;
+
+    await context.read<PrinterModel>().printReturnReceipt(
+          {
+            'posName': cashbox['posName'],
+            'cashierName': cheque['cashierName'],
+            'chequeNumber': cheque['chequeNumber'],
+          },
+          payload['itemsList'] as List,
+          _refundAmount,
+        );
   }
 
   /// Штучное количество отправляем целым числом — таким его ждёт бэкенд
@@ -390,7 +412,7 @@ class _ReturnState extends State<Return> {
     );
   }
 
-  /// Раскладка «чек слева — позиции справа» для планшета и моноблока.
+  /// Раскладка «чек слева — позиции справа» для планшета.
   Widget _splitLayout() {
     final layout = context.layout;
 
@@ -440,10 +462,10 @@ class _ReturnState extends State<Return> {
 
   Widget _headerShell(Widget child) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок берём от палитры: прибитая к светлой теме, она делала
+      // статус-бар тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(

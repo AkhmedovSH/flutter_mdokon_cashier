@@ -42,6 +42,8 @@ dependencies:
   in_app_update: ^4.2.3
   url_launcher: ^6.0.18
   package_info_plus: ^10.2.1
+  # Папка логов кассы на устройстве (lib/core/utils/logger.dart)
+  path_provider: ^2.1.5
 
   flutter_spinkit: ^5.1.0
 
@@ -72,6 +74,7 @@ dependencies:
   http: ^1.6.0
   # SHA1-подпись запросов Click Pass / Uzum
   crypto: ^3.0.6
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:

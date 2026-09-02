@@ -47,6 +47,14 @@ class _AppState extends State<App> {
             theme: lightTheme,
             darkTheme: darkTheme,
             routerConfig: globalRouter,
+            // Большинство экранов читает цвета из статического `AppColors`, а не
+            // через `Theme.of(context)`, поэтому смена темы сама по себе их не
+            // перестраивала: старый экран оставался в прежних цветах до
+            // перехода на другой. Ключ по теме пересобирает всё дерево сразу.
+            builder: (context, child) => KeyedSubtree(
+              key: ValueKey(themeModel.isDark),
+              child: child ?? const SizedBox.shrink(),
+            ),
           );
         },
       ),

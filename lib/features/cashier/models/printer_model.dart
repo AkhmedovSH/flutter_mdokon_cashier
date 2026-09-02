@@ -5,10 +5,20 @@ import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/utils/permissions.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+
+/// Причина, по которой поиск принтера не начался.
+enum BluetoothScanFailure {
+  unsupported,
+  permissionDenied,
+  permissionPermanentlyDenied,
+  adapterOff,
+}
 
 class PrinterModel extends ChangeNotifier {
   GetStorage storage = GetStorage();
@@ -30,6 +40,17 @@ class PrinterModel extends ChangeNotifier {
     });
   }
 
+  /// Настройки печати. Читаем из хранилища напрямую, а не через
+  /// [SettingsModel]: печать вызывается из моделей и репозиториев, где
+  /// `BuildContext` не всегда есть. Значения туда пишет [SettingsModel] —
+  /// плоским ключом и в карту `settings` одновременно.
+  bool _flag(String key) {
+    final value = storage.read(key);
+    if (value is bool) return value;
+
+    return SettingsModel.defaults[key] == true;
+  }
+
   void setPrinterSize(dynamic value) {
     storage.write('printerSize', value);
     notifyListeners();
@@ -42,8 +63,26 @@ class PrinterModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> startScan() async {
-    if (await FlutterBluePlus.isSupported == false) return;
+  /// Почему скан не пошёл: пустой список принтеров сам по себе ничего не
+  /// объясняет, а причина почти всегда одна из трёх.
+  Future<BluetoothScanFailure?> startScan() async {
+    if (await FlutterBluePlus.isSupported == false) {
+      return BluetoothScanFailure.unsupported;
+    }
+
+    final permission = await AppPermissions.bluetooth();
+    if (!permission.isGranted) {
+      return permission.needsSettings
+          ? BluetoothScanFailure.permissionPermanentlyDenied
+          : BluetoothScanFailure.permissionDenied;
+    }
+
+    // Выключенный адаптер — самая частая причина «принтер не находится»:
+    // startScan в этом случае просто ничего не вернёт.
+    if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
+      return BluetoothScanFailure.adapterOff;
+    }
+
     scanResults.clear();
     scanSubscription?.cancel();
     scanSubscription = FlutterBluePlus.scanResults.listen((results) {
@@ -51,6 +90,8 @@ class PrinterModel extends ChangeNotifier {
       notifyListeners();
     });
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+
+    return null;
   }
 
   Future<void> stopScan() async {
@@ -82,17 +123,18 @@ class PrinterModel extends ChangeNotifier {
     }
   }
 
-  Future<void> printFullCheque(Map cheque, List itemsList) async {
+  /// Печать чека продажи.
+  ///
+  /// [copies] задаётся явно только для повторной печати; при обычной продаже
+  /// число экземпляров решает настройка `print2cheques`.
+  Future<void> printFullCheque(Map cheque, List itemsList, {int? copies}) async {
     if (selectedDevice == null) return;
+    // «Принтер сломан» — способ доработать смену без печати: чек пробивается,
+    // бумага не тратится.
+    if (_flag('printerBroken')) return;
 
     final profile = await CapabilityProfile.load(name: 'default');
-    PaperSize paperSize = PaperSize.mm80;
-    if (printerSize == '384') {
-      paperSize = PaperSize.mm58;
-    } else if (printerSize == '512') {
-      paperSize = PaperSize.mm72;
-    }
-    final generator = Generator(paperSize, profile);
+    final generator = Generator(_paperSize(), profile);
     List<int> bytes = [];
     final cashboxSettings = storage.read('cashboxSettings');
     final chequeSettings = cashboxSettings['chequeSettings'];
@@ -210,10 +252,107 @@ class PrinterModel extends ChangeNotifier {
       bytes += generator.text("${chequeSettings['promo_text_cheque']}", styles: const PosStyles(align: PosAlign.center));
     }
 
+    // 7. Штрих-код и QR чека — по настройкам печати
+    bytes += _chequeCodes(generator, cheque);
+
+    bytes += generator.feed(1);
+    bytes += generator.cut();
+
+    final count = copies ?? (_flag('print2cheques') ? 2 : 1);
+    for (var i = 0; i < count; i++) {
+      await _sendBytesToDevice(bytes);
+    }
+  }
+
+  /// Печать чека возврата.
+  ///
+  /// Отдельный метод, а не флаг у [printFullCheque]: у возврата нет оплат и
+  /// скидки, зато обязательна крупная шапка — по ней возвратный чек отличают
+  /// от продажного, когда оба лежат в одной пачке.
+  Future<void> printReturnReceipt(Map cheque, List itemsList, num total) async {
+    if (selectedDevice == null) return;
+    if (_flag('printerBroken')) return;
+
+    final profile = await CapabilityProfile.load(name: 'default');
+    final generator = Generator(_paperSize(), profile);
+    var bytes = <int>[];
+
+    bytes += generator.reset();
+    bytes += generator.setGlobalCodeTable('CP866');
+
+    bytes += generator.text(
+      "${cheque['posName'] ?? ''}",
+      styles: const PosStyles(align: PosAlign.center, bold: true),
+    );
+    bytes += generator.text(
+      'QAYTARISH / VOZVRAT',
+      styles: const PosStyles(
+        align: PosAlign.center,
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+        bold: true,
+      ),
+      linesAfter: 1,
+    );
+
+    bytes += _getChequeRow(generator, 'Kassir', '${cheque['cashierName'] ?? ''}');
+    bytes += _getChequeRow(generator, 'Chek ID', '${cheque['chequeNumber'] ?? ''}');
+    bytes += _getChequeRow(generator, 'Sana', formatUnixTime(getUnixTime()));
+    bytes += generator.hr(ch: '*');
+
+    final cfg = tableConfigForPaper(int.parse(printerSize));
+    bytes += await tableDivider(generator, cfg);
+    for (var i = 0; i < itemsList.length; i++) {
+      final item = itemsList[i] as Map;
+      final quantity = customNumber(item['quantity']);
+      final price = customNumber(item['salePrice']);
+
+      bytes += await tableLine(
+        generator,
+        cfg,
+        '${i + 1}. ${item['productName']}',
+        '${formatMoney(quantity)}x${formatMoney(price, decimalDigits: 0)}',
+        formatMoney(quantity * price),
+      );
+    }
+    bytes += await tableDivider(generator, cfg);
+
+    bytes += _getChequeRow(generator, 'Qaytarildi', formatMoney(total), bold: true);
+    bytes += generator.hr(ch: '*', linesAfter: 1);
     bytes += generator.feed(1);
     bytes += generator.cut();
 
     await _sendBytesToDevice(bytes);
+  }
+
+  PaperSize _paperSize() {
+    if (printerSize == '384') return PaperSize.mm58;
+    if (printerSize == '512') return PaperSize.mm72;
+
+    return PaperSize.mm80;
+  }
+
+  /// Штрих-код номера чека и QR со ссылкой на него.
+  ///
+  /// QR печатаем только если сервер вернул ссылку: рисовать его из номера чека
+  /// бессмысленно — сканировать будет нечего.
+  List<int> _chequeCodes(Generator generator, Map cheque) {
+    var bytes = <int>[];
+
+    final number = '${cheque['chequeNumber'] ?? ''}'.trim();
+    if (_flag('showBarcode') && number.isNotEmpty) {
+      bytes += generator.barcode(
+        Barcode.code128(number.split('')),
+        align: PosAlign.center,
+      );
+    }
+
+    final url = '${cheque['qrcodeURL'] ?? cheque['QRCodeURL'] ?? ''}'.trim();
+    if (_flag('showQrCode') && url.isNotEmpty) {
+      bytes += generator.qrcode(url, align: PosAlign.center, size: QRSize.size6);
+    }
+
+    return bytes;
   }
 
   Future<img.Image?> _decodeNetworkImage(String url) async {
@@ -255,7 +394,7 @@ class PrinterModel extends ChangeNotifier {
     bool bold = false,
   }) async {
     final nameLines = wrapText(name, cfg.name);
-    final bytes = <int>[];
+    var bytes = <int>[];
 
     for (int i = 0; i < nameLines.length; i++) {
       final rawLine =

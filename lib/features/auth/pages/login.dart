@@ -90,7 +90,7 @@ class _LoginState extends State<Login> {
     final bool split = layout.size >= AppScreenSize.expanded;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.brandSurface,
       resizeToAvoidBottomInset: false,
       body: AuthBackground(
         child: SafeArea(
@@ -398,7 +398,7 @@ class _SupportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onDark = AppColors.onPrimary.withValues(alpha: 0.85);
+    final onDark = AppColors.onBrandSurface.withValues(alpha: 0.85);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -411,7 +411,7 @@ class _SupportRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.onPrimary,
+              color: AppColors.onBrandSurface,
             ),
           ),
         ),

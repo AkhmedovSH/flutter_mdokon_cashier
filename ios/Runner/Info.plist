@@ -22,7 +22,11 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>NSCameraUsageDescription</key>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth нужен для подключения к чековому принтеру</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth нужен для подключения к чековому принтеру</string>
+	<key>NSCameraUsageDescription</key>
 		<string>Камера нужна для сканирования штрих-кодов и кодов маркировки товаров</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>

@@ -4,13 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
+import 'package:flutter_mdokon/core/theme/app_typography.dart';
 
 const list = [];
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final int titleCount;
-  final TextStyle titleStyle;
+
+  /// Если не задан — берётся стиль заголовка активной темы. Раньше здесь стоял
+  /// `const TextStyle` без цвета: на тёмной теме заголовок оставался чёрным.
+  final TextStyle? titleStyle;
   final List<Widget>? actions;
   final bool leading;
 
@@ -18,10 +22,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.titleCount = 0,
-    this.titleStyle = const TextStyle(
-      fontWeight: FontWeight.w700,
-      fontSize: 24,
-    ),
+    this.titleStyle,
     this.leading = false,
     this.actions,
   });
@@ -33,16 +34,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: Colors.black.withValues(alpha: 0.3),
-            width: 0.33,
-          ),
+          bottom: BorderSide(color: AppColors.border, width: 0.33),
         ),
       ),
       child: AppBar(
         title: Text(
           '${context.tr(title)} ${titleCount > 0 ? '[$titleCount]' : ''}',
-          style: titleStyle,
+          style: titleStyle ??
+              AppText.h1.copyWith(fontSize: 24, fontWeight: FontWeight.w700),
         ),
         leading: leading
             ? IconButton(

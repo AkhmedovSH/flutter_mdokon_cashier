@@ -1,7 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/utils/permissions.dart';
 import 'package:vibration/vibration.dart';
 
 /// Сканер штрих-кодов и кодов маркировки на камере устройства.
@@ -24,20 +25,22 @@ class BarcodeScannerPage extends StatefulWidget {
   /// Разрешение спрашивается здесь же: до `Navigator.push` его нет смысла
   /// откладывать, а каждый вызывающий экран повторял этот код у себя.
   static Future<String?> scan(BuildContext context, {String? title}) async {
-    final granted = await _ensureCameraPermission();
-    if (!granted || !context.mounted) return null;
+    final outcome = await AppPermissions.camera();
+    if (!context.mounted) return null;
+    if (!outcome.isGranted) {
+      // Молчаливый отказ выглядел как «кнопка не работает»: объясняем причину,
+      // а после «Больше не спрашивать» сразу открываем настройки приложения.
+      showDangerToast(
+        context.tr('camera_access_denied'),
+        description: outcome.needsSettings ? context.tr('permission_open_settings') : '',
+      );
+      if (outcome.needsSettings) await AppPermissions.openSettings();
+      return null;
+    }
 
     return Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (_) => BarcodeScannerPage(title: title)),
     );
-  }
-
-  static Future<bool> _ensureCameraPermission() async {
-    var status = await Permission.camera.status;
-    if (status.isGranted) return true;
-    if (status.isPermanentlyDenied) return false;
-    status = await Permission.camera.request();
-    return status.isGranted;
   }
 
   @override
@@ -189,7 +192,7 @@ class _ScannerError extends StatelessWidget {
               if (denied) ...[
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: openAppSettings,
+                  onPressed: AppPermissions.openSettings,
                   child: Text(context.tr('settings')),
                 ),
               ],

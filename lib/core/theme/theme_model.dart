@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
@@ -33,7 +34,15 @@ class ThemeModel with ChangeNotifier {
     if (_isDark == value) return;
     _isDark = value;
     AppColors.use(value);
+    applySystemOverlayStyle();
     storage.write('isDarkTheme', value);
     notifyListeners();
+  }
+
+  /// Перекрасить системные панели под активную палитру. Экраны без `AppBar`
+  /// свой стиль не задают, поэтому без этого вызова статус-бар и панель
+  /// навигации оставались от прежней темы.
+  static void applySystemOverlayStyle() {
+    SystemChrome.setSystemUIOverlayStyle(systemOverlayStyleFor(AppColors.palette));
   }
 }

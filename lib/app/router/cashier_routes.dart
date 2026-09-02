@@ -9,6 +9,8 @@ import 'package:flutter_mdokon/features/cashier/pages/payment/payment_sample.dar
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/x_report.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/balance.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/settings.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/whats_new.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/logs.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/quick_selection.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/quick_selection_picker.dart';
 
@@ -58,6 +60,14 @@ List<RouteBase> cashiers = [
   GoRoute(
     path: '/profile/settings',
     pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Settings()),
+  ),
+  GoRoute(
+    path: '/profile/whats-new',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, WhatsNew()),
+  ),
+  GoRoute(
+    path: '/profile/logs',
+    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Logs()),
   ),
   GoRoute(
     path: '/return',

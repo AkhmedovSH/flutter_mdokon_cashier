@@ -27,7 +27,7 @@ class CashBoxes extends StatelessWidget {
     final auth = context.watch<AuthModel>();
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.brandSurface,
       body: AuthBackground(
         child: SafeArea(
           child: Padding(

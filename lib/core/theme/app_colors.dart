@@ -32,6 +32,15 @@ class AppPalette {
   final Color primarySoft;
   final Color primaryTint;
 
+  /// Фон крупных фирменных заливок: шапка продажи, блок «К оплате», экраны
+  /// входа. Отдельный токен, потому что [primary] в тёмной теме осветлён под
+  /// контраст мелких элементов — целая шапка таким цветом становится светлым
+  /// пятном на тёмном экране.
+  final Color brandSurface;
+
+  /// Текст и иконки на [brandSurface] — светлый в обеих темах.
+  final Color onBrandSurface;
+
   // Поверхности
   final Color canvas;
   final Color surface;
@@ -75,6 +84,8 @@ class AppPalette {
     required this.primaryDark,
     required this.primarySoft,
     required this.primaryTint,
+    required this.brandSurface,
+    required this.onBrandSurface,
     required this.canvas,
     required this.surface,
     required this.border,
@@ -108,6 +119,8 @@ class AppPalette {
     primaryDark: Color(0xFF4A4FD1),
     primarySoft: Color(0xFFEEF0FE),
     primaryTint: Color(0xFFDDE0FD),
+    brandSurface: Color(0xFF5B60E8),
+    onBrandSurface: Color(0xFFFFFFFF),
     canvas: Color(0xFFF4F6FB),
     surface: Color(0xFFFFFFFF),
     border: Color(0xFFE3E8F3),
@@ -144,6 +157,10 @@ class AppPalette {
     primaryDark: Color(0xFF7C82F2),
     primarySoft: Color(0xFF1F2337),
     primaryTint: Color(0xFF2B3050),
+    // Приглушённый индиго вместо осветлённого акцента: белый текст на нём даёт
+    // 9:1, и шапка остаётся тёмной, как и весь экран.
+    brandSurface: Color(0xFF3A3F8F),
+    onBrandSurface: Color(0xFFFFFFFF),
     canvas: Color(0xFF0F1117),
     surface: Color(0xFF171A23),
     border: Color(0xFF262B38),
@@ -199,6 +216,20 @@ class AppColors {
   static Color get primaryDark => _palette.primaryDark;
   static Color get primarySoft => _palette.primarySoft;
   static Color get primaryTint => _palette.primaryTint;
+  static Color get brandSurface => _palette.brandSurface;
+  static Color get onBrandSurface => _palette.onBrandSurface;
+
+  /// Фон светлого чипа НА фирменной плашке (активная вкладка, бейдж «оплачено»).
+  ///
+  /// Плашка [brandSurface] тёмная в обеих темах, поэтому чипы на ней от темы не
+  /// зависят: `surface` здесь давал в тёмной теме тёмный чип с тёмным текстом.
+  static Color get brandChip => _palette.onBrandSurface;
+
+  /// Текст на [brandChip] — только светлая палитра, чип всегда белый.
+  static Color get onBrandChip => AppPalette.light.textPrimary;
+
+  /// Успех на [brandChip] (бейдж «оплачено»).
+  static Color get brandChipSuccess => AppPalette.light.successText;
 
   // Поверхности
   static Color get canvas => _palette.canvas;

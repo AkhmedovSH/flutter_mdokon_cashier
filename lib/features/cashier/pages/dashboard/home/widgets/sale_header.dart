@@ -32,12 +32,12 @@ class SaleHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        statusBarColor: AppColors.primary,
+        statusBarColor: AppColors.brandSurface,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
       child: Container(
-        color: AppColors.primary,
+        color: AppColors.brandSurface,
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -61,7 +61,7 @@ class SaleHeader extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppText.bodyMedium.copyWith(
-                          color: AppColors.onPrimary,
+                          color: AppColors.onBrandSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -73,9 +73,9 @@ class SaleHeader extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             height: 1.4,
-                            color: AppColors.onPrimary,
+                            color: AppColors.onBrandSurface,
                             fontFeatures: AppText.tabularFigures,
-                          ).copyWith(color: AppColors.onPrimary.withValues(alpha: 0.8)),
+                          ).copyWith(color: AppColors.onBrandSurface.withValues(alpha: 0.8)),
                         ),
                     ],
                   ),
@@ -109,7 +109,7 @@ class _HeaderIcon extends StatelessWidget {
         child: SizedBox(
           width: AppDimens.tapTarget,
           height: AppDimens.tapTarget,
-          child: Icon(icon, size: 22, color: AppColors.onPrimary),
+          child: Icon(icon, size: 22, color: AppColors.onBrandSurface),
         ),
       ),
     );
@@ -128,13 +128,13 @@ class _Avatar extends StatelessWidget {
       height: 40,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.onPrimary.withValues(alpha: 0.18),
+        color: AppColors.onBrandSurface.withValues(alpha: 0.18),
         borderRadius: AppDimens.control,
       ),
       child: Text(
         initials,
         style: AppText.bodyMedium.copyWith(
-          color: AppColors.onPrimary,
+          color: AppColors.onBrandSurface,
           fontWeight: FontWeight.w600,
         ),
       ),

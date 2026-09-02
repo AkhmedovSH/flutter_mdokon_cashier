@@ -43,6 +43,14 @@ class PaymentUiState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Закрывает свою клавиатуру. `false` — она и так была скрыта.
+  bool closePad() {
+    if (!_padOpen) return false;
+    _padOpen = false;
+    notifyListeners();
+    return true;
+  }
+
   /// При смене вкладки поля обнуляются — активным снова становится первый способ.
   void reset() {
     _activeIndex = 0;
@@ -72,10 +80,6 @@ class PaymentHero extends StatelessWidget {
   /// Подпись под суммой: «Чек X · внесено Y».
   final String subtitle;
 
-  /// Бейдж справа: процент сбора либо «готово».
-  final String badge;
-  final bool done;
-
   /// Переключатель вкладок под суммой.
   final Widget tabs;
 
@@ -85,8 +89,6 @@ class PaymentHero extends StatelessWidget {
     required this.value,
     required this.currency,
     required this.subtitle,
-    required this.badge,
-    required this.done,
     required this.tabs,
   });
 
@@ -96,8 +98,8 @@ class PaymentHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: AppColors.primary,
-      padding: EdgeInsets.fromLTRB(layout.gutter, 14, layout.gutter, 14),
+      color: AppColors.brandSurface,
+      padding: EdgeInsets.fromLTRB(layout.gutter, 10, layout.gutter, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -113,7 +115,7 @@ class PaymentHero extends StatelessWidget {
                       label.toUpperCase(),
                       style: AppText.caption.copyWith(
                         letterSpacing: 0.88,
-                        color: AppColors.onPrimary.withValues(alpha: 0.75),
+                        color: AppColors.onBrandSurface.withValues(alpha: 0.75),
                       ),
                     ),
                     const SizedBox(height: AppDimens.gap4),
@@ -131,7 +133,7 @@ class PaymentHero extends StatelessWidget {
                                 fontSize: layout.scaled(38),
                                 height: 1,
                                 letterSpacing: -1.14,
-                                color: AppColors.onPrimary,
+                                color: AppColors.onBrandSurface,
                               ),
                             ),
                           ),
@@ -140,29 +142,12 @@ class PaymentHero extends StatelessWidget {
                         Text(
                           currency,
                           style: AppText.secondary.copyWith(
-                            color: AppColors.onPrimary.withValues(alpha: 0.7),
+                            color: AppColors.onBrandSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: AppDimens.gap8),
-              Container(
-                height: 30,
-                padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: done ? AppColors.surface : AppColors.onPrimary.withValues(alpha: 0.18),
-                  borderRadius: AppDimens.pill,
-                ),
-                child: Text(
-                  badge,
-                  style: AppText.tabular(AppText.small).copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: done ? AppColors.successText : AppColors.onPrimary,
-                  ),
                 ),
               ),
             ],
@@ -171,12 +156,12 @@ class PaymentHero extends StatelessWidget {
           Text(
             subtitle,
             style: AppText.tabular(AppText.small).copyWith(
-              color: AppColors.onPrimary.withValues(alpha: 0.75),
+              color: AppColors.onBrandSurface.withValues(alpha: 0.75),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppDimens.gap12),
           tabs,
         ],
       ),
@@ -200,7 +185,10 @@ class PaymentHeroTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.surface : AppColors.onPrimary.withValues(alpha: 0.18),
+      // Активная вкладка — светлый чип на тёмной плашке. Раньше здесь стоял
+      // `surface`: в тёмной теме он тёмный, и активная вкладка становилась
+      // тёмной плашкой с почти не видимым тёмным текстом.
+      color: selected ? AppColors.brandChip : AppColors.onBrandSurface.withValues(alpha: 0.18),
       borderRadius: AppDimens.pill,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -216,7 +204,7 @@ class PaymentHeroTab extends StatelessWidget {
             style: AppText.small.copyWith(
               fontWeight: FontWeight.w600,
               letterSpacing: 0.36,
-              color: selected ? AppColors.primary : AppColors.onPrimary,
+              color: selected ? AppColors.onBrandChip : AppColors.onBrandSurface,
             ),
           ),
         ),
@@ -501,6 +489,9 @@ class PaymentAmountBar extends StatelessWidget {
 
     final item = _types[_index];
     final bool empty = customNumber(item['amount']) <= 0;
+    // Пока системная клавиатура на экране (в том числе пока она уезжает),
+    // свою не рисуем: вдвоём они не помещаются по высоте, и панель обрезалась.
+    final bool padVisible = ui.padOpen && MediaQuery.of(context).viewInsets.bottom == 0;
 
     return _wrapper(context, body: [
       Row(
@@ -557,7 +548,12 @@ class PaymentAmountBar extends StatelessWidget {
             size: 34,
             iconSize: 18,
             pill: true,
-            onPressed: ui.togglePad,
+            // Снимаем фокус в обе стороны: иначе поле оставалось активным и
+            // системная клавиатура всплывала сама, стоило закрыть свою.
+            onPressed: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              ui.togglePad();
+            },
           ),
           const SizedBox(width: 6),
           AppButton(
@@ -579,7 +575,7 @@ class PaymentAmountBar extends StatelessWidget {
           ),
         ],
       ),
-      if (ui.padOpen) ...[
+      if (padVisible) ...[
         const SizedBox(height: 10),
         SizedBox(
           height: 32,

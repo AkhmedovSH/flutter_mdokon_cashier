@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_preview_sheet.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
@@ -37,7 +38,7 @@ class _ChequesState extends State<Cheques> {
   List cheques = [];
   List visible = [];
 
-  /// Чек, открытый в правой колонке (планшет и моноблок).
+  /// Чек, открытый в правой колонке (планшет).
   Map? selected;
 
   @override
@@ -282,10 +283,10 @@ class _ChequesState extends State<Cheques> {
     final chips = _chips;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок берём от палитры: прибитая к светлой теме, она делала
+      // статус-бар тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(

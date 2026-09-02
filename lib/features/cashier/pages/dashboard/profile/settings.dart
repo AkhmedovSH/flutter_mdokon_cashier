@@ -1,7 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_mdokon/core/utils/permissions.dart';
 import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
@@ -9,12 +10,13 @@ import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/utils/logger.dart';
 import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:flutter_mdokon/shared/widgets/dialogs.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
 /// Раздел настроек — он же чип-фильтр в шапке.
-enum _Section { general, cashbox, print }
+enum _Section { general, cashbox, scales, print, postpone }
 
 /// Тип контрола в строке настройки.
 enum _Control {
@@ -26,6 +28,9 @@ enum _Control {
 
   /// Числовое значение с шагом ±1 (знаки после запятой).
   stepper,
+
+  /// Число вводом с клавиатуры (префиксы весов — двузначные).
+  number,
 
   /// Сегменты «Светлая / Тёмная».
   theme,
@@ -50,6 +55,16 @@ class _Item {
   final double min;
   final double max;
 
+  /// Настройка, которую нельзя держать включённой вместе с этой.
+  final String? exclusive;
+
+  /// Показывать ли строку вообще (право кассира, режим кассы).
+  final bool Function()? showWhen;
+
+  /// Строка видна, но выключена — когда её значение ни на что не влияет.
+  /// Аргумент — текущий черновик настроек.
+  final bool Function(Map<String, dynamic> draft)? disabled;
+
   const _Item({
     required this.key,
     required this.titleKey,
@@ -60,6 +75,9 @@ class _Item {
     this.options = const [],
     this.min = 0,
     this.max = 0,
+    this.exclusive,
+    this.showWhen,
+    this.disabled,
   });
 }
 
@@ -89,10 +107,17 @@ class _SettingsState extends State<Settings> {
   Map<String, dynamic> _draft = {};
 
   String _query = '';
+
+  /// Растёт при «Сбросить» — по нему пересоздаются поля ввода, иначе в них
+  /// остаётся отменённый текст.
+  int _resetToken = 0;
   _Section? _activeSection;
   bool _saving = false;
 
-  static const List<_Item> _items = [
+  /// Схема настроек. Порядок разделов и номера повторяют десктопную кассу
+  /// (`src/components/settings/settingsSections.js`), чтобы кассир, привыкший
+  /// к десктопной кассе, находил пункт по тому же номеру.
+  static final List<_Item> _items = [
     _Item(
       key: 'theme',
       titleKey: 'appearance_theme',
@@ -101,12 +126,21 @@ class _SettingsState extends State<Settings> {
       control: _Control.theme,
     ),
     _Item(
+      key: 'verboseLog',
+      titleKey: 'settings_logs_verbose',
+      descKey: 'settings_logs_verbose_desc',
+      section: _Section.general,
+      control: _Control.toggle,
+    ),
+    _Item(
       key: 'locale',
       titleKey: 'interface_language',
       descKey: 'settings_description_2',
       section: _Section.general,
       control: _Control.select,
     ),
+
+    // --- 1. Касса ---------------------------------------------------------
     _Item(
       key: 'changeCurrencyOnSale',
       num: '1.1',
@@ -125,9 +159,123 @@ class _SettingsState extends State<Settings> {
       min: 0,
       max: 5,
     ),
+    // Подтверждения удаления показываем только тому, кто вообще может удалять
+    // позиции — иначе настройка ни на что не влияет.
+    _Item(
+      key: 'showConfirmModalDeleteItem',
+      num: '1.3',
+      titleKey: 'show_confirmation_modal_item',
+      descKey: 'setting_text15',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+      showWhen: _canDeleteItems,
+    ),
+    _Item(
+      key: 'showConfirmModalDeleteAllItems',
+      num: '1.4',
+      titleKey: 'show_confirmation_modal_all',
+      descKey: 'setting_text16',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+      showWhen: _canDeleteItems,
+    ),
+    _Item(
+      key: 'showLastScannedProduct',
+      num: '1.5',
+      titleKey: 'show_last_scanned_product',
+      descKey: 'setting_text18',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'productGrouping',
+      num: '1.6',
+      titleKey: 'product_grouping',
+      descKey: 'product_grouping_text',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'showProductOutOfStock',
+      num: '1.7',
+      titleKey: 'show_product_out_of_stock',
+      descKey: 'setting_text19',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'searchExact',
+      num: '1.8',
+      titleKey: 'exact_search',
+      descKey: 'exact_search_text',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'amountExceedsLimit',
+      num: '1.9',
+      titleKey: 'amount_exceeds_limit',
+      descKey: 'setting_text21',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+    _Item(
+      key: 'accountingBalance',
+      num: '1.10',
+      titleKey: 'accounting_balance',
+      descKey: 'accounting_balance_text',
+      section: _Section.cashbox,
+      control: _Control.toggle,
+    ),
+
+    // --- 2. Весы ----------------------------------------------------------
+    _Item(
+      key: 'barcodeFormat',
+      num: '2.1',
+      titleKey: 'barcode_format',
+      descKey: 'setting_text6',
+      section: _Section.scales,
+      control: _Control.select,
+      options: [
+        MapEntry('5', 'Формат 7 / Format 7'),
+        MapEntry('6', 'Формат 6 / Format 6'),
+      ],
+    ),
+    _Item(
+      key: 'weightPrefix',
+      num: '2.2',
+      titleKey: 'weight_prefix',
+      descKey: 'setting_text7',
+      section: _Section.scales,
+      control: _Control.number,
+      min: 0,
+      max: 99,
+    ),
+    _Item(
+      key: 'piecePrefix',
+      num: '2.3',
+      titleKey: 'piece_prefix',
+      descKey: 'setting_text8',
+      section: _Section.scales,
+      control: _Control.number,
+      min: 0,
+      max: 99,
+    ),
+    _Item(
+      key: 'finalPrefix',
+      num: '2.4',
+      titleKey: 'final_prefix',
+      descKey: 'setting_text9',
+      section: _Section.scales,
+      control: _Control.number,
+      min: 0,
+      max: 99,
+    ),
+
+    // --- 3. Печать --------------------------------------------------------
     _Item(
       key: 'printer',
-      num: '2.1',
+      num: '3.1',
       titleKey: 'settings_title_7',
       descKey: 'settings_description_7',
       section: _Section.print,
@@ -135,7 +283,7 @@ class _SettingsState extends State<Settings> {
     ),
     _Item(
       key: 'printerSize',
-      num: '2.2',
+      num: '3.2',
       titleKey: 'receipt_print_width',
       descKey: 'receipt_print_width_description',
       section: _Section.print,
@@ -146,21 +294,91 @@ class _SettingsState extends State<Settings> {
         MapEntry('384', '58 mm'),
       ],
     ),
+    // «Принтер сломан» глушит всю печать, поэтому остальные пункты раздела при
+    // включённом флаге показываем выключенными, а не молча бездействующими.
     _Item(
       key: 'printAfterSale',
-      num: '2.3',
+      num: '3.3',
       titleKey: 'settings_title_8',
       descKey: 'settings_description_8',
       section: _Section.print,
       control: _Control.toggle,
+      disabled: _printerOff,
+    ),
+    _Item(
+      key: 'print2cheques',
+      num: '3.4',
+      titleKey: 'print_2_cheques',
+      descKey: 'print_2_cheques_text',
+      section: _Section.print,
+      control: _Control.toggle,
+      disabled: _printerOff,
+    ),
+    _Item(
+      key: 'printReturnCheque',
+      num: '3.5',
+      titleKey: 'print_return_cheque',
+      descKey: 'print_return_cheque_text',
+      section: _Section.print,
+      control: _Control.toggle,
+      disabled: _printerOff,
+    ),
+    _Item(
+      key: 'showBarcode',
+      num: '3.6',
+      titleKey: 'show_barcode',
+      descKey: 'setting_text22',
+      section: _Section.print,
+      control: _Control.toggle,
+      disabled: _printerOff,
+    ),
+    _Item(
+      key: 'showQrCode',
+      num: '3.7',
+      titleKey: 'show_qr',
+      descKey: 'setting_text23',
+      section: _Section.print,
+      control: _Control.toggle,
+      disabled: _printerOff,
+    ),
+    _Item(
+      key: 'printerBroken',
+      num: '3.8',
+      titleKey: 'printer_problems',
+      descKey: 'setting_text13',
+      section: _Section.print,
+      control: _Control.toggle,
+    ),
+
+    // --- 4. Отложенные чеки ----------------------------------------------
+    _Item(
+      key: 'postponeOnline',
+      num: '4.1',
+      titleKey: 'postpone_online',
+      descKey: 'postpone_online_text',
+      section: _Section.postpone,
+      control: _Control.toggle,
+      exclusive: 'postponeOffline',
+    ),
+    _Item(
+      key: 'postponeOffline',
+      num: '4.2',
+      titleKey: 'postpone_offline',
+      descKey: 'postpone_offline_text',
+      section: _Section.postpone,
+      control: _Control.toggle,
+      exclusive: 'postponeOnline',
     ),
   ];
+
+  static bool _canDeleteItems() => checkRole('CASHBOX_DELETE_SCAN_ITEM');
+
+  static bool _printerOff(Map<String, dynamic> draft) => draft['printerBroken'] == true;
 
   @override
   void initState() {
     super.initState();
     _readCurrentValues();
-    _requestBluetoothPermissions();
   }
 
   @override
@@ -169,29 +387,17 @@ class _SettingsState extends State<Settings> {
     super.dispose();
   }
 
-  /// Сканирование принтеров без этих разрешений возвращает пустой список,
-  /// поэтому спрашиваем их на входе, а не в момент нажатия.
-  Future<void> _requestBluetoothPermissions() async {
-    await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-  }
-
   void _readCurrentValues() {
     final settings = context.read<SettingsModel>();
     final printer = context.read<PrinterModel>();
     final locale = context.read<LocaleModel>();
 
     _saved = {
-      'theme': settings.theme,
+      ...settings.values,
+      // Локаль и ширина чека живут не в SettingsModel: первая в easy_localization,
+      // вторая в PrinterModel рядом с самим подключением.
       'locale': locale.localeName,
-      'changeCurrencyOnSale': settings.changeCurrencyOnSale,
-      'decimalDigits': settings.decimalDigits,
       'printerSize': printer.printerSize,
-      'printAfterSale': settings.printAfterSale,
     };
     _draft = Map.of(_saved);
   }
@@ -200,15 +406,28 @@ class _SettingsState extends State<Settings> {
 
   void _set(String key, dynamic value) => setState(() => _draft[key] = value);
 
+  /// Переключить флаг, погасив парную настройку: `postponeOnline` и
+  /// `postponeOffline` одновременно включёнными смысла не имеют.
+  void _toggle(_Item item) {
+    final value = !(_draft[item.key] == true);
+    setState(() {
+      _draft[item.key] = value;
+      final other = item.exclusive;
+      if (value && other != null) _draft[other] = false;
+    });
+  }
+
   // --- Список -------------------------------------------------------------
 
   /// Настройки, прошедшие поиск (но ещё не фильтр по разделу) — по ним же
   /// считаются числа на чипах, чтобы пустых разделов в шапке не оставалось.
   List<_Item> get _found {
-    final query = _query.trim().toLowerCase();
-    if (query.isEmpty) return _items;
+    final available = _items.where((item) => item.showWhen?.call() ?? true).toList();
 
-    return _items.where((item) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return available;
+
+    return available.where((item) {
       final haystack = [
         item.num,
         context.tr(item.titleKey),
@@ -233,7 +452,9 @@ class _SettingsState extends State<Settings> {
   String _sectionTitle(_Section section) => switch (section) {
         _Section.general => context.tr('general'),
         _Section.cashbox => context.tr('cashbox'),
+        _Section.scales => context.tr('libra'),
         _Section.print => context.tr('print'),
+        _Section.postpone => context.tr('postponed_cheques'),
       };
 
   /// Описание точности сумм показывает пример прямо с черновым значением,
@@ -255,9 +476,31 @@ class _SettingsState extends State<Settings> {
 
   // --- Действия -----------------------------------------------------------
 
+  /// Разрешения спрашиваем здесь, а не на входе в настройки: кассир открывает
+  /// этот экран ради десятка других переключателей, и системный диалог про
+  /// Bluetooth при первом же заходе выглядел необоснованным.
   Future<void> _pickPrinter() async {
     final printer = context.read<PrinterModel>();
-    printer.startScan();
+    final failure = await printer.startScan();
+    if (!mounted) return;
+
+    if (failure != null) {
+      showDangerToast(
+        context.tr(switch (failure) {
+          BluetoothScanFailure.adapterOff => 'printer_bluetooth_off',
+          BluetoothScanFailure.unsupported => 'printer_bluetooth_unsupported',
+          _ => 'permission_bluetooth_denied',
+        }),
+        description: failure == BluetoothScanFailure.permissionPermanentlyDenied
+            ? context.tr('permission_open_settings')
+            : '',
+      );
+      if (failure == BluetoothScanFailure.permissionPermanentlyDenied) {
+        await AppPermissions.openSettings();
+      }
+      return;
+    }
+
     await showPrinterPicker(context);
   }
 
@@ -266,6 +509,7 @@ class _SettingsState extends State<Settings> {
     setState(() {
       _draft = Map.of(_saved);
       _query = '';
+      _resetToken++;
     });
   }
 
@@ -275,22 +519,26 @@ class _SettingsState extends State<Settings> {
 
     final settings = context.read<SettingsModel>();
 
-    for (final key in const [
-      'changeCurrencyOnSale',
-      'decimalDigits',
-      'printAfterSale',
-    ]) {
-      if (_saved[key] != _draft[key]) settings.updateSetting(key, _draft[key]);
-    }
+    // Всё, что знает SettingsModel, уезжает одним пакетом: иначе каждый
+    // переключатель перестраивал бы кассу отдельным notifyListeners().
+    settings.updateAll({
+      for (final key in settings.values.keys)
+        if (_saved[key] != _draft[key]) key: _draft[key],
+    });
 
     if (_saved['printerSize'] != _draft['printerSize']) {
       context.read<PrinterModel>().setPrinterSize(_draft['printerSize']);
     }
 
+    // «Расширенный лог» логгер держит полем — после сохранения перечитываем,
+    // иначе уровень debug остался бы в прежнем состоянии до перезапуска.
+    if (_saved['verboseLog'] != _draft['verboseLog']) {
+      appLog.refreshVerbose();
+      appLog.info('log.verbose_changed', {'enabled': _draft['verboseLog'] == true});
+    }
+
     if (_saved['theme'] != _draft['theme']) {
-      final dark = _draft['theme'] == true;
-      context.read<ThemeModel>().setDark(dark);
-      settings.updateSetting('theme', dark);
+      context.read<ThemeModel>().setDark(_draft['theme'] == true);
     }
 
     if (_saved['locale'] != _draft['locale']) {
@@ -544,17 +792,20 @@ class _SettingsState extends State<Settings> {
 
   Widget _row(_Item item) {
     final isTheme = item.control == _Control.theme;
+    final off = item.disabled?.call(_draft) ?? false;
 
-    return AppCard(
+    final card = AppCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimens.gap12,
         vertical: 10,
       ),
-      onTap: item.control == _Control.toggle
-          ? () => _set(item.key, !(_draft[item.key] == true))
-          : item.control == _Control.printer
-              ? _pickPrinter
-              : null,
+      onTap: off
+          ? null
+          : item.control == _Control.toggle
+              ? () => _toggle(item)
+              : item.control == _Control.printer
+                  ? _pickPrinter
+                  : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -564,7 +815,7 @@ class _SettingsState extends State<Settings> {
               Expanded(child: _titleBlock(item)),
               if (!isTheme) ...[
                 const SizedBox(width: AppDimens.gap12),
-                _control(item),
+                _control(item, enabled: !off),
               ],
             ],
           ),
@@ -575,6 +826,10 @@ class _SettingsState extends State<Settings> {
         ],
       ),
     );
+
+    // Выключенную настройку не прячем: кассир должен видеть, что пункт есть, и
+    // понимать, почему он сейчас не работает.
+    return off ? Opacity(opacity: 0.45, child: card) : card;
   }
 
   Widget _titleBlock(_Item item) {
@@ -606,7 +861,7 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  Widget _control(_Item item) {
+  Widget _control(_Item item, {bool enabled = true}) {
     switch (item.control) {
       case _Control.toggle:
         return Transform.scale(
@@ -616,14 +871,14 @@ class _SettingsState extends State<Settings> {
             value: _draft[item.key] == true,
             activeThumbColor: AppColors.onPrimary,
             activeTrackColor: AppColors.primary,
-            onChanged: (value) => _set(item.key, value),
+            onChanged: enabled ? (value) => _toggle(item) : null,
           ),
         );
 
       case _Control.select:
         return _SelectButton(
           label: _selectLabel(item),
-          onTap: () => _openSelect(item),
+          onTap: enabled ? () => _openSelect(item) : null,
         );
 
       case _Control.stepper:
@@ -631,6 +886,17 @@ class _SettingsState extends State<Settings> {
           value: customNumber(_draft[item.key]).round(),
           min: item.min.round(),
           max: item.max.round(),
+          onChanged: (value) => _set(item.key, value.toDouble()),
+        );
+
+      case _Control.number:
+        return _NumberField(
+          // Ключ по значению настройки: иначе поле не подхватит «Сбросить».
+          key: ValueKey('${item.key}_$_resetToken'),
+          value: customNumber(_draft[item.key]).round(),
+          min: item.min.round(),
+          max: item.max.round(),
+          enabled: enabled,
           onChanged: (value) => _set(item.key, value.toDouble()),
         );
 
@@ -773,7 +1039,7 @@ class _SettingsState extends State<Settings> {
 class _SelectButton extends StatelessWidget {
   final String label;
   final IconData? icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _SelectButton({required this.label, required this.onTap, this.icon});
 
@@ -931,6 +1197,69 @@ class _ThemeOption extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Двузначное число вводом с клавиатуры — префиксы весового штрих-кода.
+///
+/// Степпер здесь не годится: до 25 пришлось бы жать двадцать пять раз.
+/// Значение выходит наружу уже приведённым к диапазону, чтобы в настройках не
+/// оседал префикс из трёх цифр.
+class _NumberField extends StatefulWidget {
+  final int value;
+  final int min;
+  final int max;
+  final bool enabled;
+  final ValueChanged<int> onChanged;
+
+  const _NumberField({
+    super.key,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    this.enabled = true,
+  });
+
+  @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final TextEditingController _controller =
+      TextEditingController(text: '${widget.value}');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handle(String raw) {
+    // Пустое поле не трогает настройку: кассир стёр цифры, чтобы ввести новые.
+    if (raw.isEmpty) return;
+    final parsed = int.tryParse(raw);
+    if (parsed == null) return;
+    widget.onChanged(parsed.clamp(widget.min, widget.max));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 72,
+      child: AppInput(
+        controller: _controller,
+        enabled: widget.enabled,
+        height: 34,
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter('${widget.max}'.length),
+        ],
+        fill: AppColors.canvas,
+        onChanged: _handle,
       ),
     );
   }

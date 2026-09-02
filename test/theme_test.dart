@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/app_typography.dart';
 import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/utils/helper.dart';
 
 /// Контраст по WCAG 2.1 — тот же расчёт, которым подбиралась палитра.
 ///
@@ -109,11 +110,83 @@ void main() {
         expect(_contrast(p.onPrimary, p.primary), greaterThanOrEqualTo(threshold));
       });
 
+      test('$name: текст на фирменной заливке читается, а сама она тёмная', () {
+        expect(_contrast(p.onBrandSurface, p.brandSurface), greaterThanOrEqualTo(threshold));
+        // Шапка продажи и блок «К оплате» занимают полэкрана: они должны быть
+        // темнее текста на них в обеих темах, иначе в тёмной теме это светлое
+        // пятно (regression: там стоял осветлённый primary).
+        expect(p.brandSurface.computeLuminance(), lessThan(0.3));
+      });
+
       test('$name: семантический текст читается на своей плашке', () {
         expect(_contrast(p.dangerText, p.dangerSoft), greaterThanOrEqualTo(threshold));
         expect(_contrast(p.successText, p.successSoft), greaterThanOrEqualTo(threshold));
         expect(_contrast(p.warningText, p.warningSoft), greaterThanOrEqualTo(threshold));
       });
+
+      test('$name: текст тоста читается на всех вариантах плашки', () {
+        for (final background in [p.toast, p.dangerText, p.warningText]) {
+          expect(
+            _contrast(toastForeground(background), background),
+            greaterThanOrEqualTo(threshold),
+          );
+        }
+      });
     }
+  });
+
+  group('чипы на фирменной плашке', () {
+    // Регрессия: активная вкладка «Оплата» красилась в `surface`, а он в тёмной
+    // теме тёмный — тёмный текст на тёмном чипе поверх тёмной плашки.
+    for (final dark in [false, true]) {
+      test('светлый чип и читаемый текст при isDark=$dark', () {
+        AppColors.use(dark);
+
+        expect(_contrast(AppColors.onBrandChip, AppColors.brandChip), greaterThanOrEqualTo(4.5));
+        expect(_contrast(AppColors.brandChipSuccess, AppColors.brandChip), greaterThanOrEqualTo(4.5));
+        expect(_contrast(AppColors.brandChip, AppColors.brandSurface), greaterThanOrEqualTo(4.5));
+      });
+    }
+  });
+
+  group('тема не зависит от активной палитры', () {
+    // Регрессия: стили `AppText` берут цвет из активной палитры, а `MaterialApp`
+    // собирает light и dark за один проход — тёмная тема получала чёрный текст
+    // заголовков, пока активной оставалась светлая.
+    test('заголовок AppBar тёмной темы светлый даже при активной светлой', () {
+      AppColors.use(false);
+      final theme = buildAppTheme(AppPalette.dark);
+
+      expect(theme.appBarTheme.titleTextStyle?.color, AppPalette.dark.textPrimary);
+      expect(theme.textTheme.bodyLarge?.color, AppPalette.dark.textPrimary);
+    });
+
+    test('заголовок AppBar светлой темы тёмный даже при активной тёмной', () {
+      AppColors.use(true);
+      final theme = buildAppTheme(AppPalette.light);
+
+      expect(theme.appBarTheme.titleTextStyle?.color, AppPalette.light.textPrimary);
+      expect(theme.textTheme.bodyLarge?.color, AppPalette.light.textPrimary);
+    });
+  });
+
+  group('системные панели', () {
+    test('иконки статус-бара инвертированы относительно фона', () {
+      expect(
+        systemOverlayStyleFor(AppPalette.dark).statusBarIconBrightness,
+        Brightness.light,
+      );
+      expect(
+        systemOverlayStyleFor(AppPalette.light).statusBarIconBrightness,
+        Brightness.dark,
+      );
+    });
+
+    test('панель навигации красится в поверхность палитры', () {
+      expect(
+        systemOverlayStyleFor(AppPalette.dark).systemNavigationBarColor,
+        AppPalette.dark.surface,
+      );
+    });
   });
 }

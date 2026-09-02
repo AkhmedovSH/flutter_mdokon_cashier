@@ -16,7 +16,9 @@ import 'package:unicons/unicons.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/home.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheques.dart';
 
+import 'package:go_router/go_router.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/whats_new.dart';
 
 class CashierDashboard extends StatefulWidget {
   const CashierDashboard({
@@ -29,6 +31,20 @@ class CashierDashboard extends StatefulWidget {
 
 class _CashierDashboardState extends State<CashierDashboard> {
   final GetStorage _storage = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    // «Что нового» показывается один раз на версию и только после того, как
+    // касса уже открылась: перебивать вход кассира списком изменений нельзя.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showWhatsNew());
+  }
+
+  Future<void> _showWhatsNew() async {
+    if (!await shouldShowWhatsNew()) return;
+    if (!mounted) return;
+    context.push('/cashier/profile/whats-new');
+  }
 
   /// Кассир для верхней навигации: имя и фамилия, иначе логин.
   String get _cashierName {
@@ -74,7 +90,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
             const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),
           ];
 
-          // На широком экране разделы переезжают в шапку: низ моноблока и
+          // На широком экране разделы переезжают в шапку: низ планшета и
           // планшета кассир руками не достаёт.
           final topNav = context.layout.useTopNav;
 

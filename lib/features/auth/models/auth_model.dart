@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'package:flutter_mdokon/core/utils/logger.dart';
+import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/features/auth/data/auth_repository.dart';
 import 'package:flutter_mdokon/features/auth/models/auth_roles.dart';
@@ -117,19 +119,12 @@ class AuthModel extends ChangeNotifier {
     rememberMe = true;
   }
 
-  /// Дефолтные настройки при первом запуске.
+  /// Дефолтные настройки при первом запуске. Список один на всё приложение —
+  /// [SettingsModel.defaults]; дублировать его здесь было нечем, кроме как
+  /// расхождениями.
   void ensureDefaultSettings() {
     if (storage.read('settings') != null) return;
-    storage.write('settings', {
-      'showChequeProducts': false,
-      'printAfterSale': false,
-      'searchGroupProducts': false,
-      'selectUserAftersale': false,
-      'offlineDeferment': false,
-      'additionalInfo': false,
-      'language': false,
-      'theme': false,
-    });
+    storage.write('settings', Map<String, dynamic>.from(SettingsModel.defaults));
   }
 
   // --- Сценарий --------------------------------------------------------
@@ -148,6 +143,7 @@ class AuthModel extends ChangeNotifier {
     try {
       return isOtpStep ? await _confirmOtp() : await _signIn();
     } catch (e) {
+      appLog.exception('auth.submit_failed', e);
       _fail('Не удалось войти. Попробуйте ещё раз');
       return null;
     } finally {
@@ -269,6 +265,11 @@ class AuthModel extends ChangeNotifier {
         'defaultCurrencyName': cashbox['defaultCurrency'] == 2 ? 'USD' : "So'm",
         'hidePriceIn': pos['hidePriceIn'],
         'loyaltyApi': pos['loyaltyApi'],
+        // UDS — вторая программа лояльности. Ключи лежат на сервере, кассе
+        // нужно знать только, подключена ли она на точке: от этого зависит
+        // вкладка «UDS» в оплате.
+        'udsEnabled': pos['udsEnabled'] == true,
+        'udsCompanyId': pos['udsCompanyId'],
         'saleMinus': pos['saleMinus'],
         'posId': pos['posId'],
         'posName': pos['posName'],

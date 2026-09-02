@@ -363,11 +363,15 @@ class AppChip extends StatelessWidget {
                 Icon(icon, size: 16, color: foreground),
                 const SizedBox(width: 6),
               ],
-              Text(
-                label,
-                style: AppText.secondaryBold.copyWith(color: foreground),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              // Подпись ужимаем: чип часто стоит в Expanded (например ряд
+              // быстрых сроков), и на узком экране длинное слово выпирало.
+              Flexible(
+                child: Text(
+                  label,
+                  style: AppText.secondaryBold.copyWith(color: foreground),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

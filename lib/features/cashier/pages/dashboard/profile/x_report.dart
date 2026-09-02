@@ -91,7 +91,9 @@ class _XReportState extends State<XReport> {
 
     storage.remove('user');
     if (response['success'] && mounted) {
-      printXReport(zReport: true);
+      // Печать Z-отчёта при закрытии смены — право Z_REPORT (desktop:
+      // `Titlebar.js`). Без него смена закрывается молча.
+      if (checkRole('Z_REPORT')) printXReport(zReport: true);
       Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
       context.pushReplacement('/auth');
     }
@@ -588,6 +590,7 @@ class _XReportState extends State<XReport> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             children: [
+              if (checkRole('X_REPORT'))
               Expanded(
                 flex: 2,
                 child: SizedBox(
@@ -609,7 +612,7 @@ class _XReportState extends State<XReport> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              if (checkRole('X_REPORT')) const SizedBox(width: 10),
               Expanded(
                 child: SizedBox(
                   height: 48,

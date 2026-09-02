@@ -4,9 +4,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'package:flutter_mdokon/core/utils/logger.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/data/postponed_cheque_repository.dart';
 import 'package:flutter_mdokon/features/cashier/data/sale_repository.dart';
+import 'package:flutter_mdokon/features/cashier/data/supplier_debt_repository.dart';
 import 'package:flutter_mdokon/features/cashier/domain/manual_discount.dart';
+import 'package:flutter_mdokon/features/cashier/domain/postponed_cheque.dart';
+import 'package:flutter_mdokon/features/cashier/domain/sale_tabs.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
 
@@ -48,6 +53,19 @@ enum SaleShortcut {
   /// Операции, доступные из меню чека. Количество меняется степпером,
   /// упаковка — диалогом при добавлении товара.
   static const menu = [price, discountPercent, discountLine, discountAmount];
+
+  /// Разрешена ли операция текущему пользователю. Как в desktop-кассе
+  /// (`Tab.js`): смена цены закрыта ролью CASHBOX_CHANGE_SALE_PRICE, любые
+  /// скидки — CASHBOX_DISCOUNT.
+  bool get allowed => switch (this) {
+        price => checkRole('CASHBOX_CHANGE_SALE_PRICE'),
+        discountPercent || discountLine || discountAmount => checkRole('CASHBOX_DISCOUNT'),
+        _ => true,
+      };
+
+  /// Пункты меню чека, оставшиеся после проверки ролей.
+  static List<SaleShortcut> get allowedMenu =>
+      menu.where((shortcut) => shortcut.allowed).toList();
 }
 
 /// Состояние экрана продажи: корзина, скидки, быстрые операции,
@@ -57,12 +75,18 @@ enum SaleShortcut {
 /// рисует состояние и реагирует на возвращённые флаги.
 class SaleModel extends ChangeNotifier {
   final SaleRepository repository;
+  final PostponedChequeRepository postponedRepository;
+  final SupplierDebtRepository supplierRepository;
   final GetStorage storage;
 
   SaleModel({
     SaleRepository? repository,
+    PostponedChequeRepository? postponedRepository,
+    SupplierDebtRepository? supplierRepository,
     GetStorage? storage,
   })  : repository = repository ?? const SaleRepository(),
+        postponedRepository = postponedRepository ?? const PostponedChequeRepository(),
+        supplierRepository = supplierRepository ?? const SupplierDebtRepository(),
         storage = storage ?? GetStorage();
 
   // --- Чек ---------------------------------------------------------------
@@ -157,6 +181,10 @@ class SaleModel extends ChangeNotifier {
     if (isAgent && returnCheque != null && returnCheque.isNotEmpty) {
       data = Map.from(returnCheque);
     }
+
+    // Вкладка №1 создана до `init()` со своим пустым чеком — привязываем её к
+    // тому, который модель набирает на самом деле.
+    _syncActiveTab();
 
     notifyListeners();
     await loadExpenses();
@@ -351,6 +379,16 @@ class SaleModel extends ChangeNotifier {
   }
 
   void deleteLine(int index) {
+    // Удаление позиции — первое, что спрашивают при разборе «чек не сошёлся»,
+    // поэтому уровень audit, а не debug.
+    final line = index >= 0 && index < items.length ? items[index] : null;
+    if (line != null) {
+      appLog.audit('sale.line_deleted', {
+        'name': '${line['name'] ?? ''}',
+        'quantity': line['quantity'],
+        'price': line['price'],
+      });
+    }
     if (items.length == 1) {
       clearCheque();
       return;
@@ -361,6 +399,9 @@ class SaleModel extends ChangeNotifier {
 
   /// Полный сброс чека с сохранением валюты и режима цены.
   void clearCheque() {
+    if (items.isNotEmpty) {
+      appLog.audit('sale.cheque_cleared', {'lines': items.length});
+    }
     final user = storage.read('user') ?? {};
     data = emptyCheque(
       currencyId: data['currencyId'],
@@ -369,7 +410,75 @@ class SaleModel extends ChangeNotifier {
       ..['cashierLogin'] = user['login']
       ..['cashierName'] = '${user['firstName'] ?? ''}';
     shortcutValue = '';
+    _syncActiveTab();
     notifyListeners();
+  }
+
+  // --- Вкладки чеков -----------------------------------------------------
+
+  /// Параллельно набираемые чеки. Только планшет: на телефоне панель вкладок
+  /// не рисуется, и состояние так и остаётся из одной вкладки.
+  SaleTabsState _tabs = initialSaleTabs(emptyCheque());
+  SaleTabsState get tabs => _tabs;
+
+  int get activeTabId => _tabs.activeId;
+  bool get canAddTab => _tabs.canAdd;
+  bool get canCloseTab => _tabs.canClose;
+
+  /// Новая вкладка с пустым чеком. Валюта и режим цены переносятся из
+  /// текущего чека — кассир выбрал их для этой смены, а не для этого чека.
+  void addTab() {
+    if (!_tabs.canAdd) return;
+    final user = storage.read('user') ?? {};
+    final blank = emptyCheque(
+      currencyId: data['currencyId'],
+      activePrice: data['activePrice'],
+    )
+      ..['cashierLogin'] = user['login']
+      ..['cashierName'] = '${user['firstName'] ?? ''}';
+
+    _tabs = addSaleTab(_tabs, data, blank);
+    _openActiveTab();
+  }
+
+  void switchTab(int id) {
+    final next = switchSaleTab(_tabs, id, data);
+    if (identical(next, _tabs)) return;
+    _tabs = next;
+    _openActiveTab();
+  }
+
+  /// Закрыть вкладку. Набранный в ней чек пропадает — подтверждение
+  /// спрашивает UI, модель молча выполняет.
+  void closeTab(int id) {
+    final wasActive = id == _tabs.activeId;
+    final next = closeSaleTab(_tabs, id, data);
+    if (identical(next, _tabs)) return;
+    _tabs = next;
+    if (wasActive) {
+      _openActiveTab();
+    } else {
+      notifyListeners();
+    }
+  }
+
+  /// Чек активной вкладки становится текущим.
+  void _openActiveTab() {
+    data = _tabs.active.cheque;
+    shortcutValue = '';
+    _recalculate();
+  }
+
+  /// Снимок текущего чека во вкладке. Зовётся там, где `data` подменяется
+  /// целиком (сброс чека, открытие отложенного): иначе вкладка держала бы
+  /// ссылку на карту, которой в модели больше нет.
+  void _syncActiveTab() {
+    _tabs = SaleTabsState(
+      tabs: [
+        for (final tab in _tabs.tabs) tab.id == _tabs.activeId ? tab.copyWith(cheque: data) : tab,
+      ],
+      activeId: _tabs.activeId,
+    );
   }
 
   /// Ручная скидка на чек, заданная кассиром (F5 — процент, F6 — сумма).
@@ -830,6 +939,218 @@ class SaleModel extends ChangeNotifier {
       final ok = await repository.createClient(payload);
       if (ok) await loadClients();
       return ok;
+    } finally {
+      _setBusy(false);
+    }
+  }
+
+  // --- Отложенные чеки ---------------------------------------------------
+
+  /// Открытый сейчас список отложенных.
+  List<PostponedCheque> postponed = [];
+
+  /// Выбранная строка списка или -1.
+  int postponedIndex = -1;
+
+  PostponedCheque? get selectedPostponed =>
+      postponedIndex < 0 || postponedIndex >= postponed.length ? null : postponed[postponedIndex];
+
+  /// Офлайновый список из хранилища устройства.
+  List get _storedPostponed {
+    final raw = storage.read(postponedStorageKey);
+    return raw is List ? List.from(raw) : [];
+  }
+
+  /// Отложить текущий чек.
+  ///
+  /// Куда — решает настройка: `postponeOnline` кладёт чек на сервер точки,
+  /// `postponeOffline` — в хранилище устройства. Настройки взаимоисключающие,
+  /// поэтому режим приходит сюда уже выбранным.
+  Future<bool> postponeCheque(PostponeStore store) async {
+    if (_busy) return false;
+    if (!canPostpone(data)) {
+      showDangerToast('cheque_is_empty'.tr());
+      return false;
+    }
+
+    _setBusy(true);
+    try {
+      final snapshot = postponedSnapshot(data, createdDate: DateTime.now().millisecondsSinceEpoch);
+
+      if (store == PostponeStore.offline) {
+        storage.write(postponedStorageKey, [..._storedPostponed, snapshot]);
+      } else {
+        final ok = await postponedRepository.save(posId: cashbox['posId'], cheque: snapshot);
+        if (!ok) return false;
+      }
+      clearCheque();
+      return true;
+    } finally {
+      _setBusy(false);
+    }
+  }
+
+  /// Загрузить список отложенных чеков выбранного источника.
+  Future<void> loadPostponed(PostponeStore store) async {
+    postponedIndex = -1;
+    postponed = switch (store) {
+      PostponeStore.offline => parseStoredList(_storedPostponed),
+      PostponeStore.online => await postponedRepository.list(cashbox['posId']),
+      PostponeStore.cloud => await postponedRepository.cloud(cashbox['posId']),
+    };
+    notifyListeners();
+  }
+
+  void selectPostponed(int index) {
+    postponedIndex = postponedIndex == index ? -1 : index;
+    notifyListeners();
+  }
+
+  /// Открыть выбранный чек в корзине.
+  ///
+  /// Онлайновый и облачный чеки на сервере остаются: их удалит продажа по
+  /// `chequeOnlineId`. Офлайновый уходит из хранилища сразу — второго места,
+  /// где он мог бы закрыться, нет.
+  bool openPostponed() {
+    final selected = selectedPostponed;
+    if (selected == null) {
+      showDangerToast('choose_cheque'.tr());
+      return false;
+    }
+    if (!currencyMatches(selected.cheque, cashbox['defaultCurrency'])) {
+      showDangerToast('different_currencies'.tr());
+      return false;
+    }
+
+    data = restorePostponed(
+      selected.cheque,
+      cashbox: cashbox,
+      user: storage.read('user') ?? {},
+      shiftId: _shiftId,
+      source: selected.id == null ? null : selected,
+    );
+    shortcutValue = '';
+    _syncActiveTab();
+
+    if (selected.id == null) _removeStoredPostponed(postponedIndex);
+    postponed = List.of(postponed)..removeAt(postponedIndex);
+    postponedIndex = -1;
+
+    _recalculate();
+    return true;
+  }
+
+  /// Удалить выбранный чек, не открывая.
+  Future<bool> deletePostponed() async {
+    final selected = selectedPostponed;
+    if (selected == null) {
+      showDangerToast('choose_cheque'.tr());
+      return false;
+    }
+
+    if (selected.id != null) {
+      final ok = await postponedRepository.remove(selected.id);
+      if (!ok) return false;
+    } else {
+      _removeStoredPostponed(postponedIndex);
+    }
+
+    postponed = List.of(postponed)..removeAt(postponedIndex);
+    postponedIndex = -1;
+    notifyListeners();
+    return true;
+  }
+
+  void _removeStoredPostponed(int index) {
+    final stored = _storedPostponed;
+    if (index < 0 || index >= stored.length) return;
+    storage.write(postponedStorageKey, stored..removeAt(index));
+  }
+
+  // --- Взаиморасчёт с поставщиками ---------------------------------------
+
+  List allSuppliers = [];
+  List suppliers = [];
+  int supplierIndex = -1;
+  Map supplierPayment = {'amount': '', 'note': ''};
+
+  Map? get selectedSupplier =>
+      supplierIndex < 0 || supplierIndex >= suppliers.length ? null : suppliers[supplierIndex] as Map;
+
+  /// Сброс формы выдачи — при открытии и закрытии листа.
+  void resetSupplierForm() {
+    supplierIndex = -1;
+    supplierPayment = {'amount': '', 'note': ''};
+    notifyListeners();
+  }
+
+  Future<void> loadSuppliers() async {
+    // После выдачи список перечитывается — выделение переносим на того же
+    // поставщика, чтобы кассир увидел его новый остаток, а не потерял строку.
+    final keep = selectedSupplier?['organizationId'];
+    final response = await supplierRepository.list(cashbox['posId']);
+    allSuppliers = List.from(response);
+    suppliers = List.from(response);
+    supplierIndex = keep == null
+        ? -1
+        : suppliers.indexWhere((e) => '${e['organizationId']}' == '$keep');
+    notifyListeners();
+  }
+
+  void searchSuppliers(String query) {
+    final value = query.trim().toLowerCase();
+    final selected = selectedSupplier;
+    suppliers = value.isEmpty
+        ? List.from(allSuppliers)
+        : allSuppliers.where((supplier) {
+            final name = '${supplier['organizationName'] ?? ''}'.toLowerCase();
+            final phone = '${supplier['phone'] ?? ''}'.toLowerCase();
+            return name.contains(value) || phone.contains(value);
+          }).toList();
+    // Выделение держим на самом поставщике, а не на позиции в списке: после
+    // фильтра индексы разъезжаются, и кассир выдал бы деньги не тому.
+    supplierIndex = selected == null ? -1 : suppliers.indexOf(selected);
+    notifyListeners();
+  }
+
+  void selectSupplier(int index) {
+    supplierIndex = supplierIndex == index ? -1 : index;
+    notifyListeners();
+  }
+
+  void setSupplierField(String key, String value) {
+    supplierPayment[key] = value;
+    notifyListeners();
+  }
+
+  bool get canPaySupplier =>
+      selectedSupplier != null && customNumber(supplierPayment['amount']) > 0 && !_busy;
+
+  /// Выдача денег поставщику. Долг гасится и деньги списываются из ящика одной
+  /// операцией — обычным расходом провести это нельзя, долг остался бы висеть.
+  Future<bool> paySupplier() async {
+    if (!canPaySupplier) return false;
+    final supplier = selectedSupplier!;
+
+    _setBusy(true);
+    try {
+      final result = await supplierRepository.pay({
+        'posId': cashbox['posId'],
+        'cashboxId': cashbox['cashboxId'],
+        'shiftId': _shiftId,
+        'organizationId': supplier['organizationId'],
+        'currencyId': supplier['currencyId'],
+        'note': '${supplierPayment['note'] ?? ''}',
+        'amountOut': customNumber(supplierPayment['amount']),
+      });
+      if (!result.ok) {
+        if (result.message.isNotEmpty) showDangerToast(result.message);
+        return false;
+      }
+      supplierPayment = {'amount': '', 'note': ''};
+      // Строка остаётся выделенной — кассир видит новый остаток.
+      await loadSuppliers();
+      return true;
     } finally {
       _setBusy(false);
     }

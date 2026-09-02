@@ -8,6 +8,7 @@ import 'package:syncfusion_flutter_barcodes/barcodes.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/printer_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/cheques/cheque_preview_sheet.dart';
@@ -143,10 +144,10 @@ class _ChequeDetailState extends State<ChequeDetail> {
     ].where((e) => e.isNotEmpty).join(' · ');
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок берём от палитры: прибитая к светлой теме, она делала
+      // статус-бар тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(

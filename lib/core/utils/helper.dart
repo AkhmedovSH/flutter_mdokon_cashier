@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mdokon/core/state/filter_model.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/app_typography.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/shared/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -51,15 +52,9 @@ Color get danger => AppColors.danger;
 Color get a2 => AppColors.iconMuted;
 Color get b8 => AppColors.textSecondary;
 
-const systemOverlayStyleLight = SystemUiOverlayStyle(
-  statusBarIconBrightness: Brightness.light,
-  statusBarColor: Colors.transparent,
-);
-
-const systemOverlayStyleDark = SystemUiOverlayStyle(
-  statusBarIconBrightness: Brightness.dark,
-  statusBarColor: Colors.transparent,
-);
+/// Системные панели под активную палитру. Обычным экранам это ставит тема
+/// (`appBarTheme.systemOverlayStyle`); константа нужна там, где `AppBar` нет.
+SystemUiOverlayStyle get systemOverlayStyle => systemOverlayStyleFor(AppColors.palette);
 
 BoxShadow get boxShadow => AppDimens.cardShadow.first;
 
@@ -258,8 +253,19 @@ double customNumber(dynamic value) {
   return 0;
 }
 
-/// Тост дизайн-системы: тёмная плашка #1B2138 (для ошибки/предупреждения —
-/// dangerText / warningText), белый текст, радиус 12, высота 48, снизу.
+/// Цвет текста на плашке тоста.
+///
+/// Плашка бывает и тёмной (нейтральный тост), и светлой (в тёмной теме
+/// `dangerText` / `warningText` — осветлённые), поэтому цвет текста считаем от
+/// самой плашки. Раньше здесь стоял `onPrimary`, который в тёмной теме тёмный —
+/// текст на тёмном тосте становился нечитаемым.
+Color toastForeground(Color background) =>
+    ThemeData.estimateBrightnessForColor(background) == Brightness.dark
+        ? const Color(0xFFFFFFFF)
+        : const Color(0xFF10121A);
+
+/// Тост дизайн-системы: плашка `AppColors.toast` (для ошибки/предупреждения —
+/// dangerText / warningText), контрастный текст, радиус 12, высота 48, снизу.
 void _showToast(
   dynamic message, {
   required Color background,
@@ -268,21 +274,23 @@ void _showToast(
   dynamic description = "",
   Duration duration = const Duration(seconds: 3),
 }) {
+  final Color foreground = toastForeground(background);
+
   toastification.show(
     title: Text(
       '$message',
-      style: AppText.body.copyWith(color: AppColors.onPrimary),
+      style: AppText.body.copyWith(color: foreground),
     ),
     description: '$description'.isNotEmpty
         ? Text(
             '$description',
-            style: AppText.small.copyWith(color: AppColors.onPrimary.withValues(alpha: 0.72)),
+            style: AppText.small.copyWith(color: foreground.withValues(alpha: 0.72)),
           )
         : null,
-    icon: Icon(icon, color: AppColors.onPrimary),
+    icon: Icon(icon, color: foreground),
     primaryColor: background,
     backgroundColor: background,
-    foregroundColor: AppColors.onPrimary,
+    foregroundColor: foreground,
     animationDuration: AppDimens.fast,
     autoCloseDuration: duration,
     type: type,
@@ -333,13 +341,21 @@ void showWarningToast(dynamic message, {dynamic description = ""}) {
 
 /// Тост с действием: компактная плашка и кнопка отмены справа
 /// (например «Товар · добавлен» + «Убрать»).
+///
+/// [bottomInset] поднимает плашку над тем, что стоит внизу экрана (нижняя
+/// навигация кассы): лёжа прямо на панели, тост перехватывал нажатия и кассир
+/// не мог переключить раздел, пока тот не закроется.
 void showActionToast(
   BuildContext context,
   dynamic message, {
   required String actionLabel,
   required VoidCallback onAction,
   Duration duration = const Duration(seconds: 4),
+  double bottomInset = 0,
 }) {
+  final Color background = AppColors.toast;
+  final Color foreground = toastForeground(background);
+
   toastification.showCustom(
     context: context,
     alignment: Alignment.bottomCenter,
@@ -347,9 +363,14 @@ void showActionToast(
     autoCloseDuration: duration,
     builder: (context, item) => Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: AppDimens.gutter, vertical: AppDimens.gap4),
+      margin: EdgeInsets.fromLTRB(
+        AppDimens.gutter,
+        AppDimens.gap4,
+        AppDimens.gutter,
+        AppDimens.gap4 + bottomInset,
+      ),
       child: Material(
-        color: AppColors.toast,
+        color: background,
         borderRadius: AppDimens.control,
         clipBehavior: Clip.antiAlias,
         elevation: 6,
@@ -363,7 +384,7 @@ void showActionToast(
                   '$message',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppText.body.copyWith(color: AppColors.onPrimary),
+                  style: AppText.body.copyWith(color: foreground),
                 ),
               ),
               const SizedBox(width: AppDimens.gap8),
@@ -376,12 +397,12 @@ void showActionToast(
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: AppColors.onPrimary,
+                  foregroundColor: foreground,
                 ),
                 child: Text(
                   actionLabel,
                   style: AppText.small.copyWith(
-                    color: AppColors.onPrimary,
+                    color: foreground,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

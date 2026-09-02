@@ -4,8 +4,9 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_nav_bar.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 
-/// Верхняя навигация кассы для планшета и моноблока.
+/// Верхняя навигация кассы для планшета.
 ///
 /// На телефоне разделы живут в нижней панели ([CashierNavBar]) — там до них
 /// достаёт большой палец. На широком экране низ экрана далеко от рук кассира,
@@ -44,10 +45,10 @@ class CashierTopBar extends StatelessWidget {
     final layout = context.layout;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок берём от палитры: прибитая к светлой теме, она делала
+      // статус-бар тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -119,7 +120,7 @@ class _Identity extends StatelessWidget {
     final layout = context.layout;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: layout.pick(compact: 200, medium: 220, expanded: 260, large: 320)),
+      constraints: BoxConstraints(maxWidth: layout.pick(compact: 200, medium: 220, expanded: 260)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

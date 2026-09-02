@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/app_typography.dart';
@@ -14,6 +15,13 @@ import 'package:flutter_mdokon/core/theme/app_typography.dart';
 /// `ThemeModel`, он вызывает `AppColors.use()` перед сборкой темы.
 ThemeData buildAppTheme(AppPalette palette) {
   final bool dark = palette.isDark;
+
+  // Стили `AppText` берут цвет из активной палитры, а тема может собираться и
+  // для другой (`MaterialApp` строит light и dark за один проход). Поэтому цвет
+  // здесь всегда переопределяем явно — иначе тёмная тема получала бы чёрный
+  // текст заголовков, пока активна светлая.
+  TextStyle primaryText(TextStyle style) => style.copyWith(color: palette.textPrimary);
+  TextStyle secondaryText(TextStyle style) => style.copyWith(color: palette.textSecondary);
 
   OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
         borderRadius: AppDimens.control,
@@ -45,15 +53,15 @@ ThemeData buildAppTheme(AppPalette palette) {
       outlineVariant: palette.divider,
     ),
     textTheme: TextTheme(
-      displayLarge: AppText.display,
-      headlineMedium: AppText.amount,
-      titleLarge: AppText.h1,
-      titleMedium: AppText.h2,
-      bodyLarge: AppText.body,
-      bodyMedium: AppText.secondary,
-      bodySmall: AppText.small,
-      labelLarge: AppText.button,
-      labelSmall: AppText.caption,
+      displayLarge: primaryText(AppText.display),
+      headlineMedium: primaryText(AppText.amount),
+      titleLarge: primaryText(AppText.h1),
+      titleMedium: primaryText(AppText.h2),
+      bodyLarge: primaryText(AppText.body),
+      bodyMedium: secondaryText(AppText.secondary),
+      bodySmall: secondaryText(AppText.small),
+      labelLarge: AppText.button.copyWith(color: palette.onPrimary),
+      labelSmall: secondaryText(AppText.caption),
     ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: palette.primary,
@@ -66,7 +74,7 @@ ThemeData buildAppTheme(AppPalette palette) {
       // в тёмной наоборот — поле светлее фона, иначе оно сливается.
       fillColor: dark ? palette.surface : palette.canvas,
       hintStyle: AppText.body.copyWith(color: palette.iconMuted),
-      labelStyle: AppText.caption,
+      labelStyle: secondaryText(AppText.caption),
       errorStyle: AppText.small.copyWith(color: palette.dangerText),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppDimens.gap16,
@@ -85,8 +93,12 @@ ThemeData buildAppTheme(AppPalette palette) {
       foregroundColor: palette.textPrimary,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: AppText.h1,
+      titleTextStyle: primaryText(AppText.h1),
       iconTheme: IconThemeData(color: palette.textPrimary),
+      actionsIconTheme: IconThemeData(color: palette.textPrimary),
+      // Иконки статус-бара — под цвет шапки, иначе на тёмной теме они
+      // остаются тёмными и сливаются с фоном.
+      systemOverlayStyle: systemOverlayStyleFor(palette),
     ),
     datePickerTheme: DatePickerThemeData(
       backgroundColor: palette.surface,
@@ -112,7 +124,7 @@ ThemeData buildAppTheme(AppPalette palette) {
         disabledForegroundColor: palette.textSecondary,
         minimumSize: const Size(0, AppDimens.heightLarge),
         elevation: 0,
-        textStyle: AppText.button,
+        textStyle: AppText.button.copyWith(color: palette.onPrimary),
         shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
       ),
     ),
@@ -122,7 +134,7 @@ ThemeData buildAppTheme(AppPalette palette) {
         foregroundColor: palette.textPrimary,
         minimumSize: const Size(0, AppDimens.heightMedium),
         side: BorderSide(color: palette.border),
-        textStyle: AppText.secondaryBold,
+        textStyle: primaryText(AppText.secondaryBold),
         shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
       ),
     ),
@@ -130,7 +142,7 @@ ThemeData buildAppTheme(AppPalette palette) {
       style: TextButton.styleFrom(
         foregroundColor: palette.primary,
         iconColor: palette.primary,
-        textStyle: AppText.secondaryBold,
+        textStyle: AppText.secondaryBold.copyWith(color: palette.primary),
         minimumSize: const Size(0, AppDimens.tapTarget),
         shape: const RoundedRectangleBorder(borderRadius: AppDimens.control),
       ),
@@ -155,8 +167,8 @@ ThemeData buildAppTheme(AppPalette palette) {
       backgroundColor: palette.surface,
       surfaceTintColor: palette.surface,
       elevation: 0,
-      titleTextStyle: AppText.h2,
-      contentTextStyle: AppText.secondary,
+      titleTextStyle: primaryText(AppText.h2),
+      contentTextStyle: secondaryText(AppText.secondary),
       shape: const RoundedRectangleBorder(borderRadius: AppDimens.card),
     ),
     bottomSheetTheme: BottomSheetThemeData(
@@ -171,14 +183,14 @@ ThemeData buildAppTheme(AppPalette palette) {
       horizontalMargin: 10,
       dividerThickness: 1,
       headingRowColor: WidgetStateProperty.all(palette.canvas),
-      headingTextStyle: AppText.caption,
+      headingTextStyle: secondaryText(AppText.caption),
       dataRowColor: WidgetStateProperty.all(palette.surface),
-      dataTextStyle: AppText.secondaryBold,
+      dataTextStyle: primaryText(AppText.secondaryBold),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: palette.surface,
       selectedColor: palette.primary,
-      labelStyle: AppText.secondaryBold,
+      labelStyle: primaryText(AppText.secondaryBold),
       side: BorderSide(color: palette.border),
       shape: const RoundedRectangleBorder(borderRadius: AppDimens.pill),
     ),
@@ -217,3 +229,21 @@ ThemeData get lightTheme => buildAppTheme(AppPalette.light);
 
 /// Тёмная тема.
 ThemeData get darkTheme => buildAppTheme(AppPalette.dark);
+
+
+/// Стиль системных панелей (статус-бар и панель навигации) под палитру.
+///
+/// Android сам не подстраивает иконки: без этого на тёмной теме статус-бар
+/// оставался с тёмными иконками на тёмном фоне, а панель навигации — белой.
+SystemUiOverlayStyle systemOverlayStyleFor(AppPalette palette) {
+  final Brightness icons = palette.isDark ? Brightness.light : Brightness.dark;
+
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: icons,
+    statusBarBrightness: palette.brightness,
+    systemNavigationBarColor: palette.surface,
+    systemNavigationBarDividerColor: palette.border,
+    systemNavigationBarIconBrightness: icons,
+  );
+}

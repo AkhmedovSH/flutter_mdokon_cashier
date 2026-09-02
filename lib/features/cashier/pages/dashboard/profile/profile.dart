@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/auth/models/user_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/pages/payment/subscription_payment_sheet.dart';
@@ -155,23 +156,23 @@ class _ProfileState extends State<Profile> {
 
     // Слева — кто работает и что в кассе, справа — операции со сменой
     // и устройством: на широком экране это две независимые колонки.
+    // «Закрыть смену» держим рядом со сменой, а не в хвосте экрана: внизу до
+    // неё нужно было прокручивать весь список переходов.
     final identity = <Widget>[
       _userCard(user),
       if (!_isAgent) ...[
         const SizedBox(height: AppDimens.gap12),
         _shiftCard(),
+        const SizedBox(height: AppDimens.gap12),
+        AppButton.secondary(
+          label: context.tr('close_shift'),
+          onPressed: () => _open('/cashier/profile/x-report'),
+        ),
       ],
     ];
     final operations = <Widget>[
       _menuCard(),
       const SizedBox(height: AppDimens.gap16),
-      if (!_isAgent) ...[
-        AppButton.secondary(
-          label: context.tr('close_shift'),
-          onPressed: () => _open('/cashier/profile/x-report'),
-        ),
-        const SizedBox(height: AppDimens.gap8),
-      ],
       AppButton.danger(
         label: context.tr('logout'),
         onPressed: _confirmLogout,
@@ -234,10 +235,10 @@ class _ProfileState extends State<Profile> {
   /// заметить до того, как чек уйдёт в очередь.
   Widget _header() {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок — от палитры: раньше она была прибита к светлой теме,
+      // и в тёмной статус-бар оставался тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -334,15 +335,7 @@ class _ProfileState extends State<Profile> {
           Row(
             children: [
               Expanded(child: AppSectionLabel(context.tr('shift'))),
-              if (loadingReport)
-                const AppLoader(size: 18, strokeWidth: 2)
-              else
-                _StatusPill(
-                  label: context.tr('shift_opened'),
-                  background: AppColors.canvas,
-                  foreground: AppColors.textPrimary,
-                  dotColor: AppColors.success,
-                ),
+              if (loadingReport) const AppLoader(size: 18, strokeWidth: 2),
             ],
           ),
           if (meta.isNotEmpty) ...[
@@ -408,7 +401,9 @@ class _ProfileState extends State<Profile> {
   /// справа, чтобы не открывать экран ради того, что видно строкой.
   Widget _menuCard() {
     final items = <_MenuItem>[
-      if (!_isAgent)
+      // X-отчёт — отдельное право, как в desktop (`Titlebar.js`): смену
+      // кассир закрывает всегда, а вот смотреть цифры по ней может не каждый.
+      if (!_isAgent && checkRole('X_REPORT'))
         _MenuItem(
           icon: UniconsLine.clipboard_alt,
           title: context.tr('x_report'),
@@ -442,6 +437,22 @@ class _ProfileState extends State<Profile> {
         title: context.tr('subscription_pay_title'),
         value: context.tr('subscription_pay_subtitle'),
         onTap: _paySubscription,
+      ),
+      // «Что нового» — тот же список изменений, что показывается сам после
+      // обновления: кассир должен иметь возможность вернуться к нему позже.
+      _MenuItem(
+        icon: UniconsLine.megaphone,
+        title: context.tr('whats_new'),
+        value: version.isEmpty ? '' : version.split(' ').first,
+        onTap: () => _open('/cashier/profile/whats-new'),
+      ),
+      // Логи устройства — экран для поддержки: разбор инцидента постфактум,
+      // часто без интернета.
+      _MenuItem(
+        icon: UniconsLine.file_alt,
+        title: context.tr('settings_logs_title'),
+        value: '',
+        onTap: () => _open('/cashier/profile/logs'),
       ),
       _MenuItem(
         icon: UniconsLine.calling,
@@ -595,45 +606,6 @@ class _Stat extends StatelessWidget {
             style: AppText.small,
           ),
       ],
-    );
-  }
-}
-
-/// Плашка состояния: точка + подпись (связь с сервером, статус смены).
-class _StatusPill extends StatelessWidget {
-  final String label;
-  final Color background;
-  final Color foreground;
-  final Color dotColor;
-
-  const _StatusPill({
-    required this.label,
-    required this.background,
-    required this.foreground,
-    required this.dotColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 28,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(color: background, borderRadius: AppDimens.pill),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppDimens.gap8),
-          Text(
-            label,
-            style: AppText.small.copyWith(color: foreground, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
     );
   }
 }

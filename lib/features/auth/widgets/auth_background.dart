@@ -8,12 +8,14 @@ class AuthBackground extends StatelessWidget {
 
   const AuthBackground({super.key, required this.child});
 
-  static const Color _circle = Color(0xFF6A6FEC);
+  /// Круги — та же заливка, осветлённая: отдельного токена не заводим,
+  /// декорация читается только рядом с [AppColors.brandSurface].
+  static Color get _circle => Color.lerp(AppColors.brandSurface, Colors.white, 0.08)!;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.primary,
+      color: AppColors.brandSurface,
       child: Stack(
         children: [
           const Positioned(top: -130, left: -140, child: _Circle(size: 300)),
@@ -35,7 +37,7 @@ class _Circle extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AuthBackground._circle,
         shape: BoxShape.circle,
       ),
@@ -58,7 +60,7 @@ class AuthLogoHeader extends StatelessWidget {
           height: 64,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AppColors.onPrimary.withValues(alpha: 0.18),
+            color: AppColors.onBrandSurface.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(18),
           ),
           child: Text(
@@ -66,7 +68,7 @@ class AuthLogoHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w600,
-              color: AppColors.onPrimary,
+              color: AppColors.onBrandSurface,
               height: 1.1,
             ),
           ),
@@ -77,7 +79,7 @@ class AuthLogoHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: AppColors.onPrimary,
+            color: AppColors.onBrandSurface,
           ),
         ),
         const SizedBox(height: 6),
@@ -86,7 +88,7 @@ class AuthLogoHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,
-            color: AppColors.onPrimary.withValues(alpha: 0.85),
+            color: AppColors.onBrandSurface.withValues(alpha: 0.85),
           ),
         ),
       ],

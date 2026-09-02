@@ -12,7 +12,6 @@ Widget _at(Size size, Widget child) => MediaQuery(
 const _phone = Size(390, 844);
 const _tabletPortrait = Size(768, 1024);
 const _tabletLandscape = Size(1024, 768);
-const _monoblock = Size(1280, 800);
 const _phoneLandscape = Size(844, 390);
 
 void main() {
@@ -23,8 +22,7 @@ void main() {
       expect(AppLayout.sizeOf(600), AppScreenSize.medium);
       expect(AppLayout.sizeOf(1023), AppScreenSize.medium);
       expect(AppLayout.sizeOf(1024), AppScreenSize.expanded);
-      expect(AppLayout.sizeOf(1279), AppScreenSize.expanded);
-      expect(AppLayout.sizeOf(1280), AppScreenSize.large);
+      expect(AppLayout.sizeOf(1280), AppScreenSize.expanded);
     });
 
     test('на телефоне телефонная раскладка', () {
@@ -43,16 +41,13 @@ void main() {
       expect(layout.useDialogInsteadOfSheet, isTrue);
     });
 
-    test('планшет в альбоме и моноблок: три зоны на экране', () {
+    test('планшет в альбоме: три зоны на экране', () {
       const tablet = AppLayout(size: AppScreenSize.expanded, screen: _tabletLandscape);
-      const monoblock = AppLayout(size: AppScreenSize.large, screen: _monoblock);
 
       expect(tablet.hasSideRail, isTrue);
       expect(tablet.railWidth, 320);
-      expect(monoblock.hasSideRail, isTrue);
-      expect(monoblock.railWidth, 400);
-      expect(monoblock.primaryButtonHeight, 72);
-      expect(monoblock.keypadKey, 76);
+      expect(tablet.primaryButtonHeight, 64);
+      expect(tablet.keypadKey, 68);
     });
 
     test('телефон в альбоме боковую колонку не получает — не хватает высоты', () {
@@ -61,10 +56,10 @@ void main() {
     });
 
     test('pick наследует пропущенную ступень', () {
-      const large = AppLayout(size: AppScreenSize.large, screen: _monoblock);
-      expect(large.pick(compact: 1, medium: 2), 2);
-      expect(large.pick(compact: 1, medium: 2, expanded: 3), 3);
-      expect(large.pick(compact: 1, large: 4), 4);
+      const expanded = AppLayout(size: AppScreenSize.expanded, screen: _tabletLandscape);
+      expect(expanded.pick(compact: 1, medium: 2), 2);
+      expect(expanded.pick(compact: 1, medium: 2, expanded: 3), 3);
+      expect(expanded.pick(compact: 1), 1);
     });
   });
 
@@ -87,13 +82,13 @@ void main() {
       expect(find.text('колонка'), findsNothing);
     });
 
-    testWidgets('на моноблоке колонка встаёт справа', (tester) async {
-      tester.view.physicalSize = _monoblock;
+    testWidgets('на планшете в альбоме колонка встаёт справа', (tester) async {
+      tester.view.physicalSize = _tabletLandscape;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(_at(
-        _monoblock,
+        _tabletLandscape,
         const SideRailLayout(
           body: Text('чек'),
           rail: Text('колонка'),
@@ -103,9 +98,9 @@ void main() {
 
       expect(find.text('колонка'), findsOneWidget);
       expect(find.text('панель'), findsNothing);
-      // Колонка занимает правые 400 px экрана.
-      expect(tester.getSize(find.byType(SideRailLayout)).width, 1280);
-      expect(tester.getTopLeft(find.text('колонка')).dx, greaterThan(880 - 1));
+      // Колонка занимает правые 320 px экрана.
+      expect(tester.getSize(find.byType(SideRailLayout)).width, 1024);
+      expect(tester.getTopLeft(find.text('колонка')).dx, greaterThan(704 - 1));
     });
   });
 
@@ -149,13 +144,13 @@ void main() {
       expect(tester.getSize(find.byType(SizedBox)).width, 390);
     });
 
-    testWidgets('на моноблоке держит колонку 840', (tester) async {
-      tester.view.physicalSize = _monoblock;
+    testWidgets('на планшете в альбоме держит колонку 760', (tester) async {
+      tester.view.physicalSize = _tabletLandscape;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(_at(_monoblock, const ContentBox(child: SizedBox.expand())));
-      expect(tester.getSize(find.byType(SizedBox)).width, 840);
+      await tester.pumpWidget(_at(_tabletLandscape, const ContentBox(child: SizedBox.expand())));
+      expect(tester.getSize(find.byType(SizedBox)).width, 760);
     });
   });
 }

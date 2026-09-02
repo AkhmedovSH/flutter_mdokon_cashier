@@ -10,7 +10,11 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter_mdokon/core/network/api.dart';
 import 'package:flutter_mdokon/core/state/loading_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/theme/themes.dart';
+import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
+import 'package:flutter_mdokon/features/cashier/domain/product_search.dart';
+import 'package:flutter_mdokon/features/cashier/domain/scale_barcode.dart';
 import 'package:flutter_mdokon/features/cashier/domain/scanned_input.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/marking_scan.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
@@ -47,6 +51,9 @@ class _CatalogState extends State<Catalog> {
   /// именно он привязывается к позиции и задаёт её количество.
   String? _pendingMarking;
 
+  /// Количество из штрих-кода весов — им заменяется «одна штука» при добавлении.
+  double? _pendingWeight;
+
   @override
   void initState() {
     super.initState();
@@ -64,17 +71,29 @@ class _CatalogState extends State<Catalog> {
 
   // --- Данные ------------------------------------------------------------
 
-  void searchProducts(dynamic value) {
+  void searchProducts(dynamic value, {bool scanned = false}) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (!mounted) return;
+      // Настройки читаем до сетевых запросов: после await контекст трогать уже
+      // нельзя, а значения за полсекунды поиска не меняются.
+      final settings = context.read<SettingsModel>();
       setState(() {
         products = [];
       });
       Provider.of<LoadingModel>(context, listen: false).showLoader(num: 1);
       // Код маркировки ищем не как есть, а по GTIN: у карточки товара может
       // стоять как GTIN-14, так и он же без ведущих нулей — пробуем по порядку.
-      final terms = parseScannedInput(value).searchTerms;
+      var terms = parseScannedInput(value).searchTerms;
+
+      // Штрих-код весов сам по себе в базе не лежит: искать нужно код товара
+      // из его середины, а вес запомнить до добавления позиции в чек.
+      final scale = terms.isEmpty ? null : parseScaleBarcode(terms.first, _scaleSettings(settings));
+      if (scale != null) {
+        _pendingWeight = scale.quantity;
+        terms = ['${scale.productCode}'];
+      }
+
       if (terms.isNotEmpty) {
         var arr = [];
         dynamic response;
@@ -98,9 +117,15 @@ class _CatalogState extends State<Catalog> {
               arr.add(response[i]);
             }
           }
+          if (settings.searchExact) arr = applyExactSearch(arr, terms.first);
+          if (settings.productGrouping) arr = applyProductGrouping(arr);
           products = arr;
         } else if (response != null && response.length == 0) {
           products = [];
+          _pendingWeight = null;
+          // Про «ничего не найдено» сообщаем только сканированию: при наборе
+          // руками пустой список — это ещё не дописанное слово.
+          if (mounted && scanned) await _reportNotFound();
         }
         setState(() {});
       } else {
@@ -112,6 +137,31 @@ class _CatalogState extends State<Catalog> {
     });
   }
 
+  ScaleSettings _scaleSettings(SettingsModel settings) {
+    return ScaleSettings(
+      format: settings.barcodeFormat,
+      weightPrefix: settings.weightPrefix,
+      piecePrefix: settings.piecePrefix,
+    );
+  }
+
+  /// Отсканированный товар не нашёлся. Тост легко проглядеть, когда кассир
+  /// смотрит на сканер, а не на экран, — поэтому по настройке показываем окно,
+  /// которое нужно закрыть руками.
+  Future<void> _reportNotFound() async {
+    if (!context.read<SettingsModel>().showProductOutOfStock) {
+      showDangerToast(context.tr('product_out_of_stock'));
+      return;
+    }
+
+    await AppModal.error(
+      context,
+      title: context.tr('product_out_of_stock'),
+      text: context.tr('product_out_of_stock_text'),
+      confirmLabel: context.tr('clear'),
+    );
+  }
+
   Future<void> getQrCode() async {
     final result = await BarcodeScannerPage.scan(context);
     if (result == null || !mounted) return;
@@ -120,7 +170,7 @@ class _CatalogState extends State<Catalog> {
     if (scanned.raw.isEmpty) return;
     setState(() {
       _pendingMarking = scanned.marking?.code;
-      searchProducts(scanned.raw);
+      searchProducts(scanned.raw, scanned: true);
       textEditingController.text = scanned.displayTerm;
     });
     // Код маркировки проверяем параллельно поиску: ответ ЦРПТ на подбор товара
@@ -180,10 +230,32 @@ class _CatalogState extends State<Catalog> {
     }
 
     Vibration.vibrate(amplitude: 10, duration: 30);
-    if (mounted) setState(() {});
+    if (mounted) {
+      _warnAccountingBalance(products[i] as Map);
+      setState(() {});
+    }
+  }
+
+  /// Отрицательный учётный остаток означает, что товар продаётся мимо
+  /// документов прихода. Продажу это не блокирует — только предупреждает.
+  void _warnAccountingBalance(Map product) {
+    if (!context.read<SettingsModel>().accountingBalance) return;
+    if (customNumber(product['accountingBalance']) >= 0) return;
+
+    showWarningToast(context.tr('accounting_balance_negative'));
   }
 
   Future<void> addProductToList(int i, {num quantity = 1}) async {
+    // Весы уже сказали, сколько взвесили: одна «штука» тут не при чём.
+    final weight = _pendingWeight;
+    if (weight != null) {
+      _pendingWeight = null;
+      quantity = scaleQuantityFor(
+        ScaleBarcode(productCode: 0, quantity: weight, byWeight: true),
+        uomId: (products[i] as Map)['uomId'],
+      );
+    }
+
     final before = _inCart(products[i]);
     await _applyQuantity(i, before + quantity);
     if (!mounted) return;
@@ -201,6 +273,9 @@ class _CatalogState extends State<Catalog> {
       label,
       actionLabel: context.tr('remove'),
       onAction: () => _undoAdd(balanceId, added),
+      // На телефоне разделы живут в нижней панели — тост держим над ней,
+      // иначе он перехватывает нажатия по вкладкам.
+      bottomInset: context.layout.useTopNav ? 0 : 56 + MediaQuery.of(context).padding.bottom,
     );
   }
 
@@ -362,10 +437,10 @@ class _CatalogState extends State<Catalog> {
   /// читается как закреплённая панель, а не как первый элемент ленты.
   Widget _topBar() {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      // Яркость иконок берём от палитры: прибитая к светлой теме, она делала
+      // статус-бар тёмным на тёмном.
+      value: systemOverlayStyleFor(AppColors.palette).copyWith(
         statusBarColor: AppColors.surface,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
       ),
       child: Container(
         decoration: BoxDecoration(

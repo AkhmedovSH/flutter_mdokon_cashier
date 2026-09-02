@@ -1,8 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
+import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/features/cashier/domain/postponed_cheque.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
@@ -18,6 +21,10 @@ enum SaleAction {
   selectClient,
   createClient,
   clearCheque,
+  postponeSave,
+  postponeOpen,
+  chequeFromCloud,
+  supplierSettlement,
 }
 
 /// Иконки быстрых операций в меню «…».
@@ -40,23 +47,43 @@ extension _ShortcutIcon on SaleShortcut {
 class SaleSheets {
   const SaleSheets._();
 
+  /// Куда касса откладывает чеки, или `null` — откладывание выключено.
+  /// Настройки взаимоисключающие, поэтому вариант ровно один.
+  static PostponeStore? postponeStoreOf(BuildContext context) {
+    final settings = context.read<SettingsModel>();
+    if (settings.postponeOnline) return PostponeStore.online;
+    if (settings.postponeOffline) return PostponeStore.offline;
+    return null;
+  }
+
   /// Меню чека («…» в блоке итогов): операции над позициями, клиенты, очистка.
   ///
   /// Возвращает либо [SaleShortcut] (операция запросит значение отдельным
   /// листом), либо [SaleAction].
   static Future<Object?> chequeActions(BuildContext context, SaleModel model) {
+    final postponeStore = postponeStoreOf(context);
+
     return AppModal.actions<Object>(
       context,
       title: context.tr('cheque'),
       cancelLabel: context.tr('cancel'),
       actions: [
         if (!model.isEmpty)
-          for (final shortcut in SaleShortcut.menu)
+          for (final shortcut in SaleShortcut.allowedMenu)
             AppModalAction(
               label: context.tr(shortcut.labelKey),
               value: shortcut,
               icon: shortcut.icon,
             ),
+        // Отложить можно только набранный чек, и только если кассе выбрали, куда
+        // откладывать: настройки `postponeOnline` / `postponeOffline` выключены
+        // по умолчанию и взаимоисключающие.
+        if (!model.isEmpty && !model.isAgent && postponeStore != null)
+          AppModalAction(
+            label: context.tr('postpone_cheque'),
+            value: SaleAction.postponeSave,
+            icon: UniconsLine.folder_plus,
+          ),
         if (model.isAgent)
           AppModalAction(
             label: context.tr('choose_client'),
@@ -83,6 +110,8 @@ class SaleSheets {
   /// Меню кассы («…» в шапке): то, что не относится к текущему чеку —
   /// режим цены, валюта, погашение долга, расходы.
   static Future<SaleAction?> cashierActions(BuildContext context, SaleModel model) {
+    final postponeStore = postponeStoreOf(context);
+
     return AppModal.actions<SaleAction>(
       context,
       title: context.tr('more'),
@@ -110,6 +139,26 @@ class SaleSheets {
             label: context.tr('expenses'),
             value: SaleAction.expense,
             icon: UniconsLine.usd_circle,
+          ),
+        if (!model.isAgent)
+          AppModalAction(
+            label: context.tr('settlement_with_suppliers'),
+            value: SaleAction.supplierSettlement,
+            icon: UniconsLine.truck,
+          ),
+        if (!model.isAgent && postponeStore != null)
+          AppModalAction(
+            label: context.tr('open_postponed_cheque'),
+            value: SaleAction.postponeOpen,
+            icon: UniconsLine.folder_open,
+          ),
+        // Чек агента из облака доступен всегда: он не зависит от того, куда
+        // касса откладывает свои чеки.
+        if (!model.isAgent)
+          AppModalAction(
+            label: context.tr('cheque_from_cloud'),
+            value: SaleAction.chequeFromCloud,
+            icon: UniconsLine.cloud_download,
           ),
       ],
     );
@@ -200,6 +249,33 @@ class SaleSheets {
       context,
       builder: (ctx) => _CreateClientSheet(model: model),
     );
+  }
+
+  /// Список отложенных чеков. Возвращает `true`, если чек открыли в корзине.
+  static Future<bool> postponedList(
+    BuildContext context,
+    SaleModel model,
+    PostponeStore store,
+  ) async {
+    await model.loadPostponed(store);
+    if (!context.mounted) return false;
+    final opened = await AppModal.sheet<bool>(
+      context,
+      builder: (ctx) => _PostponedSheet(model: model, store: store),
+    );
+    return opened == true;
+  }
+
+  /// Взаиморасчёт с поставщиками.
+  static Future<void> suppliers(BuildContext context, SaleModel model) async {
+    model.resetSupplierForm();
+    await model.loadSuppliers();
+    if (!context.mounted) return;
+    await AppModal.sheet<void>(
+      context,
+      builder: (ctx) => _SupplierSheet(model: model),
+    );
+    model.resetSupplierForm();
   }
 }
 
@@ -715,6 +791,266 @@ class _CreateClientSheetState extends State<_CreateClientSheet> {
               : null,
         ),
       ],
+    );
+  }
+}
+
+// --- Отложенные чеки --------------------------------------------------------
+
+class _PostponedSheet extends StatelessWidget {
+  final SaleModel model;
+  final PostponeStore store;
+
+  const _PostponedSheet({required this.model, required this.store});
+
+  /// Заголовок говорит кассиру, где лежит список: офлайновый чек с соседней
+  /// кассы не откроется, и лучше узнать об этом до поисков.
+  String _title(BuildContext context) => switch (store) {
+        PostponeStore.offline || PostponeStore.online => context.tr('postponed_cheques'),
+        PostponeStore.cloud => context.tr('cheque_from_cloud'),
+      };
+
+  String _subtitle(BuildContext context) => switch (store) {
+        PostponeStore.offline => context.tr('postpone_offline_text'),
+        PostponeStore.online => context.tr('postpone_online_text'),
+        PostponeStore.cloud => context.tr('cheque_from_cloud_text'),
+      };
+
+  Future<void> _delete(BuildContext context) async {
+    final ok = await AppModal.confirm(
+      context,
+      title: context.tr('are_you_sure_you_want_to_delete_the_cheque'),
+      confirmLabel: context.tr('delete'),
+      cancelLabel: context.tr('cancel'),
+      tone: AppModalTone.danger,
+    );
+    if (!ok) return;
+    await model.deletePostponed();
+  }
+
+  /// Открыть чек, спросив про набранную корзину.
+  ///
+  /// Отложенный чек встаёт на место текущего целиком — десктоп делает это молча,
+  /// и набранная корзина пропадает без предупреждения. Здесь спрашиваем.
+  Future<void> _open(BuildContext context) async {
+    if (!model.isEmpty) {
+      final ok = await AppModal.confirm(
+        context,
+        title: context.tr('are_you_sure_you_want_to_remove_all_products'),
+        text: context.tr('open_postponed_cheque_replaces_cart'),
+        confirmLabel: context.tr('open_cheque'),
+        cancelLabel: context.tr('cancel'),
+        tone: AppModalTone.danger,
+      );
+      if (!ok || !context.mounted) return;
+    }
+    if (model.openPostponed() && context.mounted) Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: model,
+      builder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _SheetHeader(title: _title(context), subtitle: _subtitle(context)),
+          const SizedBox(height: AppDimens.gap12),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.42),
+            child: model.postponed.isEmpty
+                ? AppEmptyState(
+                    icon: UniconsLine.folder_open,
+                    title: context.tr('no_data'),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: model.postponed.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: AppDimens.gap8),
+                    itemBuilder: (context, i) {
+                      final cheque = model.postponed[i];
+                      final date = postponedDateLabel(cheque.createdDate);
+                      final meta = [
+                        '${cheque.lineCount} ${context.tr('pieces_short')}',
+                        if (date.isNotEmpty) date,
+                        if (cheque.subtitle.isNotEmpty) cheque.subtitle,
+                      ].join(' · ');
+                      final number = '${cheque.cheque['chequeNumber'] ?? ''}';
+
+                      return AppCard(
+                        selected: i == model.postponedIndex,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimens.gap12,
+                          vertical: 10,
+                        ),
+                        onTap: () => model.selectPostponed(i),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    number.isEmpty ? context.tr('cheque') : number,
+                                    style: AppText.bodyMedium,
+                                  ),
+                                  Text(meta, style: AppText.small),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              formatMoney(cheque.total),
+                              style: AppText.tabular(AppText.secondaryBold),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          const SizedBox(height: AppDimens.gap16),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton.danger(
+                  label: context.tr('delete'),
+                  onPressed: model.selectedPostponed == null ? null : () => _delete(context),
+                ),
+              ),
+              const SizedBox(width: AppDimens.gap12),
+              Expanded(
+                child: AppButton(
+                  label: context.tr('open_cheque'),
+                  onPressed: model.selectedPostponed == null ? null : () => _open(context),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- Взаиморасчёт с поставщиками --------------------------------------------
+
+class _SupplierSheet extends StatefulWidget {
+  final SaleModel model;
+
+  const _SupplierSheet({required this.model});
+
+  @override
+  State<_SupplierSheet> createState() => _SupplierSheetState();
+}
+
+class _SupplierSheetState extends State<_SupplierSheet> {
+  final _search = TextEditingController();
+  final _amount = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    _amount.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final model = widget.model;
+
+    return ListenableBuilder(
+      listenable: model,
+      builder: (context, _) {
+        // Успешная выдача обнуляет сумму в модели — поле идёт следом.
+        if ('${model.supplierPayment['amount']}'.isEmpty && _amount.text.isNotEmpty) {
+          _amount.clear();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SheetHeader(
+              title: context.tr('settlement_with_suppliers'),
+              subtitle: context.tr('supplier_payment_text'),
+            ),
+            const SizedBox(height: AppDimens.gap12),
+            AppSearchField(
+              controller: _search,
+              hint: context.tr('search'),
+              onChanged: model.searchSuppliers,
+            ),
+            const SizedBox(height: AppDimens.gap12),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.28),
+              child: model.suppliers.isEmpty
+                  ? AppEmptyState(icon: UniconsLine.truck, title: context.tr('no_data'))
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: model.suppliers.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: AppDimens.gap8),
+                      itemBuilder: (context, i) {
+                        final supplier = model.suppliers[i];
+                        return AppCard(
+                          selected: i == model.supplierIndex,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimens.gap12,
+                            vertical: 10,
+                          ),
+                          onTap: () => model.selectSupplier(i),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${supplier['organizationName'] ?? ''}',
+                                      style: AppText.bodyMedium,
+                                    ),
+                                    Text('${supplier['phone'] ?? ''}', style: AppText.small),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${formatMoney(supplier['balance'])} ${supplier['currencyName'] ?? ''}',
+                                style: AppText.tabular(AppText.secondaryBold),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: AppDimens.gap16),
+            AppInput.money(
+              label: context.tr('amount'),
+              controller: _amount,
+              onChanged: (value) => model.setSupplierField('amount', value),
+            ),
+            const SizedBox(height: AppDimens.gap12),
+            AppInput(
+              label: context.tr('note'),
+              hint: context.tr('note'),
+              onChanged: (value) => model.setSupplierField('note', value),
+            ),
+            const SizedBox(height: AppDimens.gap16),
+            AppButton(
+              label: context.tr('give_out'),
+              loading: model.busy,
+              onPressed: model.canPaySupplier
+                  ? () async {
+                      final ok = await model.paySupplier();
+                      if (ok && context.mounted) showSuccessToast(context.tr('success'));
+                    }
+                  : null,
+            ),
+          ],
+        );
+      },
     );
   }
 }
