@@ -68,7 +68,10 @@ class _ReturnMarkingBodyState extends State<_ReturnMarkingBody> {
   /// Отсканировать принесённую пачку. В отличие от продажи, сервер здесь не нужен:
   /// достаточно того, что код есть в этом чеке.
   Future<void> _scan() async {
-    final result = await BarcodeScannerPage.scan(context);
+    final result = await BarcodeScannerPage.scan(
+      context,
+      hint: context.tr('scanner_aim_marking_hint'),
+    );
     if (result == null || !mounted) return;
 
     final scanned = parseScannedInput(result);

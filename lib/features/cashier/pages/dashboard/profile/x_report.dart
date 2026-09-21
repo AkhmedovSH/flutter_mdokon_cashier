@@ -213,16 +213,16 @@ class _XReportState extends State<XReport> {
   Widget _buildStatCards() {
     final salesAmount = _first(report['salesList'])?['salesAmount'] ?? 0;
     final balance = _first(report['balanceList'])?['balance'] ?? 0;
+    final salesCurrency = _currencyLabel(_first(report['salesList'])?['currencyName']);
+    final balanceCurrency = _currencyLabel(_first(report['balanceList'])?['currencyName']);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          Expanded(child: _statCard(context.tr('sales'), formatMoney(salesAmount))),
+          Expanded(child: _statCard(context.tr('sales'), formatMoney(salesAmount), salesCurrency)),
           const SizedBox(width: 10),
-          Expanded(child: _statCard(context.tr('in_cashbox'), formatMoney(balance))),
-          const SizedBox(width: 10),
-          Expanded(child: _statCard(context.tr('receipts'), '${report['totalCountCheque'] ?? 0}')),
+          Expanded(child: _statCard(context.tr('in_cashbox'), formatMoney(balance), balanceCurrency)),
         ],
       ),
     );
@@ -236,9 +236,14 @@ class _XReportState extends State<XReport> {
     return parts.join(' · ');
   }
 
-  Widget _statCard(String label, String value) {
+  String _currencyLabel(dynamic currencyName) {
+    final name = (currencyName ?? '').toString().trim();
+    return name.isEmpty ? context.tr('currency_sum') : name;
+  }
+
+  Widget _statCard(String label, String value, String currency) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: _panelDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,23 +254,40 @@ class _XReportState extends State<XReport> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
               color: AppColors.iconMuted,
             ),
           ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 30,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text.rich(
+                TextSpan(
+                  text: value,
+                  children: [
+                    TextSpan(
+                      text: ' $currency',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.iconMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ),
@@ -346,7 +368,7 @@ class _XReportState extends State<XReport> {
     if (xReportList is List && xReportList.isNotEmpty) {
       final rows = <Widget>[];
       for (final item in xReportList) {
-        final name = '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}'.trim();
+        final name = reportRowName(item);
         if ((item['amountIn'] ?? 0) != 0) {
           rows.add(_row('$name · ${context.tr('income')}', formatMoney(item['amountIn'])));
         }
@@ -367,7 +389,7 @@ class _XReportState extends State<XReport> {
       for (final item in amountInList) {
         factRows.add(_factRow(
           color: item['paymentTypeId'] == 1 ? AppColors.success : AppColors.primary,
-          name: '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}'.trim(),
+          name: reportRowName(item),
           amount: formatMoney(item['amountIn'] ?? 0),
           currency: '${item['currencyName'] ?? ''}',
         ));
@@ -378,7 +400,7 @@ class _XReportState extends State<XReport> {
       for (final item in amountOutList) {
         factRows.add(_factRow(
           color: AppColors.danger,
-          name: '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''} · ${context.tr('expense')}'.trim(),
+          name: '${reportRowName(item)} · ${context.tr('expense')}',
           amount: formatMoney(item['amountOut'] ?? 0),
           currency: '${item['currencyName'] ?? ''}',
         ));

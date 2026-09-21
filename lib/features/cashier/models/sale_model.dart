@@ -11,6 +11,7 @@ import 'package:flutter_mdokon/features/cashier/data/sale_repository.dart';
 import 'package:flutter_mdokon/features/cashier/data/supplier_debt_repository.dart';
 import 'package:flutter_mdokon/features/cashier/domain/manual_discount.dart';
 import 'package:flutter_mdokon/features/cashier/domain/postponed_cheque.dart';
+import 'package:flutter_mdokon/features/cashier/domain/sale_session.dart';
 import 'package:flutter_mdokon/features/cashier/domain/sale_tabs.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking.dart';
 import 'package:flutter_mdokon/features/cashier/domain/marking_item.dart';
@@ -180,6 +181,9 @@ class SaleModel extends ChangeNotifier {
 
     if (isAgent && returnCheque != null && returnCheque.isNotEmpty) {
       data = Map.from(returnCheque);
+      _sessionRestored = true;
+    } else {
+      _restoreSession();
     }
 
     // Вкладка №1 создана до `init()` со своим пустым чеком — привязываем её к
@@ -239,14 +243,19 @@ class SaleModel extends ChangeNotifier {
         showDangerToast('limit_exceeded'.tr());
         continue;
       }
-      _addToList(product);
+      _addToList(product, accumulate: true);
     }
     notifyListeners();
     return false;
   }
 
   /// Добавление позиции в чек с пересчётом итогов.
-  void _addToList(Map response, {dynamic weight = 0}) {
+  ///
+  /// [accumulate] — количество из [response] прибавляется к уже набранному, а
+  /// не заменяет его. Так ведёт себя сканирование и быстрый выбор: второй
+  /// проход по тому же товару — это вторая штука, а не та же самая. Диалог
+  /// упаковки, наоборот, задаёт количество целиком.
+  void _addToList(Map response, {dynamic weight = 0, bool accumulate = false}) {
     data['totalPrice'] = 0;
     final index = items.indexWhere((e) => e['balanceId'] == response['balanceId']);
 
@@ -267,6 +276,9 @@ class SaleModel extends ChangeNotifier {
       if (response['quantity'] != '') {
         if (customNumber(weight) > 0) {
           items[index]['quantity'] = customNumber(items[index]['quantity']) + customNumber(weight);
+        } else if (accumulate) {
+          items[index]['quantity'] =
+              customNumber(items[index]['quantity']) + customNumber(response['quantity']);
         } else {
           items[index]['quantity'] = customNumber(response['quantity']);
         }
@@ -397,11 +409,18 @@ class SaleModel extends ChangeNotifier {
     _recalculate();
   }
 
+  /// Счётчик сбросов чека. Экраны, которые держат собственное состояние
+  /// вокруг чека (например строка поиска в каталоге), по его изменению
+  /// понимают, что чек начат заново — оплачен, отложен или очищен.
+  int _chequeSerial = 0;
+  int get chequeSerial => _chequeSerial;
+
   /// Полный сброс чека с сохранением валюты и режима цены.
   void clearCheque() {
     if (items.isNotEmpty) {
       appLog.audit('sale.cheque_cleared', {'lines': items.length});
     }
+    _chequeSerial++;
     final user = storage.read('user') ?? {};
     data = emptyCheque(
       currencyId: data['currencyId'],
@@ -479,6 +498,105 @@ class SaleModel extends ChangeNotifier {
       ],
       activeId: _tabs.activeId,
     );
+  }
+
+  // --- Сохранение окна продажи -------------------------------------------
+
+  /// Снимок вкладок пишется в хранилище при каждом изменении состояния, и
+  /// касса открывается там, где кассир её оставил: те же позиции, количества,
+  /// цены и скидка на чек. Правила, по которым снимок признаётся своим, — в
+  /// `sale_session.dart`.
+
+  /// Сессию поднимаем один раз за жизнь модели. Экран продажи зовёт `init()`
+  /// при каждом возврате на вкладку, и без флага восстановление затирало бы
+  /// корзину, набранную минуту назад.
+  bool _sessionRestored = false;
+
+  /// Последний записанный снимок. Пустая строка — «в хранилище пусто»:
+  /// без неё каждое уведомление слушателей переписывало бы файл заново.
+  String? _lastSessionJson;
+
+  SaleSessionOwner get _sessionOwner => SaleSessionOwner(
+        posId: cashbox['posId'],
+        cashboxId: cashbox['cashboxId'],
+        shiftId: _shiftId,
+        login: '${(storage.read('user') ?? {})['login'] ?? ''}',
+      );
+
+  /// Вкладки в том виде, в каком их надо сохранить: активная держит `data`,
+  /// которую модель правит на месте.
+  SaleTabsState get _sessionState => SaleTabsState(
+        tabs: [
+          for (final tab in _tabs.tabs) tab.id == _tabs.activeId ? tab.copyWith(cheque: data) : tab,
+        ],
+        activeId: _tabs.activeId,
+      );
+
+  void _restoreSession() {
+    if (_sessionRestored) return;
+    _sessionRestored = true;
+
+    // Кассир уже что-то набрал (агентский чек, отложенный, товар из каталога) —
+    // сохранённая сессия ему поверх не нужна.
+    if (!_tabs.tabs.every((tab) => tab.isEmpty) || items.isNotEmpty) return;
+
+    final restored = decodeSaleSession(
+      storage.read(saleSessionStorageKey),
+      owner: _sessionOwner,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (restored == null) return;
+
+    _tabs = restored;
+    data = _tabs.active.cheque;
+    shortcutValue = '';
+    _recalculate(notify: false);
+    appLog.audit('sale.session_restored', {
+      'tabs': _tabs.tabs.length,
+      'lines': items.length,
+    });
+  }
+
+  /// Записать снимок, если он изменился.
+  void _persistSession() {
+    if (!_sessionRestored) return;
+
+    final state = _sessionState;
+    if (state.tabs.every((tab) => tab.isEmpty)) {
+      if (_lastSessionJson == '') return;
+      _lastSessionJson = '';
+      storage.remove(saleSessionStorageKey);
+      return;
+    }
+
+    final encoded = encodeSaleSession(
+      tabs: state,
+      owner: _sessionOwner,
+      savedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (encoded == null) return;
+
+    // Время записи в снимке меняется всегда — сравниваем без него, иначе
+    // проверка «изменилось ли» не сработала бы ни разу.
+    if (_sameSession(encoded, _lastSessionJson)) return;
+    _lastSessionJson = encoded;
+    storage.write(saleSessionStorageKey, encoded);
+  }
+
+  /// Одинаковы ли снимки с точностью до отметки времени.
+  bool _sameSession(String a, String? b) {
+    if (b == null || b.isEmpty) return false;
+    final left = a.replaceAll(RegExp(r'"savedAt":\d+'), '');
+    final right = b.replaceAll(RegExp(r'"savedAt":\d+'), '');
+    return left == right;
+  }
+
+  /// Единая точка сохранения: состояние чека меняют десятки методов, и все
+  /// они заканчиваются уведомлением слушателей.
+  @override
+  void notifyListeners() {
+    _persistSession();
+    super.notifyListeners();
   }
 
   /// Ручная скидка на чек, заданная кассиром (F5 — процент, F6 — сумма).
@@ -924,7 +1042,9 @@ class SaleModel extends ChangeNotifier {
     final client = clients.firstWhere((e) => e['selected'] == true, orElse: () => null);
     if (client == null) return;
     data['clientName'] = '${client['name']}';
-    data['clientId'] = '${client['id']}';
+    // Идентификатор кладём числом, как отдал справочник: строкой он ломал
+    // проверки вида `clientId == 0` на экране оплаты.
+    data['clientId'] = client['id'];
     data['clientComment'] = '${client['comment'] ?? ''}';
     data['clientAddress'] = '${client['address'] ?? ''}';
     data['clientPhone1'] = '${client['phone1'] ?? ''}';

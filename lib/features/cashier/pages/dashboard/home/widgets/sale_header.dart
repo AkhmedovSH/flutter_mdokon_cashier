@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
@@ -14,11 +15,16 @@ class SaleHeader extends StatelessWidget {
   final String meta;
   final VoidCallback onActionsTap;
 
+  /// Быстрый выбор. `null` — колонка набора и так стоит справа от чека, и
+  /// иконка в шапке была бы вторым входом в одно и то же.
+  final VoidCallback? onQuickSelectionTap;
+
   const SaleHeader({
     super.key,
     required this.name,
     required this.meta,
     required this.onActionsTap,
+    this.onQuickSelectionTap,
   });
 
   /// Инициалы для аватара: до двух букв.
@@ -81,6 +87,8 @@ class SaleHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppDimens.gap8),
+                if (onQuickSelectionTap != null)
+                  _HeaderIcon(icon: UniconsLine.bolt, onTap: onQuickSelectionTap!),
                 _HeaderIcon(icon: Icons.more_horiz, onTap: onActionsTap),
               ],
             ),

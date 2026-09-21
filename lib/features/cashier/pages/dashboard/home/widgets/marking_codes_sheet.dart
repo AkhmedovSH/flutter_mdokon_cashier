@@ -62,7 +62,10 @@ class _MarkingCodesBodyState extends State<_MarkingCodesBody> {
 
   /// Отсканировать ещё один код на ту же позицию.
   Future<void> _scan() async {
-    final result = await BarcodeScannerPage.scan(context);
+    final result = await BarcodeScannerPage.scan(
+      context,
+      hint: context.tr('scanner_aim_marking_hint'),
+    );
     if (result == null || !mounted) return;
 
     final scanned = parseScannedInput(result);

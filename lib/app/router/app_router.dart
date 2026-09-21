@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -15,18 +14,9 @@ import 'package:flutter_mdokon/features/agent/pages/dashboard.dart';
 
 import 'package:flutter_mdokon/app/router/cashier_routes.dart';
 import 'package:flutter_mdokon/app/router/director_routes.dart';
+import 'package:flutter_mdokon/app/router/native_page_builder.dart';
 
 GetStorage storage = GetStorage();
-
-// Функция для создания страниц с Cupertino анимацией
-Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widget child) {
-  return CupertinoPage(
-    child: child,
-    key: state.pageKey,
-    name: state.name,
-    arguments: state.extra,
-  );
-}
 
 final globalRouter = GoRouter(
   initialLocation: '/',
@@ -69,7 +59,7 @@ final globalRouter = GoRouter(
     GoRoute(
       path: '/auth',
       pageBuilder: (context, state) {
-        return cupertinoPageBuilder(context, state, const Login());
+        return nativePageBuilder(context, state, const Login());
       },
 
       // builder: (context, start) => Login(),
@@ -79,7 +69,7 @@ final globalRouter = GoRouter(
           pageBuilder: (context, state) {
             final extraData = state.extra as Map<String, dynamic>?;
             print(extraData?['posList']);
-            return cupertinoPageBuilder(
+            return nativePageBuilder(
               context,
               state,
               CashBoxes(
@@ -93,28 +83,28 @@ final globalRouter = GoRouter(
     ),
     GoRoute(
       path: '/cashier',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const CashierDashboard()),
+      pageBuilder: (context, state) => nativePageBuilder(context, state, const CashierDashboard()),
       routes: cashiers,
     ),
     GoRoute(
       path: '/director',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const DirectorDashboard()),
+      pageBuilder: (context, state) => nativePageBuilder(context, state, const DirectorDashboard()),
       routes: directors,
     ),
     GoRoute(
       path: '/agent',
-      pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const AgentDashboard()),
+      pageBuilder: (context, state) => nativePageBuilder(context, state, const AgentDashboard()),
       routes: [
         ...cashiers,
         GoRoute(
           path: '/profile/balance',
-          pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Balance()),
+          pageBuilder: (context, state) => nativePageBuilder(context, state, Balance()),
         ),
       ],
     ),
     // GoRoute(
     //   path: '/',
-    //   pageBuilder: (context, state) => cupertinoPageBuilder(context, state, const PageNotFound()),
+    //   pageBuilder: (context, state) => nativePageBuilder(context, state, const PageNotFound()),
     // ),
   ],
 );

@@ -631,7 +631,7 @@ class PrinterModel extends ChangeNotifier {
       for (final item in report['amountInList']) {
         bytes += await _row(
           generator,
-          '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+          reportRowName(item),
           '${formatMoney(item['amountIn'])} ${item['currencyName']}',
         );
       }
@@ -643,7 +643,7 @@ class PrinterModel extends ChangeNotifier {
       for (final item in report['amountOutList']) {
         bytes += await _row(
           generator,
-          '${item['paymentTypeName'] ?? ''} ${item['paymentPurposeName'] ?? ''}',
+          reportRowName(item),
           '${formatMoney(item['amountOut'])} ${item['currencyName']}',
         );
       }

@@ -173,6 +173,25 @@ class SaleSheets {
     );
   }
 
+  /// Точное количество позиции: открывается тапом по числу в степпере.
+  /// Единственный способ пробить весовой товар (1,2 кг) руками — степпер
+  /// ходит только целыми шагами. Возвращает `null`, если отменили.
+  static Future<num?> quantity(BuildContext context, SaleModel model, int index) {
+    final item = model.items[index] as Map;
+
+    return AppModal.sheet<num>(
+      context,
+      builder: (ctx) => _QuantitySheet(
+        title: '${item['productName'] ?? ''}',
+        value: customNumber(item['quantity']),
+        // При включённой продаже в минус остаток не ограничивает: касса
+        // сознательно уходит за него, и лист не должен мешать.
+        available: model.saleMinus ? null : customNumber(item['balance']),
+        wholeOnly: customNumber(item['uomId']).round() == 1,
+      ),
+    );
+  }
+
   /// Выбор режима цены: розница / опт / банк.
   static Future<void> priceMode(BuildContext context, SaleModel model) {
     return AppModal.sheet<void>(
@@ -308,6 +327,104 @@ class _SheetHeader extends StatelessWidget {
           foreground: AppColors.textSecondary,
           onPressed: () => Navigator.of(context).pop(),
         ),
+      ],
+    );
+  }
+}
+
+// --- Количество позиции ------------------------------------------------------
+
+/// Ввод точного количества позиции чека.
+///
+/// Степпер меняет количество единичными шагами, поэтому вес (1,2 кг) набрать
+/// им нельзя — здесь кассир пишет число как есть, с точкой или запятой.
+class _QuantitySheet extends StatefulWidget {
+  final String title;
+  final double value;
+
+  /// Остаток на кассе или `null`, если продажа в минус разрешена.
+  final double? available;
+
+  /// Штучный товар (uomId = 1) дробным быть не может.
+  final bool wholeOnly;
+
+  const _QuantitySheet({
+    required this.title,
+    required this.value,
+    required this.available,
+    required this.wholeOnly,
+  });
+
+  @override
+  State<_QuantitySheet> createState() => _QuantitySheetState();
+}
+
+class _QuantitySheetState extends State<_QuantitySheet> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value > 0 ? formatQuantity(widget.value) : '',
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final raw = _controller.text.trim().replaceAll(',', '.');
+    final parsed = double.tryParse(raw);
+
+    if (parsed == null || parsed <= 0) {
+      setState(() => _error = context.tr('wrong_quantity'));
+      return;
+    }
+    if (widget.wholeOnly && parsed != parsed.roundToDouble()) {
+      setState(() => _error = context.tr('wrong_quantity'));
+      return;
+    }
+    final available = widget.available;
+    if (available != null && parsed > available) {
+      setState(() => _error = context.tr('not_more', args: [formatQuantity(available)]));
+      return;
+    }
+
+    Navigator.of(context).pop(parsed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final available = widget.available;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SheetHeader(
+          title: context.tr('quantity'),
+          subtitle: widget.title.isEmpty ? null : widget.title,
+        ),
+        if (available != null) ...[
+          const SizedBox(height: AppDimens.gap4),
+          Text(
+            '${context.tr('available')}: ${formatQuantity(available)}',
+            style: AppText.tabular(AppText.secondary),
+          ),
+        ],
+        const SizedBox(height: AppDimens.gap16),
+        AppInput.quantity(
+          controller: _controller,
+          hint: context.tr('enter_value'),
+          autofocus: true,
+          errorText: _error,
+          textInputAction: TextInputAction.done,
+          onChanged: (_) {
+            if (_error != null) setState(() => _error = null);
+          },
+          onSubmitted: (_) => _submit(),
+        ),
+        const SizedBox(height: AppDimens.gap16),
+        AppButton(label: context.tr('accept'), onPressed: _submit),
       ],
     );
   }

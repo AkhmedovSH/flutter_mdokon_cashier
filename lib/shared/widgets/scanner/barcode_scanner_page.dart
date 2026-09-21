@@ -15,16 +15,23 @@ import 'package:vibration/vibration.dart';
 /// Экран возвращает сырую строку кода или `null`, если кассир вышел назад:
 /// разбор — не его дело, этим занимается `parseScannedInput`.
 class BarcodeScannerPage extends StatefulWidget {
-  const BarcodeScannerPage({super.key, this.title});
+  const BarcodeScannerPage({super.key, this.title, this.hint});
 
   /// Заголовок в шапке; по умолчанию — «Сканирование».
   final String? title;
+
+  /// Подсказка под рамкой: на что наводить.
+  ///
+  /// Задаётся вызывающим экраном, потому что кадру нужны разные вещи: в
+  /// каталоге это штрих-код с упаковки, у маркировки — DataMatrix акцизной
+  /// марки, у подтверждения оплаты — QR из SMS.
+  final String? hint;
 
   /// Открыть сканер. `null` — камеру не дали или кассир вышел назад.
   ///
   /// Разрешение спрашивается здесь же: до `Navigator.push` его нет смысла
   /// откладывать, а каждый вызывающий экран повторял этот код у себя.
-  static Future<String?> scan(BuildContext context, {String? title}) async {
+  static Future<String?> scan(BuildContext context, {String? title, String? hint}) async {
     final outcome = await AppPermissions.camera();
     if (!context.mounted) return null;
     if (!outcome.isGranted) {
@@ -39,7 +46,7 @@ class BarcodeScannerPage extends StatefulWidget {
     }
 
     return Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => BarcodeScannerPage(title: title)),
+      MaterialPageRoute(builder: (_) => BarcodeScannerPage(title: title, hint: hint)),
     );
   }
 
@@ -134,30 +141,55 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
             onDetect: _onDetect,
             errorBuilder: (context, error) => _ScannerError(error: error),
           ),
-          const IgnorePointer(child: _ScannerFrame()),
+          IgnorePointer(
+            child: _ScannerFrame(hint: widget.hint ?? context.tr('scanner_aim_hint')),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Рамка прицела: подсказывает, куда наводить, и закрывает края кадра.
+/// Рамка прицела с подсказкой.
+///
+/// Одной рамки мало: кассир видел пустой кадр и не понимал, что от него
+/// хотят, — под рамкой прямо говорим, на что наводить.
 class _ScannerFrame extends StatelessWidget {
-  const _ScannerFrame();
+  final String hint;
+
+  const _ScannerFrame({required this.hint});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: FractionallySizedBox(
         widthFactor: 0.78,
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white70, width: 2),
-              borderRadius: BorderRadius.circular(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white70, width: 2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                hint,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+              ),
+            ),
+          ],
         ),
       ),
     );

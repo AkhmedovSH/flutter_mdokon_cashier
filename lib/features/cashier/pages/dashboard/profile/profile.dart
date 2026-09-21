@@ -179,7 +179,7 @@ class _ProfileState extends State<Profile> {
       ),
       const SizedBox(height: AppDimens.gap16),
       Text(
-        'mDokon POS${version.isEmpty ? '' : ' $version'}',
+        'mDokon Kassa${version.isEmpty ? '' : ' $version'}',
         textAlign: TextAlign.center,
         style: AppText.tabular(AppText.small),
       ),
@@ -586,8 +586,15 @@ class _Stat extends StatelessWidget {
           style: AppText.small,
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
+        // Валюта — в одной строке с числом: отдельной строкой она занимала
+        // высоту, но ничего не добавляла.
+        Text.rich(
+          TextSpan(
+            text: value,
+            children: [
+              if (unit != null) TextSpan(text: ' ${unit!}', style: AppText.small),
+            ],
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -598,13 +605,6 @@ class _Stat extends StatelessWidget {
             fontFeatures: AppText.tabularFigures,
           ),
         ),
-        if (unit != null)
-          Text(
-            unit!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.small,
-          ),
       ],
     );
   }

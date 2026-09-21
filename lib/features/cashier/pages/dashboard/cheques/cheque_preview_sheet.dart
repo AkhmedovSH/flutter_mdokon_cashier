@@ -151,7 +151,9 @@ class _ChequePreviewSheetState extends State<ChequePreviewSheet> {
                       '${context.tr('cheque')} №${widget.number}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.tabular(AppText.h2),
+                      style: AppText.tabular(
+                        AppText.bodyMedium,
+                      ).copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
                     Text(

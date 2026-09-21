@@ -11,43 +11,106 @@ import 'package:flutter_mdokon/features/cashier/data/quick_rail_repository.dart'
 import 'package:flutter_mdokon/features/cashier/domain/quick_rail.dart';
 import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 
+/// Ключ псевдокатегории «Обычные» — товаров набора без категории.
+///
+/// У самих таких товаров `categoryId` пустой, но пустым же обозначается «ни
+/// одна категория не открыта»: с одним значением на два смысла папка не
+/// открывалась вовсе. Наружу, в фильтр, ключ уходит обратно пустым.
+const String _kRegularCategoryId = 'regular';
+
 /// Ширина рельсы с иконками видов.
 const double _kRailWidth = 64;
 
 /// Ширина раскрытой панели.
 const double _kPanelWidth = 288;
 
+/// Виды колонки: иконка и подпись. Порядок один и для рельсы планшета, и для
+/// сегментов телефонного листа.
+const List<(QuickRailView, IconData, String)> _kViews = [
+  (QuickRailView.list, UniconsLine.list_ul, 'rightbar_rail_list'),
+  (QuickRailView.showcase, UniconsLine.image_v, 'rightbar_rail_showcase'),
+  (QuickRailView.groups, UniconsLine.apps, 'rightbar_rail_groups'),
+];
+
 /// Боковая колонка быстрого выбора (`src/components/cashbox/Rightbar.js`).
 ///
-/// Четыре вида: список набора, витрина с картинками, категории набора и
-/// цифровая клавиатура. Живёт только на планшете: на телефоне для неё нет ни
-/// ширины, ни сценария — там товар ищут через каталог.
+/// Три вида: список набора, витрина с картинками и категории набора.
+/// Цифрового блока здесь нет: код товара на телефоне набирают не пальцем, а
+/// сканером, и клавиши только занимали место.
 ///
-/// Панель по умолчанию закрыта — видна одна рельса иконок. Повторный тап по
-/// активной иконке закрывает панель, как на десктопе: чек на 1024 px важнее
-/// витрины, и кассир решает сам, когда её открыть.
+/// Две раскладки одного и того же набора. На планшете — колонка справа от
+/// чека: панель по умолчанию закрыта, видна одна рельса иконок, и повторный
+/// тап по активной иконке её закрывает (чек на 1024 px важнее витрины).
+/// На телефоне ([compact]) колонке нет места, поэтому тот же набор
+/// открывается листом снизу — [QuickRail.show]: рельсы нет, вид переключают
+/// сегменты в шапке, панель всегда раскрыта.
 class QuickRail extends StatefulWidget {
   /// Добавить товар в чек по штрих-коду.
   final Future<void> Function(String barcode) onAddBarcode;
 
-  /// Нажатие клавиши на экранном цифровом блоке — уходит в тот же разбор
-  /// `resolveHotkey`, что и внешняя клавиатура.
-  final void Function(String key) onKey;
+  /// Чек меняется — колонка перерисовывает счётчики.
+  ///
+  /// Слушаем модель, а не получаем цифры разом: телефонный лист живёт в своём
+  /// маршруте, и `setState` страницы продажи его не перестраивает.
+  final Listenable cart;
 
-  /// «Добавить в чек» — товар по набранному коду.
-  final VoidCallback onSubmit;
+  /// Сколько штук этого штрих-кода уже в чеке — цифра на карточке товара.
+  final double Function(String barcode) quantityOf;
 
-  /// Что уже набрано: клавиатура показывает буфер прямо над клавишами,
-  /// иначе на планшете его видно только в строке горячих клавиш сверху.
-  final String buffer;
+  /// Телефонная раскладка листом. См. описание класса.
+  final bool compact;
 
   const QuickRail({
     super.key,
     required this.onAddBarcode,
-    required this.onKey,
-    required this.onSubmit,
-    required this.buffer,
+    required this.cart,
+    required this.quantityOf,
+    this.compact = false,
   });
+
+  /// Открыть быстрый выбор листом снизу — вход с телефона.
+  static Future<void> show(
+    BuildContext context, {
+    required Future<void> Function(String barcode) onAddBarcode,
+    required Listenable cart,
+    required double Function(String barcode) quantityOf,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.scrim,
+      builder: (ctx) {
+        final media = MediaQuery.of(ctx);
+        // Лист высокий: витрина карточками должна помещаться целиком.
+        // Экранную клавиатуру поиска пропускаем вперёд — иначе список
+        // уезжает под неё.
+        final insets = media.viewInsets.bottom;
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: insets),
+          child: SafeArea(
+            top: false,
+            child: Container(
+              height: (media.size.height - insets) * 0.9,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppDimens.sheet,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: QuickRail(
+                compact: true,
+                cart: cart,
+                quantityOf: quantityOf,
+                onAddBarcode: onAddBarcode,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   State<QuickRail> createState() => _QuickRailState();
@@ -64,19 +127,40 @@ class _QuickRailState extends State<QuickRail> {
 
   List<Map> _items = const [];
   List<Map> _categories = const [];
-  List<Map> _showcase = const [];
+
+  /// Строки остатка точки — карточки витрины. Это «все товары», а не набор:
+  /// у десктопа витрина тоже идёт мимо быстрого подбора.
+  List<Map<String, dynamic>> _showcase = const [];
+
+  /// Запрос, которым набран `_showcase`. Открытие витрины поверх уже
+  /// загруженного списка не должно снова тянуть весь остаток.
+  String? _showcaseQuery;
+
+  /// «Штрих-код → цена продажи»: сам набор цен не отдаёт, их приносит остаток.
+  Map<String, dynamic> _prices = const {};
 
   QuickRailView _view = QuickRailView.list;
   String _activeCategoryId = '';
   String _search = '';
-  bool _open = false;
+  late bool _open = widget.compact;
   bool _loading = true;
   bool _showcaseLoading = false;
+
+  /// Набор быстрого подбора живёт на кассе. У агента кассы нет, и запросы за
+  /// набором уходили с пустым `cashboxId` — сервер отвечал на них 400. Ему
+  /// оставляем витрину: она считается от точки, а не от кассы.
+  bool get _hasSet => customIf(_cashbox['cashboxId']);
+
+  /// Виды, которые видно на этой сессии. См. [_hasSet].
+  List<(QuickRailView, IconData, String)> get _views => _hasSet
+      ? _kViews
+      : [for (final view in _kViews) if (view.$1 == QuickRailView.showcase) view];
 
   @override
   void initState() {
     super.initState();
     _cashbox = _storage.read('cashbox') ?? {};
+    if (!_hasSet) _view = QuickRailView.showcase;
     _load();
   }
 
@@ -92,40 +176,48 @@ class _QuickRailState extends State<QuickRail> {
   Future<void> _load() async {
     final posId = _cashbox['posId'];
     final cashboxId = _cashbox['cashboxId'];
-    final results = await Future.wait([
-      _repository.items(posId: posId, cashboxId: cashboxId),
-      _repository.categories(posId: posId, cashboxId: cashboxId),
-    ]);
+    // Остаток тянем одним запросом на двоих: из него и карточки витрины, и
+    // цены набора — цен сам набор не отдаёт. Запрос уходит вместе с набором,
+    // а не после него: ждать его дважды колонке незачем.
+    final balanceRequest = _repository.balance(
+      posId: posId,
+      currencyId: _cashbox['defaultCurrency'],
+    );
+    final results = _hasSet
+        ? await Future.wait([
+            _repository.items(posId: posId, cashboxId: cashboxId),
+            _repository.categories(posId: posId, cashboxId: cashboxId),
+          ])
+        : const [<Map>[], <Map>[]];
+    final balance = await balanceRequest;
     if (!mounted) return;
 
     setState(() {
       _items = results[0];
       _categories = results[1];
+      _showcase = _repository.uniqueByBarcode(balance);
+      _showcaseQuery = '';
+      _prices = _repository.pricesOf(balance);
       _loading = false;
     });
   }
 
-  /// Витрина: у мобилки нет локальной базы, поэтому карточки приходят с
-  /// сервера по запросу. Пустой запрос показывает сам набор — иначе кассир
-  /// открывал бы витрину на пустой экран.
+  /// Витрина: карточки — это остаток точки, как у десктопа «все товары».
+  /// Локальной базы у мобилки нет, поэтому и полный список, и поиск по нему
+  /// приходят с сервера одним и тем же запросом.
   Future<void> _loadShowcase(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _showcase = const [];
-        _showcaseLoading = false;
-      });
-      return;
-    }
+    if (_showcaseQuery == query) return;
 
     setState(() => _showcaseLoading = true);
-    final rows = await _repository.search(
+    final rows = await _repository.balance(
       posId: _cashbox['posId'],
       currencyId: _cashbox['defaultCurrency'],
       query: query,
     );
     if (!mounted) return;
     setState(() {
-      _showcase = rows;
+      _showcase = _repository.uniqueByBarcode(rows);
+      _showcaseQuery = query;
       _showcaseLoading = false;
     });
   }
@@ -145,7 +237,8 @@ class _QuickRailState extends State<QuickRail> {
 
   void _toggleView(QuickRailView view) {
     if (_open && _view == view) {
-      setState(() => _open = false);
+      // В листе закрывать нечего: панель — и есть весь лист.
+      if (!widget.compact) setState(() => _open = false);
       return;
     }
 
@@ -158,12 +251,17 @@ class _QuickRailState extends State<QuickRail> {
       _view = view;
       _open = true;
     });
-    if (view == QuickRailView.showcase) _loadShowcase(_search.trim());
+    // Пока идёт первая загрузка, остаток уже едет — второй раз не просим.
+    if (view == QuickRailView.showcase && !_loading) _loadShowcase(_search.trim());
   }
 
   void _openCategory(String categoryId) {
     setState(() => _activeCategoryId = categoryId);
   }
+
+  /// Категория позиций для фильтра: «Обычные» — это пустой `categoryId`.
+  String get _filterCategoryId =>
+      _activeCategoryId == _kRegularCategoryId ? '' : _activeCategoryId;
 
   String get _currency =>
       customNumber(_cashbox['defaultCurrency']) == 2 ? 'USD' : context.tr('sum');
@@ -174,10 +272,9 @@ class _QuickRailState extends State<QuickRail> {
         return context.tr('quick_selection');
       case QuickRailView.showcase:
         return context.tr('rightbar_showcase_title');
-      case QuickRailView.keys:
-        return context.tr('rightbar_keyboard');
       case QuickRailView.groups:
         if (_activeCategoryId.isEmpty) return context.tr('rightbar_categories_title');
+        if (_activeCategoryId == _kRegularCategoryId) return context.tr('regular_category');
         final active = _categories.where(
           (category) => quickCategoryKey(category) == _activeCategoryId,
         );
@@ -191,6 +288,8 @@ class _QuickRailState extends State<QuickRail> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.compact) return _sheet();
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -200,14 +299,56 @@ class _QuickRailState extends State<QuickRail> {
     );
   }
 
-  Widget _rail() {
-    const views = <(QuickRailView, IconData, String)>[
-      (QuickRailView.list, UniconsLine.list_ul, 'rightbar_rail_list'),
-      (QuickRailView.showcase, UniconsLine.image_v, 'rightbar_rail_showcase'),
-      (QuickRailView.groups, UniconsLine.apps, 'rightbar_rail_groups'),
-      (QuickRailView.keys, UniconsLine.keyboard, 'rightbar_rail_keys'),
-    ];
+  /// Телефонная раскладка: та же панель без рельсы, виды — сегментами сверху.
+  Widget _sheet() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _header(),
+        _viewTabs(),
+        _searchField(),
+        Expanded(child: _body()),
+      ],
+    );
+  }
 
+  /// Переключатель видов для листа — те же четыре кнопки, что и в рельсе,
+  /// только в строку.
+  Widget _viewTabs() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.gap8,
+        0,
+        AppDimens.gap8,
+        AppDimens.gap8,
+      ),
+      child: Row(
+        children: [
+          for (final (view, icon, labelKey) in _views)
+            Expanded(
+              child: _RailButton(
+                icon: icon,
+                label: context.tr(labelKey),
+                active: _view == view,
+                onTap: () => _toggleView(view),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Закрыть быстрый выбор: на планшете сворачивается панель, на телефоне
+  /// уходит весь лист.
+  void _close() {
+    if (widget.compact) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _open = false);
+  }
+
+  Widget _rail() {
     return Container(
       width: _kRailWidth,
       decoration: BoxDecoration(
@@ -217,7 +358,7 @@ class _QuickRailState extends State<QuickRail> {
       child: Column(
         children: [
           const SizedBox(height: AppDimens.gap8),
-          for (final (view, icon, labelKey) in views)
+          for (final (view, icon, labelKey) in _views)
             _RailButton(
               icon: icon,
               label: context.tr(labelKey),
@@ -239,7 +380,7 @@ class _QuickRailState extends State<QuickRail> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _header(),
-          if (_view != QuickRailView.keys) _searchField(),
+          _searchField(),
           Expanded(child: _body()),
         ],
       ),
@@ -285,7 +426,7 @@ class _QuickRailState extends State<QuickRail> {
             iconSize: 18,
             background: AppColors.canvas,
             foreground: AppColors.textSecondary,
-            onPressed: () => setState(() => _open = false),
+            onPressed: _close,
           ),
         ],
       ),
@@ -306,29 +447,34 @@ class _QuickRailState extends State<QuickRail> {
   }
 
   Widget _body() {
-    if (_view == QuickRailView.keys) return _keyboard();
     if (_loading) return const AppLoaderView();
 
-    switch (_view) {
-      case QuickRailView.showcase:
-        return _showcaseView();
-      case QuickRailView.groups:
-        return _groupsView();
-      case QuickRailView.list:
-      case QuickRailView.keys:
-        return _listView();
-    }
+    // Счётчики добавленного живут в чеке: он меняется без ведома колонки,
+    // поэтому перерисовку тянем от модели, а не от `setState` страницы.
+    return ListenableBuilder(
+      listenable: widget.cart,
+      builder: (_, _) {
+        switch (_view) {
+          case QuickRailView.showcase:
+            return _showcaseView();
+          case QuickRailView.groups:
+            return _groupsView();
+          case QuickRailView.list:
+            return _listView();
+        }
+      },
+    );
   }
 
   /// Пустой экран: без запроса подсказываем, где набор пополнить, с запросом —
-  /// что его достаточно изменить.
-  Widget _empty(String emptyHintKey) {
+  /// что его достаточно изменить. У витрины подсказки без запроса нет: пустой
+  /// там не набор, а остаток точки, и кассир его из кассы не пополнит.
+  Widget _empty(String? emptyHintKey) {
+    final hint = _search.trim().isEmpty ? emptyHintKey : 'rightbar_search_empty_hint';
     return AppEmptyState(
       icon: UniconsLine.search,
       title: context.tr('nothing_found'),
-      text: context.tr(
-        _search.trim().isEmpty ? emptyHintKey : 'rightbar_search_empty_hint',
-      ),
+      text: hint == null ? null : context.tr(hint),
     );
   }
 
@@ -359,7 +505,7 @@ class _QuickRailState extends State<QuickRail> {
       final visible = filterQuickItems(
         _items,
         search: _search,
-        categoryId: _activeCategoryId,
+        categoryId: _filterCategoryId,
         view: QuickRailView.groups,
       );
       if (visible.isEmpty) return _empty('rightbar_quick_empty_hint');
@@ -383,7 +529,7 @@ class _QuickRailState extends State<QuickRail> {
       padding: _listPadding,
       children: [
         if (showRegular) ...[
-          _categoryCard(context.tr('regular_category'), '', regular),
+          _categoryCard(context.tr('regular_category'), _kRegularCategoryId, regular),
           const SizedBox(height: AppDimens.gap8),
         ],
         for (final category in categories) ...[
@@ -401,15 +547,15 @@ class _QuickRailState extends State<QuickRail> {
   Widget _showcaseView() {
     if (_showcaseLoading) return const AppLoaderView();
 
-    // Пустой запрос — показываем сам набор карточками: у мобилки нет
-    // локальной базы, из которой десктоп берёт «все товары».
-    final rows = _search.trim().isEmpty ? _items : _showcase;
-    if (rows.isEmpty) return _empty('rightbar_quick_empty_hint');
+    final rows = _showcase;
+    if (rows.isEmpty) return _empty(null);
 
     return GridView.builder(
       padding: _listPadding,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        // Лист во всю ширину телефона держит третью карточку, узкая
+        // колонка планшета — нет.
+        crossAxisCount: widget.compact ? 3 : 2,
         mainAxisSpacing: AppDimens.gap8,
         crossAxisSpacing: AppDimens.gap8,
         childAspectRatio: 0.78,
@@ -422,9 +568,21 @@ class _QuickRailState extends State<QuickRail> {
   /// Штрих-код позиции: у набора он `productBarcode`, у остатков — `barcode`.
   String _barcodeOf(Map item) => '${item['productBarcode'] ?? item['barcode'] ?? ''}';
 
+  /// Цена позиции. У строки остатка она своя, у позиции набора её нет —
+  /// подставляем из карты цен по штрих-коду.
+  dynamic _priceOf(Map item) =>
+      customIf(item['salePrice']) ? item['salePrice'] : _prices[_barcodeOf(item)];
+
+  /// Цена подписью, или пусто — цену без остатка показывать нечем.
+  Widget _priceLabel(Map item, TextStyle style) {
+    final price = _priceOf(item);
+    if (!customIf(price)) return const SizedBox.shrink();
+    return Text('${formatMoney(price)} $_currency', style: AppText.tabular(style));
+  }
+
   Widget _productRow(Map item) {
     final barcode = _barcodeOf(item);
-    final price = item['salePrice'];
+    final quantity = widget.quantityOf(barcode);
 
     return AppCard(
       padding: const EdgeInsets.all(AppDimens.gap8),
@@ -458,14 +616,14 @@ class _QuickRailState extends State<QuickRail> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                if (customIf(price))
-                  Text(
-                    '${formatMoney(price)} $_currency',
-                    style: AppText.tabular(AppText.secondaryBold),
-                  ),
+                _priceLabel(item, AppText.secondaryBold),
               ],
             ),
           ),
+          if (quantity > 0) ...[
+            const SizedBox(width: AppDimens.gap8),
+            _QtyBadge(quantity: quantity),
+          ],
         ],
       ),
     );
@@ -502,9 +660,19 @@ class _QuickRailState extends State<QuickRail> {
     );
   }
 
+  /// Адрес картинки товара. Сервер отдаёт путь от корня, но встречается и
+  /// готовая ссылка — тогда хост приписывать не нужно.
+  String _imageOf(Map item) {
+    final path = '${item['productImageUrl'] ?? item['imageUrl'] ?? ''}'.trim();
+    if (path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return path.startsWith('/') ? '$hostUrl$path' : '$hostUrl/$path';
+  }
+
   Widget _showcaseCard(Map item) {
     final barcode = _barcodeOf(item);
-    final image = '${item['productImageUrl'] ?? ''}';
+    final image = _imageOf(item);
+    final quantity = widget.quantityOf(barcode);
 
     return AppCard(
       padding: const EdgeInsets.all(AppDimens.gap8),
@@ -513,23 +681,34 @@ class _QuickRailState extends State<QuickRail> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: AppDimens.control,
-              child: Container(
-                color: AppColors.canvas,
-                alignment: Alignment.center,
-                child: image.isEmpty
-                    ? Icon(UniconsLine.box, size: 28, color: AppColors.iconMuted)
-                    : Image.network(
-                        '$hostUrl$image',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        // Картинка не обязана доехать: на кассе бывает тонкий
-                        // канал, а добавить товар нужно всё равно.
-                        errorBuilder: (_, _, _) =>
-                            Icon(UniconsLine.box, size: 28, color: AppColors.iconMuted),
-                      ),
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: AppDimens.control,
+                  child: Container(
+                    color: AppColors.canvas,
+                    alignment: Alignment.center,
+                    child: image.isEmpty
+                        ? Icon(UniconsLine.box, size: 28, color: AppColors.iconMuted)
+                        : Image.network(
+                            image,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            // Картинка не обязана доехать: на кассе бывает
+                            // тонкий канал, а добавить товар нужно всё равно.
+                            errorBuilder: (_, _, _) =>
+                                Icon(UniconsLine.box, size: 28, color: AppColors.iconMuted),
+                          ),
+                  ),
+                ),
+                if (quantity > 0)
+                  Positioned(
+                    top: AppDimens.gap4,
+                    right: AppDimens.gap4,
+                    child: _QtyBadge(quantity: quantity),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: AppDimens.gap4),
@@ -539,87 +718,12 @@ class _QuickRailState extends State<QuickRail> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            '${formatMoney(item['salePrice'])} $_currency',
-            style: AppText.tabular(AppText.caption),
-          ),
+          _priceLabel(item, AppText.secondaryBold),
         ],
       ),
     );
   }
 
-  // --- Клавиатура ----------------------------------------------------------
-
-  Widget _keyboard() {
-    const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'];
-    const shortcuts = ['+', '*', '-', '/', 'F5', 'F6'];
-
-    return SingleChildScrollView(
-      padding: _listPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: AppDimens.heightMedium,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: AppDimens.gap12),
-            decoration: BoxDecoration(
-              color: AppColors.canvas,
-              borderRadius: AppDimens.control,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Text(
-              widget.buffer.isEmpty ? '0' : widget.buffer,
-              style: AppText.tabular(AppText.h2).copyWith(
-                color: widget.buffer.isEmpty ? AppColors.iconMuted : AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppDimens.gap8),
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: AppDimens.gap8,
-            crossAxisSpacing: AppDimens.gap8,
-            childAspectRatio: 1.4,
-            children: [
-              for (final key in digits) _KeyButton(label: key, onTap: () => widget.onKey(key)),
-              _KeyButton(
-                label: '⌫',
-                tone: _KeyTone.danger,
-                onTap: () => widget.onKey('Backspace'),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimens.gap8),
-          // Те же операции, что и на внешней клавиатуре: набранное число плюс
-          // клавиша операции, разбор один и тот же — `resolveHotkey`.
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: AppDimens.gap8,
-            crossAxisSpacing: AppDimens.gap8,
-            childAspectRatio: 1.4,
-            children: [
-              for (final key in shortcuts)
-                _KeyButton(
-                  label: key,
-                  tone: _KeyTone.secondary,
-                  onTap: () => widget.onKey(key),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppDimens.gap8),
-          AppButton(
-            label: context.tr('rightbar_add_to_cheque'),
-            onPressed: widget.buffer.isEmpty ? null : widget.onSubmit,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Кнопка вида в рельсе иконок.
@@ -670,34 +774,28 @@ class _RailButton extends StatelessWidget {
   }
 }
 
-enum _KeyTone { normal, secondary, danger }
+/// Счётчик уже добавленного в чек: без него повторный тап по карточке
+/// выглядит как «не сработало».
+class _QtyBadge extends StatelessWidget {
+  final double quantity;
 
-class _KeyButton extends StatelessWidget {
-  final String label;
-  final _KeyTone tone;
-  final VoidCallback onTap;
-
-  const _KeyButton({required this.label, required this.onTap, this.tone = _KeyTone.normal});
+  const _QtyBadge({required this.quantity});
 
   @override
   Widget build(BuildContext context) {
-    final (background, foreground) = switch (tone) {
-      _KeyTone.normal => (AppColors.canvas, AppColors.textPrimary),
-      _KeyTone.secondary => (AppColors.primarySoft, AppColors.primary),
-      _KeyTone.danger => (AppColors.dangerSoft, AppColors.dangerText),
-    };
-
-    return Material(
-      color: background,
-      borderRadius: AppDimens.control,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppDimens.control,
-        child: Center(
-          child: Text(
-            label,
-            style: AppText.tabular(AppText.h2).copyWith(color: foreground),
-          ),
+    return Container(
+      constraints: const BoxConstraints(minWidth: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        formatQuantity(quantity),
+        style: AppText.tabular(AppText.caption).copyWith(
+          color: AppColors.onPrimary,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

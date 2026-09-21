@@ -9,12 +9,20 @@ class SaleRepository {
   const SaleRepository();
 
   /// Отправка чека агентом на кассу (`create` или `update`).
+  ///
+  /// Реквизиты покупателя дублируются рядом с чеком, как в десктопном
+  /// `Tab.jsx`: касса берёт их из строки списка, а не из JSON чека, и без
+  /// этих полей открытый чек оказывался без клиента.
   Future<bool> sendToCashbox({
     required dynamic posId,
     required Map cheque,
     dynamic id,
   }) async {
     final payload = {
+      'clientId': cheque['clientId'],
+      'clientName': cheque['clientName'],
+      'organizationId': cheque['organizationId'],
+      'organizationName': cheque['organizationName'],
       'posId': posId,
       'cheque': jsonEncode(cheque),
       'id': ?id,

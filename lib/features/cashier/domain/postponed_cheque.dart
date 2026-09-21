@@ -140,6 +140,13 @@ Map<String, dynamic> postponedSnapshot(Map cheque, {required dynamic createdDate
   return copy;
 }
 
+/// Идентификатор из ответа или `null`, если его нет.
+///
+/// «Ничего не выбрано» сервер отдаёт нулём, а не `null`, поэтому голый `??`
+/// не помогал: ноль строки списка перебивал живой идентификатор из самого
+/// чека, и открытый чек оказывался без клиента.
+dynamic _idOrNull(dynamic value) => customIf(value) ? value : null;
+
 /// Строка ответа сервера → [PostponedCheque].
 ///
 /// Чек приходит строкой JSON внутри поля `cheque`. Битую строку пропускаем:
@@ -165,9 +172,9 @@ PostponedCheque? parsePostponedRow(dynamic raw) {
     cheque: cheque,
     id: raw['id'],
     createdDate: raw['createdDate'],
-    clientId: raw['clientId'] ?? cheque['clientId'],
+    clientId: _idOrNull(raw['clientId']) ?? _idOrNull(cheque['clientId']),
     clientName: '${raw['clientName'] ?? cheque['clientName'] ?? ''}',
-    organizationId: raw['organizationId'] ?? cheque['organizationId'],
+    organizationId: _idOrNull(raw['organizationId']) ?? _idOrNull(cheque['organizationId']),
     organizationName: '${raw['organizationName'] ?? cheque['organizationName'] ?? ''}',
     agentLogin: '${raw['agentLogin'] ?? ''}',
     agentName: '${raw['agentName'] ?? ''}',

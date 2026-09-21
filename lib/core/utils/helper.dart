@@ -221,6 +221,41 @@ String findFromArrayById(List<Map<String, dynamic>> array, dynamic id) {
   return '';
 }
 
+/// Название типа оплаты в строке X/Z-отчёта. Для погашения задолженности и
+/// возвратов бэк отдаёт `paymentTypeName = null` — строки «Погашение
+/// задолженности» наличными и перечислением выглядели одинаково. Разворачиваем
+/// `paymentTypeId` так же, как desktop (`Titlebar.js`, `paymentTypeLabel`).
+String paymentTypeLabel(dynamic item) {
+  final name = (item is Map ? item['paymentTypeName'] : null)?.toString() ?? '';
+  if (name.isNotEmpty) return name;
+  switch (int.tryParse('${item is Map ? item['paymentTypeId'] : ''}')) {
+    case 1:
+      return 'cash'.tr();
+    case 2:
+      return 'terminal'.tr();
+    case 3:
+      return 'transfer'.tr();
+    case 4:
+      return 'uget'.tr();
+    case 5:
+      return 'Click';
+    case 6:
+      return 'Payme';
+    case 7:
+      return 'Uzum';
+    case 9:
+      return 'UzQR';
+    default:
+      return '';
+  }
+}
+
+/// Подпись строки отчёта: тип оплаты + назначение платежа.
+String reportRowName(dynamic item) {
+  final purpose = (item is Map ? item['paymentPurposeName'] : null)?.toString() ?? '';
+  return [paymentTypeLabel(item), purpose].where((e) => e.isNotEmpty).join(' ');
+}
+
 bool checkRole(dynamic role) {
   GetStorage storage = GetStorage();
   List<dynamic> roles = storage.read<List<dynamic>>('user_roles') ?? [];
@@ -339,8 +374,16 @@ void showWarningToast(dynamic message, {dynamic description = ""}) {
   );
 }
 
+/// Последняя показанная плашка с действием — её сменяет следующая.
+ToastificationItem? _actionToast;
+
 /// Тост с действием: компактная плашка и кнопка отмены справа
 /// (например «Товар · добавлен» + «Убрать»).
+///
+/// Плашка всегда одна: [bottomInset] поднимает каждую из них над нижней
+/// навигацией, поэтому стопка из двух расходилась на высоту панели. Да и по
+/// смыслу «Убрать» относится к последнему добавленному товару — как у
+/// системного `SnackBar`, новая плашка заменяет предыдущую.
 ///
 /// [bottomInset] поднимает плашку над тем, что стоит внизу экрана (нижняя
 /// навигация кассы): лёжа прямо на панели, тост перехватывал нажатия и кассир
@@ -356,7 +399,10 @@ void showActionToast(
   final Color background = AppColors.toast;
   final Color foreground = toastForeground(background);
 
-  toastification.showCustom(
+  final previous = _actionToast;
+  if (previous != null) toastification.dismiss(previous, showRemoveAnimation: false);
+
+  _actionToast = toastification.showCustom(
     context: context,
     alignment: Alignment.bottomCenter,
     animationDuration: AppDimens.fast,
@@ -391,6 +437,7 @@ void showActionToast(
               TextButton(
                 onPressed: () {
                   toastification.dismiss(item);
+                  if (identical(_actionToast, item)) _actionToast = null;
                   onAction();
                 },
                 style: TextButton.styleFrom(

@@ -95,6 +95,16 @@ void main() {
       expect(list.single.lineCount, 2);
     });
 
+    test('нулевой clientId строки не затирает клиента из самого чека', () {
+      final list = parsePostponedList([
+        {'id': 43, 'clientId': 0, 'organizationId': 0, 'cheque': jsonEncode(cheque())},
+      ]);
+
+      expect(list.single.clientId, 7);
+      expect(list.single.clientName, 'Иванов');
+      expect(list.single.organizationId, isNull);
+    });
+
     test('битый JSON пропускается — остальные чеки остаются в списке', () {
       final list = parsePostponedList([
         {'id': 1, 'cheque': '{не json'},

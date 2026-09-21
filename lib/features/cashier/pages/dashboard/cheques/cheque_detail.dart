@@ -282,8 +282,11 @@ class _ChequeDetailState extends State<ChequeDetail> {
           if (inn.isNotEmpty) _InfoRow(label: context.tr('inn'), value: inn),
           if (customIf(cheque['cashierName']))
             _InfoRow(label: context.tr('cashier'), value: '${cheque['cashierName']}', tabular: false),
-          if (customIf(cheque['transactionId']))
-            _InfoRow(label: '${context.tr('cheque')} ID', value: '${cheque['transactionId']}'),
+          _InfoRow(
+            label: '${context.tr('cheque')} ID',
+            value: _number,
+            copyable: true,
+          ),
           _InfoRow(
             label: context.tr('cheque_type'),
             value: context.tr(isReturn ? 'return' : 'sale'),
@@ -407,7 +410,6 @@ class _ChequeDetailState extends State<ChequeDetail> {
                   label: context.tr('PRINT'),
                   variant: AppButtonVariant.secondary,
                   size: AppButtonSize.medium,
-                  icon: Icons.print_outlined,
                   loading: printing,
                   onPressed: _print,
                 ),
@@ -415,10 +417,9 @@ class _ChequeDetailState extends State<ChequeDetail> {
               if (_refundable) ...[
                 const SizedBox(width: AppDimens.gap8),
                 Expanded(
-                  flex: 2,
                   child: AppButton(
-                    label: context.tr('make_return'),
-                    variant: AppButtonVariant.dangerSolid,
+                    label: context.tr('RETURN'),
+                    variant: AppButtonVariant.danger,
                     size: AppButtonSize.medium,
                     onPressed: _refund,
                   ),
@@ -527,18 +528,37 @@ class _InfoRow extends StatelessWidget {
   final bool muted;
   final Color? valueColor;
 
+  /// Длинные идентификаторы держим в одну строку с многоточием и даём кнопку
+  /// копирования: целиком они на экран всё равно не влезают.
+  final bool copyable;
+
   const _InfoRow({
     required this.label,
     required this.value,
     this.tabular = true,
     this.muted = false,
     this.valueColor,
+    this.copyable = false,
   });
+
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!context.mounted) return;
+    showSuccessToast(context.tr('copied'), description: value);
+  }
 
   @override
   Widget build(BuildContext context) {
     final style = (muted ? AppText.secondary : AppText.bodyMedium).copyWith(
       color: valueColor ?? (muted ? AppColors.textSecondary : AppColors.textPrimary),
+    );
+
+    final text = Text(
+      value,
+      textAlign: TextAlign.end,
+      maxLines: copyable ? 1 : null,
+      overflow: copyable ? TextOverflow.ellipsis : null,
+      style: tabular ? AppText.tabular(style) : style,
     );
 
     return Padding(
@@ -548,13 +568,22 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(label, style: AppText.secondary),
           const SizedBox(width: AppDimens.gap12),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: tabular ? AppText.tabular(style) : style,
+          Expanded(child: text),
+          if (copyable) ...[
+            const SizedBox(width: AppDimens.gap8),
+            InkWell(
+              onTap: () => _copy(context),
+              borderRadius: BorderRadius.circular(AppDimens.radiusControl),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.copy_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

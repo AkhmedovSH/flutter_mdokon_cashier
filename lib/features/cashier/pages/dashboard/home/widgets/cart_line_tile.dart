@@ -15,6 +15,9 @@ class CartLineTile extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<num> onQuantityChanged;
 
+  /// Тап по числу в степпере: ввод точного количества, в том числе веса.
+  final VoidCallback onQuantityTap;
+
   /// Маркировочная позиция: количество задаётся кодами, а не степпером.
   /// `true` — сканировать новый код, `false` — открыть список кодов.
   final ValueChanged<bool>? onMarkingCodes;
@@ -26,6 +29,7 @@ class CartLineTile extends StatelessWidget {
     required this.currency,
     required this.onTap,
     required this.onQuantityChanged,
+    required this.onQuantityTap,
     this.onMarkingCodes,
   });
 
@@ -66,6 +70,9 @@ class CartLineTile extends StatelessWidget {
               _QuantityStepper(
                 value: _quantity,
                 onChanged: onQuantityChanged,
+                // У маркировочной позиции количество считают коды — руками
+                // его не задать.
+                onValueTap: _marking ? null : onQuantityTap,
                 onMarkingCodes: _marking ? onMarkingCodes : null,
               ),
               const SizedBox(width: AppDimens.gap8),
@@ -81,7 +88,7 @@ class CartLineTile extends StatelessWidget {
                     ),
                     Text(
                       [
-                        '${formatMoney(item['salePrice'])} × ${formatMoney(_quantity, decimalDigits: 3)}',
+                        '${formatMoney(item['salePrice'])} × ${formatQuantity(_quantity)}',
                         if (_discount > 0) '−${formatMoney(_discount, decimalDigits: 0)}%',
                       ].join('  '),
                       maxLines: 1,
@@ -136,6 +143,9 @@ class _QuantityStepper extends StatelessWidget {
   final double value;
   final ValueChanged<num> onChanged;
 
+  /// Тап по числу — лист точного количества; `null` у маркировочной позиции.
+  final VoidCallback? onValueTap;
+
   /// У маркировочной позиции обе кнопки ведут к кодам: «+» — сканер,
   /// «−» — список, где кассир выбирает, какую именно пачку убрать.
   final ValueChanged<bool>? onMarkingCodes;
@@ -143,6 +153,7 @@ class _QuantityStepper extends StatelessWidget {
   const _QuantityStepper({
     required this.value,
     required this.onChanged,
+    this.onValueTap,
     this.onMarkingCodes,
   });
 
@@ -166,24 +177,27 @@ class _QuantityStepper extends StatelessWidget {
             onTap: () => onMarkingCodes == null ? onChanged(value - 1) : onMarkingCodes!(false),
           ),
           // Ширина фиксирована: число любой длины не двигает кнопки степпера.
-          Container(
-            width: 52,
-            height: 34,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                _whole ? '${value.round()}' : formatMoney(value, decimalDigits: 3),
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  fontFeatures: AppText.tabularFigures,
+          InkWell(
+            onTap: onValueTap,
+            child: Container(
+              width: 52,
+              height: 34,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _whole ? '${value.round()}' : formatQuantity(value),
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    fontFeatures: AppText.tabularFigures,
+                  ),
                 ),
               ),
             ),

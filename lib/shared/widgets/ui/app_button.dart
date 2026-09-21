@@ -256,14 +256,17 @@ class AppIconButton extends StatelessWidget {
   }) : _floating = false;
 
   /// Плавающая кнопка сканера: 64×64, брендовая заливка, тень.
+  ///
+  /// Цвета можно переопределить: когда плавающих кнопок две, вторая обязана
+  /// отличаться от главной, иначе кассир жмёт наугад.
   const AppIconButton.floating({
     super.key,
     required this.icon,
     this.onPressed,
     this.tooltip,
-  })  : background = null,
-        foreground = null,
-        size = 64,
+    this.background,
+    this.foreground,
+  })  : size = 64,
         iconSize = 28,
         pill = true,
         _floating = true;

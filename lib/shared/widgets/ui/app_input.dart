@@ -107,6 +107,37 @@ class AppInput extends StatefulWidget {
         maxLines = 1,
         moneyStyle = true;
 
+  /// Поле количества: та же крупная вёрстка, что у [AppInput.money], но
+  /// клавиатура с разделителем — иначе весовой товар (1,2 кг) на телефоне
+  /// набрать нечем: `TextInputType.number` на Android даёт только цифры.
+  /// Разделитель принимаем любой: кассиру всё равно, точка на клавиатуре
+  /// или запятая.
+  AppInput.quantity({
+    super.key,
+    this.label,
+    this.hint = '0',
+    this.errorText,
+    this.controller,
+    this.initialValue,
+    this.onChanged,
+    this.onSubmitted,
+    this.onTap,
+    this.textInputAction,
+    this.enabled = true,
+    this.readOnly = false,
+    this.autofocus = false,
+    this.prefixIcon,
+    this.suffix,
+    this.focusNode,
+    this.height = 52,
+    this.fill,
+  })  : keyboardType = const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters = [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+        obscureText = false,
+        togglePassword = false,
+        maxLines = 1,
+        moneyStyle = true;
+
   @override
   State<AppInput> createState() => _AppInputState();
 }

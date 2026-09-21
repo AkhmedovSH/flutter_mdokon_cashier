@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/widgets/cashier_nav_bar.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/home.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/catalog.dart';
 import 'package:flutter_mdokon/features/agent/pages/cheques.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/profile/profile.dart';
 
@@ -80,73 +84,34 @@ class _AgentDashboardState extends State<AgentDashboard> {
         showSecondModalConfirm();
       },
       child: Scaffold(
+        backgroundColor: AppColors.canvas,
         resizeToAvoidBottomInset: false,
         body: SizedBox.expand(
           child: IndexedStack(
             index: dashboardModel.currentIndex,
-            // controller: pageController,
-            // onPageChanged: (index) {
-            //   setState(() => currentIndex = index);
-            // },
             children: [
               dashboardModel.currentIndex == 0 ? CashierHome() : Container(),
-              dashboardModel.currentIndex == 1 ? AgentCheques() : Container(),
+              // Каталог стоит вторым, как у кассира: продажа зовёт его по
+              // номеру вкладки, и другой порядок открыл бы агенту чеки.
+              Catalog(),
+              dashboardModel.currentIndex == 2 ? AgentCheques() : Container(),
               Profile(),
             ],
           ),
         ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: black.withValues(alpha: 0.3),
-                width: 0.33,
-              ),
+        bottomNavigationBar: CashierNavBar(
+          currentIndex: dashboardModel.currentIndex,
+          onTap: dashboardModel.setCurrentIndex,
+          items: [
+            CashierNavItem(
+              icon: UniconsLine.shopping_cart,
+              labelKey: 'sale',
+              badge: context.watch<SaleModel>().lineCount,
             ),
-          ),
-          child: BottomAppBar(
-            padding: const EdgeInsets.all(0),
-            elevation: 0,
-            color: Colors.transparent,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                splashFactory: NoSplash.splashFactory,
-              ),
-              child: BottomNavigationBar(
-                onTap: (index) => setState(() {
-                  dashboardModel.setCurrentIndex(index);
-                }),
-                backgroundColor: Colors.transparent,
-                selectedItemColor: mainColor,
-                currentIndex: dashboardModel.currentIndex,
-                type: BottomNavigationBarType.fixed,
-                selectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  color: grey,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-                elevation: 0,
-                items: [
-                  BottomNavigationBarItem(
-                    icon: Icon(UniconsLine.monitor),
-                    label: context.tr('sale'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(UniconsLine.receipt),
-                    label: context.tr('checks'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(UniconsLine.user),
-                    label: context.tr('profile'),
-                  ),
-                ],
-              ),
-            ),
-          ),
+            const CashierNavItem(icon: UniconsLine.search, labelKey: 'products'),
+            const CashierNavItem(icon: UniconsLine.receipt, labelKey: 'checks'),
+            const CashierNavItem(icon: UniconsLine.user, labelKey: 'profile'),
+          ],
         ),
       ),
     );

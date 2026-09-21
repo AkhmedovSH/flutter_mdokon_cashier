@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_mdokon/features/cashier/data/quick_rail_repository.dart';
 import 'package:flutter_mdokon/features/cashier/domain/quick_rail.dart';
 
 /// Позиция набора «быстрый подбор».
@@ -110,6 +111,35 @@ void main() {
     test('идентификатор берётся из любого из двух ключей', () {
       expect(quickCategoryKey({'id': '10'}), '10');
       expect(quickCategoryKey({'categoryId': '20'}), '20');
+    });
+  });
+
+  group('витрина: строки остатка', () {
+    const repository = QuickRailRepository();
+
+    // Остаток приходит партиями: у одного штрих-кода их бывает несколько.
+    final rows = <Map<String, dynamic>>[
+      {'barcode': '111', 'salePrice': 1000, 'productName': 'Хлеб'},
+      {'barcode': '111', 'salePrice': 1200, 'productName': 'Хлеб'},
+      {'barcode': '222', 'salePrice': 5000, 'productName': 'Молоко'},
+      {'barcode': '', 'salePrice': 700, 'productName': 'Без кода'},
+    ];
+
+    test('на карточку — один штрих-код, цена из первой партии', () {
+      final unique = repository.uniqueByBarcode(rows);
+      expect(unique.length, 2);
+      expect(unique.first['salePrice'], 1000);
+    });
+
+    test('строки без штрих-кода в витрину не попадают', () {
+      expect(
+        repository.uniqueByBarcode(rows).map((row) => row['barcode']),
+        ['111', '222'],
+      );
+    });
+
+    test('цены набора собираются по штрих-коду', () {
+      expect(repository.pricesOf(rows), {'111': 1000, '222': 5000});
     });
   });
 }

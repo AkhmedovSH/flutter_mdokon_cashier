@@ -75,7 +75,7 @@ class AuthLogoHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppDimens.gap12),
         Text(
-          'mDokon POS',
+          'mDokon Kassa',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,

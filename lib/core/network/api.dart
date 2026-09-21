@@ -19,7 +19,26 @@ BaseOptions options = BaseOptions(
   // sendTimeout: const Duration(seconds: 10),
   // receiveTimeout: const Duration(seconds: 20),
 );
-var dio = Dio(options);
+var dio = Dio(options)
+  ..interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (request, handler) {
+        request.headers['Accept-Language'] = apiLanguage;
+        // Бэк локализует справочники по заголовку `Language` (desktop
+        // `src/api/api.js` шлёт оба). Без него часть названий — например
+        // `paymentPurposeName` в X-отчёте — приходила по-русски.
+        request.headers['Language'] = apiLanguage;
+        handler.next(request);
+      },
+    ),
+  );
+
+/// Язык интерфейса в формате BCP-47 — на нём бэк отдаёт справочники и тексты
+/// (`currencyName`, длительность смены и прочее, что мы не переводим сами).
+/// В хранилище лежит флаг `language`: `true` — узбекский, иначе русский.
+/// Кириллической узбекской локали в приложении пока нет, поэтому `uz-Cyrl-UZ`
+/// не отправляем.
+String get apiLanguage => storage.read('language') == true ? 'uz-Latn-UZ' : 'ru';
 
 Future<bool> checkToken() async {
   if (storage.read('lastLogin') != null) {

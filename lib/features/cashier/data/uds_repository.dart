@@ -12,15 +12,27 @@ import 'package:flutter_mdokon/features/cashier/domain/uds.dart';
 /// `errorKey`, а не на текст.
 const _base = '/services/desktop/api';
 
+/// Клиент живёт столько же, сколько модель кассы, а язык кассир может сменить
+/// в настройках — поэтому `Accept-Language` ставим на каждый запрос, а не один
+/// раз в `BaseOptions`.
+Dio _defaultClient() => Dio(BaseOptions(
+      baseUrl: hostUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: const {'Accept': 'application/json'},
+    ))
+  ..interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (request, handler) {
+        request.headers['Accept-Language'] = apiLanguage;
+        handler.next(request);
+      },
+    ),
+  );
+
 class UdsRepository {
   UdsRepository({Dio? client, GetStorage? store})
-      : _dio = client ??
-            Dio(BaseOptions(
-              baseUrl: hostUrl,
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 30),
-              headers: const {'Accept': 'application/json'},
-            )),
+      : _dio = client ?? _defaultClient(),
         _store = store ?? GetStorage();
 
   final Dio _dio;

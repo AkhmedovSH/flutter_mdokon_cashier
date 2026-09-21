@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_mdokon/features/director/pages/pos/documents_in/create.dart';
@@ -10,28 +9,20 @@ import 'package:flutter_mdokon/features/director/pages/pos/inventory/inventory.d
 
 import 'package:flutter_mdokon/features/director/pages/reports/balance.dart';
 import 'package:flutter_mdokon/features/director/pages/reports/sales.dart';
-
-Page<T> cupertinoPageBuilder<T>(BuildContext context, GoRouterState state, Widget child) {
-  return CupertinoPage(
-    child: child,
-    key: state.pageKey,
-    name: state.name,
-    arguments: state.extra,
-  );
-}
+import 'package:flutter_mdokon/app/router/native_page_builder.dart';
 
 List<RouteBase> directors = [
   GoRoute(
     path: '/documents-in',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, DocumentsIn()),
+    pageBuilder: (context, state) => nativePageBuilder(context, state, DocumentsIn()),
     routes: [
       GoRoute(
         path: '/create',
-        pageBuilder: (context, state) => cupertinoPageBuilder(context, state, DocumentsInCreate()),
+        pageBuilder: (context, state) => nativePageBuilder(context, state, DocumentsInCreate()),
         routes: [
           GoRoute(
             path: '/complete',
-            pageBuilder: (context, state) => cupertinoPageBuilder(context, state, DocumentsInComplete()),
+            pageBuilder: (context, state) => nativePageBuilder(context, state, DocumentsInComplete()),
           ),
         ],
       ),
@@ -39,15 +30,15 @@ List<RouteBase> directors = [
   ),
   GoRoute(
     path: '/inventory',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, Inventory()),
+    pageBuilder: (context, state) => nativePageBuilder(context, state, Inventory()),
     routes: [
       GoRoute(
         path: '/create',
-        pageBuilder: (context, state) => cupertinoPageBuilder(context, state, InventoryCreate()),
+        pageBuilder: (context, state) => nativePageBuilder(context, state, InventoryCreate()),
         routes: [
           GoRoute(
             path: '/complete',
-            pageBuilder: (context, state) => cupertinoPageBuilder(context, state, InventoryComplete()),
+            pageBuilder: (context, state) => nativePageBuilder(context, state, InventoryComplete()),
           ),
         ],
       ),
@@ -55,10 +46,10 @@ List<RouteBase> directors = [
   ),
   GoRoute(
     path: '/balance',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, PosBalance()),
+    pageBuilder: (context, state) => nativePageBuilder(context, state, PosBalance()),
   ),
   GoRoute(
     path: '/sales',
-    pageBuilder: (context, state) => cupertinoPageBuilder(context, state, PosSales()),
+    pageBuilder: (context, state) => nativePageBuilder(context, state, PosSales()),
   ),
 ];

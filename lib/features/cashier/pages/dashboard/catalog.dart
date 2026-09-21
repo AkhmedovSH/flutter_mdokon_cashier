@@ -54,20 +54,45 @@ class _CatalogState extends State<Catalog> {
   /// Количество из штрих-кода весов — им заменяется «одна штука» при добавлении.
   double? _pendingWeight;
 
+  /// Значение [SaleModel.chequeSerial] на момент последней проверки: по его
+  /// изменению видно, что чек начат заново.
+  late int _chequeSerial;
+
+  /// Ссылку держим отдельно: в dispose обращаться к провайдеру уже нельзя.
+  late final SaleModel _saleModel;
+
   @override
   void initState() {
     super.initState();
     cashbox = storage.read('cashbox') ?? {};
+    _saleModel = context.read<SaleModel>();
+    _chequeSerial = _saleModel.chequeSerial;
+    _saleModel.addListener(_onSaleChanged);
   }
 
   @override
   void dispose() {
+    _saleModel.removeListener(_onSaleChanged);
     _debounce?.cancel();
     textEditingController.dispose();
     super.dispose();
   }
 
   SaleModel get _sale => context.read<SaleModel>();
+
+  /// Чек начали заново (оплатили, отложили, очистили) — прошлый поиск больше
+  /// не про этого покупателя, поэтому строку и выдачу сбрасываем.
+  void _onSaleChanged() {
+    if (_saleModel.chequeSerial == _chequeSerial) return;
+    _chequeSerial = _saleModel.chequeSerial;
+    if (textEditingController.text.isEmpty && products.isEmpty) return;
+
+    _debounce?.cancel();
+    textEditingController.clear();
+    _pendingMarking = null;
+    _pendingWeight = null;
+    setState(() => products = []);
+  }
 
   // --- Данные ------------------------------------------------------------
 
@@ -225,6 +250,11 @@ class _CatalogState extends State<Catalog> {
       if (quantity <= 0) return;
       final product = Map<String, dynamic>.from(products[i] as Map);
       product['quantity'] = quantity;
+      // Маркировочный товар без кода в чек не кладём: количество такой позиции
+      // задают коды, а один штрих-код с упаковки кода не несёт.
+      if (!await ensureMarkingCode(context, product, cashbox['posId'])) return;
+      if (!mounted) return;
+
       final needsUnitDialog = model.addScannedProducts([product]);
       if (needsUnitDialog && mounted) await SaleSheets.unit(context, model);
     }

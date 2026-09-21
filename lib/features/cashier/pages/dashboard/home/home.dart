@@ -18,6 +18,7 @@ import 'package:flutter_mdokon/features/cashier/domain/product_search.dart';
 import 'package:flutter_mdokon/features/cashier/domain/postponed_cheque.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
 import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/features/cashier/pages/dashboard/marking_scan.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/sale_sheets.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/cart_line_tile.dart';
 import 'package:flutter_mdokon/features/cashier/pages/dashboard/home/widgets/hotkeys_panel.dart';
@@ -48,7 +49,11 @@ class _CashierHomeState extends State<CashierHome> {
   final FocusNode _hotkeyFocus = FocusNode(debugLabel: 'cashier-hotkeys');
 
   /// Набранное на внешней клавиатуре число, ждущее клавишу операции («2» в «2+»).
-  String _hotkeyBuffer = '';
+  ///
+  /// [ValueNotifier], а не поле: экранный цифровой блок на телефоне живёт в
+  /// листе быстрого выбора — это отдельный маршрут, и `setState` страницы его
+  /// не перестраивает.
+  final ValueNotifier<String> _hotkeyBuffer = ValueNotifier<String>('');
 
   @override
   void initState() {
@@ -59,6 +64,7 @@ class _CashierHomeState extends State<CashierHome> {
   @override
   void dispose() {
     _hotkeyFocus.dispose();
+    _hotkeyBuffer.dispose();
     super.dispose();
   }
 
@@ -101,6 +107,20 @@ class _CashierHomeState extends State<CashierHome> {
     if (needsUnitDialog && mounted) await SaleSheets.unit(context, model);
   }
 
+  /// Ввод точного количества позиции: единственный способ пробить весовой
+  /// товар (1,2 кг) — степпер ходит целыми шагами.
+  Future<void> _editQuantity(int index) async {
+    final model = _model;
+    if (index < 0 || index >= model.items.length) return;
+
+    model.selectLine(index);
+    final value = await SaleSheets.quantity(context, model, index);
+    if (value == null || !mounted) return;
+
+    model.setQuantity(index, value);
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   /// Смена цены и скидки закрыты ролями. Проверяем на обоих входах: меню уже
   /// отфильтровано, но клавиатура на планшете зовёт операцию напрямую.
   bool _ensureShortcutAllowed(SaleShortcut shortcut) {
@@ -135,18 +155,19 @@ class _CashierHomeState extends State<CashierHome> {
   /// Нажатие клавиши — с внешней клавиатуры или с экранного блока боковой
   /// колонки. Путь один: иначе раскладка разъехалась бы на двух обработчиках.
   bool _handleKey(String key) {
-    final command = resolveHotkey(key, buffer: _hotkeyBuffer);
+    final buffer = _hotkeyBuffer.value;
+    final command = resolveHotkey(key, buffer: buffer);
     switch (command.action) {
       case HotkeyAction.none:
         return false;
       case HotkeyAction.append:
-        setState(() => _hotkeyBuffer = appendToHotkeyBuffer(_hotkeyBuffer, command.symbol!));
+        _hotkeyBuffer.value = appendToHotkeyBuffer(buffer, command.symbol!);
       case HotkeyAction.backspace:
-        setState(() => _hotkeyBuffer = _hotkeyBuffer.substring(0, _hotkeyBuffer.length - 1));
+        _hotkeyBuffer.value = buffer.substring(0, buffer.length - 1);
       case HotkeyAction.clearInput:
-        setState(() => _hotkeyBuffer = '');
+        _hotkeyBuffer.value = '';
       case HotkeyAction.clearCheque:
-        setState(() => _hotkeyBuffer = '');
+        _hotkeyBuffer.value = '';
         _confirmClear();
       case HotkeyAction.shortcut:
         _runHotkeyShortcut(command.shortcut!);
@@ -157,13 +178,13 @@ class _CashierHomeState extends State<CashierHome> {
   /// Операция с клавиатуры: значение уже набрано, лист ввода не открываем.
   Future<void> _runHotkeyShortcut(SaleShortcut shortcut) async {
     if (!_ensureShortcutAllowed(shortcut)) {
-      setState(() => _hotkeyBuffer = '');
+      _hotkeyBuffer.value = '';
       return;
     }
 
     final model = _model;
-    model.setShortcutValue(_hotkeyBuffer);
-    setState(() => _hotkeyBuffer = '');
+    model.setShortcutValue(_hotkeyBuffer.value);
+    _hotkeyBuffer.value = '';
 
     final needsUnitDialog = model.applyShortcut(shortcut);
     if (needsUnitDialog && mounted) await SaleSheets.unit(context, model);
@@ -187,7 +208,7 @@ class _CashierHomeState extends State<CashierHome> {
       return;
     }
 
-    final rows = await _quickRail.search(
+    final rows = await _quickRail.balance(
       posId: model.cashbox['posId'],
       currencyId: model.data['currencyId'],
       query: code,
@@ -206,19 +227,36 @@ class _CashierHomeState extends State<CashierHome> {
 
     final product = Map<String, dynamic>.from(matched.first as Map);
     product['quantity'] = 1;
+    // Маркировочный товар по одному штрих-коду в чек не попадает: сначала код
+    // с акцизной марки, иначе количество позиции задавать нечем.
+    if (!await ensureMarkingCode(context, product, model.cashbox['posId'])) return;
+    if (!mounted) return;
+
     final needsUnitDialog = model.addScannedProducts([product]);
     if (needsUnitDialog && mounted) await SaleSheets.unit(context, model);
   }
 
-  /// Клавиша экранного цифрового блока колонки.
-  void _onRailKey(String key) => _handleKey(key);
+  /// Сколько штук этого штрих-кода уже в чеке — счётчик на карточке колонки.
+  double _quantityInCart(String barcode) {
+    if (barcode.isEmpty) return 0;
+    var total = 0.0;
+    for (final item in _model.items) {
+      if ('${(item as Map)['barcode'] ?? ''}' != barcode) continue;
+      total += customNumber(item['quantity']);
+    }
+    return total;
+  }
 
-  /// «Добавить в чек» на экранной клавиатуре: набранное — это код товара.
-  Future<void> _submitBuffer() async {
-    final code = _hotkeyBuffer;
-    if (code.isEmpty) return;
-    setState(() => _hotkeyBuffer = '');
-    await _addByBarcode(code);
+  /// Быстрый выбор с телефона: колонки там нет, поэтому тот же набор
+  /// открываем листом снизу. Каталог остаётся рядом — он про весь остаток,
+  /// а быстрый выбор про несколько ходовых позиций.
+  Future<void> _openQuickSelection() {
+    return QuickRail.show(
+      context,
+      cart: _model,
+      quantityOf: _quantityInCart,
+      onAddBarcode: _addByBarcode,
+    );
   }
 
   /// Переход к оплате. Возврат `true` из оплаты очищает чек.
@@ -394,6 +432,8 @@ class _CashierHomeState extends State<CashierHome> {
                 if (customIf(model.cashbox['cashboxName'])) '${model.cashbox['cashboxName']}',
               ].join(' · '),
               onActionsTap: _openCashierActions,
+              // Быстрый выбор — только там, где колонки справа нет.
+              onQuickSelectionTap: layout.hasSideRail ? null : _openQuickSelection,
             ),
           // Параллельные чеки — только планшет: на телефоне нет ни ширины,
           // ни сценария «два покупателя у одной кассы».
@@ -411,19 +451,23 @@ class _CashierHomeState extends State<CashierHome> {
               body: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Добавить товар — плавающей кнопкой над чеком: у списка
+                  // снизу есть отступ, так что последнюю строку она не
+                  // закрывает. На широком экране вместо неё колонка справа.
                   Expanded(
                     child: Stack(
                       children: [
                         model.isEmpty ? _empty(context) : _cart(model),
-                        Positioned(
-                          right: layout.gutter,
-                          bottom: layout.gutter,
-                          child: AppIconButton.floating(
-                            icon: UniconsLine.qrcode_scan,
-                            tooltip: context.tr('search'),
-                            onPressed: _openCatalog,
+                        if (!layout.hasSideRail)
+                          Positioned(
+                            right: layout.gutter,
+                            bottom: layout.gutter,
+                            child: AppIconButton.floating(
+                              icon: UniconsLine.plus,
+                              tooltip: context.tr('search'),
+                              onPressed: _openCatalog,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -431,10 +475,9 @@ class _CashierHomeState extends State<CashierHome> {
                   // остаётся ширина: на телефоне товар ищут через каталог.
                   if (layout.hasSideRail)
                     QuickRail(
-                      buffer: _hotkeyBuffer,
+                      cart: model,
+                      quantityOf: _quantityInCart,
                       onAddBarcode: _addByBarcode,
-                      onKey: _onRailKey,
-                      onSubmit: _submitBuffer,
                     ),
                 ],
               ),
@@ -499,13 +542,16 @@ class _CashierHomeState extends State<CashierHome> {
           Icon(UniconsLine.keyboard, size: 16, color: AppColors.textSecondary),
           const SizedBox(width: AppDimens.gap8),
           Expanded(
-            child: Text(
-              _hotkeyBuffer.isEmpty ? context.tr('hotkeys_hint') : _hotkeyBuffer,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _hotkeyBuffer.isEmpty
-                  ? AppText.secondary
-                  : AppText.tabular(AppText.secondaryBold).copyWith(color: AppColors.primary),
+            child: ValueListenableBuilder<String>(
+              valueListenable: _hotkeyBuffer,
+              builder: (context, buffer, _) => Text(
+                buffer.isEmpty ? context.tr('hotkeys_hint') : buffer,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: buffer.isEmpty
+                    ? AppText.secondary
+                    : AppText.tabular(AppText.secondaryBold).copyWith(color: AppColors.primary),
+              ),
             ),
           ),
           AppIconButton(
@@ -622,6 +668,7 @@ class _CashierHomeState extends State<CashierHome> {
             currency: model.currencyName,
             onTap: () => model.selectLine(index),
             onQuantityChanged: (value) => model.setQuantity(index, value),
+            onQuantityTap: () => _editQuantity(index),
             onMarkingCodes: (scan) => showMarkingCodesSheet(
               context,
               model,

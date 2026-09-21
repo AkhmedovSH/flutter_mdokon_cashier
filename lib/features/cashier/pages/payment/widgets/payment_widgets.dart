@@ -746,7 +746,11 @@ class OtpCodeField extends StatelessWidget {
   const OtpCodeField({super.key, required this.model, required this.selection});
 
   Future<void> _scan(BuildContext context) async {
-    final code = await BarcodeScannerPage.scan(context, title: context.tr('otp_code'));
+    final code = await BarcodeScannerPage.scan(
+      context,
+      title: context.tr('otp_code'),
+      hint: context.tr('scanner_aim_qr_hint'),
+    );
     if (code == null || code.isEmpty) return;
     model.otpController.text = code.trim();
   }
