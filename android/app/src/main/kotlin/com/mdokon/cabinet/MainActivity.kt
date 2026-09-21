@@ -1,4 +1,4 @@
-package com.example.flutter_mdokon
+package com.mdokon.cabinet
 
 import io.flutter.embedding.android.FlutterActivity
 
