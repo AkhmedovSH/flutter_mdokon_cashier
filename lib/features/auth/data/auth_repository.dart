@@ -1,6 +1,7 @@
 import 'package:get_storage/get_storage.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/utils/logger.dart';
 
 /// Единственная точка доступа к API авторизации.
 ///
@@ -11,21 +12,48 @@ class AuthRepository {
 
   AuthRepository({GetStorage? storage}) : storage = storage ?? GetStorage();
 
+  /// Почему не прошёл последний вход: неверные креды и недоступный сервер
+  /// выглядели для кассира одинаково.
+  String lastLoginError = '';
+
   /// POST /auth/login — возвращает `true`, если токен получен и сохранён.
   Future<bool> login({
     required String username,
     required String password,
     bool rememberMe = false,
   }) async {
+    lastLoginError = '';
     final response = await post(
       '/auth/login',
       {'username': username, 'password': password, 'rememberMe': rememberMe},
       isGuest: true,
     );
-    if (!httpOk(response) || response['access_token'] == null) return false;
+    if (!httpOk(response) || response['access_token'] == null) {
+      lastLoginError = _loginReason(response);
+      return false;
+    }
 
+    // Свежий токен: старый lastLogin от прошлой сессии заставил бы checkToken()
+    // перелогиниться прежним пользователем и подменить токен до запроса профиля.
+    storage.remove('lastLogin');
     storage.write('access_token', response['access_token']);
     return true;
+  }
+
+  String _loginReason(dynamic response) {
+    if (response == null) {
+      return 'Сервер не ответил. Проверьте интернет и повторите';
+    }
+    if (response is Map) {
+      final message = response['error_description'] ??
+          response['message'] ??
+          response['error'];
+      if (message != null && '$message'.isNotEmpty) return '$message';
+      if (response['access_token'] == null) {
+        return 'Сервер принял запрос, но не выдал токен доступа';
+      }
+    }
+    return 'Неверный логин или пароль';
   }
 
   /// Нужно ли подтверждение по SMS для текущего токена.
@@ -43,6 +71,11 @@ class AuthRepository {
   /// Профиль пользователя с ролями.
   Future<Map> account() async {
     final response = await get('/services/desktop/api/account');
+    appLog.info('auth.account_response', {
+      'type': '${response.runtimeType}',
+      'ok': httpOk(response),
+      'keys': response is Map ? response.keys.toList() : null,
+    });
     return httpOk(response) ? Map.from(response) : {};
   }
 

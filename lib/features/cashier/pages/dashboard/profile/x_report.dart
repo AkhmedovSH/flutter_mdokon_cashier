@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:unicons/unicons.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 
 class XReport extends StatefulWidget {
@@ -90,6 +91,7 @@ class _XReportState extends State<XReport> {
     });
 
     storage.remove('user');
+    credentialStore.deletePassword();
     if (response['success'] && mounted) {
       // Печать Z-отчёта при закрытии смены — право Z_REPORT (desktop:
       // `Titlebar.js`). Без него смена закрывается молча.

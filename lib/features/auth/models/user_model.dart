@@ -39,7 +39,13 @@ class UserModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Почему в прошлый раз не вышло загрузить типы оплаты: пустой справочник
+  /// на точке и отказ сервера — разные беды, а кассир видел один и тот же
+  /// текст. Сообщение отсюда показывает экран входа.
+  String paymentTypesError = '';
+
   Future getPaymentTypes(dynamic posId) async {
+    paymentTypesError = '';
     final response = await get("/services/desktop/api/payment-type-helper/$posId");
     try {
       if (httpOk(response) && response.length > 0) {
@@ -47,19 +53,55 @@ class UserModel extends ChangeNotifier {
         storage.write('paymentTypes', response);
         return true;
       }
+      paymentTypesError = httpOk(response)
+          ? 'На точке (ID $posId) не настроен ни один тип оплаты. '
+              'Добавьте их в кабинете и войдите снова'
+          : 'Сервер не отдал типы оплаты для точки ID $posId: '
+              '${_responseReason(response)}';
       return false;
     } catch (e) {
+      paymentTypesError = 'Не разобрали ответ по типам оплаты (точка ID $posId): $e';
       return false;
     }
   }
 
   Future getCashboxSettings(dynamic posId) async {
     final response = await get("/services/desktop/api/cashbox-settings/$posId");
-    response['cashboxSettings'] = jsonDecode(response['cashboxSettings']);
-    response['chequeSettings'] = jsonDecode(response['chequeSettings']);
-    response['userSettings'] = jsonDecode(response['userSettings']);
+    if (!httpOk(response) || response is! Map) {
+      throw Exception(
+        'Настройки кассы (точка ID $posId) не получены: ${_responseReason(response)}',
+      );
+    }
+    // Любая из трёх секций может прийти пустой — тогда говорим, какая именно,
+    // вместо безымянного падения jsonDecode.
+    response['cashboxSettings'] = _decodeSettings(response['cashboxSettings'], 'cashboxSettings', posId);
+    response['chequeSettings'] = _decodeSettings(response['chequeSettings'], 'chequeSettings', posId);
+    response['userSettings'] = _decodeSettings(response['userSettings'], 'userSettings', posId);
     cashboxSettings = response;
     storage.write('cashboxSettings', response);
+  }
+
+  dynamic _decodeSettings(dynamic raw, String name, dynamic posId) {
+    if (raw == null) {
+      throw Exception('Настройки «$name» пустые на точке ID $posId');
+    }
+    if (raw is! String) return raw;
+    try {
+      return jsonDecode(raw);
+    } catch (e) {
+      throw Exception('Настройки «$name» (точка ID $posId) пришли битыми: $e');
+    }
+  }
+
+  /// Что именно сказал сервер — текст ошибки, код или «нет ответа».
+  String _responseReason(dynamic response) {
+    if (response == null) return 'нет ответа от сервера';
+    if (response is Map) {
+      final message = response['message'] ?? response['error'] ?? response['detail'];
+      if (message != null && '$message'.isNotEmpty) return '$message';
+      if (response['status'] != null) return 'код ${response['status']}';
+    }
+    return 'неожиданный ответ';
   }
 
   Future<void> setVersion(String version) async {

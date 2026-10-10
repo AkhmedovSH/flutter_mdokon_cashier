@@ -29,9 +29,16 @@ class _LoginState extends State<Login> {
     super.initState();
     final auth = context.read<AuthModel>();
     auth.ensureDefaultSettings();
-    auth.restoreSavedCredentials();
+    // Логин подставляется сразу, пароль читается из Keystore/Keychain
+    // асинхронно — поле заполняем, когда он придёт, если кассир не ввёл свой.
+    final restored = auth.restoreSavedCredentials();
     _loginController.text = auth.username;
     _passwordController.text = auth.password;
+    restored.then((_) {
+      if (mounted && _passwordController.text.isEmpty) {
+        _passwordController.text = auth.password;
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<UserModel>().checkVersion(context);

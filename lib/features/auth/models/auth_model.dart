@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/utils/logger.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
@@ -29,13 +30,16 @@ class AuthModel extends ChangeNotifier {
   final AuthRepository repository;
   final UserModel userModel;
   final GetStorage storage;
+  final CredentialStore credentials;
 
   AuthModel({
     required this.userModel,
     AuthRepository? repository,
     GetStorage? storage,
+    CredentialStore? credentials,
   })  : repository = repository ?? AuthRepository(),
-        storage = storage ?? GetStorage();
+        storage = storage ?? GetStorage(),
+        credentials = credentials ?? credentialStore;
 
   // --- Форма -----------------------------------------------------------
   String username = '';
@@ -110,13 +114,19 @@ class AuthModel extends ChangeNotifier {
       });
 
   /// Подставить сохранённые логин и пароль, если стояла галочка «Запомнить меня».
-  void restoreSavedCredentials() {
+  /// Пароль читается из защищённого хранилища ([CredentialStore]).
+  Future<void> restoreSavedCredentials() async {
     final saved = storage.read('user');
     if (saved is! Map || customIf(saved['rememberMe']) != true) return;
 
+    // Логин и галочку ставим сразу (до первого кадра), пароль — когда
+    // ответит хранилище, и только если кассир не успел ввести свой.
     username = '${saved['username'] ?? ''}';
-    password = '${saved['password'] ?? ''}';
     rememberMe = true;
+    final savedPassword = await credentials.readPassword() ?? '';
+    if (password.isEmpty && savedPassword.isNotEmpty) {
+      _update(() => password = savedPassword);
+    }
   }
 
   /// Дефолтные настройки при первом запуске. Список один на всё приложение —
@@ -141,24 +151,51 @@ class AuthModel extends ChangeNotifier {
 
     _setSubmitting(true);
     try {
-      return isOtpStep ? await _confirmOtp() : await _signIn();
+      final redirect = isOtpStep ? await _confirmOtp() : await _signIn();
+      // Вход не удался (и не ждём код из SMS) — не оставляем полуоткрытую сессию:
+      // после перезапуска роутер пустил бы в кассу по user + lastLogin.
+      if (redirect == null && !isOtpStep && step != AuthStep.otp) _dropSession();
+      return redirect;
     } catch (e) {
       appLog.exception('auth.submit_failed', e);
-      _fail('Не удалось войти. Попробуйте ещё раз');
+      _dropSession();
+      // Кассир на точке не пойдёт в логи: показываем, на чём именно споткнулись.
+      _fail('Вход прерван: ${_reason(e)}');
       return null;
     } finally {
       _setSubmitting(false);
     }
   }
 
+  /// Забываем прошлую сессию: токен, роль, `user`, `lastLogin`, смену. Корзину
+  /// (`saleSession`) оставляем только тому же логину, иначе чужой чек уехал бы
+  /// к другому кассиру.
+  void _dropSession({bool keepSale = false}) {
+    if (!keepSale) storage.remove('saleSession');
+    for (final key in const [
+      'access_token',
+      'lastLogin',
+      'user',
+      'role',
+      'user_roles',
+      'shift',
+    ]) {
+      storage.remove(key);
+    }
+  }
+
   Future<AuthRedirect?> _signIn() async {
+    final prev = storage.read('user');
+    final sameUser = prev is Map && '${prev['username']}' == username.trim();
+    _dropSession(keepSale: sameUser);
+
     final ok = await repository.login(
       username: username.trim(),
       password: password,
       rememberMe: rememberMe,
     );
     if (!ok) {
-      _fail('Неверный логин или пароль');
+      _fail(repository.lastLoginError);
       return null;
     }
 
@@ -188,13 +225,15 @@ class AuthModel extends ChangeNotifier {
   Future<AuthRedirect?> _loadAccount() async {
     final account = await repository.account();
     if (account.isEmpty) {
-      _fail('Не удалось получить профиль');
+      _fail('Сервер не вернул профиль пользователя. Проверьте связь и повторите');
       return null;
     }
 
+    // Пароль нужен для тихого перелогина, но в GetStorage (`user`) он не
+    // попадает — только в Keystore/Keychain.
+    await credentials.writePassword(password);
     userModel.setUser({
       'username': username.trim(),
-      'password': password,
       'rememberMe': rememberMe,
       ...account,
     });
@@ -208,14 +247,17 @@ class AuthModel extends ChangeNotifier {
       AuthRoles.cashier => await _openCashierSession(),
       AuthRoles.agent => await _openAgentSession(),
       AuthRoles.owner || AuthRoles.merchandiser => await _openDirectorSession(),
-      _ => _fail('Нет доступа'),
+      _ => _fail(
+          'У пользователя нет роли для входа в кассу '
+          '(права: ${_authorities(account['authorities'])})',
+        ),
     };
   }
 
   /// Кассир: либо возвращаемся в открытую смену, либо идём выбирать кассу.
   Future<AuthRedirect?> _openCashierSession() async {
     final response = await repository.accessPos();
-    if (response.isEmpty) return _fail('Нет доступных касс');
+    if (response.isEmpty) return _fail('Сервер не вернул ни одной кассы для этого кассира');
 
     if (customIf(response['openShift'])) {
       storage.remove('shift');
@@ -225,7 +267,7 @@ class AuthModel extends ChangeNotifier {
 
       final ready = await userModel.getPaymentTypes(shift['posId']);
       await userModel.getCashboxSettings(shift['posId']);
-      if (ready != true) return _fail('Не удалось загрузить типы оплаты');
+      if (ready != true) return _fail(userModel.paymentTypesError);
 
       return const AuthRedirect('/cashier');
     }
@@ -238,7 +280,7 @@ class AuthModel extends ChangeNotifier {
 
   Future<AuthRedirect?> _openAgentSession() async {
     final response = await repository.accessPos();
-    if (response.isEmpty) return _fail('Нет доступных точек');
+    if (response.isEmpty) return _fail('Сервер не вернул ни одной точки для агента');
 
     response['isAgent'] = true;
     response['defaultCurrencyName'] = response['defaultCurrency'] == 2 ? 'USD' : "So'm";
@@ -283,16 +325,24 @@ class AuthModel extends ChangeNotifier {
         posId: pos['posId'],
         cashboxId: cashbox['id'],
       );
-      if (customIf(shift['success']) != true) return _fail('Не удалось открыть смену');
+      if (customIf(shift['success']) != true) {
+        final message = '${shift['message'] ?? ''}'.trim();
+        return _fail(
+          message.isEmpty
+              ? 'Смена на кассе «${cashbox['name']}» не открылась — сервер отказал без пояснения'
+              : 'Смена на кассе «${cashbox['name']}» не открылась: $message',
+        );
+      }
       storage.write('shift', shift);
 
       final ready = await userModel.getPaymentTypes(pos['posId']);
       await userModel.getCashboxSettings(pos['posId']);
-      if (ready != true) return _fail('Не удалось загрузить типы оплаты');
+      if (ready != true) return _fail(userModel.paymentTypesError);
 
       return const AuthRedirect('/cashier');
     } catch (e) {
-      return _fail('Не удалось открыть смену');
+      appLog.exception('auth.open_shift_failed', e);
+      return _fail('Смена не открылась: ${_reason(e)}');
     } finally {
       _setSubmitting(false);
     }
@@ -300,10 +350,25 @@ class AuthModel extends ChangeNotifier {
 
   // --- Служебное -------------------------------------------------------
 
+  /// Человекочитаемая причина из исключения: свой текст Exception показываем
+  /// как есть, служебный префикс `Exception:` убираем.
+  String _reason(Object error) {
+    final text = error is Exception
+        ? error.toString().replaceFirst('Exception: ', '')
+        : error.toString();
+    return text.isEmpty ? 'неизвестная ошибка' : text;
+  }
+
+  String _authorities(dynamic value) {
+    if (value is List && value.isNotEmpty) return value.join(', ');
+    return 'список пуст';
+  }
+
   AuthRedirect? _fail(String message) {
-    _error = message;
+    _error = message.trim().isEmpty ? 'Неизвестная ошибка входа' : message.trim();
     notifyListeners();
-    showDangerToast(message);
+    appLog.warn('auth.failed', {'message': _error});
+    showDangerToast(_error!);
     return null;
   }
 

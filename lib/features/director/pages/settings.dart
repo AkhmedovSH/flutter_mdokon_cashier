@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/core/localization/locale_model.dart';
 import 'package:flutter_mdokon/core/state/settings_model.dart';
@@ -319,6 +320,7 @@ class CardItem extends StatelessWidget {
             storage.remove('user');
             storage.remove('access_token');
             storage.remove('lastLogin');
+            credentialStore.deletePassword();
             context.pushReplacement('/auth');
           }
           if (title == 'support') {

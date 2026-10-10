@@ -9,6 +9,7 @@ import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
 import 'package:flutter_mdokon/core/theme/themes.dart';
 import 'package:flutter_mdokon/features/auth/models/user_model.dart';
@@ -142,6 +143,7 @@ class _ProfileState extends State<Profile> {
     storage.remove('user');
     storage.remove('access_token');
     storage.remove('lastLogin');
+    credentialStore.deletePassword();
     Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
     context.go('/auth');
   }

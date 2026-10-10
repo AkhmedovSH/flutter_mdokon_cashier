@@ -5,7 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/utils/helper.dart';
+import 'package:flutter_mdokon/core/utils/logger.dart';
 
 const hostUrl = "https://cabinet.mdokon.uz";
 
@@ -44,11 +46,14 @@ Future<bool> checkToken() async {
   if (storage.read('lastLogin') != null) {
     var lastLogin = (storage.read('lastLogin'));
     if (minutesBetween(lastLogin, DateTime.now()) >= 55) {
+      // Пароль — из Keystore/Keychain, в GetStorage его больше нет.
+      final password = await credentialStore.readPassword();
+      if (password == null || password.isEmpty) return false;
       final response = await post(
         '/auth/login',
         {
           "username": storage.read('user')['username'],
-          "password": storage.read('user')['password'],
+          "password": password,
         },
         isGuest: true,
       );
@@ -171,14 +176,23 @@ Future del(String url) async {
 }
 
 bool httpOk(dynamic response) {
-  if (response != null && response != false && response != {} && response != "") {
-    return true;
-  }
-  return false;
+  if (response == null || response == false || response == "") return false;
+  // `response != {}` в Dart всегда истинно (сравнение по ссылке), поэтому пустой Map ловим явно.
+  if (response is Map && response.isEmpty) return false;
+  return true;
 }
 
 Future<void> statuscheker(dynamic e) async {
   print(e);
+  try {
+    appLog.warn('net.error', {
+      'url': '${e.requestOptions?.uri}',
+      'status': e.response?.statusCode,
+      'type': '${e.type}',
+    });
+  } catch (_) {
+    appLog.warn('net.error', {'err': '${e.runtimeType}'});
+  }
   if (e.response != null && e.response.statusCode != null) {
     log(jsonEncode(e.response.toString()));
 

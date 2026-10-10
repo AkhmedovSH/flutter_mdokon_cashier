@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_mdokon/app/app.dart';
 import 'package:flutter_mdokon/app/providers.dart';
+import 'package:flutter_mdokon/core/storage/credential_store.dart';
 import 'package:flutter_mdokon/core/theme/app_colors.dart';
 import 'package:flutter_mdokon/core/theme/theme_model.dart';
 import 'package:flutter_mdokon/core/utils/logger.dart';
@@ -28,6 +29,10 @@ void main() async {
   appLog.refreshVerbose();
   appLog.installGlobalErrorHandlers();
   appLog.info('app.start');
+
+  // Старые версии хранили пароль открытым текстом в GetStorage (`user.password`).
+  // Переносим его в Keystore/Keychain до того, как UserModel прочитает `user`.
+  await credentialStore.migrateLegacy(storage);
 
   // Пользовательский выбор темы важнее системного: системную яркость берём
   // только при самом первом запуске, пока в хранилище ничего нет.
