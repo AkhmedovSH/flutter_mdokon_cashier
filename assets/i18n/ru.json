@@ -851,5 +851,9 @@
 	"yesterday": "Вчера",
 	"you_do_not_have_access": "У вас нет доступа",
 	"you_need_to_install_the_latest_version_to_continue_using_the_app": "Требуется установить последнюю версию чтобы продолжить использовать приложение",
-	"z_report": "Z-отчёт"
+	"z_report": "Z-отчёт",
+	"editing_sent_cheque": "Редактирование отправленного чека",
+	"exit_without_saving": "Выйти",
+	"replace_cart_title": "Заменить корзину?",
+	"replace_cart_text": "Товары в текущей корзине будут удалены, вместо них откроется этот чек."
 }

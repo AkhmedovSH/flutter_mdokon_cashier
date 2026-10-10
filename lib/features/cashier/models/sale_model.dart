@@ -95,8 +95,14 @@ class SaleModel extends ChangeNotifier {
   Map data = emptyCheque();
   Map cashbox = {};
 
-  /// Режим редактирования чека, пришедшего с кассы (агент).
-  bool isEdit = false;
+  /// Ключ в чеке с `id` онлайн-чека, который агент открыл на правку.
+  /// Лежит прямо в `data`, а не в поле модели: так он переживает
+  /// перезапуск вместе с сессией продажи и сбрасывается вместе с чеком.
+  static const agentChequeIdKey = 'agentChequeId';
+
+  /// Агент правит уже отправленный чек — повторная отправка обновляет его
+  /// (`PUT`), а не создаёт на кассе второй.
+  bool get isEdit => isAgent && data[agentChequeIdKey] != null;
 
   /// Значение в поле быстрых операций.
   String shortcutValue = '';
@@ -169,8 +175,9 @@ class SaleModel extends ChangeNotifier {
   // --- Инициализация -----------------------------------------------------
 
   /// Подтягивает кассу, пользователя и справочник расходов.
-  /// [returnCheque] — чек, возвращённый агенту на редактирование.
-  Future<void> init({Map? returnCheque}) async {
+  /// [returnCheque] — чек, возвращённый агенту на редактирование,
+  /// [returnChequeId] — `id` его строки в `cheque-online-list`.
+  Future<void> init({Map? returnCheque, dynamic returnChequeId}) async {
     cashbox = storage.read('cashbox') ?? {};
     final user = storage.read('user') ?? {};
 
@@ -181,6 +188,7 @@ class SaleModel extends ChangeNotifier {
 
     if (isAgent && returnCheque != null && returnCheque.isNotEmpty) {
       data = Map.from(returnCheque);
+      data[agentChequeIdKey] = returnChequeId;
       _sessionRestored = true;
     } else {
       _restoreSession();
@@ -861,14 +869,14 @@ class SaleModel extends ChangeNotifier {
     if (_busy || isEmpty) return false;
     _setBusy(true);
     try {
-      final cheque = Map.from(data);
+      final cheque = Map.from(data)..remove(agentChequeIdKey);
       cheque['currencyId'] ??= cashbox['defaultCurrency'];
       if (cheque['currencyId'] == '') cheque['currencyId'] = cashbox['defaultCurrency'];
 
       final ok = await repository.sendToCashbox(
         posId: cashbox['posId'],
         cheque: cheque,
-        id: isEdit ? data['id'] : null,
+        id: isEdit ? data[agentChequeIdKey] : null,
       );
       if (ok) clearCheque();
       return ok;

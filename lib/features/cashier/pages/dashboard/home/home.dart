@@ -75,12 +75,16 @@ class _CashierHomeState extends State<CashierHome> {
     final returned = dashboard.returnCheque;
 
     Map? cheque;
+    dynamic chequeId;
     if (returned.isNotEmpty && returned['cheque'] != null) {
       cheque = jsonDecode(returned['cheque']);
+      // `id` строки списка, а не чека внутри неё: по нему касса находит
+      // отправленный чек и обновляет его вместо создания второго.
+      chequeId = returned['id'];
       dashboard.setCurrentCheque({});
     }
 
-    await context.read<SaleModel>().init(returnCheque: cheque);
+    await context.read<SaleModel>().init(returnCheque: cheque, returnChequeId: chequeId);
   }
 
   SaleModel get _model => context.read<SaleModel>();
@@ -446,6 +450,7 @@ class _CashierHomeState extends State<CashierHome> {
               onAdd: model.addTab,
             ),
           if (layout.isTablet) _hotkeyBar(),
+          if (model.isEdit) _editBanner(model),
           Expanded(
             child: SideRailLayout(
               body: Row(
@@ -527,6 +532,31 @@ class _CashierHomeState extends State<CashierHome> {
   /// Строка горячих клавиш: что уже набрано на внешней клавиатуре и вход в
   /// подсказку. Без неё набранное число нигде не видно — кассир жал бы `+`
   /// вслепую.
+  /// Агент открыл уже отправленный чек. Выйти можно, ничего не отправляя:
+  /// чек на кассе остаётся как был, корзина очищается.
+  Widget _editBanner(SaleModel model) {
+    return Container(
+      color: AppColors.warningSoft,
+      padding: EdgeInsets.fromLTRB(context.layout.gutter, AppDimens.gap4, AppDimens.gap4, AppDimens.gap4),
+      child: Row(
+        children: [
+          Icon(UniconsLine.edit, size: 18, color: AppColors.warningText),
+          const SizedBox(width: AppDimens.gap8),
+          Expanded(
+            child: Text(
+              context.tr('editing_sent_cheque'),
+              style: AppText.secondaryBold.copyWith(color: AppColors.warningText),
+            ),
+          ),
+          TextButton(
+            onPressed: model.busy ? null : model.clearCheque,
+            child: Text(context.tr('exit_without_saving'), style: TextStyle(color: AppColors.warningText)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _hotkeyBar() {
     return Container(
       decoration: BoxDecoration(
@@ -641,7 +671,9 @@ class _CashierHomeState extends State<CashierHome> {
           key: ValueKey('${item['balanceId']}_$index'),
           closeOnScroll: false,
           useTextDirection: false,
-          enabled: checkRole('CASHBOX_DELETE_SCAN_ITEM'),
+          // Агент собирает заказ, а не пробивает продажу: позицию он может
+          // убрать всегда, без права кассира.
+          enabled: model.isAgent || checkRole('CASHBOX_DELETE_SCAN_ITEM'),
           endActionPane: ActionPane(
             motion: const StretchMotion(),
             extentRatio: 0.28,

@@ -851,5 +851,9 @@
 	"yesterday": "Kecha",
 	"you_do_not_have_access": "Sizda ruxsat yo'q",
 	"you_need_to_install_the_latest_version_to_continue_using_the_app": "Ilovani davom ettirish uchun eng yangi versiyani oʻrnatish talab etiladi",
-	"z_report": "Z-hisobot"
+	"z_report": "Z-hisobot",
+	"editing_sent_cheque": "Yuborilgan chek tahrirlanmoqda",
+	"exit_without_saving": "Chiqish",
+	"replace_cart_title": "Savat almashtirilsinmi?",
+	"replace_cart_text": "Joriy savatdagi mahsulotlar o'chiriladi, o'rniga shu chek ochiladi."
 }

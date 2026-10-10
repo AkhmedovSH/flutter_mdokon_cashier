@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_mdokon/features/agent/pages/agent_cheque_preview.dart';
 import 'package:flutter_mdokon/features/cashier/models/dashboard_model.dart';
+import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
+import 'package:flutter_mdokon/shared/widgets/ui/ui.dart' show AppModal, AppModalTone;
 import 'package:flutter_mdokon/shared/widgets/loading_layout.dart';
 
 import 'package:flutter_mdokon/core/network/api.dart';
@@ -65,6 +67,32 @@ class _AgentChequesState extends State<AgentCheques> {
     }
     loading = false;
     setState(() {});
+  }
+
+  /// Тап по строке: сначала просмотр, в корзину чек попадает только по
+  /// «Редактировать». Набранную корзину без спроса не затираем.
+  Future<void> _openCheque(Map row) async {
+    final cheque = jsonDecode(row['cheque'] ?? '{}');
+    if (cheque is! Map) return;
+
+    final edit = await AgentChequePreview.open(context, cheque);
+    if (!edit || !mounted) return;
+
+    if (!context.read<SaleModel>().isEmpty) {
+      final replace = await AppModal.confirm(
+        context,
+        title: context.tr('replace_cart_title'),
+        text: context.tr('replace_cart_text'),
+        confirmLabel: context.tr('edit'),
+        cancelLabel: context.tr('cancel'),
+        tone: AppModalTone.danger,
+      );
+      if (!replace || !mounted) return;
+    }
+
+    final dashboard = context.read<DashboardModel>();
+    dashboard.setCurrentCheque(row);
+    dashboard.setCurrentIndex(0);
   }
 
   @override
@@ -166,11 +194,7 @@ class _AgentChequesState extends State<AgentCheques> {
                               children: [
                                 GestureDetector(
                                   behavior: HitTestBehavior.translucent,
-                                  onTap: () {
-                                    Provider.of<DashboardModel>(context, listen: false).setCurrentCheque(cheques[i]);
-                                    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
-                                    // context.go('/agent', extra: cheques[i]);
-                                  },
+                                  onTap: () => _openCheque(cheques[i]),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text(
@@ -180,9 +204,7 @@ class _AgentChequesState extends State<AgentCheques> {
                                 ),
                                 GestureDetector(
                                   behavior: HitTestBehavior.translucent,
-                                  onTap: () {
-                                    context.go('/agent', extra: cheques[i]);
-                                  },
+                                  onTap: () => _openCheque(cheques[i]),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text(
@@ -194,9 +216,7 @@ class _AgentChequesState extends State<AgentCheques> {
                                 ),
                                 GestureDetector(
                                   behavior: HitTestBehavior.translucent,
-                                  onTap: () {
-                                    context.go('/agent', extra: cheques[i]);
-                                  },
+                                  onTap: () => _openCheque(cheques[i]),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text(

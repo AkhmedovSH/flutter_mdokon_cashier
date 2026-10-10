@@ -96,7 +96,7 @@ class SaleSheets {
             value: SaleAction.createClient,
             icon: UniconsLine.user_plus,
           ),
-        if (!model.isEmpty && checkRole('CASHBOX_DELETE_SCAN_ITEM'))
+        if (!model.isEmpty && (model.isAgent || checkRole('CASHBOX_DELETE_SCAN_ITEM')))
           AppModalAction(
             label: context.tr('clear'),
             value: SaleAction.clearCheque,

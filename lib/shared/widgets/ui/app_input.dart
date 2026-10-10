@@ -389,7 +389,7 @@ class AppIconClear extends StatelessWidget {
 }
 
 /// Степпер количества: −  n  + , тач-таргеты 44×44.
-class AppStepper extends StatelessWidget {
+class AppStepper extends StatefulWidget {
   final int value;
   final ValueChanged<int> onChanged;
   final int min;
@@ -406,9 +406,61 @@ class AppStepper extends StatelessWidget {
   });
 
   @override
+  State<AppStepper> createState() => _AppStepperState();
+}
+
+class _AppStepperState extends State<AppStepper> {
+  late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
+  bool _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.value}');
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) _commit();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant AppStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_editing && oldWidget.value != widget.value) {
+      _controller.text = '${widget.value}';
+    }
+  }
+
+  void _startEditing() {
+    setState(() => _editing = true);
+    _controller.text = '${widget.value}';
+    _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+    _focusNode.requestFocus();
+  }
+
+  void _commit() {
+    if (!_editing) return;
+    setState(() => _editing = false);
+    final parsed = int.tryParse(_controller.text.trim());
+    var next = parsed ?? widget.value;
+    if (next < widget.min) next = widget.min;
+    final max = widget.max;
+    if (max != null && next > max) next = max;
+    _controller.text = '$next';
+    if (next != widget.value) widget.onChanged(next);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      height: height,
+      height: widget.height,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppDimens.control,
@@ -420,27 +472,49 @@ class AppStepper extends StatelessWidget {
         children: [
           _StepButton(
             icon: Icons.remove,
-            enabled: value > min,
-            onTap: () => onChanged(value - 1),
-            height: height,
+            enabled: widget.value > widget.min,
+            onTap: () => widget.onChanged(widget.value - 1),
+            height: widget.height,
           ),
-          Container(
-            constraints: const BoxConstraints(minWidth: 34),
-            height: height,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
-            ),
-            child: Text(
-              '$value',
-              style: AppText.price.copyWith(fontWeight: FontWeight.w600),
+          GestureDetector(
+            onTap: _startEditing,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 34),
+              height: widget.height,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                border: Border.symmetric(vertical: BorderSide(color: AppColors.border)),
+              ),
+              child: _editing
+                  ? SizedBox(
+                      width: 40,
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        style: AppText.price.copyWith(fontWeight: FontWeight.w600),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onSubmitted: (_) => _commit(),
+                      ),
+                    )
+                  : Text(
+                      '${widget.value}',
+                      style: AppText.price.copyWith(fontWeight: FontWeight.w600),
+                    ),
             ),
           ),
           _StepButton(
             icon: Icons.add,
-            enabled: max == null || value < max!,
-            onTap: () => onChanged(value + 1),
-            height: height,
+            enabled: widget.max == null || widget.value < widget.max!,
+            onTap: () => widget.onChanged(widget.value + 1),
+            height: widget.height,
           ),
         ],
       ),
