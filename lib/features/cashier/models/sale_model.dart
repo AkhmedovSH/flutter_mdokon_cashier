@@ -441,6 +441,33 @@ class SaleModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Выход из учётной записи. Модель — глобальный провайдер и переживает
+  /// смену пользователя, поэтому без сброса следующий вошедший увидел бы
+  /// чужую корзину. Сохранённая сессия в хранилище остаётся: она привязана к
+  /// логину и смене и вернётся только тому же кассиру.
+  void reset() {
+    if (items.isNotEmpty) {
+      appLog.audit('sale.reset_on_logout', {'lines': items.length});
+    }
+    _chequeSerial++;
+    data = emptyCheque();
+    cashbox = {};
+    shortcutValue = '';
+    _tabs = initialSaleTabs(data);
+    _sessionRestored = false;
+    _lastSessionJson = null;
+    expenses = [];
+    allClients = [];
+    clients = [];
+    postponed = [];
+    postponedIndex = -1;
+    allSuppliers = [];
+    suppliers = [];
+    // Мимо `notifyListeners()` модели: её перекрытие записало бы пустую
+    // сессию поверх сохранённой.
+    super.notifyListeners();
+  }
+
   // --- Вкладки чеков -----------------------------------------------------
 
   /// Параллельно набираемые чеки. Только планшет: на телефоне панель вкладок

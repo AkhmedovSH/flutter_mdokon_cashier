@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_mdokon/features/cashier/models/sale_model.dart';
 import 'package:unicons/unicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -144,7 +145,10 @@ class _ProfileState extends State<Profile> {
     storage.remove('access_token');
     storage.remove('lastLogin');
     credentialStore.deletePassword();
-    Provider.of<DashboardModel>(context, listen: false).setCurrentIndex(0);
+    context.read<SaleModel>().reset();
+    final dashboard = Provider.of<DashboardModel>(context, listen: false);
+    dashboard.setCurrentCheque({});
+    dashboard.setCurrentIndex(0);
     context.go('/auth');
   }
 

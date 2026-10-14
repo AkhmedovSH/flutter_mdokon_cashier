@@ -303,6 +303,9 @@ class _CatalogState extends State<Catalog> {
       label,
       actionLabel: context.tr('remove'),
       onAction: () => _undoAdd(balanceId, added),
+      // Тост всплывает на каждый товар — дольше двух секунд он закрывает
+      // список и мешает набирать следующий.
+      duration: const Duration(seconds: 2),
       // На телефоне разделы живут в нижней панели — тост держим над ней,
       // иначе он перехватывает нажатия по вкладкам.
       bottomInset: context.layout.useTopNav ? 0 : 56 + MediaQuery.of(context).padding.bottom,
